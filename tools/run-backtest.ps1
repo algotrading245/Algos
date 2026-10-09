@@ -6,18 +6,34 @@
 #   powershell -ExecutionPolicy Bypass -File tools\run-backtest.ps1 -Run holdout
 #   powershell -ExecutionPolicy Bypass -File tools\run-backtest.ps1 -Run unittest
 #
-# MT5 ignores /config when the same install is already open, so the target
-# terminal must be closed first. Nothing here places live trades: the tester runs
-# on history only and the unit-test script makes no trading calls.
+# Runs in Terminal 15 by default: a spare install kept out of live trading, since
+# MT5 ignores /config while the same install is open and Terminals 1-14 are kept
+# running. Log the cent account into Terminal 15 once (the read-only investor
+# password is enough) so it can download XAUUSD.pc history, then close it.
+# Nothing here places live trades: the tester runs on history only and the
+# unit-test script makes no trading calls.
 param(
     [ValidateSet("unittest", "baseline", "tune", "holdout")]
     [string]$Run = "baseline",
-    [string]$Terminal = "C:\Program Files\MetaTrader 5 - 14",
-    [string]$DataFolder = "$env:APPDATA\MetaQuotes\Terminal\C0E230B8F9C8C2A16D1EE5E91A38A7CF"
+    [string]$Terminal = "C:\Program Files\MetaTrader 5 - 15",
+    [string]$DataFolder = ""
 )
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $exe = Join-Path $Terminal "terminal64.exe"
+if (-not (Test-Path $exe)) { throw "$exe not found" }
+
+# Each install's data folder records its install path in origin.txt.
+if (-not $DataFolder) {
+    $DataFolder = Get-ChildItem "$env:APPDATA\MetaQuotes\Terminal" -Directory |
+        Where-Object {
+            $o = Join-Path $_.FullName "origin.txt"
+            (Test-Path $o) -and ("$(Get-Content $o -Raw)".Trim().TrimEnd('\') -eq $Terminal.TrimEnd('\'))
+        } | Select-Object -First 1 -ExpandProperty FullName
+    if (-not $DataFolder) { throw "No data folder for $Terminal yet. Start it once, log in, then close it." }
+}
+Write-Host "terminal $Terminal"
+Write-Host "data     $DataFolder"
 
 $running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe }
 if ($running) {
