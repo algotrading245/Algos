@@ -46,6 +46,16 @@ GuardParams  g_guard;
 CLadderCycle g_cycle;
 int          g_atr=INVALID_HANDLE;
 datetime     g_lastBar=0;
+datetime     g_lastWarn=0;
+
+// Skip-reason messages would repeat every bar; print them at most once a day.
+bool WarnDue()
+  {
+   if(TimeCurrent()-g_lastWarn<86400)
+      return(false);
+   g_lastWarn=TimeCurrent();
+   return(true);
+  }
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -128,7 +138,8 @@ void TryStart()
    double minDist=g_broker.stopsDist+p.s;
    if(p.t<InpTargetSpreads*p.s || p.d<=minDist || p.t<=minDist || p.t<=p.c)
      {
-      PrintFormat("AurumLadder: zone too small (d=%.2f t=%.2f, need > %.2f and t >= %.2f); skipping",
+      if(WarnDue())
+         PrintFormat("AurumLadder: zone too small (d=%.2f t=%.2f, need > %.2f and t >= %.2f); skipping",
                   p.d,p.t,minDist,InpTargetSpreads*p.s);
       return;
      }
@@ -141,6 +152,8 @@ void TryStart()
    double lots[];
    if(!AL_FirstLot(cap,InpMaxSteps,p,g_broker.v,mpl,marginLimit,lots))
      {
+      if(!WarnDue())
+         return;
       double minLots[];
       double needed=0.0;
       if(AL_LadderLots(g_broker.vmin,3,p,minLots))
@@ -158,6 +171,42 @@ void Step()
    g_cycle.OnTickManage(AL_WeekendForcesFlat(_Symbol,g_guard,TimeCurrent()));
    if(g_cycle.State()==AL_FLAT || g_cycle.State()==AL_COOLDOWN)
       TryStart();
+  }
+
+//+------------------------------------------------------------------+
+//| Acceptance (spec section 9), scored after every tester run.       |
+//| Gates: first-trade win rate above d/(d+t), worst ladder loss <= 6%|
+//| of balance, equity drawdown <= 30%. The optimiser maximises net   |
+//| profit among runs that pass; failing runs score below zero.       |
+//+------------------------------------------------------------------+
+double OnTester()
+  {
+   LadderStats st=g_cycle.stats;
+   double profit =TesterStatistics(STAT_PROFIT);
+   double dd     =TesterStatistics(STAT_EQUITY_DDREL_PERCENT);
+   double be     =InpStepAtr/(InpStepAtr+InpTargetAtr);
+   double winRate=(st.ladders>0 ? (double)st.firstStepWins/st.ladders : 0.0);
+   bool   gWin   =winRate>be;
+   bool   gLoss  =st.worstLossPct<=6.0;
+   bool   gDd    =dd<=30.0;
+   bool   gProfit=profit>0;
+   string hist="";
+   for(int i=1; i<10; i++)
+      if(st.fillsHist[i]>0)
+         hist+=StringFormat(" %s%d:%d",i==9 ? ">=" : "",i,st.fillsHist[i]);
+
+   PrintFormat("AurumLadder summary: %d ladders, %d won (%d at trade 1), %d lost (%d at step cap); fills by step:%s",
+               st.ladders,st.wins,st.firstStepWins,st.losses,st.stepCapLosses,hist);
+   PrintFormat("  net profit %.2f %s  [%s]",profit,AccountInfoString(ACCOUNT_CURRENCY),gProfit?"PASS":"FAIL");
+   PrintFormat("  first-trade win rate %.1f%% vs break-even %.1f%%  [%s]",100*winRate,100*be,gWin?"PASS":"FAIL");
+   PrintFormat("  worst ladder loss %.2f%% of balance (limit 6%%)  [%s]",st.worstLossPct,gLoss?"PASS":"FAIL");
+   PrintFormat("  max equity drawdown %.2f%% (limit 30%%)  [%s]",dd,gDd?"PASS":"FAIL");
+   PrintFormat("  ACCEPTANCE: %s",(gProfit && gWin && gLoss && gDd) ? "PASS" : "FAIL");
+
+   if(st.ladders<30)
+      return(-1e6);                      // too few ladders to judge
+   int misses=(gWin?0:1)+(gLoss?0:1)+(gDd?0:1);
+   return(misses==0 ? profit : MathMin(profit,0.0)-1e5*misses);
   }
 
 void OnTick()  { Step(); }

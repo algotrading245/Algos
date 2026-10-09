@@ -13,6 +13,18 @@
 #include "Ladder.mqh"
 #include "RiskGuard.mqh"
 
+// Results of finished ladders, for the tester summary and acceptance checks.
+struct LadderStats
+  {
+   int               ladders;
+   int               wins;
+   int               firstStepWins;   // closed in profit with only trade 1 filled
+   int               losses;
+   int               stepCapLosses;   // all N trades filled, then stopped out
+   double            worstLossPct;    // largest single-ladder loss, % of balance at its start
+   int               fillsHist[10];   // ladders by trades filled (index 9 = 9 or more)
+  };
+
 enum ENUM_AL_STATE
   {
    AL_FLAT=0,
@@ -44,6 +56,8 @@ private:
    datetime          m_start;
    double            m_lots[];
    bool              m_exitSeen;    // a closing deal was seen since the ladder started
+   double            m_startBal;    // balance when the ladder opened
+   string            m_csv;         // per-ladder log in the terminals' common Files folder
 
    string            Key(const string name) const { return(m_pfx+name); }
    void              SetGV(const string name,const double v) { GlobalVariableSet(Key(name),v); }
@@ -61,10 +75,13 @@ private:
    bool              CloseAll();
    double            RealisedSinceStart();
    void              Finalise();
+   void              Record(const double pnl);
    void              Log(const string msg) const { PrintFormat("AurumLadder[%I64d] %s",m_magic,msg); }
 
 public:
-                     CLadderCycle() : m_state(AL_FLAT), m_exitSeen(false) {}
+   LadderStats       stats;
+
+                     CLadderCycle() : m_state(AL_FLAT), m_exitSeen(false), m_startBal(0) { ZeroMemory(stats); }
    bool              Init(const BrokerSpec &b,const long magic,const int deviationPoints,
                           const int cooldownHours,const int maxFailsPerDay);
    ENUM_AL_STATE     State() const { return(m_state); }
@@ -87,6 +104,11 @@ bool CLadderCycle::Init(const BrokerSpec &b,const long magic,const int deviation
    m_trade.SetExpertMagicNumber((ulong)magic);
    m_trade.SetDeviationInPoints(deviationPoints);
    m_trade.SetTypeFillingBySymbol(b.symbol);
+   bool tester=(bool)MQLInfoInteger(MQL_TESTER);
+   m_csv=(bool)MQLInfoInteger(MQL_OPTIMIZATION) ? ""
+         : "AurumLadder_"+IntegerToString(magic)+(tester ? "_tester" : "_live")+".csv";
+   if(tester && m_csv!="")
+      FileDelete(m_csv,FILE_COMMON);
    Load();
 
    int pos=CountPositions(),ord=CountOrders();
@@ -125,6 +147,7 @@ void CLadderCycle::Save()
    SetGV("n",m_n);
    SetGV("filled",m_filled);
    SetGV("start",(double)m_start);
+   SetGV("startbal",m_startBal);
    for(int i=0; i<ArraySize(m_lots); i++)
       SetGV("lot"+IntegerToString(i+1),m_lots[i]);
   }
@@ -141,6 +164,7 @@ void CLadderCycle::Load()
    m_n     =(int)GetGV("n",0);
    m_filled=(int)GetGV("filled",0);
    m_start =(datetime)(long)GetGV("start",0);
+   m_startBal=GetGV("startbal",0);
    ArrayResize(m_lots,m_n);
    for(int i=0; i<m_n; i++)
       m_lots[i]=GetGV("lot"+IntegerToString(i+1),0);
@@ -262,6 +286,8 @@ void CLadderCycle::Finalise()
    bool     failed=(pnl<0);
    Log(StringFormat("ladder closed after %d of %d steps, result %.2f %s",m_filled,m_n,pnl,
                     AccountInfoString(ACCOUNT_CURRENCY)));
+   if(m_start>0)
+      Record(pnl);
    GlobalVariablesDeleteAll(m_pfx+"lot");
    m_state=AL_FLAT;
    m_filled=0;
@@ -279,6 +305,41 @@ void CLadderCycle::Finalise()
       m_state=AL_COOLDOWN;
      }
    Save();
+  }
+
+//+------------------------------------------------------------------+
+void CLadderCycle::Record(const double pnl)
+  {
+   double pct=(m_startBal>0 ? 100.0*pnl/m_startBal : 0.0);
+   stats.ladders++;
+   stats.fillsHist[MathMin(MathMax(m_filled,0),9)]++;
+   if(pnl>=0)
+     {
+      stats.wins++;
+      if(m_filled==1)
+         stats.firstStepWins++;
+     }
+   else
+     {
+      stats.losses++;
+      if(m_filled>=m_n)
+         stats.stepCapLosses++;
+      stats.worstLossPct=MathMax(stats.worstLossPct,-pct);
+     }
+   if(m_csv=="")
+      return;
+   int h=FileOpen(m_csv,FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON,',');
+   if(h==INVALID_HANDLE)
+      return;
+   if(FileSize(h)==0)
+      FileWrite(h,"start","end","side","d","t","n","filled","lot1","pnl","pnl_pct","balance_before");
+   FileSeek(h,0,SEEK_END);
+   FileWrite(h,TimeToString(m_start+1,TIME_DATE|TIME_SECONDS),
+             TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),
+             m_side1>0 ? "buy" : "sell",DoubleToString(m_d,2),DoubleToString(m_t,2),m_n,m_filled,
+             DoubleToString(ArraySize(m_lots)>0 ? m_lots[0] : 0,2),DoubleToString(pnl,2),
+             DoubleToString(pct,3),DoubleToString(m_startBal,2));
+   FileClose(h);
   }
 
 //+------------------------------------------------------------------+
@@ -341,6 +402,7 @@ bool CLadderCycle::Start(const int side,const double d,const double t,const doub
    m_lower=(side>0 ? fill-d : fill);
    m_filled=1;
    m_start=TimeCurrent()-1;
+   m_startBal=AccountInfoDouble(ACCOUNT_BALANCE);
    m_exitSeen=false;
    m_state=AL_LADDERING;
    Save();

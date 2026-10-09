@@ -6,10 +6,17 @@ MT5 trading algorithms: simple, maths-based, one spec per algo under `docs/super
 
 A gold zone-recovery ladder for the Vantage cent account (`XAUUSD.pc`). Design and feasibility numbers: [`docs/superpowers/specs/2026-10-09-aurumladder-design.md`](docs/superpowers/specs/2026-10-09-aurumladder-design.md).
 
-Set up on Windows:
+### Backtest on Windows (Terminal 14)
 
-1. `powershell -ExecutionPolicy Bypass -File tools\link-terminal.ps1` links `mql5\*\AurumLadder` into Terminal 14.
-2. In MetaEditor, compile `Scripts\AurumLadder\LadderTest.mq5` and run it on any chart. The Experts log should end with `0 failed`.
-3. Compile `Experts\AurumLadder\AurumLadder.mq5` and backtest it on `XAUUSD.pc` with "Every tick based on real ticks".
+Close Terminal 14 first (MT5 ignores tester configs while that install is open), then from the repo folder:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run-backtest.ps1 -Run unittest   # compile + in-terminal maths tests
+powershell -ExecutionPolicy Bypass -File tools\run-backtest.ps1 -Run baseline   # defaults, 2023-10-09 to 2025-10-09
+powershell -ExecutionPolicy Bypass -File tools\run-backtest.ps1 -Run tune       # genetic optimisation, same 2 years
+powershell -ExecutionPolicy Bypass -File tools\run-backtest.ps1 -Run holdout    # final year, ONCE, with the chosen inputs
+```
+
+Each run links the sources into the terminal, compiles them, runs on real ticks for `XAUUSD.pc` with a 40,000 USC deposit, and saves the report, a per-ladder `ladders.csv` and the acceptance verdict (`summary.txt`) to `backtests\<date>_<run>\`. Configs live in `tester\`. Before the holdout run, copy the inputs picked from the tune results into `tester\holdout.ini`.
 
 Reference maths and tests (any OS): `cd tools && python3 -m unittest`.
