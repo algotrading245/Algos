@@ -23,7 +23,7 @@ def _hist(tf):
     """histdata 1-minute bars resampled to tf, cached next to the source file."""
     src = os.path.join(ROOT, "histdata", "XAUUSD_M1.csv.gz")
     out = os.path.join(ROOT, "histdata", f"XAUUSD_{tf}.csv.gz")
-    if os.path.exists(out) and os.path.getmtime(out) >= os.path.getmtime(src):
+    if tf != "M1" and os.path.exists(out) and os.path.getmtime(out) >= os.path.getmtime(src):
         return pd.read_csv(out)
     m = pd.read_csv(src)
     m = m[pd.to_datetime(m.time, unit="s").dt.dayofweek < 5]          # a few stray quotes after the Friday close
