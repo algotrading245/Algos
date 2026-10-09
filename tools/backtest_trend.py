@@ -4,7 +4,8 @@ Rule: at each daily open, be long if the previous close is above its --ma day av
 fixed annual volatility: leverage = min(--cap, --target / vol), vol = exponentially weighted (span --span) standard
 deviation of daily returns, annualised. The held size is only changed when it is more than --band away from the
 target. Trades fill at the daily open with --cost per round trip; long swap is charged per night (triple on
-Wednesday). This is managed gold exposure, so most of the return is the gold price itself: compare with "always long".
+Wednesday) as a fixed fraction of the position value, set from today's broker swap. This is managed gold exposure,
+so most of the return is the gold price itself: compare with "always long".
 
 Usage: python tools/backtest_trend.py [--ma 50] [--target 0.10] [--cap 2] [--band 0.25] [--cost 0.25] [--grid]
 """
@@ -18,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "research"))
 import realdata as rd
 
 SWAP_LONG = 0.7744      # price units per oz per night, from the broker's symbol specification
+SWAP_PRICE = 4200.0     # gold price when that swap was read; the charge is scaled with price (a financing rate)
 
 
 def run(ma=50, target=0.10, cap=2.0, band=0.25, cost=0.25, span=30, always=False):
@@ -36,7 +38,7 @@ def run(ma=50, target=0.10, cap=2.0, band=0.25, cost=0.25, span=30, always=False
             turn, held = abs(want - held), want
         else:
             turn = 0.0
-        pnl = held * (o[i + 1] / o[i] - 1) - turn * (cost / 2) / o[i] - held * SWAP_LONG * nights[i] / o[i]
+        pnl = held * (o[i + 1] / o[i] - 1) - turn * (cost / 2) / o[i] - held * SWAP_LONG / SWAP_PRICE * nights[i]
         rows.append((d.dt[i], held, turn, pnl))
     return pd.DataFrame(rows, columns=["dt", "lev", "turn", "ret"])
 

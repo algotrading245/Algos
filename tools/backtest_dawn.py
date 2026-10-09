@@ -22,8 +22,8 @@ def trades(hold_min=120, stop_pct=0.0, cost=0.25, entry="01:00", skip_days=()):
     rows = []
     nb = hold_min // 15
     for date, g in d.groupby("date", sort=True):
-        g = g.reset_index(drop=True)
-        if g.dt.iloc[0].strftime("%H:%M") != entry or len(g) <= nb or g.dt.iloc[0].weekday() in skip_days:
+        g = g[g.dt.dt.strftime("%H:%M") >= entry].reset_index(drop=True)
+        if not len(g) or g.dt.iloc[0].strftime("%H:%M") != entry or len(g) <= nb or g.dt.iloc[0].weekday() in skip_days:
             continue
         if (g.dt.iloc[nb] - g.dt.iloc[0]).total_seconds() != hold_min * 60:      # gap inside the hold
             continue
