@@ -157,6 +157,21 @@ If these are not met, the signal is revised; the ladder is not loosened to compe
 
 **Forward test.** Two weeks on the cent account at the minimum first lot before any size increase.
 
+## 10. Sandbox simulation (synthetic gold, 2026-10-09)
+
+MT5 and real gold data were unreachable from the cloud sandbox, so `tools/backtest_sim.py` runs the EA's rules on a fat-tailed random walk calibrated to Terminal 14 (median M15 ATR 7.70, spread 0.10), 3 years per run, 40,000 USC deposit, fills at the triggering price. A random walk has no trend, so this measures the ladder's mechanics and cost, not the signal's edge.
+
+| Setting | Runs | Mean net (3 y) | Profitable | Median max DD | Worst ladder | Acceptance pass |
+|---|---|---|---|---|---|---|
+| Defaults (N=6, 1.5×ATR) | 40 | −2.7% ± 2.6% | 19/40 | 28.3% | −5.9% | 7/40 |
+| N=4 | 20 | −10.7% | 7/20 | 51.8% | −6.8% | 0/20 |
+| N=8 | 20 | −5.1% | 6/20 | 30.4% | −5.5% | 0/20 |
+| Zone 1.0×ATR | 20 | −14.3% | 4/20 | 41.5% | −6.1% | 0/20 |
+| Zone 2.5×ATR | 20 | −5.0% | 8/20 | 25.6% | −5.9% | 4/20 |
+| Target 2× step | 20 | −23.3% | 1/20 | 50.8% | −7.0% | 0/20 |
+
+Findings: the 5% cap holds (worst ladder 5–7% including slippage); with no edge the ladder loses roughly the spread cost, and no ladder setting turns that positive; drawdowns near 30% are normal even at break-even. Profit must come from the direction signal beating the d ÷ (d + t) break-even on real data, which only the MT5 real-tick backtest can show. At the live balance of 677 USC the EA placed no trades in simulation, as expected from section 7.
+
 ## Out of scope
 
 Other algorithms, other symbols, news filters, trailing stops, partial closes, a Python trading component, and any dashboard.
