@@ -73,7 +73,8 @@ deep and reinforcement learning replications, HFT, market intraday momentum (unc
 minute slot scan, daily ML, noise-area momentum, session-open drift, overnight-intraday reversal, scalp concepts,
 tick ML scalp, FX fixing reversals, pre-FOMC drift, overnight drift, FOMC cycle, FX local hours, pre-announcement
 drift, turn of month, market return around the clock, Bitcoin intraday momentum, market intraday momentum under
-short-gamma proxies (high VIX, falling or jump day), shorter last windows, next-day fade of the last half hour. The scans are in `research/`.
+short-gamma proxies (high VIX, falling or jump day), shorter last windows, next-day fade of the last half hour, crude oil
+intraday momentum on EIA report days (Wen, Indriawan, Lien, Xu 2023; `research/oil_eia_intraday.py`). The scans are in `research/`.
 
 ## Tools and data
 
