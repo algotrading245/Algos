@@ -1,0 +1,13 @@
+__pycache__/
+.obsidian/
+.tools/
+.claude/
+
+# Large market data, rebuilt by the downloaders in tools/ (too big for GitHub)
+marketdata/dukascopy/
+marketdata/histdata/raw/
+marketdata/histdata/ticks_raw/
+marketdata/histdata/ticks_m1/
+marketdata/histdata/*_M1.csv.gz
+marketdata/histdata/*.npz
+marketdata/histdata/*.npy

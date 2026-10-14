@@ -45,6 +45,10 @@ class Inputs:
     max_fails_per_day: int = 2
     no_new_minutes: int = 180
     flatten_minutes: int = 15
+    profit_min: float = 0.0       # > 0: first lot sized so a won ladder pays profit_min..profit_max USC
+    profit_max: float = 0.0
+    restart_now: bool = False     # next ladder straight after one closes, no signal needed
+    commission_lot: float = 0.0   # USC per lot, round trip
 
 
 # ---------------------------------------------------------------- market

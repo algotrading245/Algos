@@ -1,6 +1,6 @@
 """Reference model of AurumLadder's maths (spec sections 1, 2 and 4).
 
-Mirrors mql5/Include/AurumLadder/Ladder.mqh and Signal.mqh formula for formula,
+Mirrors the Ladder and Signal sections of mql5/Experts/AurumLadder/AurumLadder.mq5 formula for formula,
 so the MQL5 code can be checked against numbers computed here. Not used for trading.
 All distances are in price units; V converts lot x price into account currency.
 """
@@ -86,6 +86,21 @@ def first_lot(balance, cap_frac, n_max, d, t, s, c, v, step, vmin, vmax,
     return None, 2, None
 
 
+def profit_ladder(balance, cap_frac, n_max, d, t, s, c, v, step, vmin, vmax, profit_min, profit_max,
+                  margin_per_lot=0.0, free_margin=math.inf, margin_frac=0.5):
+    """Ladder whose first lot is the smallest paying profit_min at target; a target that would pay more than
+    profit_max is pulled in. Returns (l1, n, lots, t); reduces N down to 3, lots is None when nothing fits."""
+    l1 = max(vmin, round_up(profit_min / (v * (t - c)), step))
+    if v * l1 * (t - c) > profit_max:
+        t = c + profit_max / (v * l1)
+    for n in range(n_max, 2, -1):
+        lots = ladder_lots(l1, n, d, t, s, c, step, vmin, vmax)
+        if (lots and v * failed_loss(lots, d, t, s, c) <= balance * cap_frac + EPS
+                and margin_per_lot * sum(lots) <= margin_frac * free_margin + EPS):
+            return l1, n, lots, t
+    return None, 2, None, t
+
+
 def regression_tstat(closes):
     """t-statistic of the least-squares slope of ln(close) against bar index."""
     y = [math.log(p) for p in closes]
@@ -116,7 +131,7 @@ def direction(closes, t_min=3.0, er_min=0.25):
 
 
 def simulate(bids, spread, side1, lots, d, t, s):
-    """Walk a bid path through the order geometry used by Cycle.mqh.
+    """Walk a bid path through the order geometry used by the EA's cycle.
 
     Trade 1 fills at the first tick. Buys enter on ask at the upper edge, sells on bid
     at the lower edge; buy TP upper+t / SL lower-t-s on bid, sell TP lower-t / SL

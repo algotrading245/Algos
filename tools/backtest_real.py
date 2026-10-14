@@ -68,41 +68,50 @@ def run(m15, t, bid, ask, inp, deposit, start=None, end=None):
     cooldown_until = -1
     fails = {}
     s = inp.max_spread
+    c = inp.commission_lot / b.V
     k = inp.lookback + 1
+    at = None                                   # path point to start from, set right after a ladder closed
     while k < len(close):
+        now, at = at, None
         if (start and bt[k] < start) or (end and bt[k] >= end):
             k += 1
             continue
-        i = int(np.searchsorted(t, bt[k]))
+        i = int(np.searchsorted(t, bt[k])) if now is None else now
         if i >= len(t) - 1:
             break
         day = t[i] // 86400
-        if (t[i] < cooldown_until or fails.get(day, 0) >= inp.max_fails_per_day
-                or t[i] - bt[k] > 300 or ask[i] - bid[i] > s + 1e-9
+        if (t[i] < cooldown_until or (inp.max_fails_per_day > 0 and fails.get(day, 0) >= inp.max_fails_per_day)
+                or (now is None and t[i] - bt[k] > 300) or ask[i] - bid[i] > s + 1e-9
                 or (is_friday(t[i]) and 86400 - t[i] % 86400 < inp.no_new_minutes * 60)):
             k += 1
             continue
         tv, ev = tstat[k - 1], er[k - 1]
         side = (1 if tv > 0 else -1) if abs(tv) >= inp.t_min and ev >= inp.er_min else 0
+        if side == 0 and inp.restart_now and not np.isnan(tv):
+            side = 1 if tv >= 0 else -1
         if side == 0 or np.isnan(atr[k - 1]):
             k += 1
             continue
         d = inp.step_atr * atr[k - 1]
         tg = inp.target_atr * atr[k - 1]
+        mpl = bid[i] * b.V / b.LEVERAGE
+        size = (res.balance, inp.loss_cap_pct / 100, inp.max_steps, d, tg, s, c, b.V, b.LOT_STEP, b.VMIN, b.VMAX)
+        if inp.profit_min > 0 and tg > c:
+            l1, n, lots, tg = m.profit_ladder(*size, inp.profit_min, inp.profit_max, mpl, res.balance,
+                                              inp.margin_pct / 100)
+        else:
+            l1, n, lots = m.first_lot(*size, mpl, res.balance, inp.margin_pct / 100)
         min_dist = b.STOPS_DIST + s
-        if tg < inp.target_spreads * s or d <= min_dist or tg <= min_dist:
+        if tg < inp.target_spreads * s or d <= min_dist or tg <= min_dist or tg <= c:
             k += 1
             continue
-        mpl = bid[i] * b.V / b.LEVERAGE
-        l1, n, lots = m.first_lot(res.balance, inp.loss_cap_pct / 100, inp.max_steps, d, tg, s, 0,
-                                  b.V, b.LOT_STEP, b.VMIN, b.VMAX, mpl, res.balance,
-                                  inp.margin_pct / 100)
         if lots is None:
             res.skipped_cap += 1
             k += 1
             continue
         bal0 = res.balance
         j, pnl, filled, low_eq = ladder(t, bid, ask, i, side, lots, d, tg, s, inp)
+        pnl -= inp.commission_lot * sum(lots[:filled])
         res.balance += pnl
         peak = max(peak, bal0)
         res.max_dd_pct = max(res.max_dd_pct, 100 * (peak - (bal0 + low_eq)) / peak)
@@ -114,6 +123,8 @@ def run(m15, t, bid, ask, inp, deposit, start=None, end=None):
             fails[dj] = fails.get(dj, 0) + 1
             cooldown_until = t[j] + inp.cooldown_hours * 3600
         k = int(np.searchsorted(bt, t[j], side="right"))
+        if inp.restart_now and j + 1 < len(t) - 1:
+            k, at = int(np.searchsorted(bt, t[j + 1], side="right")) - 1, j + 1
     return res
 
 
@@ -194,13 +205,19 @@ def by_year(res):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--deposit", type=float, default=40000)
+    ap.add_argument("--profit", type=float, nargs=2, metavar=("MIN", "MAX"),
+                    help="size the first lot so a won ladder pays MIN..MAX USC, restart at once, no cooldown")
+    ap.add_argument("--commission", type=float, default=0.0, help="USC per lot, round trip")
     args = ap.parse_args()
     m15, t, bid, ask = market()
     print(f"{len(m15)} M15 bars, {len(t)} path points, "
           f"{m15.dt.iloc[0]:%Y-%m-%d} to {m15.dt.iloc[-1]:%Y-%m-%d}")
     for steps in (6, 3):
         for mult in (1.0, 1.5, 2.5):
-            inp = b.Inputs(max_steps=steps, step_atr=mult, target_atr=mult)
+            inp = b.Inputs(max_steps=steps, step_atr=mult, target_atr=mult, commission_lot=args.commission)
+            if args.profit:
+                inp.profit_min, inp.profit_max = args.profit
+                inp.restart_now, inp.cooldown_hours = True, 0
             res = run(m15, t, bid, ask, inp, args.deposit)
             b.summarise(res, args.deposit, inp, f"N={steps} zone={mult}xATR")
             print("  " + by_year(res))

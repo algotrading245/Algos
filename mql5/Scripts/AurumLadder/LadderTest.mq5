@@ -1,12 +1,13 @@
 //+------------------------------------------------------------------+
-//| LadderTest.mq5 - tests for Ladder.mqh and Signal.mqh.            |
+//| LadderTest.mq5 - tests for the ladder and signal maths in      |
+//| Experts/AurumLadder/AurumLadder.mq5.                             |
 //| Run on any chart; results go to the Experts log.                 |
 //| Same cases as tools/test_ladder_model.py.                        |
 //+------------------------------------------------------------------+
 #property script_show_inputs
 
-#include <AurumLadder\Ladder.mqh>
-#include <AurumLadder\Signal.mqh>
+#define AURUMLADDER_NO_EA
+#include "..\..\Experts\AurumLadder\AurumLadder.mq5"
 
 int g_pass=0,g_fail=0;
 

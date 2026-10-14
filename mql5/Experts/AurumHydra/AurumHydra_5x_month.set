@@ -1,0 +1,25 @@
+; AurumHydra v1.31 - goal mode: 5x the equity within 23 weekdays, the setting with the highest tested chance.
+; Backtest (resampled 2018-2026, no slippage): goal reached 47% of rounds, 36% of rounds end below a tenth of the stake.
+; Strategy Tester (Jan 2025 - Sep 2026, one round a month, 1:500, 3 cents a lot): goal reached in 9 of 21 months.
+; For 40% / 15% instead, set InpGoalCap=30.
+; Start timing (2010-2026 calendar rounds, Python model, not yet re-run in the Strategy Tester):
+; started on the 1st with 21 days the goal is reached in about 38% of rounds; started 2-3 weekdays
+; before the month's last weekday with 23 days, about 47-51%. The numbers above are for 21 days from the 1st.
+; With InpMonthEndBoost=2 on top of that start: about 56% if the doubled legs get their full size, about 50%
+; (against 47% without the boost) once the 1:500 margin cap of an order is estimated. Not yet run in the tester.
+; Every input not listed here stays at its default.
+InpGoalMult=5.0
+InpGoalDays=23
+InpGoalCap=50.0
+InpGoalBold=false
+InpGoalScale=2.5
+InpGoalDayVolPct=1.56
+InpGoalRepeat=false
+InpMonthEndBoost=2.0
+; When the round ends, at the goal or after InpGoalDays weekdays, everything is closed and the EA stops trading.
+InpGoalStop=true
+; Raise this number by one to start the next round.
+InpGoalRound=1
+; The 35% drawdown halt would stop a goal round early; the tested numbers have no halt.
+InpMaxDrawdownPct=0.0
+InpBrakePct=0.0

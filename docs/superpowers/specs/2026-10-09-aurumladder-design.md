@@ -125,15 +125,10 @@ With the defaults (d = t = 11.55, s = 0.40) at the minimum lot:
 
 | Path | Responsibility |
 |---|---|
-| `mql5/Experts/AurumLadder/AurumLadder.mq5` | Inputs and event wiring |
-| `mql5/Include/AurumLadder/Broker.mqh` | Symbol and account specifications |
-| `mql5/Include/AurumLadder/Signal.mqh` | Regression t-statistic, efficiency ratio, direction |
-| `mql5/Include/AurumLadder/Ladder.mqh` | Pure maths: lots, basket profit, failed-ladder loss, first lot |
-| `mql5/Include/AurumLadder/Cycle.mqh` | State machine, orders, basket close, restart recovery |
-| `mql5/Include/AurumLadder/RiskGuard.mqh` | Spread, weekend, daily stop |
-| `mql5/Scripts/AurumLadder/LadderTest.mq5` | In-terminal tests for Ladder and Signal |
+| `mql5/Experts/AurumLadder/AurumLadder.mq5` | The whole EA in one file, so it compiles wherever it is copied. Sections: Broker (symbol and account specifications), Signal (regression t-statistic, efficiency ratio, direction), Ladder (pure maths: lots, basket profit, failed-ladder loss, first lot), RiskGuard (spread, weekend, daily stop), Cycle (state machine, orders, basket close, restart recovery), then inputs and event wiring |
+| `mql5/Scripts/AurumLadder/LadderTest.mq5` | In-terminal tests for Ladder and Signal; includes the EA file with `AURUMLADDER_NO_EA` defined |
 | `tools/ladder_model.py`, `tools/test_ladder_model.py` | Python reference model of the same maths plus a tick-path simulation of the order geometry |
-| `tools/link-terminal.ps1` | Junctions the three `AurumLadder` folders into Terminal 14's data folder |
+| `tools/link-terminal.ps1` | Junctions the `AurumLadder` folders into Terminal 14's data folder |
 
 ## 9. Testing and acceptance
 
