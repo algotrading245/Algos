@@ -22,7 +22,8 @@ Rules of the work:
 - When a paper is used, read the full paper first (definitions, tables), not the abstract, and say in reports which
   papers were read in full.
 - Order: Python backtest, then MT5 Strategy Tester, then demo, then live.
-- Commit and push to `claude/exciting-hopper-r6sdmc` after each finished piece of work.
+- Commit and push to the session's working branch after each finished piece of work (earlier sessions:
+  `claude/exciting-hopper-r6sdmc`; the cloud session of 2026-10-14: `claude/intelligent-turing-j0nrmf`).
 
 ## EA 2: AurumFunded (v1.00, compiles with 0 errors and 0 warnings, not yet run in the Strategy Tester)
 
@@ -74,7 +75,16 @@ minute slot scan, daily ML, noise-area momentum, session-open drift, overnight-i
 tick ML scalp, FX fixing reversals, pre-FOMC drift, overnight drift, FOMC cycle, FX local hours, pre-announcement
 drift, turn of month, market return around the clock, Bitcoin intraday momentum, market intraday momentum under
 short-gamma proxies (high VIX, falling or jump day), shorter last windows, next-day fade of the last half hour, crude oil
-intraday momentum on EIA report days (Wen, Indriawan, Lien, Xu 2023; `research/oil_eia_intraday.py`). The scans are in `research/`.
+intraday momentum on EIA report days (Wen, Indriawan, Lien, Xu 2023; `research/oil_eia_intraday.py`),
+time-series momentum on 20 daily futures (Sharpe 0.5 at best; `research/futures_tsmom.py`), time-series momentum on
+Bitcoin and Ether (Sharpe 0.5 to 0.7 long-short since 2022 before CFD swap; `research/crypto_tsmom.py`). The scans are in `research/`.
+
+## Cloud sessions
+
+The cloud container has no route to histdata.com, Dukascopy or Yahoo (the proxy refuses them), so the minute data
+cannot be rebuilt there; only what is in the repository can be used (hourly gold and Hydra pairs from 2009, daily
+futures, stocks, ETFs, volatility indices, crypto hourly from 2017). Allowing those hosts in the environment's network
+settings would lift that.
 
 ## Tools and data
 
