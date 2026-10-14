@@ -72,10 +72,8 @@ Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction 
 deep and reinforcement learning replications, HFT, market intraday momentum (unconditional, both-agree, big-move),
 minute slot scan, daily ML, noise-area momentum, session-open drift, overnight-intraday reversal, scalp concepts,
 tick ML scalp, FX fixing reversals, pre-FOMC drift, overnight drift, FOMC cycle, FX local hours, pre-announcement
-drift, turn of month, market return around the clock, Bitcoin intraday momentum. The scans are in `research/`.
-
-Not yet tested, from the market intraday momentum paper (read in full): conditioning on a negative-gamma proxy (VIX
-tercile, falling market), next-day reversal of the last half hour, jump days, the last 5 and 15 minutes, NASDAQ 100.
+drift, turn of month, market return around the clock, Bitcoin intraday momentum, market intraday momentum under
+short-gamma proxies (high VIX, falling or jump day), shorter last windows, next-day fade of the last half hour. The scans are in `research/`.
 
 ## Tools and data
 
