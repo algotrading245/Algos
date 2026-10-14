@@ -79,7 +79,8 @@ intraday momentum on EIA report days (Wen, Indriawan, Lien, Xu 2023; `research/o
 time-series momentum on 20 daily futures (Sharpe 0.5 at best; `research/futures_tsmom.py`), time-series momentum on
 Bitcoin and Ether (Sharpe 0.5 to 0.7 long-short since 2022 before CFD swap; `research/crypto_tsmom.py`), and in `research/daily_candidates.py`: SPY before holidays, SPY under
 a VIX term-structure filter, gold/silver ratio fade, Monday after a falling Friday, SPY after VIX spikes, daily and
-weekly reversal in US stocks, gold month-end flow; gold's London bias and weekend-gap fades (`research/gold_london_and_gaps.py`). Re-fitting the leg weights for the highest Sharpe does not hold
+weekly reversal in US stocks, gold month-end flow; gold's London bias and weekend-gap fades (`research/gold_london_and_gaps.py`); hour-of-day returns of the hourly FX, gold and crypto
+series (`research/hourly_seasonality.py`). Re-fitting the leg weights for the highest Sharpe does not hold
 out of sample, so the EA's weights stay. The scans are in `research/`.
 
 ## Cloud sessions
@@ -87,7 +88,8 @@ out of sample, so the EA's weights stay. The scans are in `research/`.
 The cloud container has no route to histdata.com, Dukascopy or Yahoo (the proxy refuses them), so the minute data
 cannot be rebuilt there; only what is in the repository can be used (hourly gold and Hydra pairs from 2009, daily
 futures, stocks, ETFs, volatility indices, crypto hourly from 2017). Allowing those hosts in the environment's network
-settings would lift that.
+settings would lift that. raw.githubusercontent.com and web search do work; no GitHub repository was found that holds
+the minute data itself.
 
 ## Tools and data
 
