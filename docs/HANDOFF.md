@@ -65,6 +65,8 @@ limit) were checked again through third-party pages and FTMO's own 2-Step page o
 start, equity drawdown at most 4.7%, worst day -1.6%, no day stop. All legs but the quartet's bell, Tokyo and midday
 match the Python model; those three earned +2.0% against about 7% in the model. Details in
 `backtests/2026-10-15_funded_phase1/summary.md`.
+Phase 2 preset from the same 2024-01-01 start: passed (+5%) on 2024-02-20, drawdown 1.9%
+(`backtests/2026-10-15_funded_phase2/summary.md`).
 
 Open points for EA 2:
 
