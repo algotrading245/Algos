@@ -9,5 +9,6 @@ marketdata/histdata/raw/
 marketdata/histdata/ticks_raw/
 marketdata/histdata/ticks_m1/
 marketdata/histdata/*_M1.csv.gz
+marketdata/histdata/*.part
 marketdata/histdata/*.npz
 marketdata/histdata/*.npy
