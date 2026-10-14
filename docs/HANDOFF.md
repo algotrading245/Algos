@@ -61,6 +61,11 @@ no time limit, so size 0.5 stays the default: it keeps failures near zero, and l
 the edge holds. FTMO's 2-Step rules (10% / 5%, 5% daily on closed and open results, 10% static, 4 days, no time
 limit) were checked again through third-party pages and FTMO's own 2-Step page on 2026-10-14.
 
+**Strategy Tester, phase 1 (2026-10-15, owner's FTMO demo):** passed on 2024-10-25, 10 months after a 2024-01-01
+start, equity drawdown at most 4.7%, worst day -1.6%, no day stop. All legs but the quartet's bell, Tokyo and midday
+match the Python model; those three earned +2.0% against about 7% in the model. Details in
+`backtests/2026-10-15_funded_phase1/summary.md`.
+
 Open points for EA 2:
 
 - Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
