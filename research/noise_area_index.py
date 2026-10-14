@@ -91,6 +91,6 @@ if __name__ == "__main__":
         if not (root / "histdata" / f"{s}_M1.csv.gz").exists():
             continue
         print(s)
-        for vm, cost, vw in ((1.0, 0.0, True), (1.0, 1.5, True), (1.0, 3.0, True), (1.5, 1.5, True), (1.0, 1.5, False)):
+        for vm, cost, vw in ((1.0, 0.0, True), (1.0, 0.75, True), (1.0, 1.5, True), (1.0, 3.0, True), (1.5, 0.75, True), (1.5, 1.5, True), (2.0, 0.75, True), (1.0, 1.5, False)):
             x, n = run(s, vm, cost, vw)
             line(f"VM {vm} cost {cost} bp {'TWAP stop' if vw else 'band stop'}", x, n, hydra)
