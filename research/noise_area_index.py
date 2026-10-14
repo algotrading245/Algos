@@ -39,12 +39,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from overnight_intraday_reversal import NY, matrix
 
 SPLIT = pd.Timestamp("2018-01-01")
-OPEN, CLOSE = 570, 960
-CHECKS = list(range(600, 960, 30))
+# exchange clock and cash session (open, close in minutes of the day) of each index
+SESSIONS = {"SPXUSD": (NY, 570, 960), "NSXUSD": (NY, 570, 960), "GRXEUR": ("Europe/Berlin", 540, 1050),
+            "UKXGBP": ("Europe/London", 480, 990), "JPXJPY": ("Asia/Tokyo", 540, 900)}
 
 
 def run(symbol, vm=1.0, cost_bp=1.5, use_vwap=True, look=14, target=0.02, cap=4.0):
-    days, p = matrix(symbol, NY)
+    zone, OPEN, CLOSE = SESSIONS[symbol]
+    CHECKS = list(range(OPEN + 30, CLOSE, 30))
+    days, p = matrix(symbol, zone)
     p = pd.DataFrame(p.astype(float)).ffill(axis=1).to_numpy()
     keep = days.dayofweek < 5
     days, p = days[keep], p[keep]
@@ -99,7 +102,7 @@ def line(label, x, n, hydra):
 if __name__ == "__main__":
     root = Path(__file__).resolve().parent.parent / "marketdata"
     hydra = pd.read_csv(root / "hydra_legs_daily.csv.gz", index_col=0, parse_dates=True).sum(axis=1)
-    for s in ("SPXUSD", "NSXUSD"):
+    for s in SESSIONS:
         if not (root / "histdata" / f"{s}_M1.csv.gz").exists():
             continue
         print(s)
