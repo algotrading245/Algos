@@ -63,7 +63,8 @@ limit) were checked again through third-party pages and FTMO's own 2-Step page o
 
 Open points for EA 2:
 
-- Not yet run in the MT5 Strategy Tester. The symbol names in the inputs (`XAUUSD`, `US500.cash`, ...) are FTMO's as
+- Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
+  hand, so untested). The symbol names in the inputs (`XAUUSD`, `US500.cash`, ...) are FTMO's as
   far as known and must be checked in the FTMO terminal.
 - FTMO's server clock is assumed to follow European summer time (`InpEuClock true`). The EA checks the clock live and
   skips the day if it is off.
