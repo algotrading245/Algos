@@ -68,7 +68,10 @@ Open points for EA 2:
   far as known and must be checked in the FTMO terminal.
 - FTMO's server clock is assumed to follow European summer time (`InpEuClock true`). The EA checks the clock live and
   skips the day if it is off.
-- At 1:30 (less on metals) the margin cap `InpMarginPct` may shrink the gold units; the tester run will show it.
+- Margin: FTMO Swing leverage is quoted (by a user on FTMO's feature board, not on FTMO's own page) as 1:30 on
+  currencies, 1:9 on metals, 1:15 on indices. A gold unit at size 0.5 is about 1.2-1.5x equity at usual gold
+  volatility and 3.1x at most (`InpMaxLeverage` 6.2 x 0.5), so 15-35% of equity in margin at 1:9, inside the
+  per-order cap `InpMarginPct` (50% of free margin). The currency legs are far smaller. The tester run will confirm.
 - The gold-unit broker stop is not in the Python model.
 
 ## EA 1: AurumHydra (v1.32)
