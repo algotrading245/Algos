@@ -52,6 +52,15 @@ upper bounds:
 | a third | 0.5 | on | 92% | 287 | 100% | 13% |
 | a third | 1.0 | on | 66% | 105 | 59% | 20% |
 
+The pass column above counts only challenges that ended; challenges still open at the 500-day limit are left out,
+which flatters the small sizes. `python tools/prop_stress.py` counts open ones as not passed and adds a pessimistic
+intraday stand-in (any day closing below -1.5% booked as a hit of the 3% day stop). At size 0.5, passed / failed
+within 250 trading days: 96/0 at the backtested edge, 55/0 at half the edge, 46/0.2 at half with the stand-in, 37/0.4
+at a third; within 500 days 100/0, 89/0, 82/4, 66/10. Size 1.0 within 250 days: 99/0, 74/15, 58/27, 52/31. FTMO has
+no time limit, so size 0.5 stays the default: it keeps failures near zero, and larger sizes are faster only when
+the edge holds. FTMO's 2-Step rules (10% / 5%, 5% daily on closed and open results, 10% static, 4 days, no time
+limit) were checked again through third-party pages and FTMO's own 2-Step page on 2026-10-14.
+
 Open points for EA 2:
 
 - Not yet run in the MT5 Strategy Tester. The symbol names in the inputs (`XAUUSD`, `US500.cash`, ...) are FTMO's as
