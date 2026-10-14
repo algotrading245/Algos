@@ -77,7 +77,10 @@ drift, turn of month, market return around the clock, Bitcoin intraday momentum,
 short-gamma proxies (high VIX, falling or jump day), shorter last windows, next-day fade of the last half hour, crude oil
 intraday momentum on EIA report days (Wen, Indriawan, Lien, Xu 2023; `research/oil_eia_intraday.py`),
 time-series momentum on 20 daily futures (Sharpe 0.5 at best; `research/futures_tsmom.py`), time-series momentum on
-Bitcoin and Ether (Sharpe 0.5 to 0.7 long-short since 2022 before CFD swap; `research/crypto_tsmom.py`). The scans are in `research/`.
+Bitcoin and Ether (Sharpe 0.5 to 0.7 long-short since 2022 before CFD swap; `research/crypto_tsmom.py`), and in `research/daily_candidates.py`: SPY before holidays, SPY under
+a VIX term-structure filter, gold/silver ratio fade, Monday after a falling Friday, SPY after VIX spikes, daily and
+weekly reversal in US stocks, gold month-end flow. Re-fitting the leg weights for the highest Sharpe does not hold
+out of sample, so the EA's weights stay. The scans are in `research/`.
 
 ## Cloud sessions
 
