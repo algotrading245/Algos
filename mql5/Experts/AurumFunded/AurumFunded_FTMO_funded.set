@@ -1,0 +1,14 @@
+; AurumFunded - FTMO funded account: no target, runs on
+; Load on a gold chart of the FTMO account. Inputs not listed keep the EA's defaults.
+InpPropTargetPct=0.0
+InpPropRound=3
+InpPropMinDays=0
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=6.5
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0

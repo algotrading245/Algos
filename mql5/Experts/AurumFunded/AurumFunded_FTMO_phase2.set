@@ -1,0 +1,14 @@
+; AurumFunded - FTMO 2-Step Swing, phase 2: 5% target
+; Load on a gold chart of the FTMO account. Inputs not listed keep the EA's defaults.
+InpPropTargetPct=5.0
+InpPropRound=2
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=6.5
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0

@@ -6,7 +6,9 @@ not fall below 100 - max) or trails the highest end-of-day balance.  Positions a
 so the account's daily result is `scale` times the sum of the chosen legs, in % of the initial balance.  The EA's
 own daily stop (`guard`) flattens the day at that loss; a day that would have lost more than the guard is booked
 at the guard times `slip`.  A challenge is started on every trading day of the history and walked forward until
-it passes, breaches a limit or runs for `limit` days.
+it passes, breaches a limit or runs for `limit` days.  Two rules of AurumFunded can be switched on: `room` cuts the
+size in proportion once the equity is less than `room` % above the maximum loss (not below `least`), and `days`
+asks for that many trading days in a phase, traded at `coast` times the size once the target is reached.
 
 Daily data only: a day that dips below a limit and recovers before the close is not seen, so the pass rates are
 an upper bound.  The legs come from tools/backtest_hydra.py (see `legs`), cached in marketdata/hydra_legs_daily.
@@ -45,16 +47,22 @@ def legs():
     return f
 
 
-def challenge(x, start, targets, daily, most, trailing, guard, slip=1.2, limit=500):
+def challenge(x, start, targets, daily, most, trailing, guard, slip=1.2, limit=500, room=0.0, least=0.3, days=0,
+              coast=0.1):
     """Walk one challenge from day `start` of the daily results `x` (% of initial balance).  Returns
     (outcome, days): outcome 1 passed, -1 daily loss breached, -2 maximum loss breached, 0 still open."""
     day = start
     for target in targets:
         equity = peak = 0.0
+        first = day
         while True:
             if day >= len(x) or day - start >= limit:
                 return 0, day - start
             r = x[day]
+            if room:
+                r *= min(1.0, max(least, (equity - (peak if trailing else 0.0) + most) / room))
+            if equity >= target:
+                r *= coast
             day += 1
             if guard and r < -guard:
                 r = -guard * slip
@@ -64,7 +72,7 @@ def challenge(x, start, targets, daily, most, trailing, guard, slip=1.2, limit=5
             peak = max(peak, equity)
             if equity <= (peak if trailing else 0.0) - most:
                 return -2, day - start
-            if equity >= target:
+            if equity >= target and day - first >= days:
                 break
     return 1, day - start
 
@@ -85,7 +93,7 @@ def cell(k):
             f"days {k['days']:4.0f} (90%: {k['p90']:4.0f})")
 
 
-def funded(x, daily, most, trailing, guard, slip=1.2, months=12):
+def funded(x, daily, most, trailing, guard, slip=1.2, months=12, room=0.0, least=0.3):
     """A funded account started on every day: share still alive after `months` months, and the mean profit paid
     out over that time in % of the balance (profits withdrawn monthly, losses carried)."""
     alive, paid = [], []
@@ -93,6 +101,8 @@ def funded(x, daily, most, trailing, guard, slip=1.2, months=12):
         equity = peak = out = 0.0
         ok = True
         for i, r in enumerate(x[s:s + 21 * months]):
+            if room:
+                r *= min(1.0, max(least, (equity - (peak if trailing else 0.0) + most) / room))
             if guard and r < -guard:
                 r = -guard * slip
             equity += r
