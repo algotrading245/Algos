@@ -16,6 +16,18 @@ VWAP stop).  Cost in bp per round trip of the traded notional (an index CFD at F
 no commission).
 
     python research/noise_area_index.py
+
+Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
+  Before costs the rule replicates: S&P 500 Sharpe 1.00 (0.64 to 2017, 1.29 from 2018), Nasdaq 1.07 (0.76, 1.32),
+  about 10 bp a traded day and one trade a day (paper 1.33, 12 bp, 1.8 trades).  Costs decide it:
+    S&P 500  VM 1.0: 0.65 at 0.75 bp, 0.30 at 1.5 bp, -0.39 at 3 bp;  VM 1.5: 0.80 at 0.75 bp (0.70 | 0.88; 0.43
+             since 2022), 0.54 at 1.5 bp
+    Nasdaq   VM 1.0: 0.78 at 0.75 bp (0.43 | 1.08; 1.04 since 2022), 0.49 at 1.5 bp, -0.08 at 3 bp
+  The band-only stop (no TWAP) is worse; VM 2 trades too little.  Correlation with the Hydra legs -0.02; between the
+  two indices 0.62.  Half S&P 500 (VM 1.5) and half Nasdaq (VM 1.0): Sharpe 0.88 at 0.75 bp (0.61 | 1.08), 0.77 at
+  1 bp, 0.57 at 1.5 bp.  Added to Hydra with the weight that was best to 2017 (0.55 at 0.75 bp, 0.45 at 1 bp, 0.25
+  at 1.5 bp), the Sharpe from 2018 goes from 3.38 to 3.56, 3.53 and 3.46; AurumFunded's legs from 3.25 to 3.44 at
+  0.75 bp.  Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
 """
 import sys
 from pathlib import Path
