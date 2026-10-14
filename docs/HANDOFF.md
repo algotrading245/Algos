@@ -75,7 +75,9 @@ Open points for EA 2:
 Eight legs: quartet (gold session dip, bell fade, Tokyo fixing, EUR/USD midday), AUD/CAD grid, gold hold, month-end
 fix on dollar pairs, the same on yen crosses, stock-fall fix, Tokyo morning, day after a US holiday. Combined Sharpe
 3.0 (2.6 to 2017, 3.4 from 2018), volatility 24.5% a year. With a Sharpe of 3 the best reachable chance of 5x in a
-month is about 51%; the goal mode of the EA tests at 47% (preset `AurumHydra_5x_month.set`). More chance needs more
+month is about 51%; the goal mode of the EA tests at 47% (preset `AurumHydra_5x_month.set`). If the live Sharpe is lower, the best chance falls with it: 34% at 1.5, 29% at 1.0, and 20% with no edge at all
+(a fair bet sized to reach 5x does so one time in five), from P = N(N^-1(0.2) + Sharpe x sqrt(1/12)) (Browne 1999,
+reaching a goal by a deadline). More chance needs more
 Sharpe, which means new legs that are uncorrelated with these.
 
 Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction dip, burst fade, channel breakout,
