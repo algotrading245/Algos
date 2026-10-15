@@ -134,6 +134,15 @@ before cost, +3,746 at 0.75 bp, +2,307 at 1.5 bp, drawdown 17-23%, 701 trades), 
 AurumFunded if it holds. DAX, FTSE, Nikkei,
 currencies, oil, silver and gold do not add.
 
+**Candidate leg (2026-10-15): USD/JPY London breakout** (the retail "London breakout" concept, own test;
+`research/london_breakout.py`). Range = high and low of server 01:00-09:00; from 10:00 to 18:00 server follow the
+first 5-minute break of it, stop at the range's other side, flat at 18:00. Sharpe 0.97 at 0.8 bp a round trip
+(0.96 to 2017, 0.98 from 2018, positive in 16 of 17 years, 0.59 at 1.5 bp), every shifted window 0.73-1.17;
+upside breaks carry it (t 4.4). Correlation with the Hydra legs |r| <= 0.03. At 0.5% risk a trade Hydra 3.37 ->
+3.48 from 2018 (3.66 with the noise leg), AurumFunded 3.24 -> 3.34; at AurumFunded's volatility 0.125% risk a
+trade gives 3.30 with a lower drawdown (11.4% -> 10.8%). Gold, EUR/JPY and the other majors do not hold. Standalone
+MQL5 version `mql5/Experts/AurumBreakout/` (uncompiled): a Strategy Tester run on USDJPY, 2024-01 on, comes next.
+
 Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction dip, burst fade, channel breakout,
 deep and reinforcement learning replications, HFT, market intraday momentum (unconditional, both-agree, big-move),
 minute slot scan, daily ML, noise-area momentum, session-open drift, overnight-intraday reversal, scalp concepts,
