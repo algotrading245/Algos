@@ -61,6 +61,11 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   Sizing the narrow third up instead (x1.5 / 2 / 3): 1.27-1.32 to 2017 but 0.82-0.85 from 2018 against 0.83 - no.
   Other session (one check): a Tokyo breakout (server 02:00-09:00) of the previous New York afternoon's range
   (16:00-23:00) earns 0.58 before cost and -0.36 at 1.2 bp (-0.16 / -0.57) - the run after a break is London's.
+  Deflated Sharpe Ratio (Bailey, Lopez de Prado 2014; both sides at 1.2 bp, skew and kurtosis of the daily results):
+  2010-2026 Sharpe 0.97, the best of N lucky trials would show 0.55 at N = 47 (a generous count of the variants and
+  markets tried) and 0.62 at N = 100 - probability the edge is real 0.97 and 0.94.  From 2018 alone (0.83 over eight
+  years) 0.61 at N = 47: too short a sample on its own.  The same break-and-run in every yen market is extra evidence
+  this test does not count.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
