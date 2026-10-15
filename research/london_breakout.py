@@ -17,7 +17,8 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   USD/JPY robustness (one-off checks): range 0-9, 2-9, 1-8, 1-10 and entry 9-18, 11-18, 10-20 give 0.93-1.17 with
   both halves 0.74-1.28; entry only to 16:00 0.73; no range filter 1.00; at 1.5 bp instead of 0.8 bp 0.59.  Upside
   breaks carry it: +0.093 R a trade (t 4.4, +0.109 / +0.079), downside +0.023 R (t 1.2); USD/JPY's drift over the
-  same hours on all days is +0.5 bp (t 0.8), so it is the break, not a London drift.  Correlation with every Hydra
+  same hours on all days is +0.5 bp (t 0.8), so it is the break, not a London drift.  On 1-minute bars instead of 5:
+  0.93 (0.87 / 0.98, 2024 on 1.13).  Correlation with every Hydra
   leg |r| <= 0.03.
   Added at 0.5% risk a trade: Hydra 2.60 / 3.37 -> 2.80 / 3.48 (to 2017 / from 2018), with the noise-area leg 3.66;
   AurumFunded 2.66 / 3.24 -> 2.88 / 3.34, with the noise leg 3.53.  The weight best to 2017 alone (2x) gives Hydra
