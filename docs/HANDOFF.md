@@ -167,7 +167,10 @@ no FTMO failures even at half the edge; the instant account's median 1.4 months 
 only 40% of the profit of trades executed within 5 minutes of a listed high-impact release (losses in full; help
 centre article 11641410). The breakout trades through 8:30 New York (server 15:30): entries within 15 minutes of it
 are 8% of trades and its best ones (+0.125 R against +0.049 R, both halves, 2010-2026), so no news filter - on the
-instant account the rule trims part of their profit on release days. For AurumHydra's 5x month: Sharpe from 2018
+instant account the rule trims part of their profit on release days. Consistency: sources disagree on whether Stellar Instant has a 40%
+best-day rule; with it the first payout's median goes from 1.4 to 4.3 months (`tools/prop_consistency.py`), and
+neither a later claim nor a larger size helps. Confirm with FundedNext before buying - it decides the instant account's
+speed (FTMO stays at ~9.6 months). For AurumHydra's 5x month: Sharpe from 2018
 3.37 -> 3.71 with both legs (breakout at 0.5% a trade, weight fitted to 2017), so P = N(N^-1(0.2) + S sqrt(1/12))
 goes from 55% to 59%.
 
