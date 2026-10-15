@@ -52,6 +52,8 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   US index CFDs, same rules, both sides (one check whether it is a risk-asset effect): S&P 500 0.03 and Nasdaq -0.01
   before cost, negative after - it is not.  DAX: 0.87 at 1 bp, but histdata has its Asian hours only from 2019 with
   2021-2022 missing and the years alternate (2023 -1.2, 2026 -1.6) - too thin to judge, not a candidate.
+  After the exit (one check): fading USD/JPY from the London fix (18:00) to 22:00 on days it closed outside its range
+  earns -0.4 bp (above) and +1.1 bp (below), t <= 1.4, signs differ by half - no post-fix reversal to add.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
