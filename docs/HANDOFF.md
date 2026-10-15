@@ -147,6 +147,10 @@ CAD/JPY 1.21, AUD/JPY 0.63) and the Nikkei (1.37) show it in both halves - a yen
 3.48 from 2018 (3.66 with the noise leg), AurumFunded 3.24 -> 3.34; at AurumFunded's volatility 0.125% risk a
 trade gives 3.30 with a lower drawdown (11.4% -> 10.8%). Gold, EUR/JPY and the other majors do not hold. Standalone
 MQL5 version `mql5/Experts/AurumBreakout/` (uncompiled): a Strategy Tester run on USDJPY, 2024-01 on, comes next.
+AurumFunded 1.03 carries the same leg, off by default (`InpBreakRiskPct=0`; 0.125 is the size tested next to the
+other legs, a quarter of the fix leg's risk): server hours 01:00-09:00 range, 10:00-18:00 trading, each side once a
+day at market when the ask / bid reaches the range, magic +26 / +27, sized through `SizeMult()` so the prop cushion
+and guards apply, closed by `CloseEverything()`. Uncompiled like the rest of 1.02-1.03.
 
 Both candidate legs in the prop simulators at AurumFunded's volatility (`tools/prop_candidates.py`, breakout on
 both sides): FTMO first payout within 12 months 67% -> 72% (breakout), 72% (noise), 75% (both) at 70% of the edge,

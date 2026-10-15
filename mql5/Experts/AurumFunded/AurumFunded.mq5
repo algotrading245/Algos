@@ -62,7 +62,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.02"
+#property version   "1.03"
 #include <Math\Stat\Normal.mqh>
 
 #include <Trade\Trade.mqh>
@@ -200,6 +200,16 @@ input int    InpAfterHHMM       = 905;   // Buy the dollar at this time, HHMM (m
 input int    InpAfterExitHHMM   = 1500;  // Close at this time, HHMM (minutes a multiple of 5)
 input int    InpAfterEntrySec   = 300;   // No entry later than this after the start, seconds
 
+input group "USD/JPY London breakout (server time; off until its own Strategy Tester run, research/london_breakout.py)"
+input double InpBreakRiskPct    = 0.0;   // Loss of each side at its stop, % of balance (0 = off; 0.125 = a quarter of the fix leg)
+input int    InpBreakFromHHMM   = 100;   // USD/JPY range from this time, HHMM
+input int    InpBreakToHHMM     = 900;   // ... to this time, HHMM
+input int    InpBreakStartHHMM  = 1000;  // Buy above the range high / sell below the low from this time, HHMM
+input int    InpBreakExitHHMM   = 1800;  // Close both sides at this time, HHMM
+input int    InpBreakFilterDays = 60;    // Days in the average range
+input double InpBreakMinRange   = 0.25;  // No breakout when the range is below this multiple of its average
+input double InpBreakMaxRange   = 3.0;   // ... or above this one
+
 input group "Overnight drift (stock index after a weak US cash session, server time, no stop)"
 input double InpDriftLev        = 0.0;   // Index position per unit of size, x equity (0 = off)
 input double InpDriftMaxLev     = 150.0; // Largest index position, x equity
@@ -232,7 +242,7 @@ input bool   InpUseModel        = true;  // Scale each trade by the model's scor
 input double InpModelTilt       = 0.5;   // Size runs from 1 - tilt to 1 + tilt times the leg's size (0 to 1)
 
 input group "Execution"
-input long   InpMagic           = 245100; // First magic number: +0 session, +1 dip, +2 bell, +3 Tokyo, +4 midday, +5 fast, +6 hold, +11.. grid, +20 and +21 fix, +22 stock-fall fix, +23 Tokyo morning, +24 after a holiday, +25 overnight drift
+input long   InpMagic           = 245100; // First magic number: +0 session, +1 dip, +2 bell, +3 Tokyo, +4 midday, +5 fast, +6 hold, +11.. grid, +20 and +21 fix, +22 stock-fall fix, +23 Tokyo morning, +24 after a holiday, +25 overnight drift, +26 and +27 USD/JPY breakout
 input int    InpGoldDeviation   = 30;     // Max slippage on gold, points
 input int    InpFxDeviation     = 10;     // Max slippage on the currency pairs, points
 
@@ -252,6 +262,7 @@ input int    InpFxDeviation     = 10;     // Max slippage on the currency pairs,
 #define MORN_MAGIC 23      // the Tokyo-morning trades have magic InpMagic+23
 #define AFTER_MAGIC 24     // the after-holiday trades have magic InpMagic+24
 #define DRIFT_MAGIC 25     // the overnight-drift trade has magic InpMagic+25
+#define BREAK_MAGIC 26     // the breakout trades have magic InpMagic+26 (long) and InpMagic+27 (short)
 #define DRIFT_DAYS 250     // cash sessions the last one is ranked against
 #define MORN_PAIRS 3
 #define FIX_PAIRS 5
@@ -296,6 +307,11 @@ bool     g_goalOver=false;  // the round has ended and InpGoalStop asks to close
 bool     g_driftOn=false;  // the stock index is there and the overnight-drift leg has a size
 datetime g_driftDone=0;    // day whose overnight-drift entry has been dealt with
 datetime g_afterDone[FIX_PAIRS];     // per pair: day that has been dealt with
+bool     g_breakOn=false;  // the breakout leg has a size
+datetime g_breakDay=0;     // day the range below belongs to
+bool     g_breakOk=false;  // that day's range exists and passed the filter
+double   g_breakHi=0.0,g_breakLo=0.0;
+datetime g_breakTraded[2]; // per side (long, short): day a trade was opened
 
 int HHMM(datetime t)
   {
@@ -1818,6 +1834,122 @@ void After()
      }
   }
 
+// High, low and last close of InpYen's M1 bars from InpBreakFromHHMM to InpBreakToHHMM of 'day'. False when more
+// than 5/12 of the minutes are missing.
+bool BreakRange(datetime day,double &hi,double &lo,double &last)
+  {
+   double h[],l[],c[];
+   datetime from=day+HHMMSec(InpBreakFromHHMM),to=day+HHMMSec(InpBreakToHHMM)-60;
+   int need=(HHMMSec(InpBreakToHHMM)-HHMMSec(InpBreakFromHHMM))/60*7/12;
+   int n=CopyHigh(InpYen,PERIOD_M1,from,to,h);
+   if(n<need || CopyLow(InpYen,PERIOD_M1,from,to,l)!=n || CopyClose(InpYen,PERIOD_M1,from,to,c)!=n)
+      return(false);
+   hi=h[ArrayMaximum(h)];
+   lo=l[ArrayMinimum(l)];
+   last=c[n-1];
+   return(hi>lo && last>0);
+  }
+
+// USD/JPY London breakout: from InpBreakStartHHMM buy once the ask reaches the high of the morning range and sell
+// once the bid reaches its low, each side once a day, stop at the range's other side, both closed at
+// InpBreakExitHHMM. Days whose range is far from its InpBreakFilterDays-day average are skipped.
+void Breakout()
+  {
+   if(!g_breakOn)
+      return;
+   datetime now=TimeCurrent(),today=DayOf(now),opened;
+   string sym=InpYen;
+   for(int s=0; s<2; s++)
+      if(HeldLots(sym,InpMagic+BREAK_MAGIC+s,opened)>0 && now>=DayOf(opened)+HHMMSec(InpBreakExitHHMM))
+         CloseAll(sym,InpMagic+BREAK_MAGIC+s);
+   datetime start=today+HHMMSec(InpBreakStartHHMM);
+   if(now<start || now>=today+HHMMSec(InpBreakExitHHMM))
+      return;
+   MqlDateTime t;
+   TimeToStruct(today,t);
+   if(t.day_of_week<1 || t.day_of_week>5)
+      return;
+   if(g_breakDay!=today)
+     {
+      g_breakDay=today;
+      g_breakOk=false;
+      double last,h,l,c,sum=0.0;
+      int n=0;
+      if(!BreakRange(today,g_breakHi,g_breakLo,last))
+        {
+         PrintFormat("AurumFunded: no USD/JPY range for today in the M1 history, no breakout");
+         return;
+        }
+      for(int k=1; k<=2*InpBreakFilterDays+20 && n<InpBreakFilterDays; k++)
+        {
+         datetime d=today-k*86400;
+         MqlDateTime u;
+         TimeToStruct(d,u);
+         if(u.day_of_week<1 || u.day_of_week>5 || !BreakRange(d,h,l,c))
+            continue;
+         sum+=(h-l)/c;
+         n++;
+        }
+      if(n<InpBreakFilterDays/2 || sum<=0)
+        {
+         PrintFormat("AurumFunded: fewer than %d days of USD/JPY M1 history, no breakout today",InpBreakFilterDays/2);
+         return;
+        }
+      double ratio=(g_breakHi-g_breakLo)/last/(sum/n);
+      g_breakOk=(ratio>=InpBreakMinRange && ratio<=InpBreakMaxRange);
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      PrintFormat("AurumFunded: USD/JPY range %s-%s, %.2fx its %d-day average%s",DoubleToString(g_breakLo,dg),
+                  DoubleToString(g_breakHi,dg),ratio,n,g_breakOk ? "" : ", no breakout today");
+     }
+   if(!g_breakOk)
+      return;
+   MqlTick q;
+   if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0)
+      return;
+   double point=SymbolInfoDouble(sym,SYMBOL_POINT);
+   int digits=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+   for(int s=0; s<2; s++)
+     {
+      int side=(s==0 ? 1 : -1);
+      long magic=InpMagic+BREAK_MAGIC+s;
+      if(g_breakTraded[s]==today || (side>0 ? q.ask<g_breakHi : q.bid>g_breakLo))
+         continue;
+      if(HeldLots(sym,magic,opened)>0 || TradedSince(sym,magic,start))
+        {
+         g_breakTraded[s]=today;
+         continue;
+        }
+      if(q.ask-q.bid>InpFxMaxSpread*point)
+         continue;             // tried again on the next tick
+      double px=(side>0 ? q.ask : q.bid);
+      double sl=NormalizeDouble(side>0 ? g_breakLo : g_breakHi,digits);
+      double dist=side*(px-sl);
+      if(dist<=SymbolInfoInteger(sym,SYMBOL_TRADE_STOPS_LEVEL)*point+q.ask-q.bid)
+        {
+         g_breakTraded[s]=today;           // already through the other side: no room for the stop
+         continue;
+        }
+      double lots=RiskLots(sym,side,px,dist,SizeMult()*InpBreakRiskPct);
+      if(lots<=0)
+        {
+         PrintFormat("AurumFunded: balance too small for the minimum lot of %s at a stop of %s, no breakout",sym,
+                     DoubleToString(dist,digits));
+         g_breakTraded[s]=today;
+         continue;
+        }
+      Prepare(sym,magic);
+      bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,"AurumFunded breakout") : g_trade.Sell(lots,sym,0.0,sl,0.0,"AurumFunded breakout"));
+      if(!ok || g_trade.ResultDeal()==0)
+        {
+         PrintFormat("AurumFunded: breakout order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+         continue;
+        }
+      PrintFormat("AurumFunded: USD/JPY broke its range, %s %.2f lots at %s, stop %s",side>0 ? "bought" : "sold",lots,
+                  DoubleToString(g_trade.ResultPrice(),digits),DoubleToString(sl,digits));
+      g_breakTraded[s]=today;
+     }
+  }
+
 // Move of the stock index over the US cash session of 'day' (16:00 to 23:00) as a fraction of the price. False when
 // that day has no bar at the start.
 bool DriftMove(datetime day,double &move)
@@ -1942,6 +2074,9 @@ bool CloseEverything()
          ok=CloseAll(g_fixSym[i],InpMagic+AFTER_MAGIC) && ok;
    if(g_driftOn)
       ok=CloseAll(InpStocks,InpMagic+DRIFT_MAGIC) && ok;
+   if(g_breakOn)
+      for(int s=0; s<2; s++)
+         ok=CloseAll(InpYen,InpMagic+BREAK_MAGIC+s) && ok;
    return(ok);
   }
 
@@ -2130,6 +2265,7 @@ void Run()
    Fall();
    Morning();
    After();
+   Breakout();
    Drift();
   }
 
@@ -2158,7 +2294,11 @@ int OnInit()
       InpPropStart<0 || InpPropTargetPct<0 || InpPropMinDays<0 || InpPropDayStopPct<=0 || InpPropMaxStopPct<=0 ||
       InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropFastDays<21 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
       InpPropResetHHMM>2359 || InpPropResetHHMM%100>59 || InpGoldStopPct<0 ||
-      InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0)
+      InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0 ||
+      InpBreakRiskPct<0 || InpBreakFromHHMM<0 || InpBreakFromHHMM%100>59 || InpBreakToHHMM%100>59 || InpBreakStartHHMM%100>59 ||
+      InpBreakExitHHMM%100>59 || InpBreakExitHHMM>2359 || HHMMSec(InpBreakToHHMM)<=HHMMSec(InpBreakFromHHMM)+3600 ||
+      HHMMSec(InpBreakStartHHMM)<HHMMSec(InpBreakToHHMM) || HHMMSec(InpBreakExitHHMM)<=HHMMSec(InpBreakStartHHMM) ||
+      InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange)
       return(INIT_PARAMETERS_INCORRECT);
    string syms[3];
    syms[0]=InpGold; syms[1]=InpYen; syms[2]=InpEuro;
@@ -2230,6 +2370,11 @@ int OnInit()
    ArrayInitialize(g_afterDone,0);
    g_driftOn=(InpDriftLev>0);
    g_driftDone=0;
+   g_breakOn=(InpBreakRiskPct>0);
+   g_breakDay=0;
+   ArrayInitialize(g_breakTraded,0);
+   if(g_breakOn)
+      iBars(InpYen,PERIOD_M1);
    if(g_driftOn && !SymbolSelect(InpStocks,true))
      {
       PrintFormat("AurumFunded: stock index %s is not available, the overnight-drift leg is off",InpStocks);
