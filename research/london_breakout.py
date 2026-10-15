@@ -44,6 +44,11 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   1.22), CAD/JPY 1.21 (1.01 / 1.41), AUD/JPY 0.63 (0.57 / 0.68), correlation 0.21-0.42 with the USD/JPY leg; at
   their spreads (1.4-2 bp) 0.72, 0.19, 0.21, -0.13.  With the Nikkei, every yen market shows the same break-and-run
   in both halves, so the USD/JPY result is not a lone fluke - but only USD/JPY is cheap enough to trade.
+  Yen-cross agreement filter (rule fixed in advance: take the USD/JPY break only if at least two of EUR/JPY,
+  GBP/JPY, AUD/JPY, CAD/JPY broke their own range the same way by then), at 1.2 bp: kept 3,128 of 4,965 trades,
+  Sharpe 1.34 (1.63 / 1.07) against 1.01 (1.15 / 0.88); the dropped trades earn 0.30.  In the portfolios it changes
+  nothing that matters (AurumFunded 3.29 vs 3.30 from 2018, drawdown 10.5% vs 10.8%; Hydra with both legs 3.64 vs
+  3.63) because a third fewer trades offset the better ones - not worth a multi-symbol EA for now.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
