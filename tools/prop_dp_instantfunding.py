@@ -18,6 +18,8 @@ Result (2026-10-15), first payout:
   blocks and 0.5% steps (FAST_IF in AurumFunded 1.03, used with InpPropFast when the target is 0 and the lock is on)
   the table gives the same: 28 / 50 / 62%, median 2.0, none lost; half the edge 2.9, none lost.  The Instant Funding
   preset switches it on (InpPropFast=true, InpPropFastDays=42).
+  Weaker edges with dips (one-off check): at 30% of the edge cushion / hybrid lose 12.8% / 13.6% of accounts (median
+  3.1 / 2.6 months), at no edge 52.6% / 52.5% - the hybrid adds no real risk; the loss rate is the edge's.
 """
 import numpy as np
 
