@@ -4,6 +4,8 @@
 ; size 0.3 with the cushion rule. tools/prop_instant.py, 70% of the edge, claiming on the 14-day cycle once +1%:
 ; first payout within 1 month 43%, 2 months 62%, 3 months 74%, median 1.4 months, no account lost before it;
 ; half the edge with pessimistic intraday dips: 59% within 3 months, 1.1% lost.
+; If FundedNext applies a 40% best-day consistency rule to this account (sources disagree), the median becomes
+; 4.3 months (tools/prop_consistency.py) - then AurumFunded_InstantFunding_pro.set is the faster route.
 ; The firm may trail intraday equity peaks; the EA trails day-start equity, so keep the 1.5% gap.
 InpPropTargetPct=0.0
 InpPropRound=1
