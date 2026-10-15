@@ -49,6 +49,9 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   Sharpe 1.34 (1.63 / 1.07) against 1.01 (1.15 / 0.88); the dropped trades earn 0.30.  In the portfolios it changes
   nothing that matters (AurumFunded 3.29 vs 3.30 from 2018, drawdown 10.5% vs 10.8%; Hydra with both legs 3.64 vs
   3.63) because a third fewer trades offset the better ones - not worth a multi-symbol EA for now.
+  US index CFDs, same rules, both sides (one check whether it is a risk-asset effect): S&P 500 0.03 and Nasdaq -0.01
+  before cost, negative after - it is not.  DAX: 0.87 at 1 bp, but histdata has its Asian hours only from 2019 with
+  2021-2022 missing and the years alternate (2023 -1.2, 2026 -1.6) - too thin to judge, not a candidate.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
