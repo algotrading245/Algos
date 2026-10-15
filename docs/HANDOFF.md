@@ -176,7 +176,11 @@ first payout after 14 days once +5%, then weekly; no weekend holding without an 
 now). `tools/prop_instantfunding.py`: size 0.5 gives a median 2.5 months to the first payout and no lost accounts
 even at half the edge; size 0.7 2.0 months (6.7% lost at half the edge). EA policy to confirm with them first. AurumFunded 1.03 follows the tightening with
 `InpPropLockPct=5` / `InpPropLockStopPct=3.5` (final stop -8.5% until +5% is first reached, then -3.5%); a fixed
--4.5% stop instead would lose 18% of accounts at half the edge. Preset `AurumFunded_InstantFunding_pro.set`. For AurumHydra's 5x month: Sharpe from 2018
+-4.5% stop instead would lose 18% of accounts at half the edge. Preset `AurumFunded_InstantFunding_pro.set`. Instant Funding also has an "Account Drawdown": open positions losing a set % of the starting
+balance together are closed by the firm (2% in their example; first time the split falls to 50%, second time the
+account is lost). At size 0.5 AurumFunded's legs close a day beyond -2% about 0.5 times a year (-1.5%: 1.7 times),
+more often intraday; so the EA has `InpPropFloatPct` (closes everything for the day first, 1.7 in the preset) - ask
+the firm for PRO's figure. For AurumHydra's 5x month: Sharpe from 2018
 3.37 -> 3.71 with both legs (breakout at 0.5% a trade, weight fitted to 2017), so P = N(N^-1(0.2) + S sqrt(1/12))
 goes from 55% to 59%.
 

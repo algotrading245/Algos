@@ -82,6 +82,7 @@ input double InpPropMaxStopPct  = 8.5;   // Final stop: close everything and hal
 input bool   InpPropTrailing    = false; // The firm's maximum loss trails the highest day-start balance
 input double InpPropLockPct     = 0.0;   // Lock: once equity is this far up, % of the initial balance, the final stop moves (0 = off; Instant Funding 5)
 input double InpPropLockStopPct = 3.5;   // ... to this loss, % of the initial balance (Instant Funding's limit becomes 5)
+input double InpPropFloatPct    = 0.0;   // Floating-loss stop: open positions this far in loss together, % of the initial balance, close all for the day (0 = off)
 input double InpPropRoomPct     = 8.5;   // Cushion sizing: size x (equity - final stop) / this, % of the initial balance (0 = off)
 input double InpPropMinSize     = 0.3;   // ... but not below this share
 input double InpPropCap         = 1.4;   // ... and not above this multiple
@@ -2442,6 +2443,13 @@ bool PropGuard()
       PrintFormat("AurumFunded: equity %.2f is %.1f%% of the initial balance under the day's start %.2f, closing everything until the firm's next day",
                   eq,InpPropDayStopPct,g_propDayBal);
      }
+   if(g_propClose==0 && !g_propDayStop && InpPropFloatPct>0 && eq-bal<=-g_propStart*InpPropFloatPct/100.0)
+     {
+      g_propDayStop=true;
+      GlobalVariableSet(PropKey("daystop"),1.0);
+      PrintFormat("AurumFunded: open positions are %.2f in loss together (%.1f%% of the initial balance), closing everything until the firm's next day",
+                  bal-eq,InpPropFloatPct);
+     }
    bool clock=ClockOk();
    if(g_propClose==0 && !g_propDayStop && clock)
       return(true);
@@ -2532,7 +2540,7 @@ int OnInit()
       InpDriftLev<0 || InpDriftMaxLev<=0 || InpDriftHHMM<0 || InpDriftHHMM%100>59 || InpDriftExitHHMM%100>59 || InpDriftExitHHMM>2359 ||
       HHMMSec(InpDriftExitHHMM)<HHMMSec(InpDriftHHMM)+300 || InpDriftEntrySec<1 || InpDriftMaxSpread<=0 ||
       InpPropStart<0 || InpPropTargetPct<0 || InpPropMinDays<0 || InpPropDayStopPct<=0 || InpPropMaxStopPct<=0 ||
-      InpPropLockPct<0 || InpPropLockStopPct<=0 || InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropFastDays<21 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
+      InpPropLockPct<0 || InpPropLockStopPct<=0 || InpPropFloatPct<0 || InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropFastDays<21 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
       InpPropResetHHMM>2359 || InpPropResetHHMM%100>59 || InpGoldStopPct<0 ||
       InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0 ||
       InpBreakRiskPct<0 || InpBreakFromHHMM<0 || InpBreakFromHHMM%100>59 || InpBreakToHHMM%100>59 || InpBreakStartHHMM%100>59 ||

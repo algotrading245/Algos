@@ -6,6 +6,9 @@
 ; firm's lines; own day stop 3%; size 0.5 with the cushion rule. tools/prop_instantfunding.py, 70% of the edge:
 ; first payout within 1 / 2 / 3 months 20 / 41 / 57%, median 2.5 months, none lost; half the edge with pessimistic
 ; intraday dips: median 3.9 months, none lost.  Size 0.7: median 2.0 months, 6.7% lost at half the edge.
+; Account Drawdown: the firm closes everything when open positions lose a set % of the starting balance together
+; (2% in their help page's example; first time the split drops to 50%, second time the account is lost). Ask them the
+; PRO figure and set InpPropFloatPct about 0.3 below it, so the EA closes first; 1.7 assumes their 2%.
 ; Weekend holding needs their add-on; this preset's legs close before the weekend (grid and gold hold are off).
 InpPropTargetPct=0.0
 InpPropRound=1
@@ -15,6 +18,7 @@ InpPropMaxStopPct=8.5
 InpPropTrailing=false
 InpPropLockPct=5.0
 InpPropLockStopPct=3.5
+InpPropFloatPct=1.7
 InpPropRoomPct=8.5
 InpPropCap=1.4
 InpPropResetHHMM=0
