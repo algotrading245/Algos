@@ -33,6 +33,9 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   fire once a day, instead of the first break only.  Upside only 1.33 / 1.06, downside only 0.62 / 0.48, both
   1.40 / 1.08 (first break only, same series, 1.09 / 0.93); in AurumFunded at its volatility with 0.125% a trade
   3.32 from 2018 and a lower drawdown (11.4% -> 10.6%).  AurumBreakout 1.01 trades both sides by default.
+  Nikkei 225 CFD with the same rules, both sides (one pre-set check of the yen link): before cost 1.37 (1.86 /
+  0.99), correlation 0.25 with the USD/JPY breakout - the same effect shows in the yen's stock market; at its 2 bp
+  spread 0.73 (1.20 / 0.37), at 3 bp 0.41 (0.87 / 0.06): too costly as a leg.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
