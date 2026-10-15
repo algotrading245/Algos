@@ -66,6 +66,8 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   markets tried) and 0.62 at N = 100 - probability the edge is real 0.97 and 0.94.  From 2018 alone (0.83 over eight
   years) 0.61 at N = 47: too short a sample on its own.  The same break-and-run in every yen market is extra evidence
   this test does not count.
+  Exit time (one check, both sides at 1.2 bp, to 2017 / from 2018): 16:00 1.10 / 0.41, 18:00 1.17 / 0.84, 20:00
+  0.79 / 0.94, 22:00 0.74 / 0.95 - 18:00 (the London fixing) is the choice the years to 2017 make; it stays.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
