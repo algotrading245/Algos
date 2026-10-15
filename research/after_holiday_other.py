@@ -15,6 +15,10 @@ Result (2026-10-15): rejected, the effect is the dollar's.  USD after US holiday
 (t 3.4; +7.0 to 2017, +8.2 from 2018), other days +0.5 bp.  JPY after Japanese holidays: London morning +2.9 bp
 (t 1.3; +3.1 / +2.7), Tokyo morning +0.4 bp - about 2 bp after cost on 11 days a year, not worth a leg.  GBP after
 English bank holidays: London morning -2.5 bp, Tokyo hours +1.7 bp (t 1.8) - nothing.
+One-off checks on the US leg itself: every dollar pair and gold move the same way after US holidays (per pair +3.9
+to +7.3 bp, gold +6.6 bp t 2.1, silver +14.7 bp); the day before a US holiday has no consistent sign.  NZD/USD and
+USD/JPY were already tried for the leg (tools/backtest_hydra.py AFTER); short gold with the leg's stop rule earns
+t 1.2 and leaves Hydra at 3.37 from 2018 at half or full size, so the leg stays at its five pairs.
 """
 import sys
 from pathlib import Path
