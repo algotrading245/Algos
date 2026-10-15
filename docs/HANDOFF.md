@@ -1,7 +1,7 @@
 # Handoff: where the two-EA project stands
 
 For a session that picks this work up without the earlier conversation (for example a cloud session). Last updated
-2026-10-14.
+2026-10-15.
 
 ## Goal
 
@@ -24,6 +24,24 @@ Rules of the work:
 - Order: Python backtest, then MT5 Strategy Tester, then demo, then live.
 - Commit and push to the session's working branch after each finished piece of work (earlier sessions:
   `claude/exciting-hopper-r6sdmc`; the cloud session of 2026-10-14: `claude/intelligent-turing-j0nrmf`).
+
+## Current state (2026-10-15, short)
+
+- **EAs in the repo:** AurumFunded 1.03 and AurumHydra 1.33 (1.02-1.03 / 1.33 written in the cloud without a compiler;
+  bracket balance checked, not compiled), standalone AurumBreakout 1.01 and AurumNoise 1.01 (uncompiled).
+- **Candidate legs, off by default in both main EAs until their tester runs:** USD/JPY London breakout (Sharpe ~1.2 /
+  0.8 at the real 1.2 bp, a yen effect seen in every yen market) and noise-area momentum on the S&P 500 and Nasdaq
+  (~0.7 / 0.9 at their spreads). Together: AurumFunded 3.24 -> ~3.5 from 2018, Hydra 3.37 -> ~3.6-3.7 (5x-month chance
+  ~55% -> ~59%).
+- **Prop routes** (simulated median to the first payout at 70% of the edge): FundedNext Stellar Instant 1.4 months (4.3
+  if it has a 40% consistency rule), Instant Funding PRO 2.5 months (preset with the Smart Drawdown lock and a
+  floating-loss stop), FTMO 1-Step 7.8 months, FTMO 2-Step 9.6 months. Presets for all four in `mql5/Experts/AurumFunded/`.
+- **Waiting on the owner:** Strategy Tester runs (README "Tests to run next"); FundedNext: consistency rule on Stellar
+  Instant?; Instant Funding: PRO's Account Drawdown %, EA policy, server clock; FTMO: the 1-Step's maximum loss (10% or 6%).
+- **Research this session** (all in `research/` and the rejected list below): volatility-managed sizing, DQN, Deep
+  Momentum Network, exponentiated-gradient weights, gold Forecast-to-Fill (look-ahead), ORB, night scalper, grids on
+  15 pairs, cross-session metals, shocks, pairs, holiday transfers, SGE, oil-CAD, Bitcoin weekends - rejected; the
+  London breakout and the tick/spread checks of both candidates - kept.
 
 ## EA 2: AurumFunded (v1.00, compiles with 0 errors and 0 warnings, not yet run in the Strategy Tester)
 
