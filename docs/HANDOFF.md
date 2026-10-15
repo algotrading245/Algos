@@ -92,6 +92,9 @@ months from 74% to 76%: worth having, but the challenge's speed is set by earnin
 **Deadline sizing (`tools/prop_dp.py`, dynamic programming = what an RL agent would learn):** passes both phases
 within 9 months 82% of the time at 70% of the edge with 1% failed (cushion rule 57%, 0%), but fails about 20% if the
 live edge is only half. Use it only once live results confirm the edge; until then the cushion rule.
+AurumFunded 1.02 has it as `InpPropFast` (off by default) in a safe form: the table only while equity is at or above
+the phase's start, the cushion rule below - both phases within 9 months 67% (cushion rule 57%), median 7.3 months
+(8.0), no failure even at half the edge with pessimistic dips. Not yet run in the Strategy Tester.
 
 Open points for EA 2:
 

@@ -28,6 +28,15 @@
 //|   the time against 37% with the old rule (room 6.5, cap 1),      |
 //|   median 9.6 months against 10.6, and with half the edge and a   |
 //|   pessimistic intraday stand-in no path failed against 7.8%.     |
+//| - Fast sizing (InpPropFast, off by default): while equity is at  |
+//|   or above the phase's start, size follows a table solved by     |
+//|   dynamic programming for passing both phases within 9 months    |
+//|   (tools/prop_dp.py); below the start the cushion rule sizes. On |
+//|   the historical paths at 70% of the edge both phases passed     |
+//|   within 9 months 67% of the time (cushion rule alone 57%),      |
+//|   median 7.3 months (8.0), and no path failed, with half the edge|
+//|   and pessimistic intraday dips none either. Switch it on only   |
+//|   after live results confirm the edge.                           |
 //| - Each gold unit carries a stop at the broker that loses         |
 //|   InpGoldStopPct of equity, for when the terminal is down; every |
 //|   other leg already has one.                                     |
@@ -53,7 +62,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.01"
+#property version   "1.02"
 #include <Math\Stat\Normal.mqh>
 
 #include <Trade\Trade.mqh>
@@ -74,6 +83,9 @@ input bool   InpPropTrailing    = false; // The firm's maximum loss trails the h
 input double InpPropRoomPct     = 8.5;   // Cushion sizing: size x (equity - final stop) / this, % of the initial balance (0 = off)
 input double InpPropMinSize     = 0.3;   // ... but not below this share
 input double InpPropCap         = 1.4;   // ... and not above this multiple
+input bool   InpPropFast        = false; // Fast sizing while in profit (tools/prop_dp.py); only once live results confirm the edge
+input datetime InpPropFastStart = 0;     // ... day the challenge was bought, counts the 9 months (0 = the phase's start)
+input int    InpPropFastDays    = 189;   // ... trading days in which both phases are aimed for
 input double InpPropCoast       = 0.1;   // Size multiple while the target is reached and trading days are missing
 input int    InpPropResetHHMM   = 100;   // The firm's day starts at this server time (FTMO: midnight CE(S)T = 01:00)
 input bool   InpEuClock         = true;  // Server clock follows European summer time (false = New York + 7 hours all year)
@@ -384,11 +396,61 @@ double PropFloor()
    return((InpPropTrailing ? g_propPeak : g_propStart)-g_propStart*InpPropMaxStopPct/100.0);
   }
 
+// Fast sizing (InpPropFast): size by 21-day block of days left (row 0 = the last block) and 0.5% step of equity
+// from -8.5%, solved by tools/prop_dp.py (9-month deadline, a failure counts -3, sizes up to 1.0, 70% of the edge).
+// Used only while equity is at or above the phase's start; below it the cushion rule sizes.
+const double FAST_P1[9][38]=
+  {
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.60,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.50,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.70,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.60,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.60,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.60,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.60,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.50,0.60,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.50,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.50,0.60,0.60,0.70,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.70,0.60,0.50,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.40,0.50,0.60,0.60,0.70,0.70,0.70,0.70,0.85,0.85,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.70,0.60,0.40,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.40,0.50,0.50,0.60,0.60,0.60,0.70,0.70,0.70,0.70,0.70,0.85,1.00,1.00,0.85,0.85,0.85,1.00,1.00,0.85,0.85,0.85,0.85,0.85,0.85,0.70,0.70,0.60,0.40,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.40,0.50,0.50,0.60,0.60,0.60,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.85,0.85,0.85,0.70,0.70,0.85,0.85,0.70,0.70,0.70,0.70,0.70,0.70,0.60,0.40,0.20}
+  };
+const double FAST_P2[9][28]=
+  {
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.60,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.60,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.50,0.30,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.50,0.60,0.70,0.70,0.70,0.70,0.85,0.85,0.85,0.85,0.85,0.85,0.70,0.70,0.70,0.60,0.60,0.50,0.40,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.50,0.50,0.60,0.60,0.60,0.60,0.70,0.70,0.70,0.60,0.60,0.60,0.60,0.50,0.50,0.40,0.40,0.30,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.40,0.40,0.50,0.50,0.50,0.50,0.60,0.60,0.60,0.60,0.50,0.50,0.50,0.40,0.40,0.40,0.30,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.40,0.40,0.40,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.40,0.40,0.40,0.40,0.30,0.30,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.20,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.30,0.20,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.30,0.30,0.20,0.20,0.20,0.20,0.20}
+  };
+
+// Size the fast table asks for (absolute, as InpSizeMult), or -1 when it does not apply: not enabled, a funded
+// account, or equity below the phase's start.
+double FastSize()
+  {
+   if(!InpPropFast || InpPropTargetPct<=0 || g_propStart<=0)
+      return(-1.0);
+   double eq=(AccountInfoDouble(ACCOUNT_EQUITY)/g_propStart-1.0)*100.0;
+   if(eq<0)
+      return(-1.0);
+   bool first=(InpPropTargetPct>=10.0);
+   datetime from=(InpPropFastStart>0 ? InpPropFastStart : g_propSince);
+   int left=InpPropFastDays-Weekdays(DayOf(from),DayOf(TimeCurrent()));
+   int blk=MathMax(0,MathMin(8,(MathMax(left,1)-1)/21));
+   int cols=(first ? 38 : 28);
+   int k=(int)MathRound((MathMin(eq,0.5*(cols-1)-8.5)+8.5)/0.5);
+   k=MathMax(0,MathMin(cols-1,k));
+   return(first ? FAST_P1[blk][k] : FAST_P2[blk][k]);
+  }
+
 // Size multiple of the guard: the cushion above the final stop over InpPropRoomPct, between InpPropMinSize and
 // InpPropCap, and InpPropCoast while only trading days are missing.
 double PropSize()
   {
    double f=(g_propCoast ? InpPropCoast : 1.0);
+   double fast=FastSize();
+   if(fast>0 && InpSizeMult>0)
+      return(f*fast/InpSizeMult);
    if(InpPropRoomPct>0 && g_propStart>0)
       f*=MathMax(InpPropMinSize,MathMin(InpPropCap,(AccountInfoDouble(ACCOUNT_EQUITY)-PropFloor())/(g_propStart*InpPropRoomPct/100.0)));
    return(f);
@@ -2094,7 +2156,7 @@ int OnInit()
       InpDriftLev<0 || InpDriftMaxLev<=0 || InpDriftHHMM<0 || InpDriftHHMM%100>59 || InpDriftExitHHMM%100>59 || InpDriftExitHHMM>2359 ||
       HHMMSec(InpDriftExitHHMM)<HHMMSec(InpDriftHHMM)+300 || InpDriftEntrySec<1 || InpDriftMaxSpread<=0 ||
       InpPropStart<0 || InpPropTargetPct<0 || InpPropMinDays<0 || InpPropDayStopPct<=0 || InpPropMaxStopPct<=0 ||
-      InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
+      InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropFastDays<21 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
       InpPropResetHHMM>2359 || InpPropResetHHMM%100>59 || InpGoldStopPct<0 ||
       InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0)
       return(INIT_PARAMETERS_INCORRECT);

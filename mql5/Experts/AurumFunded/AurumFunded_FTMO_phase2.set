@@ -13,3 +13,5 @@ InpEuClock=true
 InpSizeMult=0.5
 InpGridRiskPct=0.0
 InpHoldVolPct=0.0
+; Fast sizing while in profit: set true only after live results confirm the edge (tools/prop_dp.py)
+InpPropFast=false
