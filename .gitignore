@@ -12,3 +12,4 @@ marketdata/histdata/*_M1.csv.gz
 marketdata/histdata/*.part
 marketdata/histdata/*.npz
 marketdata/histdata/*.npy
+marketdata/histdata/ORB_*.npz
