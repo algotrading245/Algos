@@ -17,6 +17,8 @@ Result (2026-10-15), no change to the EAs:
   Midday leg by period: Sharpe 1.00 in 2010-17, 0.26 in 2018-21, 0.61 in 2022-26 (Tokyo 1.06, 1.21, 1.20).  In the
   funded leg set the full size is best to 2017 (2.66 against 2.62 at half, 2.48 without), and halving it from 2018
   gains only 3.24 -> 3.29: kept as is.
+  The Tokyo rule on the yen crosses (same days, 1.5-2 bp): EUR/JPY Sharpe 0.45 (0.21, 0.15, 1.01 by period),
+  GBP/JPY 0.22, AUD/JPY 0.20, CAD/JPY 0.28, correlation 0.6-0.84 with the USD/JPY leg - the effect is in USD/JPY.
 """
 import sys
 
