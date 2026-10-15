@@ -129,7 +129,9 @@ a VIX term-structure filter, gold/silver ratio fade, Monday after a falling Frid
 weekly reversal in US stocks, gold month-end flow; gold's London bias and weekend-gap fades (`research/gold_london_and_gaps.py`); hour-of-day returns of the hourly FX, gold and crypto
 series (`research/hourly_seasonality.py`); drift after payrolls and FOMC decisions in the dollar pairs, gold and
 the S&P 500 (`research/post_announcement_drift.py`); VWAP trend trading on the
-Nasdaq and S&P 500 (Zarattini, Aziz 2023; dies on costs at 18 reversals a day, `research/vwap_trend_index.py`). Re-fitting the leg weights for the highest Sharpe does not hold
+Nasdaq and S&P 500 (Zarattini, Aziz 2023; dies on costs at 18 reversals a day, `research/vwap_trend_index.py`); front-running
+pension rebalancing (Harvey, Mazzoleni, Melone 2025; month-end half holds after the paper but adds nothing to Hydra
+in 2018-2023, `research/rebalancing_frontrun.py` - a lead to re-check). Re-fitting the leg weights for the highest Sharpe does not hold
 out of sample, so the EA's weights stay. The scans are in `research/`.
 
 ## Cloud sessions
