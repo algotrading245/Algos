@@ -41,6 +41,9 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   halves - only 01:30-02:00 New York, +0.5 bp, below cost.  Fading opening gaps above 1 or 2 times their 60-day
   average from 9:30 to 10:00 / 10:30 / 11:00 / 16:00: signs differ between halves and between the S&P 500 and the
   Nasdaq (the Nasdaq after big gaps works only from 2018) - nothing.
+  Tuning (one-off check, 0.75 bp): band multiple 1-2, lookback 7/14/28 days, checks every 15/30/60 minutes, chosen
+  on 2010-2017.  The best five to 2017 earn a median 0.54 from 2018 on the S&P 500 (paper's setting 0.88) and 0.97
+  on the Nasdaq (paper's 1.08): tuning fits noise, the paper's 14 days and 30 minutes stay.
   The paper's conditioning (section 4: higher VIX and low 5-day RSI help) does not hold here: VIX terciles change
   order between halves on the S&P 500, and sizing by VIX/its yearly median or by RSI (1.5x below 40, 0.5x above 60)
   moves the Sharpe by -0.07 to +0.02 (one-off check).  The plain rule stays.
@@ -61,9 +64,9 @@ SESSIONS = {"SPXUSD": (NY, 570, 960), "NSXUSD": (NY, 570, 960), "GRXEUR": ("Euro
             "UKXGBP": ("Europe/London", 480, 990), "JPXJPY": ("Asia/Tokyo", 540, 900)}
 
 
-def run(symbol, vm=1.0, cost_bp=1.5, use_vwap=True, look=14, target=0.02, cap=4.0):
+def run(symbol, vm=1.0, cost_bp=1.5, use_vwap=True, look=14, target=0.02, cap=4.0, every=30):
     zone, OPEN, CLOSE = SESSIONS[symbol]
-    CHECKS = list(range(OPEN + 30, CLOSE, 30))
+    CHECKS = list(range(OPEN + 30, CLOSE, every))
     days, p = matrix(symbol, zone)
     p = pd.DataFrame(p.astype(float)).ffill(axis=1).to_numpy()
     keep = days.dayofweek < 5
