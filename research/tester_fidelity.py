@@ -19,6 +19,11 @@ Result (2026-10-15), no change to the EAs:
   gains only 3.24 -> 3.29: kept as is.
   The Tokyo rule on the yen crosses (same days, 1.5-2 bp): EUR/JPY Sharpe 0.45 (0.21, 0.15, 1.01 by period),
   GBP/JPY 0.22, AUD/JPY 0.20, CAD/JPY 0.28, correlation 0.6-0.84 with the USD/JPY leg - the effect is in USD/JPY.
+  The after-holiday idea on other calendars (the `holidays` package): the day after a Japanese holiday USD/JPY
+  falls 3.0 bp from 9:55 to 11:30 Tokyo (t -3.2, both halves), but inside the Tokyo leg's rule the non-gotobi such
+  days earn +0.026 R (t 0.7, 0.000 from 2018) and adding them lowers the leg's Sharpe from 2018 (1.21 -> 1.12): the
+  signal was the gotobi overlap.  After an English bank holiday GBP/USD and EUR/GBP in the London morning: t -1.6
+  to +1.2, signs not stable.  Nothing added.
 """
 import sys
 
