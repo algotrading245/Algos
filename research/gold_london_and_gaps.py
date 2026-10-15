@@ -16,6 +16,8 @@ Result (2009-06 to 2026-10), nothing added to any EA:
   negative in both halves (16:00-17:00, the hour into the PM auction) is the LBMA auction dip already rejected.
   Weekend gap: t between -1.07 and +1.06 for gold, AUD/USD, USD/CAD and AUD/CAD; no pair is positive in both halves
   with t above 1.
+  USD/JPY (one-off check, 2026-10-15, 1.2 bp): 200 gaps, +2.2 bp over 4 hours (t 1.1; 0.3 / 1.2 by half), +1.8 bp
+  over 10 hours (t 0.6; 1.4 / -0.4) - nothing.
 """
 from pathlib import Path
 
