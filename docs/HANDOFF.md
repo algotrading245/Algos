@@ -143,6 +143,11 @@ upside breaks carry it (t 4.4). Correlation with the Hydra legs |r| <= 0.03. At 
 trade gives 3.30 with a lower drawdown (11.4% -> 10.8%). Gold, EUR/JPY and the other majors do not hold. Standalone
 MQL5 version `mql5/Experts/AurumBreakout/` (uncompiled): a Strategy Tester run on USDJPY, 2024-01 on, comes next.
 
+Both candidate legs in the prop simulators at AurumFunded's volatility (`tools/prop_candidates.py`): FTMO first
+payout within 12 months 67% -> 71-73% at 70% of the edge, the instant account's median 1.4 months unchanged; under
+half the edge with day stops the breakout raises FTMO failures from 0% to 5.8% (its losses come in runs) and the
+noise leg the instant account's from 1.1% to 3.4%. So neither enters the prop presets before its tester run.
+
 Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction dip, burst fade, channel breakout,
 deep and reinforcement learning replications, HFT, market intraday momentum (unconditional, both-agree, big-move),
 minute slot scan, daily ML, noise-area momentum, session-open drift, overnight-intraday reversal, scalp concepts,
