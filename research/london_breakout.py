@@ -29,6 +29,10 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   (one-off check, R a trade, dollar-up / dollar-down breaks): EUR/USD +0.027 / -0.045, GBP/USD +0.037 / -0.050,
   AUD/USD -0.020 / -0.017, USD/CAD -0.058 / -0.094, USD/CHF -0.062 / -0.025, USD/JPY +0.093 / +0.023.  The effect
   is the yen's alone - one pair of seven, without a known cause, so the tester run on real spreads matters more.
+  Variant chosen on 2010-2017 (one-off check): trade each side on its own - a buy stop and a sell stop that each
+  fire once a day, instead of the first break only.  Upside only 1.33 / 1.06, downside only 0.62 / 0.48, both
+  1.40 / 1.08 (first break only, same series, 1.09 / 0.93); in AurumFunded at its volatility with 0.125% a trade
+  3.32 from 2018 and a lower drawdown (11.4% -> 10.6%).  AurumBreakout 1.01 trades both sides by default.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path

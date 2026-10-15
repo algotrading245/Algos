@@ -1,6 +1,8 @@
 ; AurumBreakout on USDJPY. Attach to a USDJPY chart; Strategy Tester: symbol USDJPY, M1 or M5, every tick based on
 ; real ticks, from 2024-01 (the range filter needs about three months of M1 history before the first trade).
-; Backtest (research/london_breakout.py): Sharpe 0.97 at 0.8 bp a round trip, 0.59 at 1.5 bp. 0.25% risk a trade
+; Backtest (research/london_breakout.py): both sides on their own Sharpe 1.40 to 2017, 1.08 from 2018 at 0.8 bp;
+; a hedging account is needed (both sides can be open at the same moment). 0.25% risk a trade
 ; for a test of its own; as a leg next to AurumFunded about 0.125%.
 InpRiskPct=0.25
 InpMagic=245300
+InpBothSides=true

@@ -4,20 +4,22 @@
 //| server clock the backtest uses; a day runs 17:00-17:00 New York). |
 //| Range = high and low of virtual 01:00-09:00 (New York 18:00-      |
 //| 02:00). From virtual 10:00 a buy stop waits at the range high and |
-//| a sell stop at the range low; the first to fill cancels the other;|
-//| the stop loss is the range's other side; one trade a day; all is  |
+//| a sell stop at the range low, each with its stop loss at the     |
+//| range's other side. InpBothSides (default): each side trades once |
+//| a day on its own; off: the first fill cancels the other. All is   |
 //| closed and cancelled at virtual 18:00 (New York 11:00). If the    |
 //| price is already outside the range at 10:00 the EA enters at      |
 //| market in that direction. Days whose range is under InpMinRange or|
 //| over InpMaxRange times the average of the last InpFilterDays      |
 //| ranges are skipped. Size: InpRiskPct of equity lost at the stop.  |
 //| Backtest: research/london_breakout.py. 2010-2026 at 0.8 bp a round|
-//| trip: Sharpe 0.97 (0.96 to 2017, 0.98 from 2018), 0.59 at 1.5 bp. |
+//| trip: both sides 1.40 to 2017, 1.08 from 2018; first fill only    |
+//| 0.96 / 0.98; 0.59 at 1.5 bp. Needs a hedging account.             |
 //| The server clock is taken to follow European summer time from    |
 //| UTC+InpServerUtc (FTMO: 2).                                       |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.00"
+#property version   "1.01"
 
 #include <Trade\Trade.mqh>
 
@@ -29,6 +31,7 @@ input int    InpTradeTo       = 18;     // Everything flat at this virtual hour
 input int    InpFilterDays    = 60;     // Days in the average range
 input double InpMinRange      = 0.25;   // Skip a range below this multiple of the average
 input double InpMaxRange      = 3.0;    // Skip a range above this multiple of the average
+input bool   InpBothSides     = true;   // Each side trades once a day on its own (false: first fill cancels the other)
 
 input group "Size"
 input double InpRiskPct       = 0.25;   // Equity lost at the stop, %
@@ -265,6 +268,14 @@ void Place(datetime vday)
                                    g_trade.Sell(lots,_Symbol,0.0,sl,0.0,"AurumBreakout")));
       PrintFormat("AurumBreakout: range %.3f-%.3f already broken, %s %.2f lots at market %s",lo,hi,side>0 ? "buy" : "sell",
                   lots,ok ? "done" : "failed");
+      if(InpBothSides)                                   // the other side keeps its own order
+        {
+         double lo2=Lots(-side,side>0 ? lo : hi,side>0 ? hi : lo);
+         bool ok2=(lo2>0 && (side>0 ? (q.bid-lo>stopsLevel) && g_trade.SellStop(lo2,lo,_Symbol,hi,0.0,ORDER_TIME_GTC,0,"AurumBreakout")
+                                    : (hi-q.ask>stopsLevel) && g_trade.BuyStop(lo2,hi,_Symbol,lo,0.0,ORDER_TIME_GTC,0,"AurumBreakout")));
+         PrintFormat("AurumBreakout: %s stop %.2f lots %s",side>0 ? "sell" : "buy",lo2,ok2 ? "placed" : "not placed");
+         return;
+        }
       g_done=true;                                       // that is the day's one trade
       return;
      }
@@ -318,6 +329,8 @@ void Run()
      }
    // one trade a day: once an order has filled (a position exists, or fewer orders are left than were placed,
    // even if the position was already stopped out between two checks) the other order goes
+   if(InpBothSides)
+      return;                                            // each order fires once; the rest waits for the flat time
    if(!g_done && (Side()!=0 || Pending()<g_orders))
       g_done=true;
    if(g_done && Pending()>0)
