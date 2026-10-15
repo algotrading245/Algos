@@ -40,6 +40,10 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   adds nothing to AurumFunded with the USD/JPY leg (3.32 either way).
   On real bid/ask ticks 2024-01 to 2026-09 (research/breakout_ticks.py) the fills cost ~1.2 bp all in; at 1.2 bp the
   both-sides leg is 1.18 / 0.83 and still lifts AurumFunded 3.24 -> 3.30 at 0.125% a trade.
+  Yen crosses, both sides (one check of the yen link): before cost EUR/JPY 1.50 (1.75 / 1.24), GBP/JPY 1.23 (1.24 /
+  1.22), CAD/JPY 1.21 (1.01 / 1.41), AUD/JPY 0.63 (0.57 / 0.68), correlation 0.21-0.42 with the USD/JPY leg; at
+  their spreads (1.4-2 bp) 0.72, 0.19, 0.21, -0.13.  With the Nikkei, every yen market shows the same break-and-run
+  in both halves, so the USD/JPY result is not a lone fluke - but only USD/JPY is cheap enough to trade.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
