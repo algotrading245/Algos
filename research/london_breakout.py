@@ -59,6 +59,8 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   trading the narrow third only gives the same daily Sharpe (0.98; 1.29 / 0.72) on a third of the trades, and the
   portfolios do not change (AurumFunded 3.29 vs 3.30, Hydra with both legs 3.64 vs 3.63) - the EA keeps all days.
   Sizing the narrow third up instead (x1.5 / 2 / 3): 1.27-1.32 to 2017 but 0.82-0.85 from 2018 against 0.83 - no.
+  Other session (one check): a Tokyo breakout (server 02:00-09:00) of the previous New York afternoon's range
+  (16:00-23:00) earns 0.58 before cost and -0.36 at 1.2 bp (-0.16 / -0.57) - the run after a break is London's.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
