@@ -54,6 +54,10 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   2021-2022 missing and the years alternate (2023 -1.2, 2026 -1.6) - too thin to judge, not a candidate.
   After the exit (one check): fading USD/JPY from the London fix (18:00) to 22:00 on days it closed outside its range
   earns -0.4 bp (above) and +1.1 bp (below), t <= 1.4, signs differ by half - no post-fix reversal to add.
+  Range width (Crabel's narrow-range idea, terciles of range / 60-day average set on 2010-2017, at 1.2 bp): below
+  0.66 +0.163 R a trade to 2017 and +0.101 R from 2018, middle -0.002 / +0.005, widest +0.022 / +0.049.  Real, but
+  trading the narrow third only gives the same daily Sharpe (0.98; 1.29 / 0.72) on a third of the trades, and the
+  portfolios do not change (AurumFunded 3.29 vs 3.30, Hydra with both legs 3.64 vs 3.63) - the EA keeps all days.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
