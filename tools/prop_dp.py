@@ -28,6 +28,11 @@ Result (policies checked on the real sequence of days, paths every 5th day 2010-
   6 / 9 / 12 months, median 7.3 months, no failure; half edge + dips 15% / 29% / 40%, no failure (cushion rule alone
   31 / 57 / 76% and 17 / 26 / 37%).  The table alone, everywhere: 39 / 79 / 88%, 0.4% failed, but 34% failed at
   half edge + dips.
+  Weaker edges (one-off check 2026-10-15, first payout incl. the funded wait, cushion / hybrid at size 0.5):
+  70% median 9.6 / 8.8 months, none failed; 50% + dips 15.8 / 14.6, none failed; 30% + dips failed 38.7 / 41.3%;
+  0% + dips 85.9 / 90.3%.  A month faster, a few points more failures if the edge is mostly gone - unlike the
+  Instant Funding table (tools/prop_dp_instantfunding.py), which adds no risk.  So InpPropFast stays off on FTMO
+  until live or demo results confirm the edge.
 """
 import numpy as np
 
