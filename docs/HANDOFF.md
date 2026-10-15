@@ -75,6 +75,8 @@ worst month -2.1%, mean month +2.25%, 23 of 34 months positive; about 70% of the
 smaller toward the final stop, up to 1.4 with profit. On the path to the first payout (`tools/prop_sizing.py`, 70%
 of the edge) the first payout comes within 9 months 46% of the time (old rule 37%), median 9.6 months (10.6), and
 with half the edge and pessimistic intraday dips no path fails (7.8%). Not yet re-run in the Strategy Tester.
+Firms (`tools/prop_firms.py`): an 8%/5% two-step (FundedNext Stellar, FundingPips) brings the first payout about a
+month sooner than FTMO's 10%/5% (median 8.8-9.0 months against 9.8 at 70% of the edge); FTMO kept for its record.
 
 Open points for EA 2:
 
