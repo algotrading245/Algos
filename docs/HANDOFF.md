@@ -67,6 +67,9 @@ match the Python model; those three earned +2.0% against about 7% in the model. 
 `backtests/2026-10-15_funded_phase1/summary.md`.
 Phase 2 preset from the same 2024-01-01 start: passed (+5%) on 2024-02-20, drawdown 1.9%
 (`backtests/2026-10-15_funded_phase2/summary.md`).
+Funded-account preset, 2024-01-01 to 2026-10-14: +110% in 34 months, equity drawdown at most 4.1%, worst day -1.6%,
+worst month -2.1%, mean month +2.25%, 23 of 34 months positive; about 70% of the Python model's log growth
+(`backtests/2026-10-15_funded_account/summary.md`).
 
 Open points for EA 2:
 
