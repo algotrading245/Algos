@@ -9,6 +9,9 @@
 ; Account Drawdown: the firm closes everything when open positions lose a set % of the starting balance together
 ; (2% in their help page's example; first time the split drops to 50%, second time the account is lost). Ask them the
 ; PRO figure and set InpPropFloatPct about 0.3 below it, so the EA closes first; 1.7 assumes their 2%.
+; Clock: on a live account the EA trades only on days the server is New York + 7 (GMT+2 winter, GMT+3 US summer);
+; otherwise the Experts log says "no trading today, the server clock is ... hours ahead of GMT". Check the log on the
+; first day - if that line appears every day, this broker's clock does not fit the EA.
 ; Weekend holding needs their add-on; this preset's legs close before the weekend (grid and gold hold are off).
 InpPropTargetPct=0.0
 InpPropRound=1
