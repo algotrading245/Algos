@@ -51,6 +51,6 @@ None of these was compiled in the cloud session that wrote them; report any comp
    with `InpBreakRiskPct=0.5` and `InpNoiseMult=0.275`.
 
 Prop routes and their simulated first-payout times (details in `docs/HANDOFF.md`): FTMO 2-Step Swing (median ~9.6
-months), FundedNext Stellar Instant (~1.4 months, or ~4.3 if it has a 40% consistency rule - ask them), Instant
+months), FTMO 1-Step (~7.8 months at size 0.5, `-Preset 1step` / `1step_funded`; verify its maximum loss on ftmo.com), FundedNext Stellar Instant (~1.4 months, or ~4.3 if it has a 40% consistency rule - ask them), Instant
 Funding PRO (~2.5 months at size 0.5, preset `AurumFunded_InstantFunding_pro.set` - ask them the Account Drawdown
 figure, their EA policy and their server clock).
