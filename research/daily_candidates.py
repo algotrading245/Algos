@@ -27,6 +27,8 @@ Result:
   Cross-sectional currency momentum (Menkhoff, Sarno, Schmeling, Schrimpf 2012; seven currencies against the dollar,
   long the two best and short the two worst over 1, 3, 6, 12 months, monthly, 1.5 bp a side): Sharpe -0.35, -0.39,
   -0.44, -0.25, negative in both halves - gone among majors since 2010.
+  Day before a US holiday, dollar basket (six pairs, one-off check), 02-08 / 03-10 / 08-12 / 10-16 / 14-17 New York:
+  t +0.9, +0.5, +0.2, -0.2, -1.6, halves disagree or are flat - the day-after leg has no mirror image.
 Leg weights: the maximum-Sharpe weights (correlations shrunk to 0 by half or fully) fitted to 2017 give 3.11 to 3.24
 from 2018 against 3.37 for the EA's weights; fitted from 2018 they give 2.78 to 2.82 to 2017 against 2.60.  On the
 whole history 3.10 against 3.01.  No change to the weights: the gain is within the noise.
