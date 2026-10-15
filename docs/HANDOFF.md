@@ -139,7 +139,9 @@ currencies, oil, silver and gold do not add.
 first 5-minute break of it, stop at the range's other side, flat at 18:00. Sharpe 0.97 at 0.8 bp a round trip
 (0.96 to 2017, 0.98 from 2018, positive in 16 of 17 years, 0.59 at 1.5 bp), every shifted window 0.73-1.17;
 upside breaks carry it (t 4.4). Trading each side on its own (a buy and a sell stop that each fire once a day,
-chosen on 2010-2017) gives 1.40 / 1.08 and is AurumBreakout 1.01's default; the same breaks on the other dollar pairs do not earn, so it is a yen effect without a known cause. Correlation with the Hydra legs |r| <= 0.03. At 0.5% risk a trade Hydra 3.37 ->
+chosen on 2010-2017) gives 1.40 / 1.08 and is AurumBreakout 1.01's default; on real bid/ask ticks (2024-01 to
+2026-09, `research/breakout_ticks.py`) fills cost ~1.2 bp all in, at which the leg is 1.18 / 0.83 and still lifts
+AurumFunded 3.24 -> 3.30; the same breaks on the other dollar pairs do not earn, so it is a yen effect without a known cause. Correlation with the Hydra legs |r| <= 0.03. At 0.5% risk a trade Hydra 3.37 ->
 3.48 from 2018 (3.66 with the noise leg), AurumFunded 3.24 -> 3.34; at AurumFunded's volatility 0.125% risk a
 trade gives 3.30 with a lower drawdown (11.4% -> 10.8%). Gold, EUR/JPY and the other majors do not hold. Standalone
 MQL5 version `mql5/Experts/AurumBreakout/` (uncompiled): a Strategy Tester run on USDJPY, 2024-01 on, comes next.

@@ -38,6 +38,8 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   spread 0.73 (1.20 / 0.37), at 3 bp 0.41 (0.87 / 0.06): too costly as a leg.
   Gold with the both-sides rule (one check): 0.58 before cost, 0.21 at 1 bp (0.19 / 0.22), year signs alternate;
   adds nothing to AurumFunded with the USD/JPY leg (3.32 either way).
+  On real bid/ask ticks 2024-01 to 2026-09 (research/breakout_ticks.py) the fills cost ~1.2 bp all in; at 1.2 bp the
+  both-sides leg is 1.18 / 0.83 and still lifts AurumFunded 3.24 -> 3.30 at 0.125% a trade.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
