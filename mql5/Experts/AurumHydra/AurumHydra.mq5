@@ -244,7 +244,7 @@ input double InpBreakMaxRange   = 3.0;   // ... or above this one
 
 input group "Noise-area index momentum (New York session; off until its own Strategy Tester run, research/noise_area_index.py)"
 input double InpNoiseMult       = 0.0;   // Notional per index, multiple of min(4, 2% / daily volatility) x equity (0 = off; 0.275 tested)
-input string InpNasdaq          = "US100.cash"; // Nasdaq 100 (the S&P 500 is InpStocks)
+input string InpNasdaq          = "NAS100.r"; // Nasdaq 100 (the S&P 500 is InpStocks; check the broker's name)
 input double InpNoiseBandSpx    = 1.5;   // Band width on the S&P 500, multiple of the average move
 input double InpNoiseBandNdx    = 1.0;   // Band width on the Nasdaq
 input double InpNoiseMaxSpreadBp= 3.0;   // No entry while the spread is above this, basis points of price
