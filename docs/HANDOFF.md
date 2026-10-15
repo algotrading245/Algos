@@ -180,7 +180,9 @@ even at half the edge; size 0.7 2.0 months (6.7% lost at half the edge). EA poli
 balance together are closed by the firm (2% in their example; first time the split falls to 50%, second time the
 account is lost). At size 0.5 AurumFunded's legs close a day beyond -2% about 0.5 times a year (-1.5%: 1.7 times),
 more often intraday; so the EA has `InpPropFloatPct` (closes everything for the day first, 1.7 in the preset) - ask
-the firm for PRO's figure. For AurumHydra's 5x month: Sharpe from 2018
+the firm for PRO's figure. FTMO's 1-Step (reviews, to verify on ftmo.com: 10% target, 3% daily, 10% end-of-day trailing
+maximum, 50% best day) at size 0.5 with a 2% EA day stop: first payout median 7.8 months, none failed even at half
+the edge (`tools/prop_ftmo_1step.py`) - a little faster than the 2-Step, slower than the instant accounts. For AurumHydra's 5x month: Sharpe from 2018
 3.37 -> 3.71 with both legs (breakout at 0.5% a trade, weight fitted to 2017), so P = N(N^-1(0.2) + S sqrt(1/12))
 goes from 55% to 59%.
 
