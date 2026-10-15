@@ -50,6 +50,9 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   Quoted spreads in histdata's tick quotes, New York session (one-off check, 2026-10-15): S&P 500 0.67 bp median in
   2026-09 and 0.99 bp in 2024-03, Nasdaq 0.32 bp in 2026-09, no wider in the first 15 minutes - the 0.75 bp
   assumption is about right on average, the Nasdaq half cheaper.  FTMO's own spreads still to be seen in the tester.
+  At those measured costs (S&P 500 1.0 bp, Nasdaq 0.4 bp; one-off check): S&P 0.70 (0.58 / 0.79), Nasdaq 0.89
+  (0.56 / 1.18); the split and weight picked on 2010-2017 are again half and half at 0.55 - Hydra 3.37 -> 3.55 from
+  2018, AurumFunded 3.24 -> 3.43.  Nasdaq alone did better from 2018 (1.18) but nothing to 2017 said so.
   Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
 """
 import sys
