@@ -1,6 +1,6 @@
 """First-payout odds of AurumFunded with the two candidate legs added: the noise-area index leg
 (research/noise_area_index.py, half S&P 500 VM 1.5 and half Nasdaq VM 1.0 at 0.75 bp, weight 0.55) and the USD/JPY
-London breakout (research/london_breakout.py, 0.8 bp, at 0.125% risk a trade).
+London breakout (research/london_breakout.py, both sides on their own, 0.8 bp, at 0.125% risk a trade).
 
 Each combination is scaled to the volatility of AurumFunded's legs alone (2010 on), so a change in the odds comes
 from the better Sharpe, not from more risk.  The paths are those of tools/prop_instant.py (FundedNext Stellar
@@ -10,16 +10,16 @@ booked as a 3% day stop.
 
     python tools/prop_candidates.py
 
-Result (2026-10-15), each at AurumFunded's volatility:
+Result (2026-10-15), each at AurumFunded's volatility, breakout trading both sides on their own:
                     instant (70% edge)           FTMO (70% edge)               half edge + dips
   AurumFunded       1m 43%, 3m 74%, 1.4 months   9m 46%, 12m 67%, 9.6 months   instant lost 1.1%, FTMO failed 0.0%
-  + breakout        43%, 74%, 1.4                50%, 71%, 9.0                 2.6%, 5.8%
+  + breakout        43%, 74%, 1.4                50%, 72%, 9.0                 1.6%, 0.0%
   + noise           45%, 75%, 1.4                48%, 72%, 9.3                 3.4%, 0.0%
-  + both            45%, 75%, 1.4                50%, 73%, 9.0                 3.4%, 0.1%
-  The legs lift the Sharpe (3.24 -> 3.30 / 3.43 / 3.48 from 2018) and the FTMO odds by a few points, leave the
-  instant account's 1.4 months as it is, and under the pessimistic case add failures - the breakout's losses come
-  in runs (its own drawdown is 9.2% at 7.1% volatility).  Neither goes into AurumFunded's prop presets before its
-  Strategy Tester run; of the two the noise leg is the safer for a challenge.
+  + both            45%, 76%, 1.4                50%, 75%, 8.9                 2.6%, 0.0%
+  Sharpe from 2018 3.24 -> 3.32 / 3.43 / 3.51.  The first-break-only breakout (the earlier version) raised FTMO
+  failures under the pessimistic case to 5.8%; trading both sides does not.  The instant account's median stays
+  1.4 months: its first claim needs only +1% on a cycle date, which AurumFunded already reaches fast.  Neither leg
+  enters the prop presets before its Strategy Tester run.
 """
 import sys
 from pathlib import Path
@@ -44,7 +44,7 @@ def candidates(index):
         from noise_area_index import run as noise
         spx, _ = noise("SPXUSD", vm=1.5, cost_bp=0.75)
         nsx, _ = noise("NSXUSD", vm=1.0, cost_bp=0.75)
-        T = breakout("USDJPY", "side")
+        T = breakout("USDJPY", "side", both=True)
         r = T.r - 0.8e-4 / T.rel
         c = pd.DataFrame({"noise": 0.5 * spx + 0.5 * nsx,
                           "breakout": pd.Series(r.to_numpy(), index=T.day).groupby(level=0).sum() * 0.00125})

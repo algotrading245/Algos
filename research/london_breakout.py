@@ -45,7 +45,9 @@ CACHE = Path(__file__).resolve().parent.parent / "marketdata" / "hydra_legs_dail
 PAIRS = {"GBPUSD": 1.0, "EURUSD": 0.8, "XAUUSD": 1.0, "USDJPY": 0.8, "GBPJPY": 2.0, "EURJPY": 1.4, "AUDUSD": 1.0}
 
 
-def run(s, stop_at="side"):
+def run(s, stop_at="side", both=False):
+    """Trades as (day, r in R, R / entry).  both=True: a buy and a sell stop that each trade once a day on their own
+    (two rows on a day both sides break); else only the first break."""
     m = pd.read_csv(DATA / f"{s}_M1.csv.gz")
     t = pd.to_datetime(m.time, unit="s")
     m = m[t.dt.dayofweek < 5]
@@ -67,29 +69,30 @@ def run(s, stop_at="side"):
         if np.isnan(avg) or not 0.25 * avg <= width / a.close.iloc[-1] <= 3 * avg:
             continue
         O, H, L, C = (b[c].to_numpy() for c in ("open", "high", "low", "close"))
-        side, e, stop, x = 0, 0.0, 0.0, None
-        for k in range(len(b)):
-            if side == 0:
-                if H[k] > hi:
-                    side, e = 1, max(hi, O[k])
-                elif L[k] < lo:
-                    side, e = -1, min(lo, O[k])
-                else:
+        for want in ((1, -1) if both else (0,)):
+            side, e, stop, x = 0, 0.0, 0.0, None
+            for k in range(len(b)):
+                if side == 0:
+                    if want >= 0 and H[k] > hi:
+                        side, e = 1, max(hi, O[k])
+                    elif want <= 0 and L[k] < lo:
+                        side, e = -1, min(lo, O[k])
+                    else:
+                        continue
+                    stop = (lo if side > 0 else hi) if stop_at == "side" else (hi + lo) / 2
+                    if side * (C[k] - stop) <= 0:            # stopped inside the entry bar
+                        x = stop
+                        break
                     continue
-                stop = (lo if side > 0 else hi) if stop_at == "side" else (hi + lo) / 2
-                if side * (C[k] - stop) <= 0:            # stopped inside the entry bar
+                if side * ((L[k] if side > 0 else H[k]) - stop) <= 0:
                     x = stop
                     break
+            if side == 0:
                 continue
-            if side * ((L[k] if side > 0 else H[k]) - stop) <= 0:
-                x = stop
-                break
-        if side == 0:
-            continue
-        if x is None:
-            x = C[-1]
-        R = abs(e - stop)
-        out.append((day, side * (x - e) / R, R / e))
+            if x is None:
+                x = C[-1]
+            R = abs(e - stop)
+            out.append((day, side * (x - e) / R, R / e))
     return pd.DataFrame(out, columns=["day", "r", "rel"])
 
 
