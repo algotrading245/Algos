@@ -22,6 +22,9 @@ Rules of the work:
 - When a paper is used, read the full paper first (definitions, tables), not the abstract, and say in reports which
   papers were read in full.
 - Order: Python backtest, then MT5 Strategy Tester, then demo, then live.
+- Leave the rollover (server 23:00-01:00, the New York close) out of intraday tests or check it separately: histdata's
+  bid quotes spike and snap back there, which looks like a strong reversal that cannot be traded (found 2026-10-15 in
+  the AUD/NZD relative-move test). The current legs and both candidates already avoid those hours.
 - Commit and push to the session's working branch after each finished piece of work (earlier sessions:
   `claude/exciting-hopper-r6sdmc`; the cloud session of 2026-10-14: `claude/intelligent-turing-j0nrmf`).
 
