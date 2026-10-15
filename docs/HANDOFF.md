@@ -85,6 +85,10 @@ no refund, EAs need an add-on). With AurumFunded at size 0.3 and a guard 4.5% un
 account lost (70% of the edge); half edge with pessimistic dips 59% within 3 months, 1.1% lost. The first claim is
 about 1.7% of the account; the FTMO challenge pays far more per month but takes about 9.6 months to the first payout.
 
+With AurumNoise added (0.55 of the S&P 500 + Nasdaq basket, 0.75 bp) the funded legs' Sharpe goes from 2.97 to 3.11,
+the FTMO first payout within 6 months from 19% to 25% (median 9.6 -> 9.2 months), the instant account's within 3
+months from 74% to 76%: worth having, but the challenge's speed is set by earning 15% at limited risk.
+
 Open points for EA 2:
 
 - Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
