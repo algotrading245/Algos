@@ -8,6 +8,18 @@ events of that kind.  Costs per round trip: currencies 1.5 bp (wider spreads aft
 research/pre_announcement_drift.py (payrolls) and research/pre_fomc_drift.py (FOMC), November 2010 on.
 
     python research/post_announcement_drift.py
+
+Paper read in full for the prior: Andersen, Bollerslev, Diebold, Vega, "Micro Effects of Macro Announcements:
+Real-Time Price Discovery in Foreign Exchange", American Economic Review 93(1), 2003 - the dollar jumps on the news
+within five to ten minutes "and little movement thereafter".
+
+Result (2010-11 to 2026-10, 190 payrolls, 127 FOMC days), nothing added to any EA:
+  No drift.  Following the first 5 or 15 minutes for 30 minutes to 4 hours loses after cost in nearly every cell
+  for the six dollar pairs, gold and the S&P 500, both halves; trading only big first moves does not change that.
+  If anything the first move partly reverses: the S&P 500 after payrolls gives back about 11 bp of the 08:30-08:35
+  move over 2-4 hours (t -1.5 to 2017, -2.2 from 2018), about 9 bp an event after cost, 12 events a year, Sharpe
+  near 0.5 - one cell of 128, not counted as an edge.  Gold after FOMC days with a big first move drifts 8-15 bp
+  (t about 1 in each half, six events a year), too thin.
 """
 import sys
 from pathlib import Path

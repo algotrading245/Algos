@@ -104,7 +104,8 @@ time-series momentum on 20 daily futures (Sharpe 0.5 at best; `research/futures_
 Bitcoin and Ether (Sharpe 0.5 to 0.7 long-short since 2022 before CFD swap; `research/crypto_tsmom.py`), and in `research/daily_candidates.py`: SPY before holidays, SPY under
 a VIX term-structure filter, gold/silver ratio fade, Monday after a falling Friday, SPY after VIX spikes, daily and
 weekly reversal in US stocks, gold month-end flow; gold's London bias and weekend-gap fades (`research/gold_london_and_gaps.py`); hour-of-day returns of the hourly FX, gold and crypto
-series (`research/hourly_seasonality.py`). Re-fitting the leg weights for the highest Sharpe does not hold
+series (`research/hourly_seasonality.py`); drift after payrolls and FOMC decisions in the dollar pairs, gold and
+the S&P 500 (`research/post_announcement_drift.py`). Re-fitting the leg weights for the highest Sharpe does not hold
 out of sample, so the EA's weights stay. The scans are in `research/`.
 
 ## Cloud sessions
