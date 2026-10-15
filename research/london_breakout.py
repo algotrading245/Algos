@@ -24,10 +24,11 @@ Result (2026-10-15): USD/JPY is a candidate leg; the other six are not.
   AurumFunded 2.66 / 3.24 -> 2.88 / 3.34, with the noise leg 3.53.  The weight best to 2017 alone (2x) gives Hydra
   3.36 from 2018, so the gain needs a modest size.  At AurumFunded's volatility, 0.25x (0.125% risk a trade) gives
   Sharpe 3.30 and a lower maximum drawdown (11.4% -> 10.8%); 1x gives 3.34 but 14.9%.
-  A likely mechanism: the dollar rises into the ECB and London fixings (Krohn, Mueller, Whelan, J. Finance;
-  research/fx_fixings_clock.py measures about 1 bp unconditionally, too little to trade), and the window ends at the
-  London 16:00 fixing; the breakout trades it only on days USD/JPY has already left its Asian range upward, where the
-  move is ~3 bp a trade.
+  Mechanism not confirmed: if it were the dollar rising into the ECB and London fixings (Krohn, Mueller, Whelan,
+  J. Finance; research/fx_fixings_clock.py), dollar-up breaks would earn on every dollar pair.  They do not
+  (one-off check, R a trade, dollar-up / dollar-down breaks): EUR/USD +0.027 / -0.045, GBP/USD +0.037 / -0.050,
+  AUD/USD -0.020 / -0.017, USD/CAD -0.058 / -0.094, USD/CHF -0.062 / -0.025, USD/JPY +0.093 / +0.023.  The effect
+  is the yen's alone - one pair of seven, without a known cause, so the tester run on real spreads matters more.
   Next: an MQL5 version for the Strategy Tester on USDJPY, then a size of about 0.125-0.25% risk a trade.
 """
 from pathlib import Path
