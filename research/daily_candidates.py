@@ -20,6 +20,10 @@ Result:
   one-off check, not repeated by this script)
   SPY in the week of the monthly option expiry (third Friday) and the week after (one-off check): 6.6 and 7.4 bp a
   day to 2017 against 4.2 on other days, -1.7 and 7.8 from 2018 against 8.8 - nothing.
+  Dollar basket (six dollar pairs, 16:00 New York) around quarter ends (Du, Tepper, Verdelhan 2018 on quarter-end
+  dollar funding; one-off check on minute data): last 5 days of a quarter -0.4 / -0.9 bp a day (t -0.1 / -0.3),
+  first 3 days +6.5 / +0.8 - nothing.  Last 5 days of the year: the dollar falls 8.1 / 9.2 bp a day (t -2.1 /
+  -2.4, 9 and 8 year-ends) - consistent but one trade a year among several windows tried; not used.
 Leg weights: the maximum-Sharpe weights (correlations shrunk to 0 by half or fully) fitted to 2017 give 3.11 to 3.24
 from 2018 against 3.37 for the EA's weights; fitted from 2018 they give 2.78 to 2.82 to 2017 against 2.60.  On the
 whole history 3.10 against 3.01.  No change to the weights: the gain is within the noise.
