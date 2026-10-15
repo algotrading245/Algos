@@ -155,7 +155,10 @@ and guards apply, closed by `CloseEverything()`. It also carries the noise-area 
 Nasdaq = `InpNasdaq` (US100.cash) with band 1.0, checks at server 17:00-22:30 (10:00-15:30 New York), flat at 23:00,
 notional = min(4, 2% / 14-day volatility) x equity x `InpNoiseMult` x `SizeMult()`, magic +28 / +29. Uncompiled like
 the rest of 1.02-1.03. Order of tests: the standalone AurumBreakout and AurumNoise first; if they hold, AurumFunded
-1.03 with `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`.
+1.03 with `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`. AurumHydra 1.33 carries the same two legs, off by default and with
+the same inputs; for the 5x-month goal the tested weights are breakout at 0.5% risk a trade (`InpBreakRiskPct=0.5`,
+weight fitted to 2017) and the noise leg at 0.275 per index. Hydra has no clock check, so in the weeks the US and
+European summer times differ its legs - old and new - run an hour off New York, as before.
 
 Both candidate legs in the prop simulators at AurumFunded's volatility (`tools/prop_candidates.py`, breakout on
 both sides): FTMO first payout within 12 months 67% -> 72% (breakout), 72% (noise), 75% (both) at 70% of the edge,
