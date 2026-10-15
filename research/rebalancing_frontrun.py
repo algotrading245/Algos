@@ -23,6 +23,9 @@ Result (2010-03 to 2026-10), not added to any EA for now:
   position (2-3 bp a day) takes it to 0.69-0.76 (0.11-0.17 in 2018-23/03).  Added to Hydra with the weight best to
   2017 (the grid's top, 1.0): from 2018 3.38 -> 3.32-3.37 (no gain), after the paper 3.41 -> 3.48-3.55.  Fails the
   rule (the 2018+ test); worth re-checking as more months come in - it is the strongest lead from this paper.
+  Intraday on the last trading day of the month (one-off check, S&P 500 CFD minute bars, against the month-to-date
+  SPY minus half TLT, 1 bp): 15:00-16:00 +1.1 bp (t 0.4), 15:30-16:00 +3.3 bp (t 1.3; -0.02 to 2017), the whole
+  day +9.4 bp (t 1.7) - 12 trades a year, Sharpe about 0.3: not used.
 """
 from pathlib import Path
 
