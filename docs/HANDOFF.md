@@ -78,6 +78,13 @@ with half the edge and pessimistic intraday dips no path fails (7.8%). Not yet r
 Firms (`tools/prop_firms.py`): an 8%/5% two-step (FundedNext Stellar, FundingPips) brings the first payout about a
 month sooner than FTMO's 10%/5% (median 8.8-9.0 months against 9.8 at 70% of the edge); FTMO kept for its record.
 
+**Fastest first payout: an instant account** (`tools/prop_instant.py`). FundedNext Stellar Instant (no challenge,
+no daily limit, 6% trailing maximum loss, payout on the 14-day cycle, 70-80% share, $49.99 for 2K to $599.99 for 20K,
+no refund, EAs need an add-on). With AurumFunded at size 0.3 and a guard 4.5% under the peak
+(`AurumFunded_FundedNext_instant.set`): first payout within 1 month 43%, 3 months 74%, median 1.4 months, no
+account lost (70% of the edge); half edge with pessimistic dips 59% within 3 months, 1.1% lost. The first claim is
+about 1.7% of the account; the FTMO challenge pays far more per month but takes about 9.6 months to the first payout.
+
 Open points for EA 2:
 
 - Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
