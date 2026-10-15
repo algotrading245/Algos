@@ -1,0 +1,4 @@
+; AurumNoise on US500.cash (S&P 500). Attach to a US500.cash chart; Strategy Tester: symbol US500.cash, M1 or M15,
+; every tick based on real ticks. Backtest (research/noise_area_index.py): Sharpe 0.80 at 0.75 bp a round trip.
+InpBandMult=1.5
+InpMagic=245200

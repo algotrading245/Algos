@@ -98,8 +98,10 @@ Barbon 2025, read in full; `research/noise_area_index.py`). Bands of the average
 days, checked every half hour from 10:00 New York, trailing stop at the band or the session average price, flat
 at 16:00, sized to 2% daily volatility. Half S&P 500 (band multiple 1.5), half Nasdaq (1.0): Sharpe 0.88 at 0.75
 bp a round trip (0.61 to 2017, 1.08 from 2018), 0.57 at 1.5 bp; correlation with the Hydra legs -0.02. With the
-weight fitted to 2017, Hydra from 2018 goes from 3.38 to 3.55 (0.75 bp) or 3.46 (1.5 bp). Not in an EA yet: needs
-FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester. DAX, FTSE, Nikkei,
+weight fitted to 2017, Hydra from 2018 goes from 3.38 to 3.55 (0.75 bp) or 3.46 (1.5 bp). Standalone MQL5 version
+`mql5/Experts/AurumNoise/` (presets for US500.cash and US100.cash), written without a compiler at hand: next is a
+Strategy Tester run on FTMO's data, 2024-01 on, to see the real spread and slippage, then a merge into AurumHydra and
+AurumFunded if it holds. DAX, FTSE, Nikkei,
 currencies, oil, silver and gold do not add.
 
 Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction dip, burst fade, channel breakout,

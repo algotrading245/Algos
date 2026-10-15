@@ -1,0 +1,4 @@
+; AurumNoise on US100.cash (Nasdaq 100). Attach to a US100.cash chart; Strategy Tester: symbol US100.cash, M1 or M15,
+; every tick based on real ticks. Backtest (research/noise_area_index.py): Sharpe 0.78 at 0.75 bp a round trip.
+InpBandMult=1.0
+InpMagic=245201
