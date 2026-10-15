@@ -16,6 +16,11 @@ bp, mean 0.53 bp.  The tick fills cost about 1.2 bp a round trip all in, not 0.8
 is 1.18 to 2017 and 0.83 from 2018; in AurumFunded at its volatility with 0.125% a trade 3.24 -> 3.30 from 2018
 (drawdown 11.4% -> 10.8%); Hydra with the noise leg and the breakout at 0.5% 3.63 (3.71 at 0.8 bp).  The candidate
 holds at the real cost, with a smaller margin.
+Gaps through the stop (one-off check on the same ticks): 4% of trades lose more than 1.1 range widths, mostly market
+entries made after the range had already broken (the EA sizes on the real entry-to-stop distance, so those lose
+the planned risk); true gaps come on US releases - 2024-02-13 and 2024-06-12 (CPI) cost 1.5-1.75x the planned
+risk, so at 0.125% a trade the worst is ~0.22% of the account.  Intervention days: 2024-05-01 -1.15 R, 2024-07-11
+-1.07 R and +12.0 R.
 """
 import sys
 from pathlib import Path
