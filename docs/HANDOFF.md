@@ -147,7 +147,9 @@ MQL5 version `mql5/Experts/AurumBreakout/` (uncompiled): a Strategy Tester run o
 Both candidate legs in the prop simulators at AurumFunded's volatility (`tools/prop_candidates.py`, breakout on
 both sides): FTMO first payout within 12 months 67% -> 72% (breakout), 72% (noise), 75% (both) at 70% of the edge,
 no FTMO failures even at half the edge; the instant account's median 1.4 months unchanged; Sharpe from 2018 3.24 ->
-3.51 with both. Neither enters the prop presets before its tester run.
+3.51 with both. Neither enters the prop presets before its tester run. For AurumHydra's 5x month: Sharpe from 2018
+3.37 -> 3.71 with both legs (breakout at 0.5% a trade, weight fitted to 2017), so P = N(N^-1(0.2) + S sqrt(1/12))
+goes from 55% to 59%.
 
 Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction dip, burst fade, channel breakout,
 deep and reinforcement learning replications, HFT, market intraday momentum (unconditional, both-agree, big-move),
