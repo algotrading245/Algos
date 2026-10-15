@@ -89,6 +89,10 @@ With AurumNoise added (0.55 of the S&P 500 + Nasdaq basket, 0.75 bp) the funded 
 the FTMO first payout within 6 months from 19% to 25% (median 9.6 -> 9.2 months), the instant account's within 3
 months from 74% to 76%: worth having, but the challenge's speed is set by earning 15% at limited risk.
 
+**Deadline sizing (`tools/prop_dp.py`, dynamic programming = what an RL agent would learn):** passes both phases
+within 9 months 82% of the time at 70% of the edge with 1% failed (cushion rule 57%, 0%), but fails about 20% if the
+live edge is only half. Use it only once live results confirm the edge; until then the cushion rule.
+
 Open points for EA 2:
 
 - Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
