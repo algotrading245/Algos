@@ -58,6 +58,9 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   breakout already holds what there is.
   The EAs' broker stop three daily volatilities from entry (against a lost connection; one-off check on minute
   closes between the half-hour checks): never reached in 2010-2026 on either index, results unchanged.
+  Deflated Sharpe Ratio (Bailey, Lopez de Prado 2014; half S&P 500 at 1.0 bp, half Nasdaq at 0.4 bp): 2010-2026
+  Sharpe 0.91 against 0.51 for the luckiest of N = 30 variants tried (0.63 at N = 100) - probability real 0.96 (0.89);
+  from 2018 1.11, 0.92 (0.81).  The rule is the paper's, replicated rather than found here, so N is generous.
   Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
 """
 import sys
