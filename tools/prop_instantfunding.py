@@ -22,6 +22,8 @@ Result (2026-10-15):
   first time, account lost the second) is met by the EA's InpPropFloatPct closing first: modelled as a day cut at
   -1.7% (x1.2 slip) it leaves the odds as above (size 0.5 median 2.5 months, none lost; size 0.7 5.6% lost at half
   the edge instead of 6.7%).
+  With both candidate legs (noise 0.55, breakout both sides at 0.125%) at AurumFunded's volatility: size 0.5
+  median 2.4 months, none lost (3.8 at half the edge, none lost); size 0.7 1.8 months (7.9% lost at half the edge).
 """
 import numpy as np
 
