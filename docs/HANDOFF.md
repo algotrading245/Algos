@@ -170,7 +170,11 @@ are 8% of trades and its best ones (+0.125 R against +0.049 R, both halves, 2010
 instant account the rule trims part of their profit on release days. Consistency: sources disagree on whether Stellar Instant has a 40%
 best-day rule; with it the first payout's median goes from 1.4 to 4.3 months (`tools/prop_consistency.py`), and
 neither a later claim nor a larger size helps. Confirm with FundedNext before buying - it decides the instant account's
-speed (FTMO stays at ~9.6 months). For AurumHydra's 5x month: Sharpe from 2018
+speed (FTMO stays at ~9.6 months). Alternative without that doubt: **Instant Funding PRO** (instantfunding.com, rules read
+2026-10-15: no target, no daily limit, no consistency rule, 10% maximum loss that tightens to 5% for good once +5%,
+first payout after 14 days once +5%, then weekly; no weekend holding without an add-on; metals and indices 1:5 for
+now). `tools/prop_instantfunding.py`: size 0.5 gives a median 2.5 months to the first payout and no lost accounts
+even at half the edge; size 0.7 2.0 months (6.7% lost at half the edge). EA policy to confirm with them first. For AurumHydra's 5x month: Sharpe from 2018
 3.37 -> 3.71 with both legs (breakout at 0.5% a trade, weight fitted to 2017), so P = N(N^-1(0.2) + S sqrt(1/12))
 goes from 55% to 59%.
 
