@@ -30,6 +30,9 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   0.75 bp.  The same rule on currency pairs fails (one-off check, London 8-16 for EUR/USD and GBP/USD, Tokyo 9-15
   for USD/JPY and AUD/USD, New York 8-16 for USD/CAD): before cost -0.56 to 0.50, after 0.8 bp all negative, as
   expected if the effect comes from option dealers' and leveraged ETFs' hedging in stock indices.
+  Commodities (one-off check, New York pit hours): WTI 9:00-14:30 VM 1.5 0.79 at 2 bp (1.01 | 0.54, 0.01 since
+  2022; histdata lacks 2024 to 2026-05), silver 8:25-13:25 0.56 at 3 bp (0.80 | 0.34, 0.12 since 2022), gold
+  8:20-13:30 0.43 at 1 bp (0.09 since 2022).  CFD spreads on oil and silver are 3-5 bp, so none is kept.
   The paper's conditioning (section 4: higher VIX and low 5-day RSI help) does not hold here: VIX terciles change
   order between halves on the S&P 500, and sizing by VIX/its yearly median or by RSI (1.5x below 40, 0.5x above 60)
   moves the Sharpe by -0.07 to +0.02 (one-off check).  The plain rule stays.
