@@ -22,7 +22,7 @@
 //| European summer time from UTC+InpServerUtc (FTMO: 2).            |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.00"
+#property version   "1.01"
 
 #include <Trade\Trade.mqh>
 
@@ -53,6 +53,7 @@ datetime g_day=0;                       // New York date the arrays below belong
 double   g_sig[NCHECK];                 // average move from the open to each check time
 double   g_hi=0,g_lo=0;                 // max and min of today's open and yesterday's close
 double   g_lev=0;                       // notional per unit of equity for today
+double   g_vol=0;                       // daily volatility of the last InpDays sessions
 bool     g_ready=false;                 // today's bands are known
 int      g_lastCheck=-1;                // index of the last check dealt with today
 bool     g_closed=false;                // the 16:00 close has been done today
@@ -224,6 +225,7 @@ bool Prepare(datetime today)
    g_hi=MathMax(open,prevClose);
    g_lo=MathMin(open,prevClose);
    g_lev=InpSizeMult*MathMin(InpMaxLeverage,InpVolTargetPct/100.0/vol);
+   g_vol=vol;
    PrintFormat("AurumNoise: %s open %.2f, yesterday %.2f, daily volatility %.2f%%, notional %.2fx equity, band at 10:00 %.3f%%",
                TimeToString(today,TIME_DATE),open,prevClose,100*vol,g_lev,100*InpBandMult*g_sig[0]);
    return(true);
@@ -291,7 +293,10 @@ void Open(int side,double ub,double lb)
       Print("AurumNoise: equity too small for the minimum lot, no entry");
       return;
      }
-   bool ok=(side>0 ? g_trade.Buy(lots,_Symbol,0.0,0.0,0.0,"AurumNoise") : g_trade.Sell(lots,_Symbol,0.0,0.0,0.0,"AurumNoise"));
+   // a broker stop three daily volatilities away, only against a lost connection; the band and average exits trade
+   double px=(side>0 ? q.ask : q.bid);
+   double sl=NormalizeDouble(px*(1.0-side*3.0*g_vol),(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS));
+   bool ok=(side>0 ? g_trade.Buy(lots,_Symbol,0.0,sl,0.0,"AurumNoise") : g_trade.Sell(lots,_Symbol,0.0,sl,0.0,"AurumNoise"));
    if(!ok || g_trade.ResultDeal()==0)
       PrintFormat("AurumNoise: order failed, retcode %d (%s)",g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
    else

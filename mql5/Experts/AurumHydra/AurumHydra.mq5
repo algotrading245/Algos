@@ -352,7 +352,7 @@ string   g_noiseSym[2];    // S&P 500 and Nasdaq, "" for one that is missing
 datetime g_noiseDay[2];    // day the bands below belong to
 bool     g_noiseReady[2];  // that day's bands are known
 int      g_noiseLast[2];   // last check dealt with that day
-double   g_noiseSig[2][NOISE_N],g_noiseHi[2],g_noiseLo[2],g_noiseLev[2];
+double   g_noiseSig[2][NOISE_N],g_noiseHi[2],g_noiseLo[2],g_noiseLev[2],g_noiseVol[2];
 
 int HHMM(datetime t)
   {
@@ -1992,6 +1992,7 @@ bool NoisePrepare(int i,datetime today)
    g_noiseHi[i]=MathMax(open,prevClose);
    g_noiseLo[i]=MathMin(open,prevClose);
    g_noiseLev[i]=MathMin(4.0,0.02/vol);
+   g_noiseVol[i]=vol;
    return(true);
   }
 
@@ -2105,8 +2106,12 @@ void Noise()
          PrintFormat("AurumHydra: balance too small for the minimum lot of %s, no noise trade",sym);
          continue;
         }
+      // a broker stop three daily volatilities away, only against a lost connection; the band and average exits
+      // above do the trading
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      double px=(dir>0 ? q.ask : q.bid),sl=NormalizeDouble(px*(1.0-dir*3.0*g_noiseVol[i]),dg);
       Prepare(sym,magic);
-      bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,0.0,0.0,"AurumHydra noise") : g_trade.Sell(lots,sym,0.0,0.0,0.0,"AurumHydra noise"));
+      bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,"AurumHydra noise") : g_trade.Sell(lots,sym,0.0,sl,0.0,"AurumHydra noise"));
       if(!ok || g_trade.ResultDeal()==0)
          PrintFormat("AurumHydra: noise order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
       else
