@@ -36,3 +36,21 @@ powershell -ExecutionPolicy Bypass -File tools\run-funded.ps1 -Preset funded -Fr
 the sources, compiles, runs on real ticks with a 100,000 USD deposit at 1:30, and saves the report and the EA's own
 log lines to `backtests\<date>_funded_<preset>\`. It was written in a cloud session without PowerShell and has not
 been run yet; report any error it prints.
+
+### Tests to run next (Strategy Tester, every tick based on real ticks, from 2024-01-01)
+
+None of these was compiled in the cloud session that wrote them; report any compile error.
+
+1. `AurumBreakout` (USD/JPY London breakout) on **USDJPY**, M1, preset `mql5/Experts/AurumBreakout/AurumBreakout_USDJPY.set`
+   (needs about three months of M1 history before the first trade). Backtest expectation: Sharpe ~0.8-1.0 at the
+   real ~1.2 bp cost, roughly 45-50% winners, ~300 trades a year.
+2. `AurumNoise` (noise-area index momentum) on **US500.cash** and **US100.cash**, M1, presets in
+   `mql5/Experts/AurumNoise/`. Expectation: Sharpe ~0.7 (S&P 500) and ~0.9 (Nasdaq) at their spreads.
+3. If both hold on FTMO's data: `AurumFunded` 1.03 with a funded preset plus `InpBreakRiskPct=0.125` and
+   `InpNoiseMult=0.275` (`-Preset funded` in `tools\run-funded.ps1`, then set the two inputs), or `AurumHydra` 1.33
+   with `InpBreakRiskPct=0.5` and `InpNoiseMult=0.275`.
+
+Prop routes and their simulated first-payout times (details in `docs/HANDOFF.md`): FTMO 2-Step Swing (median ~9.6
+months), FundedNext Stellar Instant (~1.4 months, or ~4.3 if it has a 40% consistency rule - ask them), Instant
+Funding PRO (~2.5 months at size 0.5, preset `AurumFunded_InstantFunding_pro.set` - ask them the Account Drawdown
+figure, their EA policy and their server clock).
