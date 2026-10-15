@@ -19,6 +19,13 @@ as in the paper's appendix), folds trained on all data up to 2011, 2016, 2021 an
 2 and 10 bp.  At test time each day's position is the last output of the LSTM run over the previous 63 days.
 
     python research/deep_momentum.py [--draws 12]
+
+Result (2026-10-15): rejected.  Out of sample 2011-2026, test cost 2 bp: LSTM trained without cost Sharpe -0.16,
+trained with 2 bp cost +0.14 (2011-15 -0.44, 2016-20 -0.84, 2021-26 +0.80); long only +0.55, Sgn(12-month return)
++0.37, MACD -0.11; at 10 bp the LSTM is -0.82 / -0.05.  The validation Sharpe picked the models well in the first
+fold (2.5-2.6 on 2009-2010) and then did not carry over to the test years, nor to the later folds (0.1-0.7).  On
+these 20 markets after 2010 the trend premium the network has to learn is too weak (the benchmarks themselves earn
+0.4-0.6), the paper's 2.80 rests on 88 markets in 1995-2015.  Correlation with the Hydra legs 0.03-0.07.
 """
 import argparse
 import random
