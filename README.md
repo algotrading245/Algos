@@ -42,8 +42,8 @@ been run yet; report any error it prints.
 None of these was compiled in the cloud session that wrote them; report any compile error.
 
 1. `AurumBreakout` (USD/JPY London breakout) on **USDJPY**, M1, preset `mql5/Experts/AurumBreakout/AurumBreakout_USDJPY.set`
-   (needs about three months of M1 history before the first trade). Backtest expectation: Sharpe ~0.8-1.0 at the
-   real ~1.2 bp cost, roughly 45-50% winners, ~300 trades a year.
+   (needs about three months of M1 history before the first trade). Backtest expectation on real ticks for 2024-01 to
+   2026-09: ~777 trades, 47% winners, profit factor ~1.14, +8.6% from 10,000 at 0.25% risk, 5% maximum drawdown.
 2. `AurumNoise` (noise-area index momentum) on **US500.cash** and **US100.cash**, M1, presets in
    `mql5/Experts/AurumNoise/`. Expectation: Sharpe ~0.7 (S&P 500) and ~0.9 (Nasdaq) at their spreads.
 3. If both hold on FTMO's data: `AurumFunded` 1.03 with a funded preset plus `InpBreakRiskPct=0.125` and
