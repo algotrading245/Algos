@@ -18,6 +18,8 @@ Result (2026-10-15), first payout:
   the instant accounts (Instant Funding PRO 2.5 months, FundedNext 1.4 or 4.3).  An AurumFunded preset for it would
   be: target 10, trailing true, InpPropMaxStopPct 8.5, InpPropDayStopPct 2.0 (the firm's daily limit is 3%).
   Verify the maximum loss on ftmo.com first (one review says 6%, which would change this).
+  With both candidate legs at AurumFunded's volatility, size 0.5: within 6 / 9 / 12 months 39 / 68 / 84%, median 7.1
+  months, none failed (half the edge: median 12.9 months, none failed).
 """
 import numpy as np
 
