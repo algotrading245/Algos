@@ -17,6 +17,13 @@ cost, the paper does not say how it handles that); walk-forward folds trained to
 next 5 years (2021 to 2026-10); three seeds; costs in the test 2 and 10 bp.  Baselines as in section 4.2.
 
     python research/drl_futures.py [--steps 30000] [--seeds 3]
+
+Result (2026-10-15, 30,000 training steps a fold, three seeds): rejected.  Out of sample 2011-2026 at 2 bp the three
+seeds earn Sharpe +0.54, -0.06, -0.17 (2011-15 +0.61 / -0.34 / -0.88) - the seed decides, not the model; at 10 bp
++0.01, -0.48, -0.65 (paper 1.26 and robust to 25 bp).  Benchmarks at 2 bp: long +0.55, Sgn(12m) +0.37, MACD -0.11.
+Correlation with the Hydra legs 0.00-0.05.  PG and A2C, which the paper ranks below the DQN, were not run.  With
+the Deep Momentum Network (research/deep_momentum.py) and the EUR/USD agent (research/dl_rl_replication.py) this
+makes three deep-learning / RL replications that do not beat simple rules out of sample on this data.
 """
 import argparse
 import random
