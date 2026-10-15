@@ -20,6 +20,8 @@ Result (2026-10-15), first payout:
   Verify the maximum loss on ftmo.com first (one review says 6%, which would change this).
   With both candidate legs at AurumFunded's volatility, size 0.5: within 6 / 9 / 12 months 39 / 68 / 84%, median 7.1
   months, none failed (half the edge: median 12.9 months, none failed).
+  Size 0.5 is the edge: at 0.55 / 0.6 / 0.65 the 70%-edge median is 7.4 / 7.1 / 6.6 months but half the edge fails
+  13 / 15 / 21% of accounts (with both legs 11 / 22 / 22%) - the presets keep 0.5.
 """
 import numpy as np
 
