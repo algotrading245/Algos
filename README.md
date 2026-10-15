@@ -45,7 +45,8 @@ None of these was compiled in the cloud session that wrote them; report any comp
    (needs about three months of M1 history before the first trade). Backtest expectation on real ticks for 2024-01 to
    2026-09: ~777 trades, 47% winners, profit factor ~1.14, +8.6% from 10,000 at 0.25% risk, 5% maximum drawdown.
 2. `AurumNoise` (noise-area index momentum) on **US500.cash** and **US100.cash**, M1, presets in
-   `mql5/Experts/AurumNoise/`. Expectation: Sharpe ~0.7 (S&P 500) and ~0.9 (Nasdaq) at their spreads.
+   `mql5/Experts/AurumNoise/`. Expectation 2024-01 to 2026-10 from 10,000 at full size: US500 +1.3%, 28.6% maximum drawdown (a
+   weak stretch; 2010-2026 Sharpe ~0.7); US100 +44.7%, 18.5% (Sharpe ~0.9).
 3. If both hold on FTMO's data: `AurumFunded` 1.03 with a funded preset plus `InpBreakRiskPct=0.125` and
    `InpNoiseMult=0.275` (`-Preset funded` in `tools\run-funded.ps1`, then set the two inputs), or `AurumHydra` 1.33
    with `InpBreakRiskPct=0.5` and `InpNoiseMult=0.275`.
