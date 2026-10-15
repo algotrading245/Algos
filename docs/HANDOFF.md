@@ -35,7 +35,8 @@ Rules of the work:
   ~55% -> ~59%).
 - **Prop routes** (simulated median to the first payout at 70% of the edge): FundedNext Stellar Instant 1.4 months (4.3
   if it has a 40% consistency rule), Instant Funding PRO 2.5 months (preset with the Smart Drawdown lock and a
-  floating-loss stop), FTMO 1-Step 7.8 months, FTMO 2-Step 9.6 months. Presets for all four in `mql5/Experts/AurumFunded/`.
+  floating-loss stop; 2.0 months with the DP fast sizing `FAST_IF`, none lost even at half the edge), FTMO 1-Step 7.8
+  months, FTMO 2-Step 9.6 months. Presets for all four in `mql5/Experts/AurumFunded/`.
 - **Waiting on the owner:** Strategy Tester runs (README "Tests to run next"); FundedNext: consistency rule on Stellar
   Instant?; Instant Funding: PRO's Account Drawdown %, EA policy, server clock; FTMO: the 1-Step's maximum loss (10% or 6%).
 - **Research this session** (all in `research/` and the rejected list below): volatility-managed sizing, DQN, Deep

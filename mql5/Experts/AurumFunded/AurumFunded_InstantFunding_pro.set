@@ -12,6 +12,10 @@
 ; Clock: on a live account the EA trades only on days the server is New York + 7 (GMT+2 winter, GMT+3 US summer);
 ; otherwise the Experts log says "no trading today, the server clock is ... hours ahead of GMT". Check the log on the
 ; first day - if that line appears every day, this broker's clock does not fit the EA.
+; Fast sizing (InpPropFast, table FAST_IF, tools/prop_dp_instantfunding.py): until the +5% lock, while at or above
+; the start, sizes from a policy solved for a 42-day horizon; below the start the cushion rule. 70% of the edge:
+; first payout within 1 / 2 / 3 months 28 / 50 / 62%, median 2.0 months (2.5 without), none lost; half the edge with
+; dips: median 2.9 months (3.9 without), none lost.  Set InpPropFastStart to the day the account starts.
 ; Weekend holding needs their add-on; this preset's legs close before the weekend (grid and gold hold are off).
 InpPropTargetPct=0.0
 InpPropRound=1
@@ -22,6 +26,8 @@ InpPropTrailing=false
 InpPropLockPct=5.0
 InpPropLockStopPct=3.5
 InpPropFloatPct=1.7
+InpPropFast=true
+InpPropFastDays=42
 InpPropRoomPct=8.5
 InpPropCap=1.4
 InpPropResetHHMM=0

@@ -463,19 +463,35 @@ const double FAST_P2[9][28]=
    {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.30,0.20,0.20,0.20,0.20},
    {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.30,0.30,0.20,0.20,0.20,0.20,0.20}
   };
+// Instant Funding first payout (tools/prop_dp_instantfunding.py): size by 21-day block of the InpPropFastDays left
+// (row 0 = the last block) and 0.5% step of equity from -8.5%; used while equity is at or above the start and the lock
+// is not in (static -10% floor, payout at +5%). Solved for 42 days, 70% of the edge, a lost account counting -3.
+const double FAST_IF[2][27]=
+  {
+   {1.00,0.20,0.20,0.20,0.20,0.40,0.50,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.60},
+   {1.00,0.20,0.20,0.20,0.20,0.30,0.50,0.50,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.70,0.50,0.30}
+  };
 
 // Size the fast table asks for (absolute, as InpSizeMult), or -1 when it does not apply: not enabled, a funded
 // account, or equity below the phase's start.
 double FastSize()
   {
-   if(!InpPropFast || InpPropTargetPct<=0 || g_propStart<=0)
+   if(!InpPropFast || g_propStart<=0 || (InpPropTargetPct<=0 && InpPropLockPct<=0))
       return(-1.0);
    double eq=(AccountInfoDouble(ACCOUNT_EQUITY)/g_propStart-1.0)*100.0;
    if(eq<0)
       return(-1.0);
-   bool first=(InpPropTargetPct>=10.0);
    datetime from=(InpPropFastStart>0 ? InpPropFastStart : g_propSince);
    int left=InpPropFastDays-Weekdays(DayOf(from),DayOf(TimeCurrent()));
+   if(InpPropTargetPct<=0)                     // instant account with a lock: until the lock, the FAST_IF table
+     {
+      if(g_propLocked)
+         return(-1.0);
+      int b=MathMax(0,MathMin(1,(MathMax(left,1)-1)/21));
+      int c=(int)MathRound((MathMin(eq,4.5)+8.5)/0.5);
+      return(FAST_IF[b][MathMax(0,MathMin(26,c))]);
+     }
+   bool first=(InpPropTargetPct>=10.0);
    int blk=MathMax(0,MathMin(8,(MathMax(left,1)-1)/21));
    int cols=(first ? 38 : 28);
    int k=(int)MathRound((MathMin(eq,0.5*(cols-1)-8.5)+8.5)/0.5);
