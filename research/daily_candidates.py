@@ -18,6 +18,8 @@ Result:
   gold on the last weekday of the month against the month's gold or stock move, 16:00-18:00, 16:00-19:00 server
   time, and the whole day: t from -0.27 to +1.40, signs differ between the halves (hourly bars of HYDRA_H1; a
   one-off check, not repeated by this script)
+  SPY in the week of the monthly option expiry (third Friday) and the week after (one-off check): 6.6 and 7.4 bp a
+  day to 2017 against 4.2 on other days, -1.7 and 7.8 from 2018 against 8.8 - nothing.
 Leg weights: the maximum-Sharpe weights (correlations shrunk to 0 by half or fully) fitted to 2017 give 3.11 to 3.24
 from 2018 against 3.37 for the EA's weights; fitted from 2018 they give 2.78 to 2.82 to 2017 against 2.60.  On the
 whole history 3.10 against 3.01.  No change to the weights: the gain is within the noise.
