@@ -27,7 +27,10 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   two indices 0.62.  Half S&P 500 (VM 1.5) and half Nasdaq (VM 1.0): Sharpe 0.88 at 0.75 bp (0.61 | 1.08), 0.77 at
   1 bp, 0.57 at 1.5 bp.  Added to Hydra with the weight that was best to 2017 (0.55 at 0.75 bp, 0.45 at 1 bp, 0.25
   at 1.5 bp), the Sharpe from 2018 goes from 3.38 to 3.56, 3.53 and 3.46; AurumFunded's legs from 3.25 to 3.44 at
-  0.75 bp.  Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
+  0.75 bp.  The same rule on currency pairs fails (one-off check, London 8-16 for EUR/USD and GBP/USD, Tokyo 9-15
+  for USD/JPY and AUD/USD, New York 8-16 for USD/CAD): before cost -0.56 to 0.50, after 0.8 bp all negative, as
+  expected if the effect comes from option dealers' and leveraged ETFs' hedging in stock indices.
+  Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
 """
 import sys
 from pathlib import Path
