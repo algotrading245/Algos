@@ -131,7 +131,8 @@ weight fitted to 2017, Hydra from 2018 goes from 3.38 to 3.55 (0.75 bp) or 3.46 
 Strategy Tester run on FTMO's data, 2024-01 on, to see the real spread and slippage (Python on 2024-01 to 2026-10
 from 10,000 at full size: US500 +1,550 before cost, +472 at 0.75 bp, drawdown 24-27%, 451 trades; US100 +5,352
 before cost, +3,746 at 0.75 bp, +2,307 at 1.5 bp, drawdown 17-23%, 701 trades), then a merge into AurumHydra and
-AurumFunded if it holds. DAX, FTSE, Nikkei,
+AurumFunded if it holds. Histdata's tick quotes put the spreads at 0.7-1.0 bp (S&P 500) and 0.3 bp (Nasdaq),
+so 0.75 bp is about right on average. DAX, FTSE, Nikkei,
 currencies, oil, silver and gold do not add.
 
 **Candidate leg (2026-10-15): USD/JPY London breakout** (the retail "London breakout" concept, own test;

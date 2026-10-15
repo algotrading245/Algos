@@ -47,6 +47,9 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   The paper's conditioning (section 4: higher VIX and low 5-day RSI help) does not hold here: VIX terciles change
   order between halves on the S&P 500, and sizing by VIX/its yearly median or by RSI (1.5x below 40, 0.5x above 60)
   moves the Sharpe by -0.07 to +0.02 (one-off check).  The plain rule stays.
+  Quoted spreads in histdata's tick quotes, New York session (one-off check, 2026-10-15): S&P 500 0.67 bp median in
+  2026-09 and 0.99 bp in 2024-03, Nasdaq 0.32 bp in 2026-09, no wider in the first 15 minutes - the 0.75 bp
+  assumption is about right on average, the Nasdaq half cheaper.  FTMO's own spreads still to be seen in the tester.
   Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
 """
 import sys
