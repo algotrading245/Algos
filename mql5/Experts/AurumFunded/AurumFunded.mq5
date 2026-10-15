@@ -18,11 +18,16 @@
 //|   number of trading days is done, everything is closed and the   |
 //|   EA halts. While days are missing it trades on at               |
 //|   InpPropCoast times its size. 0 = no target (funded account).   |
-//| - Near the final stop: once equity is less than InpPropRoomPct   |
-//|   above it, every size shrinks in proportion (not below          |
-//|   InpPropMinSize). In the backtest with half the edge this took  |
-//|   the pass rate at size 0.5 from 94% to 100% and the funded      |
-//|   accounts alive after a year from 93% to 100%.                  |
+//| - Cushion sizing: every size is multiplied by (equity - final    |
+//|   stop) / InpPropRoomPct, at least InpPropMinSize and at most     |
+//|   InpPropCap. With the room equal to the final stop (8.5) the    |
+//|   size is 1 at the start, shrinks toward the final stop and grows|
+//|   with profit up to 1.4x at +3.4%. On the path from buying the   |
+//|   challenge to the first payout (tools/prop_sizing.py, 70% of the|
+//|   backtested edge) the first payout came within 9 months 46% of  |
+//|   the time against 37% with the old rule (room 6.5, cap 1),      |
+//|   median 9.6 months against 10.6, and with half the edge and a   |
+//|   pessimistic intraday stand-in no path failed against 7.8%.     |
 //| - Each gold unit carries a stop at the broker that loses         |
 //|   InpGoldStopPct of equity, for when the terminal is down; every |
 //|   other leg already has one.                                     |
@@ -48,7 +53,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.00"
+#property version   "1.01"
 #include <Math\Stat\Normal.mqh>
 
 #include <Trade\Trade.mqh>
@@ -66,8 +71,9 @@ input int    InpPropMinDays     = 4;     // Trading days the firm asks for befor
 input double InpPropDayStopPct  = 3.0;   // Day stop: close everything for the day at this loss (the firm's limit is 5)
 input double InpPropMaxStopPct  = 8.5;   // Final stop: close everything and halt at this loss (the firm's limit is 10)
 input bool   InpPropTrailing    = false; // The firm's maximum loss trails the highest day-start balance
-input double InpPropRoomPct     = 6.5;   // Sizes shrink in proportion once the room to the final stop is below this (0 = off)
+input double InpPropRoomPct     = 8.5;   // Cushion sizing: size x (equity - final stop) / this, % of the initial balance (0 = off)
 input double InpPropMinSize     = 0.3;   // ... but not below this share
+input double InpPropCap         = 1.4;   // ... and not above this multiple
 input double InpPropCoast       = 0.1;   // Size multiple while the target is reached and trading days are missing
 input int    InpPropResetHHMM   = 100;   // The firm's day starts at this server time (FTMO: midnight CE(S)T = 01:00)
 input bool   InpEuClock         = true;  // Server clock follows European summer time (false = New York + 7 hours all year)
@@ -378,12 +384,13 @@ double PropFloor()
    return((InpPropTrailing ? g_propPeak : g_propStart)-g_propStart*InpPropMaxStopPct/100.0);
   }
 
-// Size multiple of the guard: smaller near the final stop, InpPropCoast while only trading days are missing.
+// Size multiple of the guard: the cushion above the final stop over InpPropRoomPct, between InpPropMinSize and
+// InpPropCap, and InpPropCoast while only trading days are missing.
 double PropSize()
   {
    double f=(g_propCoast ? InpPropCoast : 1.0);
    if(InpPropRoomPct>0 && g_propStart>0)
-      f*=MathMax(InpPropMinSize,MathMin(1.0,(AccountInfoDouble(ACCOUNT_EQUITY)-PropFloor())/(g_propStart*InpPropRoomPct/100.0)));
+      f*=MathMax(InpPropMinSize,MathMin(InpPropCap,(AccountInfoDouble(ACCOUNT_EQUITY)-PropFloor())/(g_propStart*InpPropRoomPct/100.0)));
    return(f);
   }
 
@@ -2087,7 +2094,7 @@ int OnInit()
       InpDriftLev<0 || InpDriftMaxLev<=0 || InpDriftHHMM<0 || InpDriftHHMM%100>59 || InpDriftExitHHMM%100>59 || InpDriftExitHHMM>2359 ||
       HHMMSec(InpDriftExitHHMM)<HHMMSec(InpDriftHHMM)+300 || InpDriftEntrySec<1 || InpDriftMaxSpread<=0 ||
       InpPropStart<0 || InpPropTargetPct<0 || InpPropMinDays<0 || InpPropDayStopPct<=0 || InpPropMaxStopPct<=0 ||
-      InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
+      InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
       InpPropResetHHMM>2359 || InpPropResetHHMM%100>59 || InpGoldStopPct<0 ||
       InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0)
       return(INIT_PARAMETERS_INCORRECT);

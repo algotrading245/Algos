@@ -71,6 +71,11 @@ Funded-account preset, 2024-01-01 to 2026-10-14: +110% in 34 months, equity draw
 worst month -2.1%, mean month +2.25%, 23 of 34 months positive; about 70% of the Python model's log growth
 (`backtests/2026-10-15_funded_account/summary.md`).
 
+**v1.01 (2026-10-15): cushion sizing.** Size x (equity - final stop) / 8.5%, between 0.3 and 1.4: 1 at the start,
+smaller toward the final stop, up to 1.4 with profit. On the path to the first payout (`tools/prop_sizing.py`, 70%
+of the edge) the first payout comes within 9 months 46% of the time (old rule 37%), median 9.6 months (10.6), and
+with half the edge and pessimistic intraday dips no path fails (7.8%). Not yet re-run in the Strategy Tester.
+
 Open points for EA 2:
 
 - Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
