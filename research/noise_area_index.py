@@ -53,6 +53,9 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   At those measured costs (S&P 500 1.0 bp, Nasdaq 0.4 bp; one-off check): S&P 0.70 (0.58 / 0.79), Nasdaq 0.89
   (0.56 / 1.18); the split and weight picked on 2010-2017 are again half and half at 0.55 - Hydra 3.37 -> 3.55 from
   2018, AurumFunded 3.24 -> 3.43.  Nasdaq alone did better from 2018 (1.18) but nothing to 2017 said so.
+  USD/JPY on London hours (8:00-16:00 London; one check after the London-breakout finding): before cost 0.83 /
+  0.75 (VM 1 / 1.5), at 1.2 bp -0.31 / -0.12 (negative to 2017), correlation 0.4-0.5 with the breakout leg - the
+  breakout already holds what there is.
   Next: FTMO's spread on US500.cash and US100.cash, then an MQL5 version and the Strategy Tester.
 """
 import sys
