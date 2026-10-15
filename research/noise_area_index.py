@@ -30,6 +30,10 @@ Result (2010-11 to 2026-10), a candidate leg, not yet in an EA:
   0.75 bp.  The same rule on currency pairs fails (one-off check, London 8-16 for EUR/USD and GBP/USD, Tokyo 9-15
   for USD/JPY and AUD/USD, New York 8-16 for USD/CAD): before cost -0.56 to 0.50, after 0.8 bp all negative, as
   expected if the effect comes from option dealers' and leveraged ETFs' hedging in stock indices.
+  Other indices on their own exchange's clock, 0.75 bp: DAX VM 1.5 0.38 (0.32 | 0.43), Nikkei VM 1 0.77 (0.98 |
+  0.56, 0.20 since 2022; JP225 spreads are nearer 2 bp), FTSE 100 -0.19 (0.25 before cost).  Correlations: S&P 500
+  and Nasdaq 0.62, DAX and FTSE 0.29, the rest about 0.  Hydra from 2018 with the weight fitted to 2017, 0.75 bp:
+  US two 3.38 -> 3.55, plus DAX 3.57, plus FTSE 3.48, all five 3.53 - so the leg is the S&P 500 and the Nasdaq.
   Commodities (one-off check, New York pit hours): WTI 9:00-14:30 VM 1.5 0.79 at 2 bp (1.01 | 0.54, 0.01 since
   2022; histdata lacks 2024 to 2026-05), silver 8:25-13:25 0.56 at 3 bp (0.80 | 0.34, 0.12 since 2022), gold
   8:20-13:30 0.43 at 1 bp (0.09 since 2022).  CFD spreads on oil and silver are 3-5 bp, so none is kept.
