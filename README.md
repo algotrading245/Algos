@@ -50,6 +50,10 @@ None of these was compiled in the cloud session that wrote them; report any comp
 3. If both hold on FTMO's data: `AurumFunded` 1.03 with a funded preset plus `InpBreakRiskPct=0.125` and
    `InpNoiseMult=0.275` (`-Preset funded` in `tools\run-funded.ps1`, then set the two inputs), or `AurumHydra` 1.33
    with `InpBreakRiskPct=0.5` and `InpNoiseMult=0.275`.
+   Compare it with the same run with both legs off: the Python model (2024-01 to 2026-10, size 0.5, no prop rules)
+   gives +189% / 5.2% drawdown without and +213% / 6.0% with them (Sharpe 3.51 -> 3.59, positive months 28 -> 29 of 34);
+   the earlier tester run of the funded preset made +110% with 4.1%, so expect the tester's figures lower than the
+   model's but about a tenth more profit and a little more drawdown with the legs on.
 
 Prop routes and their simulated first-payout times (details in `docs/HANDOFF.md`): FTMO 2-Step Swing (median ~9.6
 months), FTMO 1-Step (~7.8 months at size 0.5, `-Preset 1step` / `1step_funded`; verify its maximum loss on ftmo.com), FundedNext Stellar Instant (~1.4 months, or ~4.3 if it has a 40% consistency rule - ask them), Instant
