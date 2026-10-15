@@ -17,7 +17,11 @@ Result (2026-10-15):
   Against FundedNext Stellar Instant (1.4 months without a consistency rule, 4.3 with one) this account has no
   consistency rule on its own page, a larger first claim (+5% at 80% share) and room for size 0.5-0.7.  Its EA policy
   is not on the rules page (a review site says only HFT, tick scalping, server exploits and cross-account hedging are
-  banned) - to be confirmed before buying.  The "5% of the starting balance" after the lock is read as a floor at -5%.
+  banned) - to be confirmed before buying.  The lock is confirmed by their example ($9,000, then $9,500 after +$500).
+  Their "Account Drawdown" (open positions closed at a set floating loss, 2% in their example; split to 50% the
+  first time, account lost the second) is met by the EA's InpPropFloatPct closing first: modelled as a day cut at
+  -1.7% (x1.2 slip) it leaves the odds as above (size 0.5 median 2.5 months, none lost; size 0.7 5.6% lost at half
+  the edge instead of 6.7%).
 """
 import numpy as np
 
