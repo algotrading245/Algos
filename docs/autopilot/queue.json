@@ -85,8 +85,9 @@
       "set": [],
       "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
       "from": "2024.01.01",
-      "status": "queued",
+      "status": "running",
       "needs": null,
+      "folder": "backtests\\2026-10-17_0705_AurumHydra_size1_off",
       "expect": "Step 16 for AurumHydra, replacing j4. research/hydra_tester_expect.py (daily legs 2024-01 to 2026-10-12, compounded, 35% halt): legs off model +1184% / 10.7% DD, legs on +1574% / 11.5%; at the 70% of log growth the j3 runs kept, about +500% off and +620% on. Daily data cannot see intraday dips and Hydra carries gold at up to 6.2x equity, so expect the tester's equity drawdown well above the model's, roughly 15-25%. Every symbol of the preset should trade (check the by-symbol list: XAUUSD, AUDCAD, the 5 dollar pairs, 4 yen crosses, US100.cash and US500.cash in the on run). Step 16 test: return per unit of equity drawdown higher with the legs on (model 110 -> 136).",
       "note": "Queued by the orchestrator 2026-10-17 07:10 after j4 proved a set-up fault. New preset AurumHydra_FTMO_size1.set: FTMO names for all 16 symbol inputs (AurumFunded's defaults, all traded in j3), size 1, no goal mode, the EA's default 35% drawdown halt."
     }

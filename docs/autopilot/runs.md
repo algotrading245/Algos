@@ -17,3 +17,4 @@ committed).
 | 2026-10-17 06:27 | tester | Collected j4 base (5x_off: +9.47%, 14.98% eq DD, PF 1.58, 32 trades, round ended 2024-02-01); wrote summary.md; started j4 legs-on run (tag 5x_on) detached, pid 15008 | j4 off done, j4 on running |
 | 2026-10-17 06:36 | tester | Collected j4 legs-on (5x_on: +14.79%, 25.84% eq DD, PF 1.32, 49 trades, worst day -8.5% vs off +9.47% / 14.98%); wrote summary.md; queue empty, released Terminal 16 | j4 done, needs judging |
 | 2026-10-17 07:10 | orchestrator | Judged j3 legs-on (+221.5%/8.28% vs ~+185-190%/7.5-8%, return per DD 25.1 -> 26.7: both legs pass step 16 in AurumFunded) and j4 (set-up fault: 12 of 16 symbols on another broker's names, one goal round at 100); new preset AurumHydra_FTMO_size1.set, queued j5 (research/hydra_tester_expect.py), added a3 (owner: legs on in the demo?) | j5 queued |
+| 2026-10-17 07:06 | tester | Held Terminal 16; started j5 base run (size1_off, legs off) detached, pid 15288 | j5 off running |
