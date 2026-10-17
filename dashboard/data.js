@@ -1,5 +1,5 @@
 window.AURUM = {
- "generated": "2026-10-17T01:32",
+ "generated": "2026-10-17T01:39",
  "pipeline": {
   "about": "The 20 steps every idea goes through, in order; an idea stops at the first failed gate. 'agent' is the role file in .claude/agents/, 'orchestrator' is the main Opus session. The dashboard (python tools/dashboard.py) reads this file.",
   "phases": {
