@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurum Live</title>
+<style>
+:root{--bg:#0b0e14;--panel:#121722;--panel2:#171e2c;--line:#243047;--tx:#d7e0f0;--dim:#7d8aa5;--acc:#5ad1ff;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--think:#c4a1ff;--tool:#5ad1ff;--res:#6ee7b7}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f4f6fb;--panel:#fff;--panel2:#eef1f8;--line:#d5dbe8;--tx:#1b2433;--dim:#5d6a85;--acc:#0a7fb8;--think:#7c3aed;--res:#047857}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,Segoe UI,sans-serif}
+body{display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;gap:14px;align-items:center;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+h1{font-size:15px;margin:0;letter-spacing:.04em}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--bad);display:inline-block;margin-right:6px}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.stat{color:var(--dim);font-variant-numeric:tabular-nums}.stat b{color:var(--tx)}
+.badge{padding:2px 8px;border-radius:99px;font-size:12px;border:1px solid var(--line);color:var(--dim)}
+.badge.warn{color:var(--warn);border-color:var(--warn)}
+main{display:grid;grid-template-columns:260px 1fr 280px;min-height:0}
+aside{overflow:auto;padding:12px;border-right:1px solid var(--line);background:var(--panel)}
+aside.r{border-right:0;border-left:1px solid var(--line)}
+aside h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:14px 0 8px}
+aside h2:first-child{margin-top:0}
+.agent{padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--panel2);transition:.15s}
+.agent:hover{border-color:var(--acc)}.agent.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.agent .n{display:flex;justify-content:space-between;font-weight:600}
+.agent .s{color:var(--dim);font-size:12px;margin-top:2px}
+.agent.live .n::after{content:"LIVE";color:var(--ok);font-size:10px;border:1px solid var(--ok);border-radius:4px;padding:0 4px;animation:pulse 1.2s infinite}
+section{display:flex;flex-direction:column;min-height:0}
+.bar{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.chip{padding:3px 10px;border-radius:99px;border:1px solid var(--line);cursor:pointer;user-select:none;font-size:12px;color:var(--dim)}
+.chip.on{color:var(--tx);border-color:var(--acc);background:var(--panel2)}
+input[type=search]{background:var(--panel2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:5px 9px;min-width:160px}
+button{background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+#feed{flex:1;overflow:auto;padding:12px 16px;scroll-behavior:auto}
+.run{margin:18px 0 6px;color:var(--dim);font-size:12px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+.ev{margin:6px 0;padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:var(--panel);white-space:pre-wrap;word-break:break-word;animation:in .18s}
+@keyframes in{from{opacity:0;transform:translateY(4px)}}
+.ev .h{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:3px;display:flex;gap:8px}
+.ev.text{border-left:3px solid var(--acc)}
+.ev.thinking{border-left:3px solid var(--think);color:var(--dim);font-style:italic}
+.ev.tool{border-left:3px solid var(--tool);font-family:Consolas,monospace;font-size:12.5px;cursor:pointer}
+.ev.tool .res{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);color:var(--res);max-height:5.6em;overflow:hidden}
+.ev.tool.open .res{max-height:none}
+.ev.tool .res.err{color:var(--bad)}
+.ev.sys,.ev.done{font-size:12px;color:var(--dim)}
+.ev.done{border-left:3px solid var(--ok)}.ev.done.bad{border-left-color:var(--bad)}
+.live-caret::after{content:"▍";animation:pulse .8s infinite;color:var(--acc)}
+.hide{display:none}
+.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--dim)}.kv b{color:var(--tx);font-weight:500}
+.job{font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line)}.job span{float:right}
+.st-done{color:var(--ok)}.st-running{color:var(--warn)}.st-failed{color:var(--bad)}.st-queued{color:var(--acc)}
+@media (max-width:900px){main{grid-template-columns:1fr}aside{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>AURUM · AGENTS LIVE</h1>
+  <span><span id="dot" class="dot"></span><span id="conn">connecting</span></span>
+  <span class="stat">events/s <b id="eps">0</b></span>
+  <span class="stat">total <b id="tot">0</b></span>
+  <span class="stat">last event <b id="age">-</b></span>
+  <span id="pause" class="badge hide warn">PAUSED (PAUSE file)</span>
+  <span id="hold" class="badge hide warn"></span>
+  <span style="flex:1"></span>
+  <button id="theme">theme</button>
+</header>
+<main>
+  <aside id="agents"><h2>Agents</h2><div id="alist"></div></aside>
+  <section>
+    <div class="bar">
+      <span class="chip on" data-k="text">says</span>
+      <span class="chip on" data-k="thinking">thinking</span>
+      <span class="chip on" data-k="tool">tools</span>
+      <span class="chip on" data-k="sys">system</span>
+      <input id="q" type="search" placeholder="filter text…">
+      <label class="stat"><input id="follow" type="checkbox" checked> follow</label>
+      <button id="expand">expand all</button>
+      <button id="clear">clear view</button>
+    </div>
+    <div id="feed"></div>
+  </section>
+  <aside class="r">
+    <h2>Relay</h2><div id="relay"></div>
+    <h2>Last run per agent</h2><div id="lastruns"></div>
+    <h2>Queue (last 12)</h2><div id="jobs"></div>
+  </aside>
+</main>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), feed=$("#feed");
+let selRole=null, total=0, win=[], lastEv=0, lastRun=null;
+const filters={text:true,thinking:true,tool:true,sys:true};
+const blocks=new Map();      // run:index -> element being streamed
+const tools=new Map();       // tool_use id -> element
+const streamedLeft=new Map();// run -> blocks started and not yet confirmed by a full message
+const MAX=2500;
+
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function ts(t){return new Date(t*1000).toLocaleTimeString([], {hour12:false})+"."+String(Math.floor(t*1000)%1000).padStart(3,"0")}
+function runHeader(d){
+  if(lastRun===d.run)return; lastRun=d.run;
+  const h=el("div","run",`${d.role} · run ${d.run}`);h.dataset.role=d.role;feed.append(h);
+}
+function mk(d,kind,head,body){
+  runHeader(d);
+  const e=el("div","ev "+kind);e.dataset.role=d.role;e.dataset.kind=kind;
+  const h=el("div","h");h.append(el("span",null,head),el("span",null,d.role),el("span",null,ts(d.t)));
+  const b=el("div","body",body||"");e.append(h,b);feed.append(e);apply(e);return e;
+}
+function apply(e){
+  const k=e.dataset.kind, hidden=(selRole&&e.dataset.role!==selRole)||!filters[k==="done"?"sys":k]||
+    ($("#q").value&&!e.textContent.toLowerCase().includes($("#q").value.toLowerCase()));
+  e.classList.toggle("hide",!!hidden);
+}
+function refilter(){
+  feed.querySelectorAll(".ev").forEach(apply);
+  feed.querySelectorAll(".run").forEach(r=>r.classList.toggle("hide",!!(selRole&&r.dataset.role!==selRole)));
+}
+function toolCard(d,name,inp,id){
+  const e=mk(d,"tool","tool · "+name,inp);e.addEventListener("click",()=>e.classList.toggle("open"));
+  if(id)tools.set(id,e);return e;
+}
+function handle(d){
+  total++;win.push(Date.now());lastEv=Date.now();
+  const key=d.run+":"+d.i;
+  switch(d.k){
+    case "start":
+      if(d.ch==="text"||d.ch==="thinking"||d.ch==="tool_use"){
+        streamedLeft.set(d.run,(streamedLeft.get(d.run)||0)+1);
+        let e;
+        if(d.ch==="tool_use"){e=toolCard(d,d.name,"");e.dataset.pending="1"}
+        else e=mk(d,d.ch==="text"?"text":"thinking",d.ch==="text"?"says":"thinking","");
+        e.lastChild.classList.add("live-caret");blocks.set(key,e);
+      }break;
+    case "delta":{
+      const e=blocks.get(key);if(e){e.lastChild.textContent+=d.s;apply(e)}break}
+    case "msg":
+      for(const p of d.parts){
+        if(p.k==="result"){
+          const t=tools.get(p.id);
+          if(t){const r=el("div","res"+(p.err?" err":""),p.s);t.append(r)}
+          else{mk(d,"tool","result",p.s)}
+          continue;
+        }
+        const left=streamedLeft.get(d.run)||0;
+        if(left>0&&(p.k==="text"||p.k==="thinking"||p.k==="tool")){
+          streamedLeft.set(d.run,left-1);
+          // finalize the streamed block with the complete text
+          for(const [k2,e] of blocks){ if(k2.startsWith(d.run+":")&&e.dataset.kind===(p.k==="tool"?"tool":p.k)&&e.lastChild.classList.contains("live-caret")){
+            e.lastChild.classList.remove("live-caret");
+            if(p.k==="tool"){e.lastChild.textContent=p.input;tools.set(p.id,e);e.firstChild.firstChild.textContent="tool · "+p.name}
+            else e.lastChild.textContent=p.s;
+            blocks.delete(k2);break}}
+        }else if(p.k==="tool")toolCard(d,p.name,p.input,p.id);
+        else if(p.k==="text")mk(d,"text","says",p.s);
+        else if(p.k==="thinking")mk(d,"thinking","thinking",p.s);
+      }break;
+    case "init":mk(d,"sys","session",`model ${d.model} · ${d.tools} tools · permission mode ${d.perm}`);break;
+    case "turn":break;
+    case "sys":mk(d,"sys","system",d.s);break;
+    case "done":{
+      const u=d.usage||{};
+      const e=mk(d,"done",d.ok?"finished":"ended with error",
+        `${d.turns??"?"} turns · ${(d.ms/1000).toFixed(1)} s · stop: ${d.stop??"?"} · denied tool calls: ${d.denied}`+
+        `\ntokens in ${u.input_tokens??"?"} / cache read ${u.cache_read_input_tokens??"?"} / out ${u.output_tokens??"?"}`+
+        (d.cost!=null?` · reported cost $${Number(d.cost).toFixed(4)} (as reported by the CLI; subscription runs are not billed per token)`:""));
+      if(!d.ok)e.classList.add("bad");
+      for(const [k2,b] of blocks)if(k2.startsWith(d.run+":")){b.lastChild.classList.remove("live-caret");blocks.delete(k2)}
+      break}
+  }
+}
+function ingest(batch){
+  const atBottom=feed.scrollHeight-feed.scrollTop-feed.clientHeight<80;
+  for(const d of batch)handle(d);
+  while(feed.childElementCount>MAX)feed.firstChild.remove();
+  if($("#follow").checked&&atBottom)feed.scrollTop=feed.scrollHeight;
+}
+function fmtAge(ms){return ms<1000?ms+" ms":ms<60000?(ms/1000).toFixed(1)+" s":Math.round(ms/60000)+" min"}
+setInterval(()=>{
+  const now=Date.now();win=win.filter(t=>now-t<1000);
+  $("#eps").textContent=win.length;$("#tot").textContent=total;
+  $("#age").textContent=lastEv?fmtAge(now-lastEv)+" ago":"-";
+},100);
+
+function renderState(s){
+  $("#pause").classList.toggle("hide",!s.paused);
+  const h=$("#hold");h.classList.toggle("hide",!s.hold);if(s.hold)h.textContent="Terminal 16 held until "+(s.hold.until||"?").replace("T"," ").slice(0,16);
+  const al=$("#alist");al.replaceChildren();
+  for(const [r,a] of Object.entries(s.agents)){
+    const c=el("div","agent"+(a.live?" live":"")+(selRole===r?" sel":""));
+    const n=el("div","n");n.append(el("span",null,r));
+    const l=a.last||{};
+    c.append(n,el("div","s",l.ended?`last ended ${l.ended.replace("T"," ")} · exit ${l.exit}`:"no run yet"),el("div","s",`${a.runs} run files`));
+    c.onclick=()=>{selRole=selRole===r?null:r;refilter();renderState(s)};
+    al.append(c);
+  }
+  const rl=$("#relay");rl.replaceChildren();
+  const rel=s.relay||{};
+  for(const [k,v] of [["from",rel.from],["next",rel.next],["due",(rel.due||"").replace("T"," ")],["why",rel.reason],["backoff until",rel.backoff_until]]){
+    if(v){const d=el("div","kv");d.append(el("span",null,k),el("b",null,String(v).slice(0,70)));rl.append(d)}
+  }
+  const lr=$("#lastruns");lr.replaceChildren();
+  const jb=$("#jobs");jb.replaceChildren();
+  for(const j of s.jobs){const d=el("div","job");d.append(document.createTextNode(j.id+" "),el("span","st-"+j.status,j.status));jb.append(d)}
+}
+async function poll(){try{renderState(await (await fetch("/api/state")).json())}catch(e){}}
+
+function connect(){
+  const es=new EventSource("/stream");
+  es.onopen=()=>{$("#dot").classList.add("on");$("#conn").textContent="live"};
+  es.onmessage=m=>{try{ingest(JSON.parse(m.data).batch)}catch(e){console.error(e)}};
+  es.addEventListener("state",m=>renderState(JSON.parse(m.data)));
+  es.onerror=()=>{$("#dot").classList.remove("on");$("#conn").textContent="reconnecting…"};
+}
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{filters[c.dataset.k]=!filters[c.dataset.k];c.classList.toggle("on");refilter()});
+$("#q").oninput=refilter;
+$("#clear").onclick=()=>{feed.replaceChildren();blocks.clear();tools.clear();lastRun=null};
+let ex=false;$("#expand").onclick=()=>{ex=!ex;feed.querySelectorAll(".ev.tool").forEach(e=>e.classList.toggle("open",ex));$("#expand").textContent=ex?"collapse all":"expand all"};
+$("#theme").onclick=()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==="dark"?"light":"dark"};
+poll();connect();
+</script>
+</body>
+</html>

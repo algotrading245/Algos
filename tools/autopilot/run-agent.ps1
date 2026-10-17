@@ -50,7 +50,7 @@ $($status -join "`n")
 $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
 "@
     $argv = @("-p", "--settings", (Join-Path $PSScriptRoot "settings.json"), "--permission-mode", "dontAsk",
-        "--permission-prompts", "none", "--max-turns", $cfg.Turns, "--output-format", "json") + $cfg.Args
+        "--permission-prompts", "none", "--max-turns", $cfg.Turns, "--output-format", "stream-json", "--verbose", "--include-partial-messages") + $cfg.Args
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $exe
     $psi.Arguments = ($argv | ForEach-Object { if ("$_" -match '\s') { '"' + $_ + '"' } else { "$_" } }) -join " "
@@ -69,15 +69,37 @@ $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($prompt)
     $p.StandardInput.BaseStream.Write($bytes, 0, $bytes.Length)
     $p.StandardInput.Close()
-    $out = $p.StandardOutput.ReadToEndAsync()
     $err = $p.StandardError.ReadToEndAsync()
-    $timedOut = -not $p.WaitForExit($cfg.Minutes * 60000)
-    if ($timedOut) { & taskkill.exe /PID $p.Id /T /F | Out-Null; $p.WaitForExit(30000) | Out-Null }
+    # Every stream-json event is appended to logs/autopilot/events/<stamp>_<role>.jsonl as it arrives (the live
+    # dashboard, tools\live_server.py, tails it); the closing "result" event is the old json output.
+    $evDir = Join-Path $LogDir "events"; New-Item -ItemType Directory -Force $evDir | Out-Null
+    $evFile = Join-Path $evDir ("{0}_{1}.jsonl" -f $started.ToString("yyyyMMdd-HHmmss"), $Role)
+    $sw = New-Object System.IO.StreamWriter($evFile, $true, (New-Object System.Text.UTF8Encoding($false)))
+    $sw.AutoFlush = $true
+    $res = $null; $raw = New-Object System.Collections.Generic.List[string]; $timedOut = $false
+    $deadline = $started.AddMinutes($cfg.Minutes)
+    $lineTask = $p.StandardOutput.ReadLineAsync()
+    while ($true) {
+        if ($lineTask.Wait(250)) {
+            $line = $lineTask.Result
+            if ($null -eq $line) { break }
+            $sw.WriteLine($line)
+            if ($line.Contains('"type":"result"') -and $line.Contains('"duration_ms"')) {
+                $r = try { $line | ConvertFrom-Json } catch { $null }
+                if ($r -and $r.type -eq "result") { $res = $r }
+            }
+            elseif (-not $line.StartsWith('{')) { $raw.Add($line) }
+            $lineTask = $p.StandardOutput.ReadLineAsync()
+        } elseif ((Get-Date) -gt $deadline) {
+            $timedOut = $true; & taskkill.exe /PID $p.Id /T /F | Out-Null; break
+        }
+    }
+    $p.WaitForExit(30000) | Out-Null
+    $sw.Close()
     $code = if ($timedOut) { -1 } else { $p.ExitCode }
 
-    # JSON output: the answer text plus the tool calls the permission rules refused (logged so a rule can be fixed).
-    $res = try { $out.Result | ConvertFrom-Json } catch { $null }
-    $text = if ($res -and $res.result) { "$($res.result)" } else { $out.Result }
+    # The result event: the answer text plus the tool calls the permission rules refused (logged so a rule can be fixed).
+    $text = if ($res -and $res.result) { "$($res.result)" } else { $raw -join "`n" }
     Write-Log $log ("output:`n" + $text.Trim() + $(if ($err.Result.Trim()) { "`nstderr:`n" + $err.Result.Trim() } else { "" }))
     foreach ($d in @($res.permission_denials | Where-Object { $_ })) {
         Write-Log $log "denied: $($d.tool_name) $($d.tool_input | ConvertTo-Json -Compress -Depth 3)"
