@@ -47,6 +47,16 @@ Rules of the work:
   (queued after j3). Noise is now at step 16, like the breakout: the j3 and j4 legs-on runs decide. Watch in them
   whether the S&P half helps at all in 2024-26; if not, that is a reason to look again, not to drop it from a
   32-month stretch (its Python halves are 0.61 / 1.08, and refitting weights on the tester window is ruled out).
+- **j3 base run judged (orchestrator, 2026-10-17 05:55): matches.** AurumFunded 1.03, legs off, funded preset,
+  2024-01 on: +167.7%, 6.67% equity drawdown, 17 day stops, against the queue's "+110%, 4.1%, no day stop". That
+  expectation came from the 2026-10-15 run of **1.00**, whose cushion sizing was capped at 1.0; 1.01 caps it at 1.4,
+  so after +3.5% every leg trades 1.4 times its size. On that sizing the Python model gives +331% / 7.2%
+  (`research/funded_tester_gap.py`); the tester keeps 67% of its log growth (the 1.00 run kept 70%) and the drawdown is
+  inside the model's 6.2-7.2%. The day stop is 3% of the *initial* balance, so as the account compounds it shrinks
+  as a share of equity (1.1% at 2.7x), which is why it fires in 2025-26. On a real funded account payouts keep equity
+  near the start, so the tester's 17 hits overstate it; the worst day (-2.70%) stays well inside FTMO's 5%. **Legs-on
+  run, judged against the same sizing:** model +381% / 8.4%, so expect about +185-190% and 7.5-8% drawdown, with more
+  day stops. Clearly below the base's +168% would count against the legs.
 - `backtests/2026-10-17_0056_AurumBreakout_USDJPY/` holds only a `tester.ini` (an aborted start before the 01:18
   run); left untracked.
 - **Autopilot = agent relay** (`tools/autopilot/relay.ps1`, task "Aurum Relay" every 5 min; it replaced the

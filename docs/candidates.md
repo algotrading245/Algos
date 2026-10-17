@@ -20,7 +20,7 @@ Gates (2026-10-17, dry run): **PASS**
 
 Strategy Tester (backtests/2026-10-17_0118_AurumBreakout_USDJPY): 771 trades, 47.73% winners, PF 1.16, +9.96%, max equity drawdown 4.02% - matches the Python figures; step 15 passed.
 
-Notes: The gates' own 2017-fitted weight (k=0.5 of Hydra's volatility) adds nothing from 2018 (3.37 -> 3.36): the leg was stronger to 2017 (1.18) than after (0.83), so the fit over-weights it. At AurumFunded's tested size (weight 1 = 0.125% risk) Hydra 3.37 -> 3.43. HANDOFF's 0.5% risk for Hydra (weight 4) gives about 3.46. The tester run decides whether it stays.
+Notes: The gates' own 2017-fitted weight (k=0.5 of Hydra's volatility) adds nothing from 2018 (3.37 -> 3.36): the leg was stronger to 2017 (1.18) than after (0.83), so the fit over-weights it. At AurumFunded's tested size (weight 1 = 0.125% risk) Hydra 3.37 -> 3.43. HANDOFF's 0.5% risk for Hydra (weight 4) gives about 3.46. The tester run decides whether it stays. Step 16 base: j3 legs off (AurumFunded 1.03, backtests/2026-10-17_0505_AurumFunded_funded_off) +167.7%, 6.67% eq DD, 17 day stops - matches the model once the 1.4 cushion cap of 1.01 is counted (research/funded_tester_gap.py). The legs-on run (both candidates) should give about +185-190% and 7.5-8% DD; well under the base's growth would count against the legs.
 
 ## Noise-area intraday momentum, S&P 500 and Nasdaq (`noise`)
 
@@ -42,7 +42,7 @@ Strategy Tester (backtests/2026-10-17_0457_AurumNoise_US500): 452 trades, 39.6% 
 
 Strategy Tester (backtests/2026-10-17_0500_AurumNoise_US100): 697 trades, 40.75% winners, PF 1.18, +39.93%, max equity drawdown 16.41% - matches the Python figures (return 4.8 points under, drawdown 2.1 under, trades 697 vs 701; every year positive); step 15 passed for both indices, step 16 = j3 and j4 legs on vs off.
 
-Notes: Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2018 3.37 -> 3.56.
+Notes: Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2018 3.37 -> 3.56. Step 16 base: j3 legs off +167.7%, 6.67% eq DD, 17 day stops - matches (see the breakout's note); legs on expected about +185-190%, 7.5-8% DD.
 
 ## Rejected families
 

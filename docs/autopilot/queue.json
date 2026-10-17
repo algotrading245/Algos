@@ -52,7 +52,7 @@
       "folder": "backtests\\2026-10-17_0505_AurumFunded_funded_off",
       "folder_on": "backtests\\2026-10-17_0535_AurumFunded_funded_on",
       "expect": "README test 3: legs off about the earlier tester run (+110%, 4.1% drawdown, worst day -1.64%); legs on about a tenth more profit and a little more drawdown (Python model +189%/5.2% -> +213%/6.0%). No day stop hit.",
-      "note": "Runs after j1 and j2. a1 approved 2026-10-17 (backup made). AurumFunded in Terminal 16 is already linked to the repo; the demo EA runs the same source, so the recompile only reloads it."
+      "note": "Runs after j1 and j2. a1 approved 2026-10-17 (backup made). AurumFunded in Terminal 16 is already linked to the repo; the demo EA runs the same source, so the recompile only reloads it. Base run judged by the orchestrator 2026-10-17 05:55: +167.68%, 6.67% eq DD, 17 day stops - matches. The expect above was taken from the v1.00 run (size cap 1.0); 1.01+ caps the cushion at 1.4, and on that sizing the Python model gives +331% / 7.2% (legs off), so the tester keeps 67% of the model's log growth (v1.00 run: 70%) and the drawdown is inside the model's 6.2-7.2%. Corrected expectation for the legs-on run (model +381% / 8.4%, cap 1.0 check +212% / 6.0% = the +213% / 6.0% above): about +185-190% and 7.5-8% eq DD, more day stops than 17 (research/funded_tester_gap.py)."
     },
     {
       "id": "j4",
