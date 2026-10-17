@@ -84,7 +84,7 @@
    "name": "Noise-area intraday momentum, S&P 500 and Nasdaq",
    "source": "Zarattini, Aziz, Barbon 2025 (read in full); research/noise_area_index.py",
    "status": "tester",
-   "step": 15,
+   "step": 16,
    "ea": "mql5/Experts/AurumNoise/ (standalone), AurumFunded 1.03 and AurumHydra 1.33 off by default (InpNoiseMult)",
    "summary": "Bands of the average move from the 9:30 open, checked each half hour from 10:00 New York, trailing stop, flat at 16:00, 2% daily vol. Sharpe 0.88 at 0.75 bp (0.61 / 1.08), 0.57 at 1.5 bp; corr with Hydra -0.02.",
    "stress_sharpe": 0.57,
@@ -152,7 +152,29 @@
     ],
     "dry_run": true,
     "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
-   }
+   },
+   "tester": [
+    {
+     "run": "backtests/2026-10-17_0457_AurumNoise_US500",
+     "symbol": "US500.cash",
+     "trades": 452,
+     "win_rate": 39.6,
+     "profit_factor": 1.0,
+     "return_pct": -0.68,
+     "eq_dd_max_pct": 26.09,
+     "verdict": "matches the Python figures (return 2.0 points under, drawdown 2.5 under, trades 452 vs 451); the S&P half was already weak in 2024-26 in Python and is flat here (2024 +17%, 2025 and 2026 losing)"
+    },
+    {
+     "run": "backtests/2026-10-17_0500_AurumNoise_US100",
+     "symbol": "US100.cash",
+     "trades": 697,
+     "win_rate": 40.75,
+     "profit_factor": 1.18,
+     "return_pct": 39.93,
+     "eq_dd_max_pct": 16.41,
+     "verdict": "matches the Python figures (return 4.8 points under, drawdown 2.1 under, trades 697 vs 701; every year positive); step 15 passed for both indices, step 16 = j3 and j4 legs on vs off"
+    }
+   ]
   }
  ],
  "rejected": [

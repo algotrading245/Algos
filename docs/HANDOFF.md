@@ -39,8 +39,16 @@ Rules of the work:
   global variables. The terminal's old AurumFunded folder and its three FTMO presets are backed up in the terminal's
   data folder under `backup\2026-10-17_before_repo_link`.
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
-  AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17). j4 AurumHydra stays on hold until the
-  orchestrator finds j1 and j2 close to their expectation (rule in `tools/autopilot/prompts/orchestrator.md`).
+  AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on.
+- **AurumNoise passed step 15 (orchestrator, 2026-10-17 05:25).** US500.cash (j1): -0.68%, 26.1% equity drawdown,
+  452 trades, against +1.3% / 28.6% / 451 expected - flat as the Python model said; the profit was all 2024
+  (+1,689), 2025 and 2026 lost. US100.cash (j2): +39.9%, 16.4%, 697 trades, against +44.7% / 18.5% / 701; every year
+  positive. Both inside the release rule (return within 15 points, drawdown not above), so **j4 was released**
+  (queued after j3). Noise is now at step 16, like the breakout: the j3 and j4 legs-on runs decide. Watch in them
+  whether the S&P half helps at all in 2024-26; if not, that is a reason to look again, not to drop it from a
+  32-month stretch (its Python halves are 0.61 / 1.08, and refitting weights on the tester window is ruled out).
+- `backtests/2026-10-17_0056_AurumBreakout_USDJPY/` holds only a `tester.ini` (an aborted start before the 01:18
+  run); left untracked.
 - **Autopilot = agent relay** (`tools/autopilot/relay.ps1`, task "Aurum Relay" every 5 min; it replaced the
   fixed-time Orchestrator, Tester and Researcher tasks). Each agent ends with `HANDOFF: <role> <reason>`;
   `run-agent.ps1` writes it to `logs/autopilot/relay.json` and the relay starts that agent 15 min later

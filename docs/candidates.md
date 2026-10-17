@@ -24,7 +24,7 @@ Notes: The gates' own 2017-fitted weight (k=0.5 of Hydra's volatility) adds noth
 
 ## Noise-area intraday momentum, S&P 500 and Nasdaq (`noise`)
 
-Status **tester**, pipeline step 15 of 20. Source: Zarattini, Aziz, Barbon 2025 (read in full); research/noise_area_index.py.
+Status **tester**, pipeline step 16 of 20. Source: Zarattini, Aziz, Barbon 2025 (read in full); research/noise_area_index.py.
 
 Bands of the average move from the 9:30 open, checked each half hour from 10:00 New York, trailing stop, flat at 16:00, 2% daily vol. Sharpe 0.88 at 0.75 bp (0.61 / 1.08), 0.57 at 1.5 bp; corr with Hydra -0.02.
 
@@ -37,6 +37,10 @@ Gates (2026-10-17, dry run): **PASS**
 | dsr | pass | 0.938 (N=47, luck bar 0.55) | >= 0.9 |
 | corr | pass | book -0.02, max leg cross -0.03 | |book| <= 0.2, |leg| <= 0.3 |
 | goal | pass | Hydra 2018+ 3.37 -> 3.56 at weight 0.609; P(5x) 55.2% -> 57.4% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+Strategy Tester (backtests/2026-10-17_0457_AurumNoise_US500): 452 trades, 39.6% winners, PF 1.0, -0.68%, max equity drawdown 26.09% - matches the Python figures (return 2.0 points under, drawdown 2.5 under, trades 452 vs 451); the S&P half was already weak in 2024-26 in Python and is flat here (2024 +17%, 2025 and 2026 losing).
+
+Strategy Tester (backtests/2026-10-17_0500_AurumNoise_US100): 697 trades, 40.75% winners, PF 1.18, +39.93%, max equity drawdown 16.41% - matches the Python figures (return 4.8 points under, drawdown 2.1 under, trades 697 vs 701; every year positive); step 15 passed for both indices, step 16 = j3 and j4 legs on vs off.
 
 Notes: Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2018 3.37 -> 3.56.
 
