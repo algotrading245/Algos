@@ -50,7 +50,7 @@
       "status": "running",
       "needs": null,
       "folder": "backtests\\2026-10-17_0505_AurumFunded_funded_off",
-      "folder_on": null,
+      "folder_on": "backtests\\2026-10-17_0535_AurumFunded_funded_on",
       "expect": "README test 3: legs off about the earlier tester run (+110%, 4.1% drawdown, worst day -1.64%); legs on about a tenth more profit and a little more drawdown (Python model +189%/5.2% -> +213%/6.0%). No day stop hit.",
       "note": "Runs after j1 and j2. a1 approved 2026-10-17 (backup made). AurumFunded in Terminal 16 is already linked to the repo; the demo EA runs the same source, so the recompile only reloads it."
     },
