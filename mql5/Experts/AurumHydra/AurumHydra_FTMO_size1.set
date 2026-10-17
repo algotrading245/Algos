@@ -1,0 +1,23 @@
+; AurumHydra - size 1, no goal mode, on FTMO's symbol names (the names AurumFunded uses; every one traded in the
+; 2026-10-17 AurumFunded tester runs). For the leg on/off Strategy Tester run (job j5) and any other run on FTMO data.
+; The source's defaults end in .pc / .r (another broker); without these lines the fix, stock-fall, Tokyo morning,
+; after-holiday and noise legs find no symbol and stay out (job j4).
+; Expected 2024-01 to 2026-10 from 10,000: research/hydra_tester_expect.py. Inputs not listed keep the EA's defaults.
+InpGold=XAUUSD
+InpYen=USDJPY
+InpEuro=EURUSD
+InpGridSymbol=AUDCAD
+InpStocks=US500.cash
+InpPound=GBPUSD
+InpAussie=AUDUSD
+InpLoonie=USDCAD
+InpSwissy=USDCHF
+InpFixCross1=AUDJPY
+InpFixCross2=CADJPY
+InpFixCross3=GBPJPY
+InpMorn1=EURJPY
+InpMorn2=GBPJPY
+InpMorn3=CADJPY
+InpNasdaq=US100.cash
+InpSizeMult=1.0
+InpGoalMult=0.0

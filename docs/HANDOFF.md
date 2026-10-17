@@ -1,7 +1,7 @@
 # Handoff: where the two-EA project stands
 
 For a session that picks this work up without the earlier conversation (for example a cloud session). Last updated
-2026-10-15.
+2026-10-17.
 
 ## Goal
 
@@ -39,7 +39,8 @@ Rules of the work:
   global variables. The terminal's old AurumFunded folder and its three FTMO presets are backed up in the terminal's
   data folder under `backup\2026-10-17_before_repo_link`.
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
-  AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on.
+  AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on - all
+  done; j5 AurumHydra size 1 legs off/on queued (replaces j4, see below).
 - **AurumNoise passed step 15 (orchestrator, 2026-10-17 05:25).** US500.cash (j1): -0.68%, 26.1% equity drawdown,
   452 trades, against +1.3% / 28.6% / 451 expected - flat as the Python model said; the profit was all 2024
   (+1,689), 2025 and 2026 lost. US100.cash (j2): +39.9%, 16.4%, 697 trades, against +44.7% / 18.5% / 701; every year
@@ -57,6 +58,26 @@ Rules of the work:
   near the start, so the tester's 17 hits overstate it; the worst day (-2.70%) stays well inside FTMO's 5%. **Legs-on
   run, judged against the same sizing:** model +381% / 8.4%, so expect about +185-190% and 7.5-8% drawdown, with more
   day stops. Clearly below the base's +168% would count against the legs.
+- **j3 legs-on run judged (orchestrator, 2026-10-17 07:10): both legs pass step 16 in AurumFunded.** +221.5%, 8.28%
+  equity drawdown, 21 day stops, against the expected +185-190% / 7.5-8% (it kept 74% of the model's log growth, the
+  base 67%). Return per drawdown 25.1 -> 26.7, worst day -2.70% -> -2.55%, 28 of 34 months positive (base 24). The
+  2024 day stops are the same two days in both runs; the 4 extra come in late 2025-2026, when equity is 2.5x+ and the
+  3%-of-initial stop is ~1.2% of equity (see above), so they do not count against the legs. USDJPY +3,179 -> +4,671;
+  noise US100.cash +977, US500.cash -57 (the S&P half flat again on 2024-26 data).
+- **Owner question (a3 in `approvals.json`, pending): step 17 = turn both legs on in the FTMO demo?** On the attached
+  AurumFunded chart in Terminal 16 set `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`, nothing else. Agents may not
+  change a terminal's EA. Or keep the demo as it is until Hydra's j5 is in.
+- **j4 (AurumHydra 5x) was a set-up fault, not an EA result.** Its `set` renamed only 4 of Hydra's 16 symbol inputs;
+  `InpStocks` (SP500.r), `InpNasdaq` (NAS100.r), the four fix pairs and six yen crosses kept the other broker's
+  `.pc` / `.r` names, so the fix, stock-fall, Tokyo morning, after-holiday and noise legs never traded (only EURUSD,
+  USDJPY, AUDCAD did); the gold legs found the 100 deposit too small for the minimum lot; and the 5x preset stops
+  after one goal round (January 2024). Off +9.5% / 15.0%, on +14.8% / 25.8% says nothing about the legs.
+  **j5 replaces it** (queued): Hydra at size 1, no goal mode, from 10,000 at 1:500, new preset
+  `mql5/Experts/AurumHydra/AurumHydra_FTMO_size1.set` with FTMO names for all 16 symbols. Expectation
+  (`research/hydra_tester_expect.py`): model legs off +1184% / 10.7%, on +1574% / 11.5%; about +500% / +620% at the
+  j3 runs' 70% of log growth, tester drawdown likely 15-25% (gold up to 6.2x equity, intraday dips). Step 16 test:
+  return per drawdown higher with legs on. Later, for the 5x question itself: the 5x preset also needs these 16
+  names, and one round at 100 tells little - a run of separate monthly rounds would.
 - `backtests/2026-10-17_0056_AurumBreakout_USDJPY/` holds only a `tester.ini` (an aborted start before the 01:18
   run); left untracked.
 - **Autopilot = agent relay** (`tools/autopilot/relay.ps1`, task "Aurum Relay" every 5 min; it replaced the
