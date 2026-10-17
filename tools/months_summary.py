@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-ROUND = re.compile(r"goal round of \S+ ended, equity [\d.]+ from [\d.]+ \(([\d.]+)x")
+ROUND = re.compile(r"goal round of (\S+) ended, equity [\d.]+ from [\d.]+ \(([\d.]+)x")
 # Orders the broker's own margin or volume limits refused. On Terminal 16 the symbols carry FTMO's margins, not a
 # 1:500 broker's, so a month with refusals is a month where the 5x sizes did not fit; with none, the account's
 # 1:500 tester leverage was the only margin in play and the month stands for a 1:500 broker too.
@@ -40,7 +40,8 @@ def main(folder):
         mult = 1 + r["net"] / r["deposit"]
         log = f / "summary.txt"
         text = log.read_text(errors="ignore") if log.exists() else ""
-        hit = ROUND.findall(text)
+        # The tester log holds earlier runs too; only this month's round counts.
+        hit = [x for start, x in ROUND.findall(text) if start.startswith(m["Month"])]
         rows.append({"month": m["Month"], "multiple": round(mult, 3), "round": float(hit[0]) if hit else None,
                      "trades": r.get("trades"), "eq_dd_pct": r.get("eq_dd_max_pct"),
                      "margin_refusals": len(MARGIN.findall(text)), "status": "done"})

@@ -46,7 +46,7 @@ try {
 Unattended autopilot run, role: $Role. Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
 Shell commands: run each one exactly as written and alone, with no ";", "&&", "|", "2>&1" or "echo" added. The
 permission rules match whole commands, so a compound command is refused; the exit code is reported anyway.
-Terminal 16 and tester window:
+Terminal 16 (demo EA; the tester has its own install):
 $($status -join "`n")
 
 $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)

@@ -1,0 +1,43 @@
+{
+ "goal": 5.0,
+ "months_planned": 3,
+ "months_run": 3,
+ "share_goal_at_month_end": 0.3333333333333333,
+ "share_goal_reached": 0.3333333333333333,
+ "median_multiple": 1.327,
+ "share_below_half": 0.0,
+ "p_3x": 0.3333333333333333,
+ "p_4x": 0.3333333333333333,
+ "p_5x": 0.3333333333333333,
+ "p_ruin": 0.0,
+ "months_with_margin_refusals": 0,
+ "months": [
+  {
+   "month": "2026.01",
+   "multiple": 5.001,
+   "round": 5.0,
+   "trades": 46.0,
+   "eq_dd_pct": 16.83,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2026.02",
+   "multiple": 1.327,
+   "round": null,
+   "trades": 52.0,
+   "eq_dd_pct": 23.85,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2026.03",
+   "multiple": 0.913,
+   "round": null,
+   "trades": 46.0,
+   "eq_dd_pct": 42.95,
+   "margin_refusals": 0,
+   "status": "done"
+  }
+ ]
+}

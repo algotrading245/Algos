@@ -1,6 +1,6 @@
 ---
 name: tester-operator
-description: Runs MT5 Strategy Tester jobs on Terminal 16 (FTMO demo) and parses the reports. Pipeline steps 15 and 16. Use to launch one tester run, collect its report, and compare it with the expected figures.
+description: Runs MT5 Strategy Tester jobs in the tester install C:\MetaTrader 5 - Tester (FTMO demo data) and parses the reports. Pipeline steps 15 and 16. Use to launch one tester run, collect its report, and compare it with the expected figures.
 model: haiku
 tools: Read, Grep, Glob, Bash, PowerShell, Write
 ---

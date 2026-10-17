@@ -1,5 +1,5 @@
 {
-  "about": "Strategy Tester jobs for the tester agent (tools/autopilot/prompts/tester.md). It runs queued jobs on Terminal 16 in the weekend window (Saturday 00:00 to Sunday 18:00 local), one at a time, in this order. status: queued | running | done | failed | hold (hold waits for the approval in needs). from/to (yyyy.MM.dd) bound a run; a job without to runs to the day it starts and cannot be repeated exactly. A job with months {from, to} (yyyy.MM) is a series of one fresh-deposit run per calendar month through tools/run-months.ps1 (the 5x EA's test); its folder is the _months folder.",
+  "about": "Strategy Tester jobs for the tester agent (tools/autopilot/prompts/tester.md). It runs queued jobs in the tester install (C:\\MetaTrader 5 - Tester, FTMO demo data; Terminal 16 keeps the demo EA), any time of the week, one at a time, in this order. status: queued | running | done | failed | hold (hold waits for the approval in needs). from/to (yyyy.MM.dd) bound a run; a job without to runs to the day it starts and cannot be repeated exactly. A job with months {from, to} (yyyy.MM) is a series of one fresh-deposit run per calendar month through tools/run-months.ps1 (the 5x EA's test); its folder is the _months folder.",
   "jobs": [
     {
       "id": "j1",
@@ -229,6 +229,100 @@
       "needs": null,
       "expect": "Cause check, not a result for the 5x claim (its multiples do not count against 9/21). Same as j8b/j8c for 2026.02-04 but the gold spread cap raised from 0.30 to 1.0. If the cap is why gold did not trade in j8's 2026.02 and 2026.04: each of the three months logs 'hold, trend ... position 0.00 -> ...' on its first weekday or two (j8 2026.03 opened only on 03.09), and XAUUSD appears in by_symbol of 2026.02 and 2026.04. If gold still makes no trade, the cap is not the cause; look at margin or history instead. Report for each month: the first hold line's date and lots, XAUUSD profit, multiple, equity drawdown.",
       "note": "Queued by the orchestrator 2026-10-17 23:55 after judging j8a-c. About 15 minutes (3 months). Collected by the tester 2026-10-17 23:50: with the cap at 1.0 gold traded in all 3 months (XAUUSD in by_symbol of 2026.02, 03 and 04) but lost: 0.34x / 0.49x / 0.57x, XAUUSD -6,490 / -5,492 / -3,304, equity DD 69.6% / 56.1% / 55.4%, 0 margin refusals, 0 of 3 at 5x. First hold-line dates not checked (no tester log in the folders). See summary.md. Judged by the orchestrator 2026-10-18 00:05: cause confirmed, but lifting the cap does not close the gap - it widens it. With the cap at 0.30 (j8b/j8c) the same months gave 1.33x / 0.91x / 0.72x (median 0.91x, none below 0.5x); at 1.0 they give 0.34x / 0.49x / 0.57x (median 0.49x). The hold bought gold at the round's start and took the 2026 gold drops at full goal size: worst days 2026-02-02 -66.3% (only 3 trades that month after it), 2026-03-03 -54.4%, 2026-04-29 -43.1%. In these months the fixed 0.30 cap worked as an unplanned filter on high-volatility days (wide spread = fast gold). So the 1/21 of j8 is not a spread-cap artefact and stands as the tester's answer for EA 1.33 on FTMO data; the cap is not changed (picking a cap from these three months would be fitting the tester window, and the only evidence favours the current value). No follow-up job: the remaining gap to the header's 9/21 (EA 1.31, a .pc broker at 3 cents a lot) cannot be rerun on Terminal 16."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow.",
+      "id": "j10",
+      "expert": "AurumHydra",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_target5x_FTMO.set",
+      "leverage": 500,
+      "tag": "t5",
+      "months": {
+        "from": "2024.01",
+        "to": "2025.09"
+      },
+      "expect": "InpTarget=5 (goal 5x, scale 2.5) over the 21 in-sample months, one fresh deposit a month. tools/target_odds.py gives about 40% of rounds at 5x on the Python model; the tester so far kept less (j8: 1/21 on 2025.01-2026.09 with EA 1.33). Report P(3x/4x/5x), P(ruin), median multiple, margin refusals, and the months where gold made most of the loss."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow.",
+      "id": "j11",
+      "expert": "AurumHydra",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_target3x_FTMO.set",
+      "leverage": 500,
+      "tag": "t3",
+      "months": {
+        "from": "2024.01",
+        "to": "2025.09"
+      },
+      "expect": "InpTarget=3 on the same 21 months as j10, to compare the odds of 3x aimed at 3x with j10's 3x share. Report the same figures as j10."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow.",
+      "id": "j12",
+      "expert": "AurumFunded",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_funded.set",
+      "leverage": 33,
+      "tag": "funded_lib",
+      "from": "2024.01.01",
+      "to": "2025.10.10",
+      "expect": "Same preset as j3's legs-on run (+221.48%, 8.28% eq DD, 21 day stops to 2026-10-17) but on the shared library (legs on by default at half Hydra's size, 0.0625 / 0.1375) and ending 2025-10-10. Expect a little less than j3 for the shorter range; report return, eq DD, worst day, day stops."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow.",
+      "id": "j13",
+      "expert": "AurumFunded",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FundedNext_instant.set",
+      "leverage": 33,
+      "tag": "fnext",
+      "from": "2024.01.01",
+      "to": "2025.10.10",
+      "expect": "FundedNext Stellar Instant guard (4.5% under the highest day-start equity, day stop 3%, size 0.3). Report the first date equity reaches +5% (payout), any guard halt, eq DD, worst day."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow.",
+      "id": "j14",
+      "expert": "AurumFunded",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_InstantFunding_pro.set",
+      "leverage": 33,
+      "tag": "ifpro",
+      "from": "2024.01.01",
+      "to": "2025.10.10",
+      "expect": "Instant Funding PRO guard (-8.5% until +5%, then -3.5% for good). Report the date of +5%, any final stop, eq DD, worst day."
     }
   ]
 }

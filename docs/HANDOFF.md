@@ -49,8 +49,19 @@ Rules of the work:
    (`logs/autopilot/PAUSE`), release Terminal 16, start an agent role now, and a form that appends a job to
    `queue.json` (holdout dates refused). POSTs need the local host, a local Origin and header `X-Aurum: 1`.
    The claude.ai dashboard is a read-only cloud page (it cannot reach this PC).
-5. **Tester terminal** separate from the demo terminal: see "Terminals" below once installed.
-6. **Improvement loop** on both EAs through the relay, on months up to 2025.09.
+5. **Terminals.** The Strategy Tester has its own MT5 install, `C:\MetaTrader 5 - Tester` (portable data folder found
+   via `origin.txt`; FTMO-Demo history, ticks, symbols and servers.dat copied from Terminal 16, never accounts.dat).
+   `run-tester.ps1` / `run-months.ps1` default to it and link `MQL5\Experts\<EA>` and `MQL5\Include\Aurum` into it on
+   every run. It needs a one-time FTMO demo login by the owner (until then the tester logs "tester didn't start").
+   Terminal 16 ("MetaTrader 5 - 16") keeps the demo EA and is no longer closed for jobs: the weekend window and the
+   `terminal.ps1 -Hold` step are gone, tester jobs run any day. Equivalence check of the library refactor
+   (`backtests/2026-10-18_0102_AurumHydra_5xEQ_months`, run before the move): 2026.01-03 give 5.00x / 1.33x / 0.91x
+   with the same trades and drawdowns as v1.33 (j8b/j8c). Fixed in passing: `months_summary.py` counted goal rounds of
+   other months found in the same tester log.
+6. **Improvement loop** on both EAs through the relay, in-sample only. Queued 2026-10-18: j10 Hydra InpTarget=5 and
+   j11 InpTarget=3 on months 2024.01-2025.09; j12 Funded FTMO funded, j13 FundedNext Stellar Instant, j14 Instant
+   Funding PRO, 2024-01-01 to 2025-10-10. The orchestrator judges them and queues what follows. Prop routes: FTMO
+   2-Step (demo now) plus the two instant-funding accounts (no challenge, payout from +5%), presets in AurumFunded.
 
 ## Demo and autopilot (2026-10-17)
 

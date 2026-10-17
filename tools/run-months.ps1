@@ -12,7 +12,7 @@
 # once; the months run in that copy. Its folder backtests\<date>_<expert>_<tag>_months\ holds months.json (the list of
 # month folders, filled as each month ends) and, at the end, months_result.json. A re-run with -Out on that folder
 # skips months already done. -Collect says "running: k of n" while the copy is alive, else prints the summary.
-# Close Terminal 16 first (tools\autopilot\terminal.ps1 -Hold), as for run-tester.ps1.
+# Runs in the tester install (run-tester.ps1's default), not in Terminal 16.
 param(
     [string]$Expert = "",
     [string]$Symbol = "",

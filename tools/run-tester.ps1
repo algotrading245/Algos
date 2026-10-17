@@ -13,15 +13,15 @@
 #   powershell -ExecutionPolicy Bypass -File tools\run-tester.ps1 -Collect backtests\<folder>
 # which says "running" while that terminal is up, else copies the report and log lines and writes result.json.
 #
-# Default install: Terminal 16, logged in to an FTMO demo, so the symbols, their history and the server clock are
-# FTMO's. Close that install first: MT5 ignores /config while it is open. Nothing here places live trades: the
-# tester runs on history only.
+# Default install: C:\MetaTrader 5 - Tester, used only for the tester and logged in to the FTMO demo, so the symbols,
+# their history and the server clock are FTMO's. Terminal 16 keeps running the demo EA. MT5 ignores /config while an
+# install is open, so one tester run at a time. Nothing here places live trades: the tester runs on history only.
 param(
     [string]$Expert = "",
     [string]$Symbol = "",
     [string]$Preset = "",
     [string[]]$Set = @(),
-    [string]$Terminal = "C:\Program Files\MetaTrader 5 - 16",
+    [string]$Terminal = "C:\MetaTrader 5 - Tester",
     [string]$DataFolder = "",
     [string]$From = "2024.01.01",
     [string]$To = (Get-Date -Format "yyyy.MM.dd"),
@@ -87,6 +87,8 @@ $running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object {
 if ($running) { throw "$exe is open. Close it (File > Exit) and run again; MT5 ignores /config while it is running." }
 
 & (Join-Path $PSScriptRoot "link-terminal.ps1") -DataFolder $DataFolder -Project $Expert
+# The shared legs (mql5\Include\Aurum) that the wrappers include.
+& (Join-Path $PSScriptRoot "link-terminal.ps1") -DataFolder $DataFolder -Project Aurum
 
 $src = Join-Path $DataFolder "MQL5\Experts\$Expert\$Expert.mq5"
 $log = Join-Path $env:TEMP "${Expert}_compile.log"

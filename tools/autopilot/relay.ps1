@@ -6,7 +6,7 @@
 #
 # Order on each tick:
 #   1. PAUSE, another agent running, or a usage/rate-limit back-off: nothing.
-#   2. Weekend window with a tester job to start or collect: tester (Terminal 16 time is short, it goes first).
+#   2. A tester job to start or collect: tester (it goes first, so the tester install is never idle).
 #   3. A hand-over that is due: that agent.
 #   4. No agent for $IdleMinutes: the researcher if it has not run for a day, else the fidelity check if it has not
 #      run for a week, else the orchestrator.

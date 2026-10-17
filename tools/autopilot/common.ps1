@@ -1,7 +1,7 @@
 # Shared paths and the tester window for the autopilot scripts. Dot-source it: . "$PSScriptRoot\common.ps1"
 #
-# Terminal 16 (FTMO demo) runs both the demo EA and the Strategy Tester. MT5 ignores /config while the terminal is
-# open, so tester jobs only run in the weekend window, when the markets of the demo legs are shut.
+# Terminal 16 (FTMO demo) runs the demo EA. The Strategy Tester runs in its own install, C:\MetaTrader 5 - Tester
+# (same FTMO demo login, its own data folder), so tester jobs run at any hour and never close Terminal 16.
 
 $Repo     = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $LogDir   = Join-Path $Repo "logs\autopilot"
@@ -11,6 +11,7 @@ $Relay    = Join-Path $LogDir "relay.json"
 $GapMinutes = 15    # relay: minutes between one agent finishing and the agent it handed over to starting
 $T16      = "C:\Program Files\MetaTrader 5 - 16"
 $T16Exe   = Join-Path $T16 "terminal64.exe"
+$Tester   = "C:\MetaTrader 5 - Tester"
 New-Item -ItemType Directory -Force $LogDir | Out-Null
 
 function Write-Log([string]$Name, [string]$Text) {
@@ -55,10 +56,9 @@ function Get-Hold {
     return $h
 }
 
-# True when the tester agent has something to do: inside the weekend window, a queued job, or a running job whose
-# tester process has ended. With no job left it releases the autopilot's hold on Terminal 16 itself.
+# True when the tester agent has something to do: a queued job, or a running job whose tester process has ended.
+# With no job left it removes an old autopilot hold on Terminal 16 (from before the tester had its own install).
 function Test-TesterWork {
-    if (-not (Test-Window)) { return $false }
     $q = Get-Content (Join-Path $Repo "docs\autopilot\queue.json") -Raw | ConvertFrom-Json
     $work = @($q.jobs | Where-Object { $_.status -in @("queued", "running") })
     if (-not $work) {
