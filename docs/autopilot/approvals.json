@@ -1,0 +1,17 @@
+{
+  "about": "Steps the autopilot may take only after the owner approves. The owner sets status to approved (in chat, or by editing this file); agents act only on approved items and add new ones as pending.",
+  "items": [
+    {
+      "id": "a1",
+      "what": "Let the tester agent run AurumFunded in Terminal 16 (job j3). run-tester links the repo's AurumFunded folder into that terminal and recompiles it there, so first back up the terminal's current AurumFunded folder.",
+      "status": "pending",
+      "asked": "2026-10-17"
+    },
+    {
+      "id": "a2",
+      "what": "Step 19: buy a challenge or go live. Never automated: the owner does it, after a yes in chat.",
+      "status": "pending",
+      "asked": "2026-10-17"
+    }
+  ]
+}

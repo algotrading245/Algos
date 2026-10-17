@@ -22,3 +22,6 @@ backtests/**/*.png
 backtests/**/summary.txt
 # job.json holds local paths and the process id; the dashboard copies only the test settings into data.js
 backtests/**/job.json
+
+# Autopilot run logs and the local hold/PAUSE files (tools/autopilot); runs are summarised in docs/autopilot/runs.md
+logs/

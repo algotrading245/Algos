@@ -100,7 +100,8 @@ if ($Preset) {
         $values[$name] = $value
     }
 }
-foreach ($kv in $Set) { $name, $value = $kv -split "=", 2; $values[$name] = $value }
+# -File passes "-Set a=1,b=2" as one string, so split on commas here too.
+foreach ($kv in ($Set -split ",")) { $name, $value = $kv -split "=", 2; $values[$name] = $value }
 $inputs = foreach ($name in $values.Keys) {
     $value = $values[$name]
     if ($value -match "^-?\d+(\.\d+)?$") { "$name=$value||$value||0||$value||N" } else { "$name=$value" }
