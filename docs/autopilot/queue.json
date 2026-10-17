@@ -66,12 +66,12 @@
       "set": ["InpGold=XAUUSD", "InpYen=USDJPY", "InpEuro=EURUSD", "InpGridSymbol=AUDCAD"],
       "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
       "from": "2024.01.01",
-      "status": "running",
+      "status": "done",
       "needs": null,
       "folder": "backtests\\2026-10-17_0616_AurumHydra_5x_off",
       "folder_on": "backtests\\2026-10-17_0625_AurumHydra_5x_on",
       "expect": "README test 3: legs on about a tenth more profit and a little more drawdown than legs off. The preset's own symbols end in .pc (another broker), hence the overrides to FTMO names.",
-      "note": "Released by the orchestrator 2026-10-17 05:25: j1 -0.68% / 26.09% DD against +1.3% / 28.6% (return 2.0 points under, DD 2.5 under); j2 +39.93% / 16.41% against +44.7% / 18.5% (4.8 under, 2.1 under). Both within 15 points of return and not above the expected drawdown. Was: hold, needs j1 and j2 close to their expectation."
+      "note": "Released by the orchestrator 2026-10-17 05:25: j1 -0.68% / 26.09% DD against +1.3% / 28.6% (return 2.0 points under, DD 2.5 under); j2 +39.93% / 16.41% against +44.7% / 18.5% (4.8 under, 2.1 under). Both within 15 points of return and not above the expected drawdown. Was: hold, needs j1 and j2 close to their expectation. Tester 2026-10-17 06:35: both runs done. Off +9.47% / 14.98% eq DD / PF 1.58 / 32 trades; on +14.79% / 25.84% eq DD / PF 1.32 / 49 trades (worst day -8.5%). See summary.md in both folders."
     }
   ]
 }
