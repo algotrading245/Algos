@@ -40,8 +40,8 @@ Rules of the work:
   data folder under `backup\2026-10-17_before_repo_link`.
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
   AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on - all
-  done; j5 AurumHydra size 1 legs off/on done but not a valid pair; j6 (replaces j5) done and judged: **queue
-  empty**.
+  done; j5 AurumHydra size 1 legs off/on done but not a valid pair; j6 (replaces j5) done and judged; j7 failed;
+  j8a-c (5x months) done and judged; **j9 queued** (gold spread-cap check, 3 months).
 - **AurumNoise passed step 15 (orchestrator, 2026-10-17 05:25).** US500.cash (j1): -0.68%, 26.1% equity drawdown,
   452 trades, against +1.3% / 28.6% / 451 expected - flat as the Python model said; the profit was all 2024
   (+1,689), 2025 and 2026 lost. US100.cash (j2): +39.9%, 16.4%, 697 trades, against +44.7% / 18.5% / 701; every year
@@ -108,11 +108,38 @@ Rules of the work:
   boost 2.0 gave +1460% / 13.11%, return per drawdown 111 against 69. The fix legs trade only on that day, so the
   boost doubles their whole size: a re-weighting (a rejected family; a quarter-end x2 gave 3.37 -> 3.31 after 2017)
   measured on the tester window, so not adopted for size 1; it stays in the 5x preset as tested.
-- **Next for the pipeline:** step 17 for both candidates waits on the owner (a3). A useful later tester series is
-  the 5x question itself: `AurumHydra_5x_month.set` on the 16 FTMO names, from 100, one goal round per month
-  (InpGoalRepeat=false stops the EA after a round). That needs a run per start month; queue jobs have only `from`,
-  so each run would replay ticks to today after its round ends (about an hour each, like j6). **Proposed tool change:** let queue jobs carry `to` and have the tester prompt pass it to
-  `run-tester.ps1 -To` (the script already takes it). Not queued until then.
+- **Next for the pipeline:** step 17 for both candidates is under way in the demo (a3 approved). The 5x question
+  itself was run as the month series j8a-c (below); queue jobs now carry `months` {from, to} for that.
+- **j8a-c judged (orchestrator, 2026-10-17 23:55): 5x reached in 1 of 21 months, against the preset header's 9 of
+  21.** Same goal inputs as `AurumHydra_5x_month.set` (23 days, scale 2.5, boost 2.0), FTMO's 16 names, a fresh
+  10,000 at 1:500 each month, EA 1.33 (the 9/21 was 1.31 on the `.pc` broker). Only 2026.01 reached 5x (gold
+  +40.5k); median about 1x, 2 of 21 months below 0.5x. Not released, settings not changed to fit. **Cause, from
+  `research/hydra_5x_months_check.py` and the tester log:** the round needs the gold hold (sized ~47 at the round's
+  start), and gold made no trade in 7 of 21 months.
+  - 2026.05-09: the hold's trend signal (20/60/120/250-day closes) was 0 on 62-100% of days - the strategy itself,
+    gold fell from its high.
+  - 2026.02 and 2026.04: the signal was positive (0.93, 0.45) but no buy went through, and 2026.03 opened only on
+    03.09. The j6 size-1 run shows the same: from 2026.02.03 to 03.09 only reductions (which skip the spread check).
+    Most likely cause: `InpGoldMaxSpread = 0.30` is in price units, set when gold was ~2,000; at ~5,000 gold and
+    40-45% volatility FTMO's XAUUSD spread is above 0.30 for days, and Hold() then returns before buying (it also
+    gates the dip and bell legs). Margin is ruled out (~0.2 lots on 10,000 at 1:500).
+  - 2025 had gold every month and still 0/12 at 5x: the 2025 hold paid in 01/03/09 and lost 3.4-5.8k in each of
+    04-07, and 2026 gold volatility (22-48%) cuts the hold through min(3, 10.7% / vol). So the spread cap does not
+    explain the whole gap; the FTMO-data result stands as the tester's answer for EA 1.33.
+  - Worst single day: 2026.04.17 -22.8%, the AUDCAD grid (-1,832 that month).
+  - **j9 queued** (2026.02-04, `InpGoldMaxSpread=1.0`, tag `5xS`): a cause check only, not a 5x result.
+  - There is no `docs/candidates.md` entry for the 5x preset (it is the EA's own goal mode, not a candidate leg), so
+    nothing was updated there.
+- **Demo warning: AurumFunded has the same `InpGoldMaxSpread = 0.30`** (`AurumFunded.mq5:246`). If FTMO's live
+  XAUUSD spread sits above 0.30, its gold hold and gold legs never buy in the demo. The monitor/fidelity agent should
+  check Monday's journal for gold entries (or a long run of no gold buys while the trend is up). If confirmed, the fix
+  is a cap relative to price (e.g. in basis points) in both EAs: an EA change, so quant-coder, compile 0/0 and the
+  reviewer; owner approval before the demo binary changes (the junction reloads it).
+- **Proposed tool change (`tools/months_summary.py`):** its "round" field and refusal count read the tester's
+  `summary.txt`, which is one log for the whole day and every run, so both are polluted by the other months. Cut
+  each month's lines by the run's start and end time (as done by hand for j8), and count the EA's silent
+  InpMarginPct clip too, which is not a refusal in the log. Also: the AUDCAD grid retries every second while the
+  market is closed (log spam, a small later EA fix).
 - **Proposed tool change (agents may not edit `tools/`):** `tools/run-tester.ps1` should write *every* input of the
   EA into `[TesterInputs]` - parse the `input` lines of the `.mq5` for their defaults, then apply the preset, then
   `-Set` - so no run can inherit a value from the terminal's last run of the same EA. Until then every preset used
@@ -123,8 +150,8 @@ Rules of the work:
   fixed-time Orchestrator, Tester and Researcher tasks). Each agent ends with `HANDOFF: <role> <reason>`;
   `run-agent.ps1` writes it to `logs/autopilot/relay.json` and the relay starts that agent 15 min later
   (`$GapMinutes` in `common.ps1`). Order per tick: PAUSE / busy / usage-limit back-off (60 min) -> tester work in the
-  weekend window -> due hand-over -> after 2 h idle the researcher (if none for a day) or the orchestrator. Daily caps:
-  orchestrator 10, researcher 3, tester 24. Keeper (every 15 min) and Monitor (Mon-Fri 23:15) stay fixed tasks.
+  weekend window -> due hand-over -> after 2 h idle the researcher (if none for a day) or the orchestrator. No daily caps (removed
+  by the owner 2026-10-17 21:51); one agent at a time. Keeper (every 15 min) and Monitor (Mon-Fri 23:15) stay fixed tasks.
 
 ## Current state (updated 2026-10-17 13:40; the rest of this section is from 2026-10-15)
 
@@ -139,17 +166,15 @@ Rules of the work:
   the owner (a3).
 - **5x tester series (2026-10-17 15:45): queued and started as j7.** `tools/run-months.ps1` runs one fresh-deposit
   tester run per calendar month (2025-01 to 2026-09, leverage 500, deposit 10000), each with its own `to` date, so
-  rounds no longer replay to today; `tools/months_summary.py` gives the share of months at 5x. The 1:500-broker check
-  is built in: each month counts the broker's margin/volume refusals, and a month with none stands for a 1:500 broker
-  too (FTMO's symbol margins never bit). Months with refusals are the ones to discount.
+  rounds no longer replay to today; `tools/months_summary.py` gives the share of months at 5x. Its per-month refusal
+  count reads the day-wide tester log, so it is not reliable yet (see the proposed months_summary change above).
 - **j7 failed; replaced by j8a-c (orchestrator, 2026-10-17 16:20).** Three faults: the array splat (fixed), the tag
   chain in `tools/run-months.ps1` line 88 (`$tag` is `$Tag` in PowerShell, so tags grow `5x_202501_202502_...` and
-  paths overflow from the 12th month; **still unfixed, agents may not edit `tools/`**: rename it to `$monthTag`, and
-  let `months_summary.py` skip a result with deposit 0), and the job itself: `AurumHydra_5x_month.set` leaves the
+  paths overflow from the 12th month; since fixed as `$monthTag`), and the job itself: `AurumHydra_5x_month.set` leaves the
   symbols at the source's `.pc` / `.r` defaults, so every month stopped at OnInit ("symbol XAUUSD.pc is not
   available") and the 11 "done" months are empty reports. New preset `AurumHydra_5x_month_FTMO.set` (the 5x goal
   inputs, FTMO's 16 names). j8a/b/c run 2025.01-07, 2025.08-2026.02, 2026.03-09 with tags `5xA/B/C`, short enough for
-  the chained tags (52 characters at most; j7 broke at 86). Judge the 21 months together against 9/21. The untracked
+  the chained tags (52 characters at most; j7 broke at 86). Judged 2026-10-17 23:55: 1/21 (see "Demo and autopilot"). The untracked
   `backtests/2026-10-17_15*_AurumHydra_5x_*` folders of j7 hold nothing usable and can be deleted.
 - **Tester inputs:** `tools/run-tester.ps1` writes the EA source defaults before the preset and `set`, so a run no
   longer inherits inputs from an earlier one (the j4/j5 lesson).

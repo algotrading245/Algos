@@ -205,8 +205,29 @@
       "status": "done",
       "needs": null,
       "expect": "Part 3 of 3 of the 5x month series; see j8a. After this part, judge all 21 months against 9/21.",
-      "note": "Queued by the orchestrator 2026-10-17 16:20 with j8a. Started by the tester 2026-10-17 22:31. Collected 2026-10-17 23:05: 0/7 months at 5x, median 0.91x, 0 below 0.5x, 0 margin refusals. All three parts: 1 of 21 at 5x. See summary.md.",
+      "note": "Queued by the orchestrator 2026-10-17 16:20 with j8a. Started by the tester 2026-10-17 22:31. Collected 2026-10-17 23:05: 0/7 months at 5x, median 0.91x, 0 below 0.5x, 0 margin refusals. All three parts: 1 of 21 at 5x. See summary.md. Judged by the orchestrator 2026-10-17 23:55: does not match 9/21 (1/21, 0/12 in 2025 alone, where gold traded every month); not released, settings unchanged. Gold made no trade in 2026.02 and 2026.04-09: in 05-09 the hold's trend signal was 0 (strategy), in 02 and 04 its buys were most likely blocked by InpGoldMaxSpread 0.30 at ~5,000 gold (only spread-free reductions went through, in j6 too). See HANDOFF and research/hydra_5x_months_check.py; j9 checks the spread cause.",
       "folder": "backtests\\2026-10-17_2231_AurumHydra_5xC_months"
+    },
+    {
+      "id": "j9",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "5xS",
+      "set": [
+        "InpGoldMaxSpread=1.0"
+      ],
+      "months": {
+        "from": "2026.02",
+        "to": "2026.04"
+      },
+      "status": "queued",
+      "needs": null,
+      "expect": "Cause check, not a result for the 5x claim (its multiples do not count against 9/21). Same as j8b/j8c for 2026.02-04 but the gold spread cap raised from 0.30 to 1.0. If the cap is why gold did not trade in j8's 2026.02 and 2026.04: each of the three months logs 'hold, trend ... position 0.00 -> ...' on its first weekday or two (j8 2026.03 opened only on 03.09), and XAUUSD appears in by_symbol of 2026.02 and 2026.04. If gold still makes no trade, the cap is not the cause; look at margin or history instead. Report for each month: the first hold line's date and lots, XAUUSD profit, multiple, equity drawdown.",
+      "note": "Queued by the orchestrator 2026-10-17 23:55 after judging j8a-c. About 15 minutes (3 months)."
     }
   ]
 }
