@@ -224,7 +224,8 @@
         "from": "2026.02",
         "to": "2026.04"
       },
-      "status": "queued",
+      "status": "running",
+      "folder": "backtests\\2026-10-17_2335_AurumHydra_5xS_months",
       "needs": null,
       "expect": "Cause check, not a result for the 5x claim (its multiples do not count against 9/21). Same as j8b/j8c for 2026.02-04 but the gold spread cap raised from 0.30 to 1.0. If the cap is why gold did not trade in j8's 2026.02 and 2026.04: each of the three months logs 'hold, trend ... position 0.00 -> ...' on its first weekday or two (j8 2026.03 opened only on 03.09), and XAUUSD appears in by_symbol of 2026.02 and 2026.04. If gold still makes no trade, the cap is not the cause; look at margin or history instead. Report for each month: the first hold line's date and lots, XAUUSD profit, multiple, equity drawdown.",
       "note": "Queued by the orchestrator 2026-10-17 23:55 after judging j8a-c. About 15 minutes (3 months)."
