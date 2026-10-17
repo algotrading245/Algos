@@ -38,3 +38,4 @@ committed).
 | 2026-10-17 16:45 | tester | Collected j8a: running, 5 of 7 months done | still running, nothing committed |
 | 2026-10-17 21:45 | tester (by hand) | Collected j8a (0/7 months at 5x, median 0.75x); started j8b, 7 months | j8b running |
 | 2026-10-17 21:51 | owner session | Removed the relay's daily run caps (owner's request); one agent at a time, the hand-over gap and the usage back-off still apply | relay updated |
+| 2026-10-17 22:35 | tester | Collected j8b (1/7 months at 5x, median 1.37x, 0 refusals); started j8c, 7 months | j8c running |
