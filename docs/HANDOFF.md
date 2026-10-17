@@ -207,7 +207,11 @@ Rules of the work:
   rejected family is "Round-number levels". Ideas 1, 3 and 4 in that file are still abstract-only (Krohn-Vala auctions,
   S&P expiry pinning, expiry-week drift). The next idea needs a full read or a new researcher batch before any code.
   Process note: the quant-coder subagent has no Bash in the relay ("don't ask" mode), so it writes the script unrun and
-  the orchestrator runs it with `python research/<name>.py`.
+  the orchestrator runs it with `python research/<name>.py`. Commit 031f5b6 (pushed) also carried 18 renames that
+  were already staged before the run: the old EAs (Bell, Burst, Lattice, Legion, Meridian, Orient, Quartet, Snap,
+  Tokyo, .mq5 and .ex5) moved to `mql5/Experts/_archive/`. They are 100% renames of tracked files, but the .ex5 rule
+  was broken. Owner: keep them or revert. Agents: run `git diff --cached --name-only` before committing (proposed
+  check for the finish procedure).
 - **Agents (relay roles and models):** orchestrator (Opus, judges and plans), reviewer (Opus, on request), researcher
   (Haiku, daily), scanner (Haiku, on hand-over), fidelity (Sonnet, weekly or on hand-over), tester operator (Sonnet,
   weekend window), monitor (Haiku, daily demo check). Opus stays on judgement only.
