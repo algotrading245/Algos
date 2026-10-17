@@ -1,13 +1,13 @@
-"""Download XAUUSD 1-minute history from histdata.com and convert it to the layout of the MT5 exports.
+"""Download 1-minute history from histdata.com and convert it to the layout of the MT5 exports.
 
 histdata.com serves one zip per past year and one per month of the current year. Bars are bid prices stamped in a
 clock that runs 5 hours behind London. They are shifted to the broker's server clock (UTC+2, UTC+3 while the US is
 on daylight saving), so 17:00 New York is always 00:00 server time, as in marketdata/XAUUSD.pc_*.csv.gz.
 
-Output: marketdata/histdata/raw/*.zip and marketdata/histdata/XAUUSD_M1.csv.gz (time, open, high, low, close).
+Output: marketdata/histdata/raw/*.zip and marketdata/histdata/<SYMBOL>_M1.csv.gz (time, open, high, low, close).
 The source has no spread and no real volume, and it is a different liquidity feed from the broker's.
 
-    python tools\\download_histdata.py [--from 2009]
+    python tools\\download_histdata.py [--from 2009] [SYMBOL ...]      (default XAUUSD; e.g. EURUSD SPXUSD WTIUSD)
 """
 import argparse
 import io
@@ -21,22 +21,23 @@ from pathlib import Path
 
 import pandas as pd
 
-BASE = "https://www.histdata.com/download-free-forex-historical-data/?/ascii/1-minute-bar-quotes/xauusd/"
+BASE = "https://www.histdata.com/download-free-forex-historical-data/?/ascii/1-minute-bar-quotes/{}/"
 OUT = Path(__file__).resolve().parent.parent / "marketdata" / "histdata"
 UA = {"User-Agent": "Mozilla/5.0"}
 
 
-def fetch(period):
+def fetch(period, symbol="XAUUSD"):
     """period is '2023' or '2026/4'. Returns the path of the downloaded zip."""
-    path = OUT / "raw" / f"XAUUSD_M1_{period.replace('/', '_')}.zip"
+    path = OUT / "raw" / f"{symbol}_M1_{period.replace('/', '_')}.zip"
     if path.exists() and path.stat().st_size > 1000:
         return path
-    page = urllib.request.urlopen(urllib.request.Request(BASE + period, headers=UA), timeout=60).read().decode("utf-8", "replace")
+    url = BASE.format(symbol.lower()) + period
+    page = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60).read().decode("utf-8", "replace")
     form = page[page.index('id="file_down"'):]
     fields = {k: re.search(rf'name="{k}"[^>]*value="([^"]*)"', form).group(1)
               for k in ("tk", "date", "datemonth", "platform", "timeframe", "fxpair")}
     req = urllib.request.Request("https://www.histdata.com/get.php", data=urllib.parse.urlencode(fields).encode(),
-                                 headers={**UA, "Referer": BASE + period})
+                                 headers={**UA, "Referer": url})
     body = urllib.request.urlopen(req, timeout=180).read()
     if not body.startswith(b"PK"):
         raise RuntimeError(f"{period}: server did not return a zip ({len(body)} bytes)")
@@ -71,24 +72,35 @@ def to_server(stamp):
     return london + pd.to_timedelta(2 + us - uk, unit="h")
 
 
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--from", dest="first", type=int, default=2009)
-    a = ap.parse_args()
-    (OUT / "raw").mkdir(parents=True, exist_ok=True)
+def build(symbol, first):
     today = date.today()
-    periods = [str(y) for y in range(a.first, today.year)] + [f"{today.year}/{m}" for m in range(1, today.month + 1)]
+    periods = [str(y) for y in range(first, today.year)] + [f"{today.year}/{m}" for m in range(1, today.month + 1)]
     parts = []
     for p in periods:
         try:
-            parts.append(read(fetch(p)))
-            print(f"{p}: {len(parts[-1])} bars", flush=True)
+            parts.append(read(fetch(p, symbol)))
+            print(f"{symbol} {p}: {len(parts[-1])} bars", flush=True)
         except Exception as e:
-            print(f"{p}: failed, {e}", flush=True)
+            print(f"{symbol} {p}: failed, {e}", flush=True)
         time.sleep(1)
+    if not parts:
+        return
     df = pd.concat(parts).drop_duplicates("est").sort_values("est").reset_index(drop=True)
     server = to_server(df.est)
     df.insert(0, "time", (server - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1))
     df = df.drop(columns="est")
-    df.to_csv(OUT / "XAUUSD_M1.csv.gz", index=False)
-    print(f"{len(df)} bars, {pd.to_datetime(df.time.iloc[0], unit='s')} -> {pd.to_datetime(df.time.iloc[-1], unit='s')} server time")
+    tmp = OUT / f"{symbol}_M1.csv.gz.part"
+    df.to_csv(tmp, index=False, compression="gzip")
+    tmp.replace(OUT / f"{symbol}_M1.csv.gz")
+    print(f"{symbol}: {len(df)} bars, {pd.to_datetime(df.time.iloc[0], unit='s')} -> "
+          f"{pd.to_datetime(df.time.iloc[-1], unit='s')} server time", flush=True)
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--from", dest="first", type=int, default=2009)
+    ap.add_argument("symbols", nargs="*", default=["XAUUSD"])
+    a = ap.parse_args()
+    (OUT / "raw").mkdir(parents=True, exist_ok=True)
+    for sym in a.symbols:
+        build(sym.upper(), a.first)

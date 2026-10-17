@@ -1,0 +1,212 @@
+{
+  "about": "Strategy Tester jobs for the tester agent (tools/autopilot/prompts/tester.md). It runs queued jobs on Terminal 16 in the weekend window (Saturday 00:00 to Sunday 18:00 local), one at a time, in this order. status: queued | running | done | failed | hold (hold waits for the approval in needs). from/to (yyyy.MM.dd) bound a run; a job without to runs to the day it starts and cannot be repeated exactly. A job with months {from, to} (yyyy.MM) is a series of one fresh-deposit run per calendar month through tools/run-months.ps1 (the 5x EA's test); its folder is the _months folder.",
+  "jobs": [
+    {
+      "id": "j1",
+      "expert": "AurumNoise",
+      "symbol": "US500.cash",
+      "period": "M1",
+      "preset": "mql5/Experts/AurumNoise/AurumNoise_US500.set",
+      "deposit": 10000,
+      "leverage": 100,
+      "tag": "US500",
+      "set": [],
+      "from": "2024.01.01",
+      "status": "done",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_0457_AurumNoise_US500",
+      "expect": "README test 2: 2024-01 to 2026-10 from 10,000 at full size, +1.3%, 28.6% maximum drawdown (a weak stretch).",
+      "note": "Result -0.68%, 26.09% equity drawdown, PF 1.00, 452 trades. See summary.md."
+    },
+    {
+      "id": "j2",
+      "expert": "AurumNoise",
+      "symbol": "US100.cash",
+      "period": "M1",
+      "preset": "mql5/Experts/AurumNoise/AurumNoise_US100.set",
+      "deposit": 10000,
+      "leverage": 100,
+      "tag": "US100",
+      "set": [],
+      "from": "2024.01.01",
+      "status": "done",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_0500_AurumNoise_US100",
+      "expect": "README test 2: 2024-01 to 2026-10 from 10,000 at full size, +44.7%, 18.5% maximum drawdown.",
+      "note": "Result +39.93%, 16.41% equity drawdown, PF 1.18, 697 trades. See summary.md."
+    },
+    {
+      "id": "j3",
+      "expert": "AurumFunded",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_funded.set",
+      "deposit": 10000,
+      "leverage": 33,
+      "tag": "funded",
+      "set": [],
+      "compare_set": [
+        "InpBreakRiskPct=0.125",
+        "InpNoiseMult=0.275"
+      ],
+      "from": "2024.01.01",
+      "status": "done",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_0505_AurumFunded_funded_off",
+      "folder_on": "backtests\\2026-10-17_0535_AurumFunded_funded_on",
+      "expect": "README test 3: legs off about the earlier tester run (+110%, 4.1% drawdown, worst day -1.64%); legs on about a tenth more profit and a little more drawdown (Python model +189%/5.2% -> +213%/6.0%). No day stop hit.",
+      "note": "Runs after j1 and j2. a1 approved 2026-10-17 (backup made). AurumFunded in Terminal 16 is already linked to the repo; the demo EA runs the same source, so the recompile only reloads it. Base run judged by the orchestrator 2026-10-17 05:55: +167.68%, 6.67% eq DD, 17 day stops - matches. The expect above was taken from the v1.00 run (size cap 1.0); 1.01+ caps the cushion at 1.4, and on that sizing the Python model gives +331% / 7.2% (legs off), so the tester keeps 67% of the model's log growth (v1.00 run: 70%) and the drawdown is inside the model's 6.2-7.2%. Corrected expectation for the legs-on run (model +381% / 8.4%, cap 1.0 check +212% / 6.0% = the +213% / 6.0% above): about +185-190% and 7.5-8% eq DD, more day stops than 17 (research/funded_tester_gap.py). Legs-on run judged by the orchestrator 2026-10-17 07:10: +221.48% / 8.28% eq DD / 21 day stops against about +185-190% / 7.5-8% - better than expected (74% of the model's log growth against 67% off), drawdown 0.3 points over. Return per drawdown 25.1 -> 26.7, worst day -2.70% -> -2.55%; the 2024 day stops are the same two days in both runs, the 4 extra come in late 2025-2026 when equity is 2.5x+ and the 3%-of-initial stop is about 1.2% of equity. Both legs pass step 16 in AurumFunded (noise: US100.cash +977, US500.cash -57)."
+    },
+    {
+      "id": "j4",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month.set",
+      "deposit": 100,
+      "leverage": 500,
+      "tag": "5x",
+      "set": [
+        "InpGold=XAUUSD",
+        "InpYen=USDJPY",
+        "InpEuro=EURUSD",
+        "InpGridSymbol=AUDCAD"
+      ],
+      "compare_set": [
+        "InpBreakRiskPct=0.5",
+        "InpNoiseMult=0.275"
+      ],
+      "from": "2024.01.01",
+      "status": "done",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_0616_AurumHydra_5x_off",
+      "folder_on": "backtests\\2026-10-17_0625_AurumHydra_5x_on",
+      "expect": "README test 3: legs on about a tenth more profit and a little more drawdown than legs off. The preset's own symbols end in .pc (another broker), hence the overrides to FTMO names.",
+      "note": "Released by the orchestrator 2026-10-17 05:25: j1 -0.68% / 26.09% DD against +1.3% / 28.6% (return 2.0 points under, DD 2.5 under); j2 +39.93% / 16.41% against +44.7% / 18.5% (4.8 under, 2.1 under). Both within 15 points of return and not above the expected drawdown. Was: hold, needs j1 and j2 close to their expectation. Tester 2026-10-17 06:35: both runs done. Off +9.47% / 14.98% eq DD / PF 1.58 / 32 trades; on +14.79% / 25.84% eq DD / PF 1.32 / 49 trades (worst day -8.5%). See summary.md in both folders. Judged by the orchestrator 2026-10-17 07:10: inconclusive, a set-up fault, not an EA result. The set list renamed only 4 of Hydra's 16 symbol inputs; InpStocks (SP500.r), InpNasdaq (NAS100.r), the four fix pairs and six yen crosses kept the other broker's names, so the fix, stock-fall, Tokyo morning, after-holiday and noise legs never traded (by symbol only EURUSD, USDJPY, AUDCAD), the gold legs found the 100 deposit too small for the minimum lot, and the preset stops after one goal round (2024-01). The legs-on run therefore added only the breakout, for one month, at minimum-lot rounding. Replaced by j5."
+    },
+    {
+      "id": "j5",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_FTMO_size1.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "size1",
+      "set": [],
+      "compare_set": [
+        "InpBreakRiskPct=0.5",
+        "InpNoiseMult=0.275"
+      ],
+      "from": "2024.01.01",
+      "status": "done",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_0705_AurumHydra_size1_off",
+      "folder_on": "backtests\\2026-10-17_0825_AurumHydra_size1_on",
+      "expect": "Step 16 for AurumHydra, replacing j4. research/hydra_tester_expect.py (daily legs 2024-01 to 2026-10-12, compounded, 35% halt): legs off model +1184% / 10.7% DD, legs on +1574% / 11.5%; at the 70% of log growth the j3 runs kept, about +500% off and +620% on. Daily data cannot see intraday dips and Hydra carries gold at up to 6.2x equity, so expect the tester's equity drawdown well above the model's, roughly 15-25%. Every symbol of the preset should trade (check the by-symbol list: XAUUSD, AUDCAD, the 5 dollar pairs, 4 yen crosses, US100.cash and US500.cash in the on run). Step 16 test: return per unit of equity drawdown higher with the legs on (model 110 -> 136).",
+      "note": "Queued by the orchestrator 2026-10-17 07:10 after j4 proved a set-up fault. New preset AurumHydra_FTMO_size1.set: FTMO names for all 16 symbol inputs (AurumFunded's defaults, all traded in j3), size 1, no goal mode, the EA's default 35% drawdown halt. Tester 2026-10-17 09:45: both runs done but IDENTICAL to the cent (+1460.44%, 13.11% eq DD, 4174 trades, PF 1.53). Both reports list InpBreakRiskPct=0.5 although the off run's tester.ini and the preset hold no such key: the off run probably inherited j4's leg values, so no valid off/on pair. Needs a legs-off rerun with explicit InpBreakRiskPct=0,InpNoiseMult=0. See summary.md in the on folder. Judged by the orchestrator 2026-10-17 10:05: confirmed and wider than the legs. The off run's report lists every input j4's legs-on run had that the size1 preset left out: InpBreakRiskPct=0.5, InpNoiseMult=0.275, InpMonthEndBoost=2.0 (bell, Tokyo and both fix legs doubled on each month's last weekday), InpMaxDrawdownPct=0.0 (no 35% halt; it would not have fired at 13.1%), and the goal inputs (inert at InpGoalMult=0). So both j5 runs are legs on WITH the month-end boost: +1460.44% / 13.11% eq DD, return per DD 111, about 97% of the legs-on model's log growth (ln 15.60 / ln 16.74; the boost is not in the model). No step 16 verdict. j3's inputs were checked the same way: all at the EA defaults or the funded preset, so j3 stands. Replaced by j6."
+    },
+    {
+      "id": "j6",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_FTMO_size1.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "size1b",
+      "set": [],
+      "compare_set": [
+        "InpBreakRiskPct=0.5",
+        "InpNoiseMult=0.275"
+      ],
+      "from": "2024.01.01",
+      "status": "done",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_1010_AurumHydra_size1b_off",
+      "folder_on": "backtests\\2026-10-17_1116_AurumHydra_size1b_on",
+      "expect": "Step 16 for AurumHydra, replacing j5. Same model as j5 (research/hydra_tester_expect.py): legs off +1184% / 10.7%, on +1574% / 11.5%, return per DD 110 -> 136; tester drawdown likely above the model's. j5 (legs on plus InpMonthEndBoost=2, no halt) gave +1460% / 13.11%, so the clean legs-on run should land near or a little under that; the legs-off run clearly lower. Before judging, check each report's input list: off run InpBreakRiskPct=0.0, InpNoiseMult=0.0, InpMonthEndBoost=1.0, InpMaxDrawdownPct=35.0; on run the same but 0.5 / 0.275. The off run should show no USDJPY breakout magics (+26/+27) and no noise magics (+28/+29). Step 16 test: return per unit of equity drawdown higher with the legs on.",
+      "note": "Queued by the orchestrator 2026-10-17 10:05. The preset now writes the leg, boost, halt and goal inputs at the EA's defaults, because the tester keeps the previous run's value of any input a preset leaves out (j5). run-tester.ps1 lets -Set override preset lines, so the on run gets 0.5 / 0.275. Tester 2026-10-17 11:16: off run done, inputs verified (0 / 0 / 1.0 / 35): +725.13% / 12.48% eq DD / PF 1.70 / 2262 trades, return per DD 58.1, no US100/US500 trades; legs-on run started. Tester 2026-10-17 12:35: legs-on run done, inputs verified (0.5 / 0.275 / 1.0 / 35): +1076.18% / 15.54% eq DD / PF 1.49 / 4173 trades, return per DD 69.2 (off 58.1: higher with legs on); US100/US500 trade. See summary.md in the on folder. Judged by the orchestrator 2026-10-17 13:10: both legs pass step 16 in AurumHydra. Return per equity DD 58.1 -> 69.2 (+19%; model 110 -> 136, +24%). The tester kept more of the model's log growth than the j3 Funded runs (off 83%, on 87%, against 67-74%), so the return is above the 70% expectation (+725% vs about +500% off, +1076% vs about +620% on); the drawdown is above the model's as expected (12.48% vs 10.7%, 15.54% vs 11.5%). The deepest stretch moves: legs off it is 2024-07/08 (2024-07 off -6.0%, on +1.8%: USDJPY breakout +4.1, US100 +1.7, US500 +1.8 points), legs on it is 2026-01 (off -8.3%, on -13.0%: noise -3.9 points, breakout -1.0, next to AUDCAD -4.5 and EURUSD -2.2 in both runs). By symbol the breakout adds USDJPY 9,695 -> 25,860; noise US100.cash +4,181, US500.cash -1,092 (third negative S&P half on the same 2024-26 window, Python had it flat; not new evidence, weights not refitted). j5 against this on run is in effect a clean month-end-boost pair (the 35% halt never fired): boost 2.0 gave +1460% / 13.11%, return per DD 111 against 69, but the boost doubles the fix legs' whole size (they trade only on that day), so it is a re-weighting, a rejected family; kept in the 5x preset, not adopted for size 1. research/hydra_j6_compare.py. Next: step 17 (demo forward test) waits on the owner's a3."
+    },
+    {
+      "id": "j7",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "5x",
+      "set": [],
+      "months": {
+        "from": "2025.01",
+        "to": "2026.09"
+      },
+      "status": "failed",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_1550_AurumHydra_5x_months",
+      "expect": "The 5x preset's question on Terminal 16: in how many of the 21 months 2025-01 to 2026-09 does one round from a fresh 10,000 at 1:500 reach 5x? The preset header gives 9 of 21 on the 1:500 broker it was built for (.pc symbols); the Python model about 47%. Months with margin refusals are months where FTMO's symbol margins, not 1:500, capped the sizes: read those apart. A result near 9/21 with no refusals means FTMO data stands in for a 1:500 broker for this EA.",
+      "note": "Queued 2026-10-17 by the interactive session: queue jobs now take to and months (gap 3). Deposit 10,000 because j4's 100 deposit hit the minimum lot; the multiple does not depend on the deposit above that. First start 2026-10-17 15:45 failed in every month before the tester ran: run-months.ps1 splatted an array into run-tester.ps1, which bound the arguments by position (\"-Leverage\" into Deposit). Fixed (hashtable), requeued; the failed folder backtests6-10-17_1545_AurumHydra_5x_months is left untracked. Tester 2026-10-17 16:00: FAILED again, second script bug. In tools/run-months.ps1 line 88 `$tag = ... -f $Tag` overwrites $Tag (PowerShell variables are case-insensitive), so each month's tag extends the previous one (5x_202501_202502_...); from 2025.12 the file path is too long and every later month failed (Could not find a part of the path ...-holding.png). The series ended in about 9 minutes; months.json lists 2025.01-2025.11 as done, but months_summary.py crashes with ZeroDivisionError (deposit 0), so those runs have no usable report. Fix: rename the variable (e.g. $monthTag), make months_summary.py cope with empty results, delete the untracked chained folders, requeue. Judged by the orchestrator 2026-10-17 16:20: a THIRD fault, in the job itself, and the reason for deposit 0. The 5x preset still has the other broker's names (the j4 lesson) and the job's set was empty, so every month's tester.ini has InpGold=XAUUSD.pc etc.; the log says 'symbol XAUUSD.pc is not available' then 'tester stopped because OnInit returns non-zero code 1', so all 11 'done' months are empty reports, not results. Replaced by j8a-c on the new preset AurumHydra_5x_month_FTMO.set (16 FTMO names, goal inputs unchanged), split into three 7-month series with 3-letter tags so the chained tags stay short until run-months.ps1 is fixed."
+    },
+    {
+      "id": "j8a",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "5xA",
+      "set": [],
+      "months": {
+        "from": "2025.01",
+        "to": "2025.07"
+      },
+      "status": "done",
+      "folder": "backtests\\2026-10-17_1625_AurumHydra_5xA_months",
+      "needs": null,
+      "expect": "Part 1 of 3 of the 5x month series (replaces j7). One fresh 10,000 round per month at 1:500, AurumHydra_5x_month.set's goal inputs on FTMO's 16 symbol names. The preset header gives 9 of 21 months at 5x for 2025-01 to 2026-09 on the 1:500 broker it was built for; the Python model about 47% of rounds. Judge the three parts together (21 months): near 9/21 with no margin refusals means FTMO data stands in for a 1:500 broker; months with refusals read apart. Before judging, check one month's tester.ini shows InpGold=XAUUSD and its report a non-zero deposit.",
+      "note": "Queued by the orchestrator 2026-10-17 16:20. Split into 7-month parts with tag 5xA/5xB/5xC only because run-months.ps1 line 88 still chains the tags ($tag overwrites $Tag); at 7 months the longest tag is 52 characters, while j7 failed at 86. If run-months.ps1 is fixed first, the split is harmless. Collected by hand 2026-10-17 21:45 (tester was capped): 0/7 months at 5x, median 0.75x."
+    },
+    {
+      "id": "j8b",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "5xB",
+      "set": [],
+      "months": {
+        "from": "2025.08",
+        "to": "2026.02"
+      },
+      "status": "done",
+      "needs": null,
+      "expect": "Part 2 of 3 of the 5x month series; see j8a.",
+      "note": "Queued by the orchestrator 2026-10-17 16:20 with j8a. Tester 2026-10-17 22:30: 1/7 months at 5x (2026.01), median 1.37x, 0 below 0.5x, 0 margin refusals. See summary.md.",
+      "folder": "backtests\\2026-10-17_2144_AurumHydra_5xB_months"
+    },
+    {
+      "id": "j8c",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "5xC",
+      "set": [],
+      "months": {
+        "from": "2026.03",
+        "to": "2026.09"
+      },
+      "status": "done",
+      "needs": null,
+      "expect": "Part 3 of 3 of the 5x month series; see j8a. After this part, judge all 21 months against 9/21.",
+      "note": "Queued by the orchestrator 2026-10-17 16:20 with j8a. Started by the tester 2026-10-17 22:31. Collected 2026-10-17 23:05: 0/7 months at 5x, median 0.91x, 0 below 0.5x, 0 margin refusals. All three parts: 1 of 21 at 5x. See summary.md.",
+      "folder": "backtests\\2026-10-17_2231_AurumHydra_5xC_months"
+    }
+  ]
+}

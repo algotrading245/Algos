@@ -18,11 +18,25 @@
 //|   number of trading days is done, everything is closed and the   |
 //|   EA halts. While days are missing it trades on at               |
 //|   InpPropCoast times its size. 0 = no target (funded account).   |
-//| - Near the final stop: once equity is less than InpPropRoomPct   |
-//|   above it, every size shrinks in proportion (not below          |
-//|   InpPropMinSize). In the backtest with half the edge this took  |
-//|   the pass rate at size 0.5 from 94% to 100% and the funded      |
-//|   accounts alive after a year from 93% to 100%.                  |
+//| - Cushion sizing: every size is multiplied by (equity - final    |
+//|   stop) / InpPropRoomPct, at least InpPropMinSize and at most     |
+//|   InpPropCap. With the room equal to the final stop (8.5) the    |
+//|   size is 1 at the start, shrinks toward the final stop and grows|
+//|   with profit up to 1.4x at +3.4%. On the path from buying the   |
+//|   challenge to the first payout (tools/prop_sizing.py, 70% of the|
+//|   backtested edge) the first payout came within 9 months 46% of  |
+//|   the time against 37% with the old rule (room 6.5, cap 1),      |
+//|   median 9.6 months against 10.6, and with half the edge and a   |
+//|   pessimistic intraday stand-in no path failed against 7.8%.     |
+//| - Fast sizing (InpPropFast, off by default): while equity is at  |
+//|   or above the phase's start, size follows a table solved by     |
+//|   dynamic programming for passing both phases within 9 months    |
+//|   (tools/prop_dp.py); below the start the cushion rule sizes. On |
+//|   the historical paths at 70% of the edge both phases passed     |
+//|   within 9 months 67% of the time (cushion rule alone 57%),      |
+//|   median 7.3 months (8.0), and no path failed, with half the edge|
+//|   and pessimistic intraday dips none either. Switch it on only   |
+//|   after live results confirm the edge.                           |
 //| - Each gold unit carries a stop at the broker that loses         |
 //|   InpGoldStopPct of equity, for when the terminal is down; every |
 //|   other leg already has one.                                     |
@@ -48,7 +62,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.00"
+#property version   "1.03"
 #include <Math\Stat\Normal.mqh>
 
 #include <Trade\Trade.mqh>
@@ -66,8 +80,15 @@ input int    InpPropMinDays     = 4;     // Trading days the firm asks for befor
 input double InpPropDayStopPct  = 3.0;   // Day stop: close everything for the day at this loss (the firm's limit is 5)
 input double InpPropMaxStopPct  = 8.5;   // Final stop: close everything and halt at this loss (the firm's limit is 10)
 input bool   InpPropTrailing    = false; // The firm's maximum loss trails the highest day-start balance
-input double InpPropRoomPct     = 6.5;   // Sizes shrink in proportion once the room to the final stop is below this (0 = off)
+input double InpPropLockPct     = 0.0;   // Lock: once equity is this far up, % of the initial balance, the final stop moves (0 = off; Instant Funding 5)
+input double InpPropLockStopPct = 3.5;   // ... to this loss, % of the initial balance (Instant Funding's limit becomes 5)
+input double InpPropFloatPct    = 0.0;   // Floating-loss stop: open positions this far in loss together, % of the initial balance, close all for the day (0 = off)
+input double InpPropRoomPct     = 8.5;   // Cushion sizing: size x (equity - final stop) / this, % of the initial balance (0 = off)
 input double InpPropMinSize     = 0.3;   // ... but not below this share
+input double InpPropCap         = 1.4;   // ... and not above this multiple
+input bool   InpPropFast        = false; // Fast sizing while in profit (tools/prop_dp.py); only once live results confirm the edge
+input datetime InpPropFastStart = 0;     // ... day the challenge was bought, counts the 9 months (0 = the phase's start)
+input int    InpPropFastDays    = 189;   // ... trading days in which both phases are aimed for
 input double InpPropCoast       = 0.1;   // Size multiple while the target is reached and trading days are missing
 input int    InpPropResetHHMM   = 100;   // The firm's day starts at this server time (FTMO: midnight CE(S)T = 01:00)
 input bool   InpEuClock         = true;  // Server clock follows European summer time (false = New York + 7 hours all year)
@@ -182,6 +203,23 @@ input int    InpAfterHHMM       = 905;   // Buy the dollar at this time, HHMM (m
 input int    InpAfterExitHHMM   = 1500;  // Close at this time, HHMM (minutes a multiple of 5)
 input int    InpAfterEntrySec   = 300;   // No entry later than this after the start, seconds
 
+input group "USD/JPY London breakout (server time; off until its own Strategy Tester run, research/london_breakout.py)"
+input double InpBreakRiskPct    = 0.0;   // Loss of each side at its stop, % of balance (0 = off; 0.125 = a quarter of the fix leg)
+input int    InpBreakFromHHMM   = 100;   // USD/JPY range from this time, HHMM
+input int    InpBreakToHHMM     = 900;   // ... to this time, HHMM
+input int    InpBreakStartHHMM  = 1000;  // Buy above the range high / sell below the low from this time, HHMM
+input int    InpBreakExitHHMM   = 1800;  // Close both sides at this time, HHMM
+input int    InpBreakFilterDays = 60;    // Days in the average range
+input double InpBreakMinRange   = 0.25;  // No breakout when the range is below this multiple of its average
+input double InpBreakMaxRange   = 3.0;   // ... or above this one
+
+input group "Noise-area index momentum (New York session; off until its own Strategy Tester run, research/noise_area_index.py)"
+input double InpNoiseMult       = 0.0;   // Notional per index, multiple of min(4, 2% / daily volatility) x equity (0 = off; 0.275 tested)
+input string InpNasdaq          = "US100.cash"; // Nasdaq 100 (the S&P 500 is InpStocks)
+input double InpNoiseBandSpx    = 1.5;   // Band width on the S&P 500, multiple of the average move
+input double InpNoiseBandNdx    = 1.0;   // Band width on the Nasdaq
+input double InpNoiseMaxSpreadBp= 3.0;   // No entry while the spread is above this, basis points of price
+
 input group "Overnight drift (stock index after a weak US cash session, server time, no stop)"
 input double InpDriftLev        = 0.0;   // Index position per unit of size, x equity (0 = off)
 input double InpDriftMaxLev     = 150.0; // Largest index position, x equity
@@ -214,7 +252,7 @@ input bool   InpUseModel        = true;  // Scale each trade by the model's scor
 input double InpModelTilt       = 0.5;   // Size runs from 1 - tilt to 1 + tilt times the leg's size (0 to 1)
 
 input group "Execution"
-input long   InpMagic           = 245100; // First magic number: +0 session, +1 dip, +2 bell, +3 Tokyo, +4 midday, +5 fast, +6 hold, +11.. grid, +20 and +21 fix, +22 stock-fall fix, +23 Tokyo morning, +24 after a holiday, +25 overnight drift
+input long   InpMagic           = 245100; // First magic number: +0 session, +1 dip, +2 bell, +3 Tokyo, +4 midday, +5 fast, +6 hold, +11.. grid, +20 and +21 fix, +22 stock-fall fix, +23 Tokyo morning, +24 after a holiday, +25 overnight drift, +26 and +27 USD/JPY breakout, +28 and +29 noise-area index legs
 input int    InpGoldDeviation   = 30;     // Max slippage on gold, points
 input int    InpFxDeviation     = 10;     // Max slippage on the currency pairs, points
 
@@ -234,6 +272,12 @@ input int    InpFxDeviation     = 10;     // Max slippage on the currency pairs,
 #define MORN_MAGIC 23      // the Tokyo-morning trades have magic InpMagic+23
 #define AFTER_MAGIC 24     // the after-holiday trades have magic InpMagic+24
 #define DRIFT_MAGIC 25     // the overnight-drift trade has magic InpMagic+25
+#define BREAK_MAGIC 26     // the breakout trades have magic InpMagic+26 (long) and InpMagic+27 (short)
+#define NOISE_MAGIC 28     // the noise-area trades have magic InpMagic+28 (S&P 500) and InpMagic+29 (Nasdaq)
+#define NOISE_OPEN  990    // 9:30 New York in server minutes (the server is New York + 7)
+#define NOISE_CLOSE 1380   // 16:00 New York
+#define NOISE_N     12     // checks at 10:00, 10:30, ... 15:30 New York
+#define NOISE_DAYS  14     // sessions in the average move and the daily volatility
 #define DRIFT_DAYS 250     // cash sessions the last one is ranked against
 #define MORN_PAIRS 3
 #define FIX_PAIRS 5
@@ -248,6 +292,7 @@ bool     g_halted=false;
 double   g_propStart=0.0;      // initial balance the limits are measured from
 double   g_propDayBal=0.0;     // balance at the start of the firm's day
 double   g_propPeak=0.0;       // highest day-start balance
+bool     g_propLocked=false;   // equity has reached InpPropLockPct: the final stop is at InpPropLockStopPct
 datetime g_propDay=0;          // the firm's day g_propDayBal belongs to
 datetime g_propSince=0;        // when the phase was started
 bool     g_propDayStop=false;  // the day stop was hit on g_propDay
@@ -278,6 +323,17 @@ bool     g_goalOver=false;  // the round has ended and InpGoalStop asks to close
 bool     g_driftOn=false;  // the stock index is there and the overnight-drift leg has a size
 datetime g_driftDone=0;    // day whose overnight-drift entry has been dealt with
 datetime g_afterDone[FIX_PAIRS];     // per pair: day that has been dealt with
+bool     g_breakOn=false;  // the breakout leg has a size
+datetime g_breakDay=0;     // day the range below belongs to
+bool     g_breakOk=false;  // that day's range exists and passed the filter
+double   g_breakHi=0.0,g_breakLo=0.0;
+datetime g_breakTraded[2]; // per side (long, short): day a trade was opened
+bool     g_noiseOn=false;  // the noise-area leg has a size
+string   g_noiseSym[2];    // S&P 500 and Nasdaq, "" for one that is missing
+datetime g_noiseDay[2];    // day the bands below belong to
+bool     g_noiseReady[2];  // that day's bands are known
+int      g_noiseLast[2];   // last check dealt with that day
+double   g_noiseSig[2][NOISE_N],g_noiseHi[2],g_noiseLo[2],g_noiseLev[2],g_noiseVol[2];
 
 int HHMM(datetime t)
   {
@@ -375,15 +431,84 @@ string PropKey(string name)
 // Equity under which the final stop closes everything.
 double PropFloor()
   {
+   if(g_propLocked)
+      return(g_propStart-g_propStart*InpPropLockStopPct/100.0);
    return((InpPropTrailing ? g_propPeak : g_propStart)-g_propStart*InpPropMaxStopPct/100.0);
   }
 
-// Size multiple of the guard: smaller near the final stop, InpPropCoast while only trading days are missing.
+// Fast sizing (InpPropFast): size by 21-day block of days left (row 0 = the last block) and 0.5% step of equity
+// from -8.5%, solved by tools/prop_dp.py (9-month deadline, a failure counts -3, sizes up to 1.0, 70% of the edge).
+// Used only while equity is at or above the phase's start; below it the cushion rule sizes.
+const double FAST_P1[9][38]=
+  {
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.60,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.50,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.70,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.60,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.60,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.60,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.60,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.50,0.60,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.50,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.50,0.60,0.60,0.70,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.70,0.60,0.50,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.40,0.50,0.60,0.60,0.70,0.70,0.70,0.70,0.85,0.85,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.70,0.60,0.40,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.40,0.50,0.50,0.60,0.60,0.60,0.70,0.70,0.70,0.70,0.70,0.85,1.00,1.00,0.85,0.85,0.85,1.00,1.00,0.85,0.85,0.85,0.85,0.85,0.85,0.70,0.70,0.60,0.40,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.40,0.50,0.50,0.60,0.60,0.60,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.85,0.85,0.85,0.70,0.70,0.85,0.85,0.70,0.70,0.70,0.70,0.70,0.70,0.60,0.40,0.20}
+  };
+const double FAST_P2[9][28]=
+  {
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.70,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.60,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.50,0.60,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.85,0.70,0.50,0.30,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.50,0.60,0.70,0.70,0.70,0.70,0.85,0.85,0.85,0.85,0.85,0.85,0.70,0.70,0.70,0.60,0.60,0.50,0.40,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.50,0.50,0.60,0.60,0.60,0.60,0.70,0.70,0.70,0.60,0.60,0.60,0.60,0.50,0.50,0.40,0.40,0.30,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.40,0.40,0.40,0.50,0.50,0.50,0.50,0.60,0.60,0.60,0.60,0.50,0.50,0.50,0.40,0.40,0.40,0.30,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.40,0.40,0.40,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.40,0.40,0.40,0.40,0.30,0.30,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.20,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.30,0.20,0.20,0.20,0.20},
+   {0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.30,0.30,0.30,0.30,0.20,0.20,0.20,0.20,0.20}
+  };
+// Instant Funding first payout (tools/prop_dp_instantfunding.py): size by 21-day block of the InpPropFastDays left
+// (row 0 = the last block) and 0.5% step of equity from -8.5%; used while equity is at or above the start and the lock
+// is not in (static -10% floor, payout at +5%). Solved for 42 days, 70% of the edge, a lost account counting -3.
+const double FAST_IF[2][27]=
+  {
+   {1.00,0.20,0.20,0.20,0.20,0.40,0.50,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.60},
+   {1.00,0.20,0.20,0.20,0.20,0.30,0.50,0.50,0.70,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,0.70,0.50,0.30}
+  };
+
+// Size the fast table asks for (absolute, as InpSizeMult), or -1 when it does not apply: not enabled, a funded
+// account, or equity below the phase's start.
+double FastSize()
+  {
+   if(!InpPropFast || g_propStart<=0 || (InpPropTargetPct<=0 && InpPropLockPct<=0))
+      return(-1.0);
+   double eq=(AccountInfoDouble(ACCOUNT_EQUITY)/g_propStart-1.0)*100.0;
+   if(eq<0)
+      return(-1.0);
+   datetime from=(InpPropFastStart>0 ? InpPropFastStart : g_propSince);
+   int left=InpPropFastDays-Weekdays(DayOf(from),DayOf(TimeCurrent()));
+   if(InpPropTargetPct<=0)                     // instant account with a lock: until the lock, the FAST_IF table
+     {
+      if(g_propLocked)
+         return(-1.0);
+      int b=MathMax(0,MathMin(1,(MathMax(left,1)-1)/21));
+      int c=(int)MathRound((MathMin(eq,4.5)+8.5)/0.5);
+      return(FAST_IF[b][MathMax(0,MathMin(26,c))]);
+     }
+   bool first=(InpPropTargetPct>=10.0);
+   int blk=MathMax(0,MathMin(8,(MathMax(left,1)-1)/21));
+   int cols=(first ? 38 : 28);
+   int k=(int)MathRound((MathMin(eq,0.5*(cols-1)-8.5)+8.5)/0.5);
+   k=MathMax(0,MathMin(cols-1,k));
+   return(first ? FAST_P1[blk][k] : FAST_P2[blk][k]);
+  }
+
+// Size multiple of the guard: the cushion above the final stop over InpPropRoomPct, between InpPropMinSize and
+// InpPropCap, and InpPropCoast while only trading days are missing.
 double PropSize()
   {
    double f=(g_propCoast ? InpPropCoast : 1.0);
+   double fast=FastSize();
+   if(fast>0 && InpSizeMult>0)
+      return(f*fast/InpSizeMult);
    if(InpPropRoomPct>0 && g_propStart>0)
-      f*=MathMax(InpPropMinSize,MathMin(1.0,(AccountInfoDouble(ACCOUNT_EQUITY)-PropFloor())/(g_propStart*InpPropRoomPct/100.0)));
+      f*=MathMax(InpPropMinSize,MathMin(InpPropCap,(AccountInfoDouble(ACCOUNT_EQUITY)-PropFloor())/(g_propStart*InpPropRoomPct/100.0)));
    return(f);
   }
 
@@ -1749,6 +1874,332 @@ void After()
      }
   }
 
+// High, low and last close of InpYen's M1 bars from InpBreakFromHHMM to InpBreakToHHMM of 'day'. False when more
+// than 5/12 of the minutes are missing.
+bool BreakRange(datetime day,double &hi,double &lo,double &last)
+  {
+   double h[],l[],c[];
+   datetime from=day+HHMMSec(InpBreakFromHHMM),to=day+HHMMSec(InpBreakToHHMM)-60;
+   int need=(HHMMSec(InpBreakToHHMM)-HHMMSec(InpBreakFromHHMM))/60*7/12;
+   int n=CopyHigh(InpYen,PERIOD_M1,from,to,h);
+   if(n<need || CopyLow(InpYen,PERIOD_M1,from,to,l)!=n || CopyClose(InpYen,PERIOD_M1,from,to,c)!=n)
+      return(false);
+   hi=h[ArrayMaximum(h)];
+   lo=l[ArrayMinimum(l)];
+   last=c[n-1];
+   return(hi>lo && last>0);
+  }
+
+// USD/JPY London breakout: from InpBreakStartHHMM buy once the ask reaches the high of the morning range and sell
+// once the bid reaches its low, each side once a day, stop at the range's other side, both closed at
+// InpBreakExitHHMM. Days whose range is far from its InpBreakFilterDays-day average are skipped.
+void Breakout()
+  {
+   if(!g_breakOn)
+      return;
+   datetime now=TimeCurrent(),today=DayOf(now),opened;
+   string sym=InpYen;
+   for(int s=0; s<2; s++)
+      if(HeldLots(sym,InpMagic+BREAK_MAGIC+s,opened)>0 && now>=DayOf(opened)+HHMMSec(InpBreakExitHHMM))
+         CloseAll(sym,InpMagic+BREAK_MAGIC+s);
+   datetime start=today+HHMMSec(InpBreakStartHHMM);
+   if(now<start || now>=today+HHMMSec(InpBreakExitHHMM))
+      return;
+   MqlDateTime t;
+   TimeToStruct(today,t);
+   if(t.day_of_week<1 || t.day_of_week>5)
+      return;
+   if(g_breakDay!=today)
+     {
+      g_breakDay=today;
+      g_breakOk=false;
+      double last,h,l,c,sum=0.0;
+      int n=0;
+      if(!BreakRange(today,g_breakHi,g_breakLo,last))
+        {
+         PrintFormat("AurumFunded: no USD/JPY range for today in the M1 history, no breakout");
+         return;
+        }
+      for(int k=1; k<=2*InpBreakFilterDays+20 && n<InpBreakFilterDays; k++)
+        {
+         datetime d=today-k*86400;
+         MqlDateTime u;
+         TimeToStruct(d,u);
+         if(u.day_of_week<1 || u.day_of_week>5 || !BreakRange(d,h,l,c))
+            continue;
+         sum+=(h-l)/c;
+         n++;
+        }
+      if(n<InpBreakFilterDays/2 || sum<=0)
+        {
+         PrintFormat("AurumFunded: fewer than %d days of USD/JPY M1 history, no breakout today",InpBreakFilterDays/2);
+         return;
+        }
+      double ratio=(g_breakHi-g_breakLo)/last/(sum/n);
+      g_breakOk=(ratio>=InpBreakMinRange && ratio<=InpBreakMaxRange);
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      PrintFormat("AurumFunded: USD/JPY range %s-%s, %.2fx its %d-day average%s",DoubleToString(g_breakLo,dg),
+                  DoubleToString(g_breakHi,dg),ratio,n,g_breakOk ? "" : ", no breakout today");
+     }
+   if(!g_breakOk)
+      return;
+   MqlTick q;
+   if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0)
+      return;
+   double point=SymbolInfoDouble(sym,SYMBOL_POINT);
+   int digits=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+   for(int s=0; s<2; s++)
+     {
+      int side=(s==0 ? 1 : -1);
+      long magic=InpMagic+BREAK_MAGIC+s;
+      if(g_breakTraded[s]==today || (side>0 ? q.ask<g_breakHi : q.bid>g_breakLo))
+         continue;
+      if(HeldLots(sym,magic,opened)>0 || TradedSince(sym,magic,start))
+        {
+         g_breakTraded[s]=today;
+         continue;
+        }
+      if(q.ask-q.bid>InpFxMaxSpread*point)
+         continue;             // tried again on the next tick
+      double px=(side>0 ? q.ask : q.bid);
+      double sl=NormalizeDouble(side>0 ? g_breakLo : g_breakHi,digits);
+      double dist=side*(px-sl);
+      if(dist<=SymbolInfoInteger(sym,SYMBOL_TRADE_STOPS_LEVEL)*point+q.ask-q.bid)
+        {
+         g_breakTraded[s]=today;           // already through the other side: no room for the stop
+         continue;
+        }
+      double lots=RiskLots(sym,side,px,dist,SizeMult()*InpBreakRiskPct);
+      if(lots<=0)
+        {
+         PrintFormat("AurumFunded: balance too small for the minimum lot of %s at a stop of %s, no breakout",sym,
+                     DoubleToString(dist,digits));
+         g_breakTraded[s]=today;
+         continue;
+        }
+      Prepare(sym,magic);
+      bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,"AurumFunded breakout") : g_trade.Sell(lots,sym,0.0,sl,0.0,"AurumFunded breakout"));
+      if(!ok || g_trade.ResultDeal()==0)
+        {
+         PrintFormat("AurumFunded: breakout order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+         continue;
+        }
+      PrintFormat("AurumFunded: USD/JPY broke its range, %s %.2f lots at %s, stop %s",side>0 ? "bought" : "sold",lots,
+                  DoubleToString(g_trade.ResultPrice(),digits),DoubleToString(sl,digits));
+      g_breakTraded[s]=today;
+     }
+  }
+
+// Bid of 'sym' at server minute 'minute' of 'day': the close of the M1 bar that ended then, else the open of the
+// bar starting then. False when neither exists.
+bool NoisePrice(string sym,datetime day,int minute,double &px)
+  {
+   datetime t=day+minute*60;
+   int b=iBarShift(sym,PERIOD_M1,t-60,true);
+   if(b>=0)
+     {
+      px=iClose(sym,PERIOD_M1,b);
+      return(px>0);
+     }
+   b=iBarShift(sym,PERIOD_M1,t,true);
+   if(b<0)
+      return(false);
+   px=iOpen(sym,PERIOD_M1,b);
+   return(px>0);
+  }
+
+// Bands of index i for 'today': the average move from the 9:30 open to each check over the previous NOISE_DAYS
+// sessions, today's open and yesterday's close, and the day's notional per unit of equity. False while history is
+// short.
+bool NoisePrepare(int i,datetime today)
+  {
+   string sym=g_noiseSym[i];
+   double sum[NOISE_N],closes[];
+   ArrayInitialize(sum,0.0);
+   ArrayResize(closes,0);
+   int n=0;
+   double prevClose=0.0;
+   for(int k=1; k<=3*NOISE_DAYS+15 && n<=NOISE_DAYS; k++)
+     {
+      datetime d=today-k*86400;
+      MqlDateTime t;
+      TimeToStruct(d,t);
+      if(t.day_of_week<1 || t.day_of_week>5)
+         continue;
+      double o,c;
+      if(!NoisePrice(sym,d,NOISE_OPEN,o) || !NoisePrice(sym,d,NOISE_CLOSE,c))
+         continue;
+      if(prevClose==0.0)
+         prevClose=c;
+      int m=ArraySize(closes);
+      ArrayResize(closes,m+1);
+      closes[m]=c;
+      if(n<NOISE_DAYS)
+        {
+         bool full=true;
+         double mv[NOISE_N];
+         for(int j=0; j<NOISE_N && full; j++)
+           {
+            double p;
+            full=NoisePrice(sym,d,NOISE_OPEN+30*(j+1),p);
+            if(full)
+               mv[j]=MathAbs(p/o-1.0);
+           }
+         if(!full)
+            continue;
+         for(int j=0; j<NOISE_N; j++)
+            sum[j]+=mv[j];
+        }
+      n++;
+     }
+   if(n<NOISE_DAYS || ArraySize(closes)<NOISE_DAYS+1)
+      return(false);
+   for(int j=0; j<NOISE_N; j++)
+      g_noiseSig[i][j]=sum[j]/NOISE_DAYS;
+   double r[],mean=0.0,var=0.0;
+   ArrayResize(r,NOISE_DAYS);
+   for(int k=0; k<NOISE_DAYS; k++)
+     {
+      r[k]=closes[k]/closes[k+1]-1.0;
+      mean+=r[k];
+     }
+   mean/=NOISE_DAYS;
+   for(int k=0; k<NOISE_DAYS; k++)
+      var+=(r[k]-mean)*(r[k]-mean);
+   double vol=MathSqrt(var/(NOISE_DAYS-1)),open;
+   if(vol<=0 || !NoisePrice(sym,today,NOISE_OPEN,open))
+      return(false);
+   g_noiseHi[i]=MathMax(open,prevClose);
+   g_noiseLo[i]=MathMin(open,prevClose);
+   g_noiseLev[i]=MathMin(4.0,0.02/vol);
+   g_noiseVol[i]=vol;
+   return(true);
+  }
+
+// Mean of the minute closes of index i from 9:30 to server minute 'minute' today.
+double NoiseAverage(int i,datetime today,int minute)
+  {
+   double c[];
+   int n=CopyClose(g_noiseSym[i],PERIOD_M1,today+(NOISE_OPEN-1)*60,today+(minute-1)*60,c);
+   if(n<=0)
+      return(0.0);
+   double s=0.0;
+   for(int k=0; k<n; k++)
+      s+=c[k];
+   return(s/n);
+  }
+
+// Lots of 'sym' for a notional of 'mult' x equity; 0 below the minimum lot.
+double NotionalLots(string sym,int side,double price,double mult)
+  {
+   ENUM_ORDER_TYPE type=(side>0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL);
+   double pnl,margin;
+   if(!OrderCalcProfit(type,sym,1.0,price,price*(1.0+0.01*side),pnl) || pnl<=0)
+      return(0.0);
+   double lots=AccountInfoDouble(ACCOUNT_EQUITY)*mult/(pnl/0.01);
+   if(OrderCalcMargin(type,sym,1.0,price,margin) && margin>0)
+      lots=MathMin(lots,AccountInfoDouble(ACCOUNT_MARGIN_FREE)*InpMarginPct/100.0/margin);
+   double step=SymbolInfoDouble(sym,SYMBOL_VOLUME_STEP);
+   lots=MathMin(MathFloor(lots/step+1e-9)*step,SymbolInfoDouble(sym,SYMBOL_VOLUME_MAX));
+   return(lots<SymbolInfoDouble(sym,SYMBOL_VOLUME_MIN) ? 0.0 : NormalizeDouble(lots,2));
+  }
+
+// Noise-area intraday momentum (Zarattini, Aziz, Barbon) on the S&P 500 and the Nasdaq: at each half hour from
+// 10:00 New York buy above the upper band, sell below the lower one, close a long under max(upper band, session
+// average) and a short over min(lower band, session average), flat at 16:00 New York.
+void Noise()
+  {
+   if(!g_noiseOn)
+      return;
+   datetime now=TimeCurrent(),today=DayOf(now),opened;
+   int minute=(int)((now-today)/60);
+   for(int i=0; i<2; i++)
+     {
+      string sym=g_noiseSym[i];
+      if(sym=="")
+         continue;
+      long magic=InpMagic+NOISE_MAGIC+i;
+      double held=HeldLots(sym,magic,opened);
+      if(held>0 && (minute>=NOISE_CLOSE || DayOf(opened)!=today))
+        {
+         CloseAll(sym,magic);
+         continue;
+        }
+      if(g_noiseDay[i]!=today)
+        {
+         g_noiseDay[i]=today;
+         g_noiseReady[i]=false;
+         g_noiseLast[i]=-1;
+        }
+      if(minute<NOISE_OPEN+30 || minute>=NOISE_CLOSE)
+         continue;
+      int j=(minute-NOISE_OPEN)/30-1;
+      if(j<0 || j>=NOISE_N || j<=g_noiseLast[i])
+         continue;
+      g_noiseLast[i]=j;
+      if(now-(today+(NOISE_OPEN+30*(j+1))*60)>60)
+         continue;                                       // too late for this check
+      if(!g_noiseReady[i])
+        {
+         g_noiseReady[i]=NoisePrepare(i,today);
+         if(!g_noiseReady[i])
+           {
+            PrintFormat("AurumFunded: not enough M1 history on %s for the noise bands, no noise trade today",sym);
+            g_noiseLast[i]=NOISE_N;
+            continue;
+           }
+        }
+      MqlTick q;
+      if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0)
+         continue;
+      double band=(i==0 ? InpNoiseBandSpx : InpNoiseBandNdx);
+      double ub=g_noiseHi[i]*(1.0+band*g_noiseSig[i][j]),lb=g_noiseLo[i]*(1.0-band*g_noiseSig[i][j]);
+      double avg=NoiseAverage(i,today,NOISE_OPEN+30*(j+1));
+      int side=0;
+      if(held>0)
+        {
+         for(int k=PositionsTotal()-1; k>=0; k--)
+           {
+            ulong t=PositionGetTicket(k);
+            if(t!=0 && PositionGetString(POSITION_SYMBOL)==sym && PositionGetInteger(POSITION_MAGIC)==magic)
+               side=(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY ? 1 : -1);
+           }
+         double stop=(side>0 ? (avg>0 ? MathMax(ub,avg) : ub) : (avg>0 ? MathMin(lb,avg) : lb));
+         if((side>0 && q.bid<stop) || (side<0 && q.bid>stop))
+           {
+            if(!CloseAll(sym,magic))
+               continue;
+            side=0;
+           }
+        }
+      if(side!=0 || (q.bid<=ub && q.bid>=lb))
+         continue;
+      if((q.ask-q.bid)/q.bid*1e4>InpNoiseMaxSpreadBp)
+        {
+         PrintFormat("AurumFunded: %s spread %.1f bp above %.1f, no noise entry",sym,(q.ask-q.bid)/q.bid*1e4,InpNoiseMaxSpreadBp);
+         continue;
+        }
+      int dir=(q.bid>ub ? 1 : -1);
+      double lots=NotionalLots(sym,dir,dir>0 ? q.ask : q.bid,SizeMult()*InpNoiseMult*g_noiseLev[i]);
+      if(lots<=0)
+        {
+         PrintFormat("AurumFunded: balance too small for the minimum lot of %s, no noise trade",sym);
+         continue;
+        }
+      // a broker stop three daily volatilities away, only against a lost connection; the band and average exits
+      // above do the trading
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      double px=(dir>0 ? q.ask : q.bid),sl=NormalizeDouble(px*(1.0-dir*3.0*g_noiseVol[i]),dg);
+      Prepare(sym,magic);
+      bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,"AurumFunded noise") : g_trade.Sell(lots,sym,0.0,sl,0.0,"AurumFunded noise"));
+      if(!ok || g_trade.ResultDeal()==0)
+         PrintFormat("AurumFunded: noise order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+      else
+         PrintFormat("AurumFunded: %s %s %.2f lots at %.2f, bands %.2f / %.2f",sym,dir>0 ? "bought" : "sold",lots,
+                     g_trade.ResultPrice(),ub,lb);
+     }
+  }
+
 // Move of the stock index over the US cash session of 'day' (16:00 to 23:00) as a fraction of the price. False when
 // that day has no bar at the start.
 bool DriftMove(datetime day,double &move)
@@ -1873,6 +2324,13 @@ bool CloseEverything()
          ok=CloseAll(g_fixSym[i],InpMagic+AFTER_MAGIC) && ok;
    if(g_driftOn)
       ok=CloseAll(InpStocks,InpMagic+DRIFT_MAGIC) && ok;
+   if(g_breakOn)
+      for(int s=0; s<2; s++)
+         ok=CloseAll(InpYen,InpMagic+BREAK_MAGIC+s) && ok;
+   if(g_noiseOn)
+      for(int i=0; i<2; i++)
+         if(g_noiseSym[i]!="")
+            ok=CloseAll(g_noiseSym[i],InpMagic+NOISE_MAGIC+i) && ok;
    return(ok);
   }
 
@@ -1952,6 +2410,7 @@ bool PropGuard()
          g_propDay=(datetime)GlobalVariableGet(PropKey("day"));
          g_propDayBal=GlobalVariableGet(PropKey("daybal"));
          g_propDayStop=(GlobalVariableGet(PropKey("daystop"))>0);
+         g_propLocked=(GlobalVariableCheck(PropKey("lock")) && GlobalVariableGet(PropKey("lock"))>0);
         }
       else
         {
@@ -1979,6 +2438,12 @@ bool PropGuard()
       GlobalVariableSet(PropKey("peak"),g_propPeak);
       GlobalVariableSet(PropKey("daystop"),0.0);
      }
+   if(!g_propLocked && InpPropLockPct>0 && eq>=g_propStart*(1.0+InpPropLockPct/100.0))
+     {
+      g_propLocked=true;
+      GlobalVariableSet(PropKey("lock"),1.0);
+      PrintFormat("AurumFunded: equity %.2f is %.1f%% up, the final stop moves to %.2f for good",eq,InpPropLockPct,PropFloor());
+     }
    double target=g_propStart*(1.0+InpPropTargetPct/100.0);
    bool reached=(InpPropTargetPct>0 && eq>=target);
    g_propCoast=(reached && PropDays()<InpPropMinDays);
@@ -1998,6 +2463,13 @@ bool PropGuard()
       GlobalVariableSet(PropKey("daystop"),1.0);
       PrintFormat("AurumFunded: equity %.2f is %.1f%% of the initial balance under the day's start %.2f, closing everything until the firm's next day",
                   eq,InpPropDayStopPct,g_propDayBal);
+     }
+   if(g_propClose==0 && !g_propDayStop && InpPropFloatPct>0 && eq-bal<=-g_propStart*InpPropFloatPct/100.0)
+     {
+      g_propDayStop=true;
+      GlobalVariableSet(PropKey("daystop"),1.0);
+      PrintFormat("AurumFunded: open positions are %.2f in loss together (%.1f%% of the initial balance), closing everything until the firm's next day",
+                  bal-eq,InpPropFloatPct);
      }
    bool clock=ClockOk();
    if(g_propClose==0 && !g_propDayStop && clock)
@@ -2061,6 +2533,8 @@ void Run()
    Fall();
    Morning();
    After();
+   Breakout();
+   Noise();
    Drift();
   }
 
@@ -2087,9 +2561,14 @@ int OnInit()
       InpDriftLev<0 || InpDriftMaxLev<=0 || InpDriftHHMM<0 || InpDriftHHMM%100>59 || InpDriftExitHHMM%100>59 || InpDriftExitHHMM>2359 ||
       HHMMSec(InpDriftExitHHMM)<HHMMSec(InpDriftHHMM)+300 || InpDriftEntrySec<1 || InpDriftMaxSpread<=0 ||
       InpPropStart<0 || InpPropTargetPct<0 || InpPropMinDays<0 || InpPropDayStopPct<=0 || InpPropMaxStopPct<=0 ||
-      InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
+      InpPropLockPct<0 || InpPropLockStopPct<=0 || InpPropFloatPct<0 || InpPropRoomPct<0 || InpPropMinSize<=0 || InpPropMinSize>1 || InpPropCap<1 || InpPropFastDays<21 || InpPropCoast<=0 || InpPropCoast>1 || InpPropResetHHMM<0 ||
       InpPropResetHHMM>2359 || InpPropResetHHMM%100>59 || InpGoldStopPct<0 ||
-      InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0)
+      InpGoalMult<0 || (InpGoalMult>0 && InpGoalMult<=1) || InpGoalDays<1 || InpGoalCap<=0 || InpGoalDayVolPct<=0 || InpGoalScale<=0 ||
+      InpBreakRiskPct<0 || InpBreakFromHHMM<0 || InpBreakFromHHMM%100>59 || InpBreakToHHMM%100>59 || InpBreakStartHHMM%100>59 ||
+      InpBreakExitHHMM%100>59 || InpBreakExitHHMM>2359 || HHMMSec(InpBreakToHHMM)<=HHMMSec(InpBreakFromHHMM)+3600 ||
+      HHMMSec(InpBreakStartHHMM)<HHMMSec(InpBreakToHHMM) || HHMMSec(InpBreakExitHHMM)<=HHMMSec(InpBreakStartHHMM) ||
+      InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange ||
+      InpNoiseMult<0 || InpNoiseBandSpx<=0 || InpNoiseBandNdx<=0 || InpNoiseMaxSpreadBp<=0)
       return(INIT_PARAMETERS_INCORRECT);
    string syms[3];
    syms[0]=InpGold; syms[1]=InpYen; syms[2]=InpEuro;
@@ -2161,6 +2640,29 @@ int OnInit()
    ArrayInitialize(g_afterDone,0);
    g_driftOn=(InpDriftLev>0);
    g_driftDone=0;
+   g_breakOn=(InpBreakRiskPct>0);
+   g_breakDay=0;
+   ArrayInitialize(g_breakTraded,0);
+   if(g_breakOn)
+      iBars(InpYen,PERIOD_M1);
+   g_noiseOn=(InpNoiseMult>0);
+   g_noiseSym[0]=InpStocks;
+   g_noiseSym[1]=InpNasdaq;
+   for(int i=0; i<2; i++)
+     {
+      g_noiseDay[i]=0;
+      g_noiseLast[i]=-1;
+      g_noiseReady[i]=false;
+      if(!g_noiseOn)
+         continue;
+      if(SymbolSelect(g_noiseSym[i],true))
+         iBars(g_noiseSym[i],PERIOD_M1);
+      else
+        {
+         PrintFormat("AurumFunded: symbol %s is not available, the noise leg leaves it out",g_noiseSym[i]);
+         g_noiseSym[i]="";
+        }
+     }
    if(g_driftOn && !SymbolSelect(InpStocks,true))
      {
       PrintFormat("AurumFunded: stock index %s is not available, the overnight-drift leg is off",InpStocks);

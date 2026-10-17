@@ -1,0 +1,44 @@
+{
+ "id": "breakout",
+ "when": "2026-10-17T01:19:58",
+ "verdict": "PASS",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "1.18 / 0.83",
+   "rule": ">= 0.5 to 2017 and from 2018"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.59",
+   "rule": ">= 0.3 at 1.5x cost"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "0.969 (N=47, luck bar 0.55)",
+   "rule": ">= 0.9"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book -0.00, max leg hold -0.03",
+   "rule": "|book| <= 0.2, |leg| <= 0.3"
+  },
+  {
+   "gate": "goal",
+   "pass": true,
+   "figure": "Hydra 2018+ 3.37 -> 3.43 at weight 1; P(5x) 55.2% -> 55.9%",
+   "rule": "Sharpe gain >= 0.03, weight fixed by --weight"
+  }
+ ],
+ "weight": 1.0,
+ "p5x": [
+  0.5522581158607921,
+  0.5588167045143293
+ ],
+ "dry_run": true,
+ "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+}
