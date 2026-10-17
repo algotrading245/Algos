@@ -47,12 +47,12 @@
       "set": [],
       "compare_set": ["InpBreakRiskPct=0.125", "InpNoiseMult=0.275"],
       "from": "2024.01.01",
-      "status": "hold",
-      "needs": "a1",
+      "status": "queued",
+      "needs": null,
       "folder": null,
       "folder_on": null,
       "expect": "README test 3: legs off about the earlier tester run (+110%, 4.1% drawdown, worst day -1.64%); legs on about a tenth more profit and a little more drawdown (Python model +189%/5.2% -> +213%/6.0%). No day stop hit.",
-      "note": "Waits for j1 and j2 and for approval a1: run-tester links and recompiles AurumFunded inside Terminal 16, the terminal the demo EA will run from."
+      "note": "Runs after j1 and j2. a1 approved 2026-10-17 (backup made). AurumFunded in Terminal 16 is already linked to the repo; the demo EA runs the same source, so the recompile only reloads it."
     },
     {
       "id": "j4",

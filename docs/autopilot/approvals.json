@@ -4,8 +4,10 @@
     {
       "id": "a1",
       "what": "Let the tester agent run AurumFunded in Terminal 16 (job j3). run-tester links the repo's AurumFunded folder into that terminal and recompiles it there, so first back up the terminal's current AurumFunded folder.",
-      "status": "pending",
-      "asked": "2026-10-17"
+      "status": "approved",
+      "asked": "2026-10-17",
+      "approved": "2026-10-17",
+      "note": "Owner approved in chat. Backup made first: Terminal 16 data folder, backup\\2026-10-17_before_repo_link (the old AurumFunded folder and its three presets). Terminal 16's AurumFunded is now linked to the repo."
     },
     {
       "id": "a2",

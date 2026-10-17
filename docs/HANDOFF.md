@@ -28,6 +28,20 @@ Rules of the work:
 - Commit and push to the session's working branch after each finished piece of work (earlier sessions:
   `claude/exciting-hopper-r6sdmc`; the cloud session of 2026-10-14: `claude/intelligent-turing-j0nrmf`).
 
+## Demo and autopilot (2026-10-17)
+
+- **FTMO demo running:** AurumFunded 1.03 (repo version, candidate legs off) is attached in Terminal 16 to an XAUUSD
+  M15 chart with the `AurumFunded_FTMO_phase1.set` preset (phase 1: 10% target, day stop 3%, final stop at 91.5% of
+  the start balance), Algo Trading on. The EA logged "phase 1 started" on 2026-10-17; the first trades come when gold
+  opens on Monday. The monitor agent reports them in `docs/demo_log.md`.
+- **Terminal 16's `MQL5\Experts\AurumFunded` is a junction to the repo** (made with `tools/link-terminal.ps1`). Any
+  recompile of AurumFunded changes the demo's binary and MT5 reloads the EA, which keeps its phase state in terminal
+  global variables. The terminal's old AurumFunded folder and its three FTMO presets are backed up in the terminal's
+  data folder under `backup\2026-10-17_before_repo_link`.
+- **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
+  AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17). j4 AurumHydra stays on hold until the
+  orchestrator finds j1 and j2 close to their expectation (rule in `tools/autopilot/prompts/orchestrator.md`).
+
 ## Current state (2026-10-15, short)
 
 - **EAs in the repo:** AurumFunded 1.03 and AurumHydra 1.33 (1.02-1.03 / 1.33 written in the cloud without a compiler;

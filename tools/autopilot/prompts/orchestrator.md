@@ -9,6 +9,11 @@ Then pick the single most useful next task and do it, in this order of priority:
 1. An "ALERT" in the demo log since your last run: read the logs, write the finding into `docs/HANDOFF.md`.
 2. A finished tester run with a `summary.md` you have not judged: judge the gap against the expectation (step 16),
    update the candidate in `docs/candidates.json` / `.md`, and queue the next job if one follows.
+   Jobs on "hold" whose `needs` names other jobs: release one (status "queued", `needs` null) only when every job it
+   names is "done" and its result is close to that job's `expect`: total return within 15 percentage points of the
+   expected return, and maximum drawdown no more than 5 points above the expected one. The owner set this rule for
+   j4 (AurumHydra), which waits for j1 and j2. If any named job failed or is not close, leave the job on hold, write
+   the numbers and the reason into its `note` and into `docs/HANDOFF.md`, and do not change its settings to make it fit.
 3. A candidate between steps 5 and 14: do its next step. Use the quant-coder subagent for code and tests and the
    reviewer subagent for every gate (8-11) and every EA change; follow the gate files in `docs/gates/`. EA changes:
    new legs off by default, compile with `powershell -ExecutionPolicy Bypass -File tools/autopilot/compile.ps1 -Expert <EA>`
