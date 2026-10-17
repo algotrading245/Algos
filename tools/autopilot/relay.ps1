@@ -8,13 +8,14 @@
 #   1. PAUSE, another agent running, or a usage/rate-limit back-off: nothing.
 #   2. Weekend window with a tester job to start or collect: tester (Terminal 16 time is short, it goes first).
 #   3. A hand-over that is due: that agent.
-#   4. No agent for $IdleMinutes: the researcher if it has not run for a day, else the orchestrator.
+#   4. No agent for $IdleMinutes: the researcher if it has not run for a day, else the fidelity check if it has not
+#      run for a week, else the orchestrator.
 # Daily caps keep the subscription usage bounded; a role at its cap is skipped until tomorrow.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
 $IdleMinutes = 120
-$Caps = @{ orchestrator = 10; researcher = 3; tester = 24 }
+$Caps = @{ orchestrator = 10; researcher = 3; tester = 24; scanner = 2; fidelity = 2 }
 
 function Start-Agent([string]$Role, [string]$Why, [switch]$Quiet) {
     if ((Get-RunsToday $Role) -ge $Caps[$Role]) {
@@ -64,8 +65,13 @@ $last = @(Get-ChildItem $LogDir -Filter "last-*.json" | ForEach-Object {
 $lastEnd = if ($last) { $last | Sort-Object | Select-Object -Last 1 } else { Get-Date 0 }
 if (($now - $lastEnd).TotalMinutes -lt $IdleMinutes) { if ($DryRun) { Write-Output "last agent ended ${lastEnd}: not idle yet" }; exit 0 }
 
-$rf = Join-Path $LogDir "last-researcher.json"
-$researched = if (Test-Path $rf) { try { [datetime](Get-Content $rf -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
+function Get-LastEnd([string]$Role) {
+    $f = Join-Path $LogDir "last-$Role.json"
+    if (Test-Path $f) { try { [datetime](Get-Content $f -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
+}
+$researched = Get-LastEnd "researcher"
 if (($now - $researched).TotalHours -ge 24 -and (Get-RunsToday "researcher") -lt $Caps.researcher) {
     Start-Agent "researcher" "idle, no research for a day"
+} elseif (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7 -and (Get-RunsToday "fidelity") -lt $Caps.fidelity) {
+    Start-Agent "fidelity" "idle, no fidelity check for a week"
 } else { Start-Agent "orchestrator" "idle for $IdleMinutes min" -Quiet }

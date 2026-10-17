@@ -21,6 +21,15 @@ B. Start the next "queued" job, in file order:
       Every input not in the preset or `set` is now taken from the EA source's default, never from the terminal.
       For a job with `compare_set` (leg on vs off), run the base first with tag `<tag>_off`; when it is done, run it
       again as a second run with `-Set` = set plus compare_set and tag `<tag>_on`, and put both folders in the job.
+      For a job with `months` (`{"from": "yyyy.MM", "to": "yyyy.MM"}`: one fresh-deposit run per calendar month, the
+      5x EA's real test) use instead
+      `powershell -ExecutionPolicy Bypass -File tools/run-months.ps1 -Expert <expert> -Symbol <symbol> -Preset <preset> -Period <period> -Deposit <deposit> -Leverage <leverage> -Tag <tag> -FromMonth <months.from> -ToMonth <months.to> -Detach`
+      (plus `-Set` as above), and in A collect it with `tools/run-months.ps1 -Collect <its folder>`: "running: k of n"
+      means busy; otherwise it prints the month table and wrote `months_result.json`. Write `summary.md` from that
+      (share of months at the goal, median multiple, months below 0.5x, months with margin refusals, against `expect`)
+      and commit `months.json`, `months_result.json` and `summary.md` of the `_months` folder plus each month folder's
+      `result.json` and `tester.ini`. The series takes many hours; it resumes where it stopped if started again with
+      `-Out <its folder>` and the same inputs.
    3. Record the printed output folder (`backtests\...`) in the job's `folder` (or `folder_on`), status "running".
 C. No queued or running job left: `powershell -ExecutionPolicy Bypass -File tools/autopilot/terminal.ps1 -Release`.
 

@@ -21,6 +21,7 @@
       "Bash(python tools/*)",
       "Bash(python research/*)",
       "Bash(powershell -ExecutionPolicy Bypass -File tools/run-tester.ps1 *)",
+      "Bash(powershell -ExecutionPolicy Bypass -File tools/run-months.ps1 *)",
       "Bash(powershell -ExecutionPolicy Bypass -File tools/autopilot/terminal.ps1 *)",
       "Bash(powershell -ExecutionPolicy Bypass -File tools/autopilot/compile.ps1 *)",
       "Bash(git status*)",

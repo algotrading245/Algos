@@ -134,15 +134,26 @@ Rules of the work:
   market) and noise-area momentum on the S&P 500 and Nasdaq (~0.7 / 0.9 at their spreads). Together: AurumFunded 3.24
   -> ~3.5 from 2018, Hydra 3.37 -> ~3.6-3.7 (5x-month chance ~55% -> ~59%). Step 17 (demo with the legs on) waits on
   the owner (a3).
-- **The 5x tester series on FTMO data is not queued, on purpose (orchestrator 2026-10-17 13:40).** The 5x preset
-  already has a tester result on the 1:500 broker it was built for (`.pc` names, one round a month 2025-01 to
-  2026-09: goal reached in 9 of 21 months, preset header). On Terminal 16 the runs would replay ticks to today after
-  each round (no `to` in queue jobs) and, at goal sizes near the cap of 50, size against FTMO's own symbol margins
-  instead of a 1:500 broker's (not checked; j4's 100 deposit already hit "too small for the minimum lot" on the
-  dip unit). That costs a weekend of tester time for figures from a broker the 5x EA will not trade on. Worth
-  doing only once `to` is added to queue jobs and a 1:500 broker's data is at hand.
-- **Ideas:** `docs/ideas/` does not exist yet; no researcher run has written one. The relay was handed to the
-  researcher on 2026-10-17 13:40 for the first batch.
+- **5x tester series (2026-10-17 15:45): queued and started as j7.** `tools/run-months.ps1` runs one fresh-deposit
+  tester run per calendar month (2025-01 to 2026-09, leverage 500, deposit 10000), each with its own `to` date, so
+  rounds no longer replay to today; `tools/months_summary.py` gives the share of months at 5x. The 1:500-broker check
+  is built in: each month counts the broker's margin/volume refusals, and a month with none stands for a 1:500 broker
+  too (FTMO's symbol margins never bit). Months with refusals are the ones to discount.
+- **Tester inputs:** `tools/run-tester.ps1` writes the EA source defaults before the preset and `set`, so a run no
+  longer inherits inputs from an earlier one (the j4/j5 lesson).
+- **Demo vs tester fills:** `tools/fill_check.py` pairs each demo entry with the tester's entry for the same day, leg,
+  symbol and side (missing/extra entries, fill gap in bp, lot ratio). No demo entries yet on 2026-10-17; the fidelity
+  agent queues a tester run over the demo days once there are some.
+- **Scans:** `tools/edge_scan.py` families slot, own, cal (weekday, turn of month) and vol (high/low 20-day vol
+  regime) have all been run on the histdata symbols. The cal/vol run (21,240 trials, all in `docs/trials.jsonl`) left
+  one survivor, `scan_cal_wed_EURUSD_s25_L2_short`, which failed halves (1.03 / 0.41), DSR (0.125) and goal (3.37 ->
+  3.33). Simple rule scans on these instruments are exhausted; do not rerun them. New edges need a reason (a flow, a
+  paper) or new data, and the scanner agent only runs on a family or data not scanned yet.
+- **Ideas:** the researcher's first batch is `docs/ideas/2026-10-17.md` (4 ideas, abstracts only). Next runs lead
+  with non-paper sources (open code, write-ups, market structure).
+- **Agents (relay roles and models):** orchestrator (Opus, judges and plans), reviewer (Opus, on request), researcher
+  (Haiku, daily), scanner (Haiku, on hand-over), fidelity (Sonnet, weekly or on hand-over), tester operator (Sonnet,
+  weekend window), monitor (Haiku, daily demo check). Opus stays on judgement only.
 - **Prop routes** (simulated median to the first payout at 70% of the edge): FundedNext Stellar Instant 1.4 months (4.3
   if it has a 40% consistency rule), Instant Funding PRO 2.5 months (preset with the Smart Drawdown lock and a
   floating-loss stop; 2.0 months with the DP fast sizing `FAST_IF`, none lost even at half the edge), FTMO 1-Step 7.8

@@ -49,4 +49,6 @@ local and say so. Second-last line of your answer: what you did and what is next
 - `tester`: you queued a Strategy Tester job and it is the weekend window (Saturday, or Sunday before 18:00);
 - `orchestrator`: more pipeline work is waiting that the next run of yours should do (say which);
 - `researcher`: no idea in `docs/ideas/` is worth starting and the pipeline needs new ones;
+- `scanner`: `tools/edge_scan.py` has a family or data not scanned yet (name it); Haiku runs the scan and gates;
+- `fidelity`: the demo has new entries, or a fidelity job you queued is done, and fills need comparing (Sonnet);
 - `none`: nothing useful is left right now (the relay checks again in two hours).

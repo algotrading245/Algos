@@ -1,6 +1,6 @@
 # Runs one unattended Claude Code session for a pipeline role, started by the relay (relay.ps1) or the monitor task.
 #
-#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher [-IfWork]
+#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher|scanner|fidelity [-IfWork]
 #
 # - Skips when logs\autopilot\PAUSE exists (create that file to pause every agent; delete it to resume).
 # - One Claude run at a time on this PC (named mutex); a run that finds another one busy waits up to 20 minutes.
@@ -11,7 +11,7 @@
 #   nothing waits for a prompt. Each run is killed after its time limit.
 # - Output: logs\autopilot\<date>_agent-<role>.log; the last run's outcome: logs\autopilot\last-<role>.json.
 param(
-    [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher")][string]$Role,
+    [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher", "scanner", "fidelity")][string]$Role,
     [switch]$IfWork
 )
 . "$PSScriptRoot\common.ps1"
@@ -19,10 +19,13 @@ $log = "agent-$Role"
 
 if (Test-Path $Pause) { Write-Log $log "skipped: paused (logs\autopilot\PAUSE exists)"; exit 0 }
 
-# Model per role: the monitor and researcher agents carry their model (haiku) in .claude/agents/*.md.
+# Model per role: the agent roles carry their model in .claude/agents/*.md (monitor, researcher, scanner: haiku;
+# fidelity: sonnet); the tester runs on sonnet, the orchestrator on opus.
 $cfg = @{
     monitor      = @{ Args = @("--agent", "monitor");    Turns = 25; Minutes = 20 }
     researcher   = @{ Args = @("--agent", "researcher"); Turns = 40; Minutes = 60 }
+    scanner      = @{ Args = @("--agent", "scanner");    Turns = 25; Minutes = 30 }
+    fidelity     = @{ Args = @("--agent", "fidelity");   Turns = 30; Minutes = 40 }
     tester       = @{ Args = @("--model", "sonnet");     Turns = 40; Minutes = 45 }
     orchestrator = @{ Args = @("--model", "opus");       Turns = 80; Minutes = 120 }
 }[$Role]
@@ -85,7 +88,7 @@ $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
 
     # Hand-over for the relay (relay.ps1): the agent's last "HANDOFF: <role> <reason>" line names the next agent.
     $next = "none"; $reason = "no HANDOFF line"
-    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(orchestrator|researcher|tester|none)\b[ \t:-]*(.*)$')
+    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(orchestrator|researcher|tester|scanner|fidelity|none)\b[ \t:-]*(.*)$')
     if ($m.Count) { $next = $m[$m.Count - 1].Groups[1].Value; $reason = $m[$m.Count - 1].Groups[2].Value.Trim(" `t`r*_:-".ToCharArray()) }
     $old = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $state = [ordered]@{ from = $Role; next = $next; due = (Get-Date).AddMinutes($GapMinutes).ToString("s"); reason = $reason }

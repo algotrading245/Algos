@@ -1,3 +1,5 @@
 {"id": "edge_scan:slot+own", "when": "2026-10-17T15:26:44", "verdict": "2 survivors, 2 written", "count": 4720}
 {"id": "scan_slot_EURUSD_s25_L4_short", "when": "2026-10-17T15:27:11", "verdict": "FAIL at dsr"}
 {"id": "scan_slot_EURUSD_s21_L8_short", "when": "2026-10-17T15:27:15", "verdict": "FAIL at dsr"}
+{"id": "edge_scan:cal+vol", "when": "2026-10-17T15:44:53", "verdict": "1 survivors, 1 written", "count": 21240}
+{"id": "scan_cal_wed_EURUSD_s25_L2_short", "when": "2026-10-17T15:44:57", "verdict": "FAIL at halves"}
