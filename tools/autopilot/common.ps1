@@ -73,9 +73,14 @@ function Test-TesterWork {
     $busy = @($work | Where-Object { $_.status -eq "running" } | Where-Object {
         $f = if ($_.folder_on) { $_.folder_on } else { $_.folder }
         $jf = if ($f) { Join-Path $Repo "$f\job.json" }
+        $mf = if ($f) { Join-Path $Repo "$f\months.json" }
         if ($jf -and (Test-Path $jf)) {
             $j = Get-Content $jf -Raw | ConvertFrom-Json
             Get-Process -Id $j.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $j.Exe }
+        } elseif ($mf -and (Test-Path $mf)) {
+            # A run-months.ps1 job: busy while its month runner (a powershell process) is alive.
+            $m = Get-Content $mf -Raw | ConvertFrom-Json
+            Get-Process -Id $m.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq "powershell" }
         }
     })
     return (-not $busy)

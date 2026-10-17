@@ -1,0 +1,59 @@
+{
+    "Expert":  "AurumHydra",
+    "Symbol":  "XAUUSD",
+    "Preset":  "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+    "Set":  "",
+    "Period":  "M15",
+    "Deposit":  10000,
+    "Leverage":  500,
+    "Tag":  "5xA",
+    "Goal":  5,
+    "Months":  [
+                   "2025.01",
+                   "2025.02",
+                   "2025.03",
+                   "2025.04",
+                   "2025.05",
+                   "2025.06",
+                   "2025.07"
+               ],
+    "Done":  [
+                 {
+                     "Month":  "2025.01",
+                     "Folder":  "backtests\\2026-10-17_1625_AurumHydra_5xA_202501",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.02",
+                     "Folder":  "backtests\\2026-10-17_1629_AurumHydra_5xA_202501_202502",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.03",
+                     "Folder":  "backtests\\2026-10-17_1632_AurumHydra_5xA_202501_202502_202503",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.04",
+                     "Folder":  "backtests\\2026-10-17_1637_AurumHydra_5xA_202501_202502_202503_202504",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.05",
+                     "Folder":  "backtests\\2026-10-17_1639_AurumHydra_5xA_202501_202502_202503_202504_202505",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.06",
+                     "Folder":  "backtests\\2026-10-17_1643_AurumHydra_5xA_202501_202502_202503_202504_202505_202506",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.07",
+                     "Folder":  "backtests\\2026-10-17_1648_AurumHydra_5xA_202501_202502_202503_202504_202505_202506_202507",
+                     "Status":  "done"
+                 }
+             ],
+    "Pid":  6012,
+    "Started":  "2026-10-17T16:25:21.2066670+02:00"
+}

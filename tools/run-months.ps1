@@ -85,16 +85,16 @@ foreach ($ym in $months) {
     $state.Done = @($state.Done | Where-Object { $_.Month -ne $ym })
     $first = [datetime]::ParseExact($ym, "yyyy.MM", $null)
     $to = $first.AddMonths(1).AddDays(-1)
-    $tag = "{0}_{1}" -f $Tag, ($ym -replace '\.', '')
+    $monthTag = "{0}_{1}" -f $Tag, ($ym -replace '\.', '')
     $before = Get-Date
     # A hashtable: an array splatted into a script binds "-Name" strings by position, not as parameter names.
     $runArgs = @{ Expert = $Expert; Symbol = $Symbol; Period = $Period; Deposit = $Deposit; Leverage = $Leverage
-        Tag = $tag; From = $first.ToString("yyyy.MM.dd"); To = $to.ToString("yyyy.MM.dd") }
+        Tag = $monthTag; From = $first.ToString("yyyy.MM.dd"); To = $to.ToString("yyyy.MM.dd") }
     if ($Preset) { $runArgs.Preset = $Preset }
     if ($Set) { $runArgs.Set = @($Set -join ",") }
     $status = "done"
     try { & (Join-Path $PSScriptRoot "run-tester.ps1") @runArgs | Out-Null } catch { $status = "failed: $($_.Exception.Message)" }
-    $folder = Get-ChildItem (Join-Path $repo "backtests") -Directory -Filter "*_${Expert}_$tag" |
+    $folder = Get-ChildItem (Join-Path $repo "backtests") -Directory -Filter "*_${Expert}_$monthTag" |
         Where-Object { $_.CreationTime -ge $before.AddSeconds(-5) } | Sort-Object CreationTime | Select-Object -Last 1
     $state.Done = @($state.Done) + [pscustomobject]@{ Month = $ym; Folder = $(if ($folder) { "backtests\$($folder.Name)" } else { "" }); Status = $status }
     $state | ConvertTo-Json -Depth 4 | Set-Content $stateFile

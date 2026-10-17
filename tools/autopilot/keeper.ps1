@@ -23,7 +23,8 @@ while ($true) {
     try {
         $hold = Get-Hold
         $t = Get-T16
-        if ($t) { $state = "running" }
+        # Under a hold, Terminal 16 only runs for a tester job (run-tester.ps1 starts it with /config per run).
+        if ($t) { $state = if ($hold) { "running a tester job (held by $($hold.by))" } else { "running" } }
         elseif ($hold) { $state = "held by $($hold.by) until $($hold.until)" }
         elseif (Test-DemoEA) {
             Start-Process -FilePath $T16Exe -WorkingDirectory $T16
