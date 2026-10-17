@@ -34,3 +34,4 @@ committed).
 | 2026-10-17 16:25 | tester | Held Terminal 16, started j8a (5x months 2025.01-2025.07, tag 5xA) detached | running, folder backtests/2026-10-17_1625_AurumHydra_5xA_months |
 | 2026-10-17 16:30 | tester | Collected j8a: running, 1 of 7 months done | still running, nothing committed |
 | 2026-10-17 16:35 | tester | Collected j8a: running, 2 of 7 months done | still running, nothing committed |
+| 2026-10-17 16:40 | tester | Collected j8a: running, 4 of 7 months done | still running, nothing committed |
