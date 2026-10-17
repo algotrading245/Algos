@@ -250,7 +250,7 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("paused: resume first")
                 msg = f"{role}: " + powershell(AUTOPILOT / "run-agent.ps1", "-Role", role, wait=False) +                     " (waits if another agent is running)"
             elif path == "/api/queue":
-                msg = f"queued as {queue_job(b)}; the tester runs it in the next weekend window"
+                msg = f"queued as {queue_job(b)}; the tester runs it at the next relay tick (every 5 min)"
             else:
                 return self.send(404, "text/plain", b"not found")
             self.send(200, "application/json", json.dumps({"ok": True, "msg": msg}).encode())
