@@ -3,3 +3,4 @@
 {"id": "scan_slot_EURUSD_s21_L8_short", "when": "2026-10-17T15:27:15", "verdict": "FAIL at dsr"}
 {"id": "edge_scan:cal+vol", "when": "2026-10-17T15:44:53", "verdict": "1 survivors, 1 written", "count": 21240}
 {"id": "scan_cal_wed_EURUSD_s25_L2_short", "when": "2026-10-17T15:44:57", "verdict": "FAIL at halves"}
+{"id": "osler_round:grid", "when": "2026-10-18T01:05:22", "verdict": "fails: diff +0.86/-0.46 bp, net Sharpe -0.16/-0.69", "count": 512}

@@ -1,5 +1,5 @@
 window.AURUM = {
- "generated": "2026-10-17T13:02",
+ "generated": "2026-10-18T01:06",
  "pipeline": {
   "about": "The 20 steps every idea goes through, in order; an idea stops at the first failed gate. 'agent' is the role file in .claude/agents/, 'orchestrator' is the main Opus session. The dashboard (python tools/dashboard.py) reads this file.",
   "phases": {
@@ -412,6 +412,159 @@ window.AURUM = {
       "verdict": "step 16 passed in AurumHydra (see the breakout's entry): return per drawdown 58.1 -> 69.2. The noise leg's own share (no index trades with the legs off): US100.cash +4,181.31, US500.cash -1,092.30 - the S&P half negative for the third time on 2024-26 data, not refitted."
      }
     ]
+   },
+   {
+    "id": "scan_slot_EURUSD_s25_L4_short",
+    "name": "scan_slot_EURUSD_s25_L4_short",
+    "status": "testing",
+    "step": 9,
+    "gates": {
+     "id": "scan_slot_EURUSD_s25_L4_short",
+     "when": "2026-10-17T15:27:11",
+     "verdict": "FAIL at dsr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.97 / 0.69",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.41",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.403 (N=4768, luck bar 0.89)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.25, max leg quartet +0.31",
+       "rule": "|book| <= 0.2, |leg| <= 0.3"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.1%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 1.0294392575797875,
+     "p5x": [
+      0.5522581158607921,
+      0.550616350003269
+     ]
+    }
+   },
+   {
+    "id": "scan_slot_EURUSD_s21_L8_short",
+    "name": "scan_slot_EURUSD_s21_L8_short",
+    "status": "testing",
+    "step": 9,
+    "gates": {
+     "id": "scan_slot_EURUSD_s21_L8_short",
+     "when": "2026-10-17T15:27:15",
+     "verdict": "FAIL at dsr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.96 / 0.79",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.60",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.471 (N=4769, luck bar 0.89)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.20, max leg quartet +0.23",
+       "rule": "|book| <= 0.2, |leg| <= 0.3"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 1.0339760072551898,
+     "p5x": [
+      0.5522581158607921,
+      0.5515589399725805
+     ]
+    }
+   },
+   {
+    "id": "scan_cal_wed_EURUSD_s25_L2_short",
+    "name": "scan_cal_wed_EURUSD_s25_L2_short",
+    "status": "testing",
+    "step": 9,
+    "gates": {
+     "id": "scan_cal_wed_EURUSD_s25_L2_short",
+     "when": "2026-10-17T15:44:57",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "1.03 / 0.41",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.50",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.125 (N=26010, luck bar 2.23)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg quartet +0.03",
+       "rule": "|book| <= 0.2, |leg| <= 0.3"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.37 -> 3.33 at weight 11.5; P(5x) 55.2% -> 54.8%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 11.546111768491794,
+     "p5x": [
+      0.5522581158607921,
+      0.5477978122516491
+     ]
+    }
+   },
+   {
+    "id": "osler_round",
+    "name": "Round-number stop cascades (Osler)",
+    "source": "Osler, NY Fed Staff Reports 150 (2002, 'Stop-loss orders and price cascades') and 125 (2001, 'Currency orders and exchange-rate dynamics'), both read in full 2026-10-18; PDFs in marketdata/papers/",
+    "status": "rejected",
+    "step": 7,
+    "summary": "After price crosses a 00 or 50 level (last two quoted digits) it keeps going for 1-2 hours, because stop-loss buys sit just above round numbers (01-10, 51-60) and stop-loss sells just below (90-99, 40-49), while take-profits sit exactly on 00. Touches without a cross reverse more often than at arbitrary levels. Test: enter in the cross's direction once price is k pips past the level, hold 15-120 minutes.",
+    "notes": "Paper facts. SR150 (Reuters minute quotes, USD/DEM, USD/JPY, GBP/USD, New York 9:00-16:00, 1996-98): 'reach' = within 0.01% of the level; 'cross' = beyond it 15 minutes after reaching it (ex post, not tradeable as defined); moves signed in the approach direction. Table V, average move 15 min after a cross, round vs arbitrary levels: DEM 6.08 vs 5.37 bp, JPY 6.89 vs 5.98, GBP 4.92 vs 4.59 (excess +0.3 to +0.9 bp). Table VI.A, crossing minus reversing episodes: JPY +1.30 bp at 15 min, +1.34 at 30, +1.26 at 1 h, +2.35 at 2 h; DEM +1.12/+0.89/+0.57/+0.85; GBP +0.77/+0.80/+0.27/+0.35; negative at 1-2 days. Stronger after 12:30 New York (thinner market), no buy/sell asymmetry, weaker on 00-only levels, survives dropping BoJ intervention months. Large cascades about once a week vs about 5 round-number crosses a day, so the average is mostly ordinary crosses. Reversal on touch: round 58-60% vs arbitrary 55-57%. Order book (RBS, 9,667 orders, 1999-2000): stop-loss buys 14.4% at 01-10 vs 7.4% at 90-99, about 17-18% at 51-60 vs 6% at 40-49 (SR125's Table I prints the 50 rows in the other order, but its difference row and SR150's Table III agree); take-profits cluster exactly at 00; stops of $50m and over are 62% within 10 points of 00. SR125 adds a simulation only (order flow calibrated to the book reproduces both effects) and says the papers are 'silent on market efficiency... no attempt to evaluate risk-adjusted profits'. SR125 quotes the actual 30-min excess after a failed bounce as 0.0014% (0.14 bp) over 0.0063% for arbitrary levels, smaller still than SR150's tables. Prior: low. The gross edge is 0.3-2.4 bp, measured with an ex post cross; our USD/JPY cost is about 1.2 bp; the data are 25+ years old, from before algorithmic stop-running. Step 5-7 test spec (quant-coder, research/osler_round.py): USDJPY and EURUSD histdata M1 2009-2026 (marketdata/histdata/*_M1.csv.gz, bid quotes, so add the spread on entry); levels at 00 and 50 (JPY xx.00/xx.50, EUR 1.xx00/1.xx50), a 00-only variant; entry at the first M1 close k = 1, 3, 5 or 10 pips beyond a level after the price was on the other side within the last 15 minutes (a real-time cross); direction = the cross; exit after 15, 30, 60 or 120 minutes, or at a stop k pips back through the level; one trade per level per hour; sessions: all hours, London, New York, New York after 12:30 ET, no entries 21:00-23:00 UTC (rollover). Null: the same rule on arbitrary levels (10,000 random level grids shifted off 00/50, as in the papers); report round minus arbitrary per trade in bp, per 10-day block win count (binomial), and the reversal rate on touch. Pass to step 8 only if round minus arbitrary is positive in both halves (to 2017, from 2018) and the net Sharpe at 1.2 bp is >= 0.5 in both halves; then gates.py with 1.5x cost. Check overlap: correlation of daily returns with the breakout leg (USD/JPY London 10:00-18:00 server) and how many trades share its hours; rejected list has 'channel breakout', so a result that is just the generic breakout in disguise (arbitrary levels as good) is a fail. Result 2026-10-18 (research/osler_round.py, full run 710 s, USDJPY and EURUSD M1 2009-01 to 2026-10, 512 variants = 2 pairs x 2 level sets x k 1/3/5/10 x hold 15/30/60/120 x stop on/off x 4 sessions, 300 arbitrary grids each, costs 1.2 / 0.8 bp; trials line osler_round:grid count 512): REJECTED at steps 5-7. Step 5 data clean (no duplicates, 96-98% of weekday minutes, volatility peak at server 15:00 = 8:30 ET, so the clock is NY+7). No variant has net Sharpe >= 0.5 in both halves (0 of 512); the median gross per trade is negative (-0.46 / -0.22 bp) and the median round minus arbitrary is negative in both halves (-0.14 / -0.09 bp), so round levels do no better than arbitrary ones. Chosen on data to 2017: USDJPY 00-only, k=1, hold 120, no stop, NY after 12:30 ET: net Sharpe -0.16 to 2017, -0.69 from 2018; round minus arbitrary +0.86 then -0.46 bp; 10-day blocks 194/372 (p 0.22); 1.5x cost -0.53; correlation with the breakout leg -0.003, no shared hours. Reference k=3 / 30 min: gross -0.4 to +0.1 bp in every session, round at the 1st-89th percentile of arbitrary grids. Touch reversal goes against the paper on both pairs and in both halves: round 56-60% vs arbitrary 58-61% (-0.9 to -2.9 pp). Whatever SR150 saw in 1996-98 is not in 2009-26 M1 data, before or after costs."
    }
   ],
   "rejected": [
@@ -424,6 +577,11 @@ window.AURUM = {
     "family": "Breakouts other than USD/JPY",
     "examples": "channel breakout, other dollar pairs, yen crosses, Nikkei, gold, 5-minute ORB on indices",
     "why": "too costly outside USD/JPY, or adds nothing next to the noise leg"
+   },
+   {
+    "family": "Round-number levels",
+    "examples": "Osler stop cascades after 00/50 crosses (USDJPY, EURUSD M1 2009-26, 512 variants), touch reversals at round levels",
+    "why": "round levels no better than arbitrary ones; gross below cost"
    },
    {
     "family": "Machine learning and RL",
@@ -550,9 +708,135 @@ window.AURUM = {
    ],
    "dry_run": true,
    "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+  },
+  "scan_cal_wed_EURUSD_s25_L2_short": {
+   "id": "scan_cal_wed_EURUSD_s25_L2_short",
+   "when": "2026-10-17T15:44:57",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "1.03 / 0.41",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.50",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.125 (N=26010, luck bar 2.23)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg quartet +0.03",
+     "rule": "|book| <= 0.2, |leg| <= 0.3"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.37 -> 3.33 at weight 11.5; P(5x) 55.2% -> 54.8%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 11.546111768491794,
+   "p5x": [
+    0.5522581158607921,
+    0.5477978122516491
+   ]
+  },
+  "scan_slot_EURUSD_s21_L8_short": {
+   "id": "scan_slot_EURUSD_s21_L8_short",
+   "when": "2026-10-17T15:27:15",
+   "verdict": "FAIL at dsr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.96 / 0.79",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.60",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.471 (N=4769, luck bar 0.89)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.20, max leg quartet +0.23",
+     "rule": "|book| <= 0.2, |leg| <= 0.3"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 1.0339760072551898,
+   "p5x": [
+    0.5522581158607921,
+    0.5515589399725805
+   ]
+  },
+  "scan_slot_EURUSD_s25_L4_short": {
+   "id": "scan_slot_EURUSD_s25_L4_short",
+   "when": "2026-10-17T15:27:11",
+   "verdict": "FAIL at dsr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.97 / 0.69",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.41",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.403 (N=4768, luck bar 0.89)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.25, max leg quartet +0.31",
+     "rule": "|book| <= 0.2, |leg| <= 0.3"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.1%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 1.0294392575797875,
+   "p5x": [
+    0.5522581158607921,
+    0.550616350003269
+   ]
   }
  },
- "trials": 0,
+ "trials": 6,
  "props": {
   "about": "Prop routes for AurumFunded, from docs/HANDOFF.md (simulators in tools/prop_*.py, 70% of the back-tested edge). Firm rules were read on the firms' own pages on 2026-10-14/15; check again before buying. The dashboard reads this file.",
   "chosen": "FTMO 2-Step Challenge, Swing account",
@@ -609,6 +893,4109 @@ window.AURUM = {
   ]
  },
  "runs": [
+  {
+   "name": "2026-10-18_0102_AurumHydra_5xEQ_months",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-18_0102_AurumHydra_5xEQ_202601",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-18_0057_AurumHydra_5xEQ_202602",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.02.01",
+    "To": "2026.02.28",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "InpBreakRiskPct=0,InpNoiseMult=0",
+    "Started": "2026-10-18T00:57:40.6444863+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.02.01 - 2026.02.28)",
+    "deposit": 10000.0,
+    "net": -6627.57,
+    "gross_profit": 136.38,
+    "gross_loss": -6763.95,
+    "profit_factor": 0.02,
+    "recovery": -0.86,
+    "sharpe": -1.4,
+    "trades": 3.0,
+    "won": "1 (33.33%)",
+    "eq_dd_max": "7 720.95 (69.60%)",
+    "eq_dd_rel": "69.60% (7 720.95)",
+    "bal_dd_max": "6 763.12 (66.73%)",
+    "ticks": 119615.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 33.33,
+    "eq_dd_max_pct": 69.6,
+    "bal_dd_max_pct": 66.73,
+    "deals": 7,
+    "curve": [
+     [
+      "2026-02-02",
+      3372.43
+     ]
+    ],
+    "by_year": {
+     "2026": -6627.57
+    },
+    "by_month": {
+     "2026-02": -6627.57
+    },
+    "by_symbol": {
+     "XAUUSD": -6490.05,
+     "AUDCAD": -137.52
+    },
+    "worst_day": {
+     "day": "2026-02-02",
+     "pct": -66.28
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -66.28
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-18_0050_AurumHydra_5xEQ_months_bad",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-18_0050_AurumHydra_5xEQ_202601",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.01.01",
+    "To": "2026.01.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "InpBreakRiskPct=0,InpNoiseMult=0",
+    "Started": "2026-10-18T00:50:41.5629597+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.01.01 - 2026.01.31)",
+    "deposit": 10000.0,
+    "net": 40002.87,
+    "gross_profit": 40926.82,
+    "gross_loss": -923.95,
+    "profit_factor": 44.3,
+    "recovery": 9.01,
+    "sharpe": 12.2,
+    "trades": 46.0,
+    "won": "28 (60.87%)",
+    "eq_dd_max": "4 438.90 (16.36%)",
+    "eq_dd_rel": "18.76% (3 504.84)",
+    "bal_dd_max": "637.82 (6.21%)",
+    "ticks": 4303742.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 60.87,
+    "eq_dd_max_pct": 16.36,
+    "bal_dd_max_pct": 6.21,
+    "deals": 93,
+    "curve": [
+     [
+      "2026-01-02",
+      10221.28
+     ],
+     [
+      "2026-01-05",
+      10263.04
+     ],
+     [
+      "2026-01-06",
+      10266.93
+     ],
+     [
+      "2026-01-07",
+      10278.64
+     ],
+     [
+      "2026-01-08",
+      10169.57
+     ],
+     [
+      "2026-01-09",
+      10164.04
+     ],
+     [
+      "2026-01-12",
+      10165.74
+     ],
+     [
+      "2026-01-13",
+      9642.28
+     ],
+     [
+      "2026-01-14",
+      9640.95
+     ],
+     [
+      "2026-01-15",
+      9696.58
+     ],
+     [
+      "2026-01-16",
+      9696.39
+     ],
+     [
+      "2026-01-19",
+      9694.33
+     ],
+     [
+      "2026-01-20",
+      9678.94
+     ],
+     [
+      "2026-01-21",
+      9674.38
+     ],
+     [
+      "2026-01-22",
+      9674.23
+     ],
+     [
+      "2026-01-23",
+      9673.5
+     ],
+     [
+      "2026-01-26",
+      9673.47
+     ],
+     [
+      "2026-01-27",
+      9673.17
+     ],
+     [
+      "2026-01-28",
+      9656.66
+     ],
+     [
+      "2026-01-29",
+      50002.87
+     ]
+    ],
+    "by_year": {
+     "2026": 40002.87
+    },
+    "by_month": {
+     "2026-01": 40002.87
+    },
+    "by_symbol": {
+     "XAUUSD": 40560.24,
+     "EURUSD": 150.34,
+     "GBPUSD": 51.88,
+     "AUDUSD": 5.11,
+     "USDCAD": 16.39,
+     "USDCHF": 1.63,
+     "USDJPY": 26.68,
+     "AUDCAD": -809.4
+    },
+    "worst_day": {
+     "day": "2026-01-13",
+     "pct": -5.15
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 400.03
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2339_AurumHydra_5xS_202604",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.04.01",
+    "To": "2026.04.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "InpGoldMaxSpread=1.0",
+    "Started": "2026-10-17T23:39:04.5855429+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.04.01 - 2026.04.30)",
+    "deposit": 10000.0,
+    "net": -4315.16,
+    "gross_profit": 2648.52,
+    "gross_loss": -6963.68,
+    "profit_factor": 0.38,
+    "recovery": -0.68,
+    "sharpe": -3.64,
+    "trades": 43.0,
+    "won": "14 (32.56%)",
+    "eq_dd_max": "6 390.66 (55.36%)",
+    "eq_dd_rel": "55.36% (6 390.66)",
+    "bal_dd_max": "5 287.03 (48.19%)",
+    "ticks": 4970852.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 32.56,
+    "eq_dd_max_pct": 55.36,
+    "bal_dd_max_pct": 48.19,
+    "deals": 87,
+    "curve": [
+     [
+      "2026-04-01",
+      9827.7
+     ],
+     [
+      "2026-04-02",
+      9187.35
+     ],
+     [
+      "2026-04-03",
+      9134.62
+     ],
+     [
+      "2026-04-06",
+      9145.56
+     ],
+     [
+      "2026-04-07",
+      9037.41
+     ],
+     [
+      "2026-04-08",
+      8995.14
+     ],
+     [
+      "2026-04-09",
+      8907.45
+     ],
+     [
+      "2026-04-10",
+      8902.25
+     ],
+     [
+      "2026-04-13",
+      9300.21
+     ],
+     [
+      "2026-04-14",
+      9259.33
+     ],
+     [
+      "2026-04-15",
+      9167.19
+     ],
+     [
+      "2026-04-16",
+      9103.38
+     ],
+     [
+      "2026-04-17",
+      10397.89
+     ],
+     [
+      "2026-04-20",
+      10420.41
+     ],
+     [
+      "2026-04-21",
+      10343.4
+     ],
+     [
+      "2026-04-22",
+      10449.89
+     ],
+     [
+      "2026-04-23",
+      10445.51
+     ],
+     [
+      "2026-04-24",
+      10278.72
+     ],
+     [
+      "2026-04-27",
+      10283.21
+     ],
+     [
+      "2026-04-28",
+      9985.87
+     ],
+     [
+      "2026-04-29",
+      5684.84
+     ]
+    ],
+    "by_year": {
+     "2026": -4315.16
+    },
+    "by_month": {
+     "2026-04": -4315.16
+    },
+    "by_symbol": {
+     "XAUUSD": -3303.99,
+     "EURJPY": -68.35,
+     "GBPJPY": -29.8,
+     "CADJPY": -40.27,
+     "AUDCAD": -325.78,
+     "EURUSD": -489.68,
+     "USDJPY": -57.29
+    },
+    "worst_day": {
+     "day": "2026-04-29",
+     "pct": -43.07
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -43.15
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2337_AurumHydra_5xS_202603",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.03.01",
+    "To": "2026.03.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "InpGoldMaxSpread=1.0",
+    "Started": "2026-10-17T23:37:05.1983903+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.03.01 - 2026.03.31)",
+    "deposit": 10000.0,
+    "net": -5089.94,
+    "gross_profit": 781.11,
+    "gross_loss": -5871.05,
+    "profit_factor": 0.13,
+    "recovery": -0.81,
+    "sharpe": -2.58,
+    "trades": 8.0,
+    "won": "4 (50.00%)",
+    "eq_dd_max": "6 253.52 (56.09%)",
+    "eq_dd_rel": "56.09% (6 253.52)",
+    "bal_dd_max": "5 866.13 (54.44%)",
+    "ticks": 445157.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 50.0,
+    "eq_dd_max_pct": 56.09,
+    "bal_dd_max_pct": 54.44,
+    "deals": 17,
+    "curve": [
+     [
+      "2026-03-02",
+      10776.19
+     ],
+     [
+      "2026-03-03",
+      4910.06
+     ]
+    ],
+    "by_year": {
+     "2026": -5089.94
+    },
+    "by_month": {
+     "2026-03": -5089.94
+    },
+    "by_symbol": {
+     "XAUUSD": -5492.38,
+     "AUDCAD": 321.62,
+     "EURUSD": 80.82
+    },
+    "worst_day": {
+     "day": "2026-03-03",
+     "pct": -54.44
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -50.9
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2335_AurumHydra_5xS_months",
+   "job": {},
+   "summary": "# j9: AurumHydra 5x months 2026.02-04, gold spread cap 1.0 (cause check)\n\nPreset AurumHydra_5x_month_FTMO.set, set InpGoldMaxSpread=1.0, XAUUSD M15, fresh 10,000 per month, 1:500, real ticks. Run 2026-10-17 23:35 to 23:41, from 2026.02.01 to each month's end.\n\n| Month | Multiple | Net | Trades | Equity DD | XAUUSD profit | Margin refusals |\n|---|---|---|---|---|---|---|\n| 2026.02 | 0.34x | -6,627.57 | 3 | 69.60% | -6,490.05 | 0 |\n| 2026.03 | 0.49x | -5,089.94 | 8 | 56.09% | -5,492.38 | 0 |\n| 2026.04 | 0.57x | -4,315.16 | 43 | 55.36% | -3,303.99 | 0 |\n\nSeries: 0 of 3 months at 5x, median 0.49x, 2 of 3 below 0.5x (0.34x, 0.49x), 0 months with margin refusals. These multiples do not count against 9/21.\n\n## Against `expect`\n- XAUUSD now appears in by_symbol in 2026.02 and 2026.04, where j8 had no gold trade. Gold also traded in 2026.03. Gold trades in all three months with the cap at 1.0, so the 0.30 spread cap was blocking the gold buys in 2026.02 and 2026.04.\n- The gold trades lost: -6,490 (2026.02), -5,492 (2026.03), -3,304 (2026.04). The worst days are 2026-02-02 (-66.28%), 2026-03-03 (-54.44%) and 2026-04-29 (-43.07%).\n- Not done: the first \"hold, trend ... position 0.00 -> ...\" line date and lots for each month. The tester log lines are not in the month folders (no log file copied), so I did not check them.\n- Check from the tester.ini of each month (not opened by me): the set line in months.json is InpGoldMaxSpread=1.0.\n",
+   "state": "done"
+  },
+  {
+   "name": "2026-10-17_2335_AurumHydra_5xS_202602",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.02.01",
+    "To": "2026.02.28",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "InpGoldMaxSpread=1.0",
+    "Started": "2026-10-17T23:35:26.3106220+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.02.01 - 2026.02.28)",
+    "deposit": 10000.0,
+    "net": -6627.57,
+    "gross_profit": 136.38,
+    "gross_loss": -6763.95,
+    "profit_factor": 0.02,
+    "recovery": -0.86,
+    "sharpe": -1.4,
+    "trades": 3.0,
+    "won": "1 (33.33%)",
+    "eq_dd_max": "7 720.95 (69.60%)",
+    "eq_dd_rel": "69.60% (7 720.95)",
+    "bal_dd_max": "6 763.12 (66.73%)",
+    "ticks": 119615.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 33.33,
+    "eq_dd_max_pct": 69.6,
+    "bal_dd_max_pct": 66.73,
+    "deals": 7,
+    "curve": [
+     [
+      "2026-02-02",
+      3372.43
+     ]
+    ],
+    "by_year": {
+     "2026": -6627.57
+    },
+    "by_month": {
+     "2026-02": -6627.57
+    },
+    "by_symbol": {
+     "XAUUSD": -6490.05,
+     "AUDCAD": -137.52
+    },
+    "worst_day": {
+     "day": "2026-02-02",
+     "pct": -66.28
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -66.28
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2258_AurumHydra_5xC_202609",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.09.01",
+    "To": "2026.09.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:58:51.1554527+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.09.01 - 2026.09.30)",
+    "deposit": 10000.0,
+    "net": 2859.19,
+    "gross_profit": 4668.36,
+    "gross_loss": -1809.17,
+    "profit_factor": 2.58,
+    "recovery": 2.1,
+    "sharpe": 4.92,
+    "trades": 40.0,
+    "won": "23 (57.50%)",
+    "eq_dd_max": "1 362.28 (10.68%)",
+    "eq_dd_rel": "10.68% (1 362.28)",
+    "bal_dd_max": "505.46 (3.96%)",
+    "ticks": 5414041.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 57.5,
+    "eq_dd_max_pct": 10.68,
+    "bal_dd_max_pct": 3.96,
+    "deals": 81,
+    "curve": [
+     [
+      "2026-09-01",
+      10692.98
+     ],
+     [
+      "2026-09-02",
+      10565.3
+     ],
+     [
+      "2026-09-03",
+      10467.71
+     ],
+     [
+      "2026-09-04",
+      10693.63
+     ],
+     [
+      "2026-09-07",
+      10693.62
+     ],
+     [
+      "2026-09-08",
+      10925.49
+     ],
+     [
+      "2026-09-09",
+      11060.39
+     ],
+     [
+      "2026-09-10",
+      11390.06
+     ],
+     [
+      "2026-09-11",
+      12415.74
+     ],
+     [
+      "2026-09-14",
+      12346.18
+     ],
+     [
+      "2026-09-15",
+      12204.72
+     ],
+     [
+      "2026-09-16",
+      12454.22
+     ],
+     [
+      "2026-09-17",
+      12545.48
+     ],
+     [
+      "2026-09-18",
+      12751.93
+     ],
+     [
+      "2026-09-21",
+      12667.29
+     ],
+     [
+      "2026-09-22",
+      12670.05
+     ],
+     [
+      "2026-09-23",
+      12274.98
+     ],
+     [
+      "2026-09-24",
+      12247.72
+     ],
+     [
+      "2026-09-25",
+      12556.81
+     ],
+     [
+      "2026-09-28",
+      13031.18
+     ],
+     [
+      "2026-09-29",
+      12859.19
+     ]
+    ],
+    "by_year": {
+     "2026": 2859.19
+    },
+    "by_month": {
+     "2026-09": 2859.19
+    },
+    "by_symbol": {
+     "AUDCAD": 3176.85,
+     "EURUSD": -299.41,
+     "USDJPY": -97.59,
+     "GBPUSD": 18.88,
+     "AUDUSD": 17.97,
+     "USDCAD": 17.21,
+     "USDCHF": 25.28
+    },
+    "worst_day": {
+     "day": "2026-09-23",
+     "pct": -3.12
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 28.59
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2254_AurumHydra_5xC_202608",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.08.01",
+    "To": "2026.08.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:54:41.8544690+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.08.01 - 2026.08.31)",
+    "deposit": 10000.0,
+    "net": -384.94,
+    "gross_profit": 3235.24,
+    "gross_loss": -3620.18,
+    "profit_factor": 0.89,
+    "recovery": -0.12,
+    "sharpe": -0.75,
+    "trades": 41.0,
+    "won": "20 (48.78%)",
+    "eq_dd_max": "3 116.13 (25.66%)",
+    "eq_dd_rel": "25.66% (3 116.13)",
+    "bal_dd_max": "2 415.08 (20.08%)",
+    "ticks": 5115626.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 48.78,
+    "eq_dd_max_pct": 25.66,
+    "bal_dd_max_pct": 20.08,
+    "deals": 83,
+    "curve": [
+     [
+      "2026-08-03",
+      10673.02
+     ],
+     [
+      "2026-08-04",
+      10578.01
+     ],
+     [
+      "2026-08-05",
+      10664.65
+     ],
+     [
+      "2026-08-06",
+      10515.36
+     ],
+     [
+      "2026-08-07",
+      10425.36
+     ],
+     [
+      "2026-08-10",
+      10209.97
+     ],
+     [
+      "2026-08-11",
+      10206.31
+     ],
+     [
+      "2026-08-12",
+      10518.17
+     ],
+     [
+      "2026-08-13",
+      10561.67
+     ],
+     [
+      "2026-08-14",
+      10307.67
+     ],
+     [
+      "2026-08-17",
+      10336.75
+     ],
+     [
+      "2026-08-18",
+      10332.31
+     ],
+     [
+      "2026-08-19",
+      11335.72
+     ],
+     [
+      "2026-08-20",
+      11620.87
+     ],
+     [
+      "2026-08-21",
+      12023.24
+     ],
+     [
+      "2026-08-24",
+      12012.23
+     ],
+     [
+      "2026-08-25",
+      11985.88
+     ],
+     [
+      "2026-08-26",
+      11958.58
+     ],
+     [
+      "2026-08-27",
+      11975.38
+     ],
+     [
+      "2026-08-28",
+      9615.06
+     ]
+    ],
+    "by_year": {
+     "2026": -384.94
+    },
+    "by_month": {
+     "2026-08": -384.94
+    },
+    "by_symbol": {
+     "AUDCAD": -26.91,
+     "EURUSD": 65.86,
+     "EURJPY": -4.13,
+     "GBPJPY": 27.19,
+     "CADJPY": 16.53,
+     "USDJPY": -463.48
+    },
+    "worst_day": {
+     "day": "2026-08-28",
+     "pct": -19.71
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -3.85
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2249_AurumHydra_5xC_202607",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.07.01",
+    "To": "2026.07.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:49:43.0418142+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.07.01 - 2026.07.31)",
+    "deposit": 10000.0,
+    "net": 3222.75,
+    "gross_profit": 4547.94,
+    "gross_loss": -1325.19,
+    "profit_factor": 3.43,
+    "recovery": 2.31,
+    "sharpe": 7.28,
+    "trades": 42.0,
+    "won": "25 (59.52%)",
+    "eq_dd_max": "1 397.25 (13.17%)",
+    "eq_dd_rel": "13.17% (1 397.25)",
+    "bal_dd_max": "639.01 (4.61%)",
+    "ticks": 5255789.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 59.52,
+    "eq_dd_max_pct": 13.17,
+    "bal_dd_max_pct": 4.61,
+    "deals": 85,
+    "curve": [
+     [
+      "2026-07-01",
+      10119.52
+     ],
+     [
+      "2026-07-02",
+      10151.45
+     ],
+     [
+      "2026-07-03",
+      10134.34
+     ],
+     [
+      "2026-07-06",
+      10209.96
+     ],
+     [
+      "2026-07-07",
+      10187.76
+     ],
+     [
+      "2026-07-08",
+      10199.9
+     ],
+     [
+      "2026-07-09",
+      10176.96
+     ],
+     [
+      "2026-07-10",
+      11471.56
+     ],
+     [
+      "2026-07-13",
+      11481.22
+     ],
+     [
+      "2026-07-14",
+      11915.77
+     ],
+     [
+      "2026-07-15",
+      11921.45
+     ],
+     [
+      "2026-07-16",
+      11856.46
+     ],
+     [
+      "2026-07-17",
+      11863.85
+     ],
+     [
+      "2026-07-20",
+      12417.55
+     ],
+     [
+      "2026-07-21",
+      12482.51
+     ],
+     [
+      "2026-07-22",
+      12462.71
+     ],
+     [
+      "2026-07-23",
+      12800.07
+     ],
+     [
+      "2026-07-24",
+      13257.24
+     ],
+     [
+      "2026-07-27",
+      13453.96
+     ],
+     [
+      "2026-07-28",
+      13264.8
+     ],
+     [
+      "2026-07-29",
+      13857.46
+     ],
+     [
+      "2026-07-30",
+      13222.75
+     ]
+    ],
+    "by_year": {
+     "2026": 3222.75
+    },
+    "by_month": {
+     "2026-07": 3222.75
+    },
+    "by_symbol": {
+     "EURUSD": 696.19,
+     "AUDCAD": 2030.34,
+     "USDJPY": 520.35,
+     "GBPUSD": -17.37,
+     "AUDUSD": -6.9,
+     "USDCAD": 7.59,
+     "USDCHF": 6.19,
+     "EURJPY": -7.68,
+     "GBPJPY": -3.52,
+     "CADJPY": -2.44
+    },
+    "worst_day": {
+     "day": "2026-07-30",
+     "pct": -4.58
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 32.23
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2245_AurumHydra_5xC_202606",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.06.01",
+    "To": "2026.06.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:45:25.5474413+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.06.01 - 2026.06.30)",
+    "deposit": 10000.0,
+    "net": -2861.09,
+    "gross_profit": 1518.04,
+    "gross_loss": -4379.13,
+    "profit_factor": 0.35,
+    "recovery": -0.76,
+    "sharpe": -3.38,
+    "trades": 60.0,
+    "won": "38 (63.33%)",
+    "eq_dd_max": "3 746.71 (35.67%)",
+    "eq_dd_rel": "35.67% (3 746.71)",
+    "bal_dd_max": "3 285.80 (31.52%)",
+    "ticks": 5620412.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 63.33,
+    "eq_dd_max_pct": 35.67,
+    "bal_dd_max_pct": 31.52,
+    "deals": 121,
+    "curve": [
+     [
+      "2026-06-01",
+      10022.55
+     ],
+     [
+      "2026-06-02",
+      9964.25
+     ],
+     [
+      "2026-06-03",
+      9942.55
+     ],
+     [
+      "2026-06-04",
+      10224.78
+     ],
+     [
+      "2026-06-05",
+      10205.25
+     ],
+     [
+      "2026-06-08",
+      10118.66
+     ],
+     [
+      "2026-06-09",
+      10091.0
+     ],
+     [
+      "2026-06-10",
+      10227.71
+     ],
+     [
+      "2026-06-11",
+      9220.75
+     ],
+     [
+      "2026-06-12",
+      9296.56
+     ],
+     [
+      "2026-06-15",
+      9258.69
+     ],
+     [
+      "2026-06-16",
+      9327.35
+     ],
+     [
+      "2026-06-17",
+      9495.23
+     ],
+     [
+      "2026-06-18",
+      9587.68
+     ],
+     [
+      "2026-06-19",
+      9514.77
+     ],
+     [
+      "2026-06-22",
+      9475.02
+     ],
+     [
+      "2026-06-23",
+      8585.74
+     ],
+     [
+      "2026-06-24",
+      8585.11
+     ],
+     [
+      "2026-06-25",
+      8648.06
+     ],
+     [
+      "2026-06-26",
+      8662.46
+     ],
+     [
+      "2026-06-29",
+      7138.91
+     ]
+    ],
+    "by_year": {
+     "2026": -2861.09
+    },
+    "by_month": {
+     "2026-06": -2861.09
+    },
+    "by_symbol": {
+     "EURUSD": 36.93,
+     "AUDCAD": -3007.33,
+     "USDJPY": -60.25,
+     "EURJPY": 116.2,
+     "GBPJPY": 56.04,
+     "CADJPY": -4.22,
+     "GBPUSD": -27.68,
+     "AUDUSD": 23.88,
+     "USDCAD": -1.52,
+     "USDCHF": 6.86
+    },
+    "worst_day": {
+     "day": "2026-06-29",
+     "pct": -17.59
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -28.61
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2240_AurumHydra_5xC_202605",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.05.01",
+    "To": "2026.05.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:40:24.1262307+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.05.01 - 2026.05.31)",
+    "deposit": 10000.0,
+    "net": -1429.66,
+    "gross_profit": 949.31,
+    "gross_loss": -2378.97,
+    "profit_factor": 0.4,
+    "recovery": -0.5,
+    "sharpe": -2.01,
+    "trades": 42.0,
+    "won": "15 (35.71%)",
+    "eq_dd_max": "2 885.29 (28.63%)",
+    "eq_dd_rel": "28.63% (2 885.29)",
+    "bal_dd_max": "1 543.85 (15.32%)",
+    "ticks": 5266029.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 35.71,
+    "eq_dd_max_pct": 28.63,
+    "bal_dd_max_pct": 15.32,
+    "deals": 85,
+    "curve": [
+     [
+      "2026-05-01",
+      9855.8
+     ],
+     [
+      "2026-05-04",
+      9980.0
+     ],
+     [
+      "2026-05-05",
+      10011.52
+     ],
+     [
+      "2026-05-06",
+      9996.72
+     ],
+     [
+      "2026-05-07",
+      10023.32
+     ],
+     [
+      "2026-05-08",
+      10047.12
+     ],
+     [
+      "2026-05-11",
+      10040.12
+     ],
+     [
+      "2026-05-12",
+      10066.72
+     ],
+     [
+      "2026-05-13",
+      10012.75
+     ],
+     [
+      "2026-05-14",
+      8595.73
+     ],
+     [
+      "2026-05-15",
+      8574.0
+     ],
+     [
+      "2026-05-18",
+      8536.2
+     ],
+     [
+      "2026-05-19",
+      8580.5
+     ],
+     [
+      "2026-05-20",
+      8948.66
+     ],
+     [
+      "2026-05-21",
+      8794.5
+     ],
+     [
+      "2026-05-22",
+      8813.72
+     ],
+     [
+      "2026-05-25",
+      8796.36
+     ],
+     [
+      "2026-05-26",
+      8768.79
+     ],
+     [
+      "2026-05-27",
+      8762.59
+     ],
+     [
+      "2026-05-28",
+      8674.59
+     ],
+     [
+      "2026-05-29",
+      8570.34
+     ]
+    ],
+    "by_year": {
+     "2026": -1429.66
+    },
+    "by_month": {
+     "2026-05": -1429.66
+    },
+    "by_symbol": {
+     "EURUSD": 73.45,
+     "USDJPY": -93.1,
+     "AUDCAD": -1407.05,
+     "GBPUSD": 7.98,
+     "AUDUSD": -15.01,
+     "USDCAD": -2.47,
+     "USDCHF": 7.68,
+     "AUDJPY": -0.68,
+     "CADJPY": -0.29,
+     "GBPJPY": -0.17
+    },
+    "worst_day": {
+     "day": "2026-05-14",
+     "pct": -14.15
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -14.3
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2236_AurumHydra_5xC_202604",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.04.01",
+    "To": "2026.04.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:36:09.5954761+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.04.01 - 2026.04.30)",
+    "deposit": 10000.0,
+    "net": -2805.06,
+    "gross_profit": 717.95,
+    "gross_loss": -3523.01,
+    "profit_factor": 0.2,
+    "recovery": -0.76,
+    "sharpe": -4.3,
+    "trades": 35.0,
+    "won": "10 (28.57%)",
+    "eq_dd_max": "3 687.00 (36.72%)",
+    "eq_dd_rel": "36.72% (3 687.00)",
+    "bal_dd_max": "2 886.41 (28.86%)",
+    "ticks": 4970852.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 28.57,
+    "eq_dd_max_pct": 36.72,
+    "bal_dd_max_pct": 28.86,
+    "deals": 71,
+    "curve": [
+     [
+      "2026-04-01",
+      9714.92
+     ],
+     [
+      "2026-04-02",
+      9851.69
+     ],
+     [
+      "2026-04-03",
+      9752.2
+     ],
+     [
+      "2026-04-06",
+      9773.04
+     ],
+     [
+      "2026-04-07",
+      9689.46
+     ],
+     [
+      "2026-04-08",
+      9634.27
+     ],
+     [
+      "2026-04-09",
+      9521.63
+     ],
+     [
+      "2026-04-10",
+      9514.59
+     ],
+     [
+      "2026-04-13",
+      9754.05
+     ],
+     [
+      "2026-04-14",
+      9704.41
+     ],
+     [
+      "2026-04-15",
+      9592.45
+     ],
+     [
+      "2026-04-16",
+      9515.89
+     ],
+     [
+      "2026-04-17",
+      7347.74
+     ],
+     [
+      "2026-04-20",
+      7378.61
+     ],
+     [
+      "2026-04-21",
+      7275.6
+     ],
+     [
+      "2026-04-22",
+      7420.44
+     ],
+     [
+      "2026-04-23",
+      7339.32
+     ],
+     [
+      "2026-04-24",
+      7116.07
+     ],
+     [
+      "2026-04-27",
+      7122.0
+     ],
+     [
+      "2026-04-28",
+      7200.0
+     ],
+     [
+      "2026-04-29",
+      7194.94
+     ]
+    ],
+    "by_year": {
+     "2026": -2805.06
+    },
+    "by_month": {
+     "2026-04": -2805.06
+    },
+    "by_symbol": {
+     "EURJPY": -98.11,
+     "GBPJPY": -48.2,
+     "CADJPY": -61.57,
+     "AUDCAD": -1832.22,
+     "EURUSD": -669.83,
+     "USDJPY": -95.13
+    },
+    "worst_day": {
+     "day": "2026-04-17",
+     "pct": -22.78
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -28.05
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2231_AurumHydra_5xC_months",
+   "job": {},
+   "summary": "# j8c: AurumHydra 5x month series, part 3 of 3 (2026.03 to 2026.09)\n\nPreset AurumHydra_5x_month_FTMO.set, XAUUSD M15, a fresh 10,000 deposit each month, 1:500, real ticks.\nCollected by the tester operator on 2026-10-17 23:05 (series started 22:31).\n\n| Month | Multiple | Trades | Equity DD % |\n|---|---|---|---|\n| 2026.03 | 0.91x | 46 | 43.0 |\n| 2026.04 | 0.72x | 35 | 36.7 |\n| 2026.05 | 0.86x | 42 | 28.6 |\n| 2026.06 | 0.71x | 60 | 35.7 |\n| 2026.07 | 1.32x | 42 | 13.2 |\n| 2026.08 | 0.96x | 41 | 25.7 |\n| 2026.09 | 1.29x | 40 | 10.7 |\n\n- 5x reached in 0 of 7 months (held to month end 0 of 7); median multiple 0.91x; 0 of 7 months below 0.5x;\n  months with margin refusals 0.\n- Against `expect` (about 9/21 at 5x over the three parts): parts so far j8a 0/7, j8b 1/7 (2026.01), j8c 0/7, so\n  1 of 21 against the preset header's 9 of 21 and the Python model's about 47%. The orchestrator judges the 21 months.\n- Not checked by me: the tester.ini InpGold / deposit check from j8a's `expect` (done for j8b).\n",
+   "state": "done"
+  },
+  {
+   "name": "2026-10-17_2231_AurumHydra_5xC_202603",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.03.01",
+    "To": "2026.03.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:31:21.8406501+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.03.01 - 2026.03.31)",
+    "deposit": 10000.0,
+    "net": -866.08,
+    "gross_profit": 6933.93,
+    "gross_loss": -7800.01,
+    "profit_factor": 0.89,
+    "recovery": -0.17,
+    "sharpe": -0.41,
+    "trades": 46.0,
+    "won": "28 (60.87%)",
+    "eq_dd_max": "5 044.64 (42.95%)",
+    "eq_dd_rel": "42.95% (5 044.64)",
+    "bal_dd_max": "4 866.24 (34.76%)",
+    "ticks": 5790602.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 60.87,
+    "eq_dd_max_pct": 42.95,
+    "bal_dd_max_pct": 34.76,
+    "deals": 93,
+    "curve": [
+     [
+      "2026-03-02",
+      11160.73
+     ],
+     [
+      "2026-03-03",
+      10944.85
+     ],
+     [
+      "2026-03-04",
+      11289.85
+     ],
+     [
+      "2026-03-05",
+      11052.26
+     ],
+     [
+      "2026-03-06",
+      11679.71
+     ],
+     [
+      "2026-03-09",
+      10866.73
+     ],
+     [
+      "2026-03-10",
+      10944.37
+     ],
+     [
+      "2026-03-11",
+      11009.31
+     ],
+     [
+      "2026-03-12",
+      11363.72
+     ],
+     [
+      "2026-03-13",
+      11714.54
+     ],
+     [
+      "2026-03-16",
+      11713.04
+     ],
+     [
+      "2026-03-17",
+      11549.11
+     ],
+     [
+      "2026-03-18",
+      12554.52
+     ],
+     [
+      "2026-03-19",
+      12395.62
+     ],
+     [
+      "2026-03-20",
+      13421.39
+     ],
+     [
+      "2026-03-23",
+      14000.16
+     ],
+     [
+      "2026-03-24",
+      10890.89
+     ],
+     [
+      "2026-03-25",
+      10908.39
+     ],
+     [
+      "2026-03-26",
+      10962.89
+     ],
+     [
+      "2026-03-27",
+      10936.99
+     ],
+     [
+      "2026-03-30",
+      9133.92
+     ]
+    ],
+    "by_year": {
+     "2026": -866.08
+    },
+    "by_month": {
+     "2026-03": -866.08
+    },
+    "by_symbol": {
+     "AUDCAD": 2850.63,
+     "EURUSD": -38.33,
+     "USDJPY": -443.8,
+     "XAUUSD": -3165.68,
+     "EURJPY": -33.78,
+     "GBPJPY": 11.91,
+     "CADJPY": -47.03
+    },
+    "worst_day": {
+     "day": "2026-03-24",
+     "pct": -22.21
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -8.66
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2224_AurumHydra_5xB_202602",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.02.01",
+    "To": "2026.02.28",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:24:37.2246552+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.02.01 - 2026.02.28)",
+    "deposit": 10000.0,
+    "net": 3268.99,
+    "gross_profit": 5726.01,
+    "gross_loss": -2457.02,
+    "profit_factor": 2.33,
+    "recovery": 1.04,
+    "sharpe": 3.61,
+    "trades": 52.0,
+    "won": "26 (50.00%)",
+    "eq_dd_max": "3 145.37 (23.85%)",
+    "eq_dd_rel": "23.85% (3 145.37)",
+    "bal_dd_max": "1 264.21 (9.50%)",
+    "ticks": 4444269.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 50.0,
+    "eq_dd_max_pct": 23.85,
+    "bal_dd_max_pct": 9.5,
+    "deals": 105,
+    "curve": [
+     [
+      "2026-02-02",
+      10674.67
+     ],
+     [
+      "2026-02-03",
+      10843.15
+     ],
+     [
+      "2026-02-04",
+      11044.74
+     ],
+     [
+      "2026-02-05",
+      12016.11
+     ],
+     [
+      "2026-02-06",
+      12213.22
+     ],
+     [
+      "2026-02-09",
+      12704.92
+     ],
+     [
+      "2026-02-10",
+      13003.27
+     ],
+     [
+      "2026-02-11",
+      13125.56
+     ],
+     [
+      "2026-02-12",
+      13310.68
+     ],
+     [
+      "2026-02-13",
+      12050.65
+     ],
+     [
+      "2026-02-16",
+      12224.32
+     ],
+     [
+      "2026-02-17",
+      12866.05
+     ],
+     [
+      "2026-02-18",
+      12713.89
+     ],
+     [
+      "2026-02-19",
+      12918.59
+     ],
+     [
+      "2026-02-20",
+      12735.37
+     ],
+     [
+      "2026-02-23",
+      12765.62
+     ],
+     [
+      "2026-02-24",
+      13419.91
+     ],
+     [
+      "2026-02-25",
+      13411.82
+     ],
+     [
+      "2026-02-26",
+      13340.06
+     ],
+     [
+      "2026-02-27",
+      13268.99
+     ]
+    ],
+    "by_year": {
+     "2026": 3268.99
+    },
+    "by_month": {
+     "2026-02": 3268.99
+    },
+    "by_symbol": {
+     "AUDCAD": 2177.09,
+     "EURUSD": 201.97,
+     "USDJPY": -77.17,
+     "EURJPY": 302.68,
+     "CADJPY": 59.06,
+     "GBPJPY": 216.12,
+     "GBPUSD": 290.24,
+     "AUDUSD": 65.02,
+     "USDCAD": 10.6,
+     "USDCHF": 24.09,
+     "AUDJPY": -0.71
+    },
+    "worst_day": {
+     "day": "2026-02-13",
+     "pct": -9.47
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 32.69
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2217_AurumHydra_5xB_202601",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2026.01.01",
+    "To": "2026.01.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:17:39.9230614+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.01.01 - 2026.01.31)",
+    "deposit": 10000.0,
+    "net": 40010.95,
+    "gross_profit": 40925.43,
+    "gross_loss": -914.48,
+    "profit_factor": 44.75,
+    "recovery": 9.01,
+    "sharpe": 11.92,
+    "trades": 46.0,
+    "won": "28 (60.87%)",
+    "eq_dd_max": "4 438.90 (16.83%)",
+    "eq_dd_rel": "18.98% (2 560.05)",
+    "bal_dd_max": "627.16 (6.09%)",
+    "ticks": 4303766.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 60.87,
+    "eq_dd_max_pct": 16.83,
+    "bal_dd_max_pct": 6.09,
+    "deals": 93,
+    "curve": [
+     [
+      "2026-01-02",
+      10233.02
+     ],
+     [
+      "2026-01-05",
+      10274.23
+     ],
+     [
+      "2026-01-06",
+      10278.12
+     ],
+     [
+      "2026-01-07",
+      10289.83
+     ],
+     [
+      "2026-01-08",
+      10183.48
+     ],
+     [
+      "2026-01-09",
+      10177.95
+     ],
+     [
+      "2026-01-12",
+      10182.0
+     ],
+     [
+      "2026-01-13",
+      9670.94
+     ],
+     [
+      "2026-01-14",
+      9662.85
+     ],
+     [
+      "2026-01-15",
+      9744.07
+     ],
+     [
+      "2026-01-16",
+      9743.76
+     ],
+     [
+      "2026-01-19",
+      9741.67
+     ],
+     [
+      "2026-01-20",
+      9731.0
+     ],
+     [
+      "2026-01-21",
+      9726.44
+     ],
+     [
+      "2026-01-22",
+      9726.29
+     ],
+     [
+      "2026-01-23",
+      9725.56
+     ],
+     [
+      "2026-01-26",
+      9725.53
+     ],
+     [
+      "2026-01-27",
+      9725.23
+     ],
+     [
+      "2026-01-28",
+      9708.72
+     ],
+     [
+      "2026-01-29",
+      50010.95
+     ]
+    ],
+    "by_year": {
+     "2026": 40010.95
+    },
+    "by_month": {
+     "2026-01": 40010.95
+    },
+    "by_symbol": {
+     "XAUUSD": 40514.32,
+     "EURUSD": 168.68,
+     "GBPUSD": 55.76,
+     "AUDUSD": 5.27,
+     "USDCAD": 18.02,
+     "USDCHF": 1.63,
+     "USDJPY": 27.22,
+     "AUDCAD": -779.95
+    },
+    "worst_day": {
+     "day": "2026-01-13",
+     "pct": -5.02
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 400.11
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2210_AurumHydra_5xB_202512",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.12.01",
+    "To": "2025.12.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:10:17.4814218+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.12.01 - 2025.12.31)",
+    "deposit": 10000.0,
+    "net": 3690.01,
+    "gross_profit": 3947.18,
+    "gross_loss": -257.17,
+    "profit_factor": 15.35,
+    "recovery": 0.4,
+    "sharpe": 1.68,
+    "trades": 39.0,
+    "won": "20 (51.28%)",
+    "eq_dd_max": "9 271.33 (43.56%)",
+    "eq_dd_rel": "43.56% (9 271.33)",
+    "bal_dd_max": "132.02 (1.32%)",
+    "ticks": 3955128.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 51.28,
+    "eq_dd_max_pct": 43.56,
+    "bal_dd_max_pct": 1.32,
+    "deals": 79,
+    "curve": [
+     [
+      "2025-12-01",
+      9868.4
+     ],
+     [
+      "2025-12-02",
+      9894.01
+     ],
+     [
+      "2025-12-03",
+      9891.56
+     ],
+     [
+      "2025-12-04",
+      9894.83
+     ],
+     [
+      "2025-12-05",
+      9905.77
+     ],
+     [
+      "2025-12-08",
+      9901.42
+     ],
+     [
+      "2025-12-09",
+      9926.67
+     ],
+     [
+      "2025-12-10",
+      9930.64
+     ],
+     [
+      "2025-12-11",
+      9929.9
+     ],
+     [
+      "2025-12-12",
+      9929.23
+     ],
+     [
+      "2025-12-15",
+      9935.7
+     ],
+     [
+      "2025-12-16",
+      9928.49
+     ],
+     [
+      "2025-12-17",
+      9924.97
+     ],
+     [
+      "2025-12-18",
+      9928.29
+     ],
+     [
+      "2025-12-19",
+      9895.76
+     ],
+     [
+      "2025-12-22",
+      9890.83
+     ],
+     [
+      "2025-12-23",
+      9893.34
+     ],
+     [
+      "2025-12-24",
+      9896.27
+     ],
+     [
+      "2025-12-26",
+      9892.74
+     ],
+     [
+      "2025-12-29",
+      9880.71
+     ],
+     [
+      "2025-12-30",
+      13690.01
+     ]
+    ],
+    "by_year": {
+     "2025": 3690.01
+    },
+    "by_month": {
+     "2025-12": 3690.01
+    },
+    "by_symbol": {
+     "XAUUSD": 3870.23,
+     "EURUSD": -184.17,
+     "AUDCAD": -8.41,
+     "USDJPY": 13.84,
+     "GBPUSD": -1.27,
+     "AUDUSD": -0.21
+    },
+    "worst_day": {
+     "day": "2025-12-01",
+     "pct": -1.32
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 36.9
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2204_AurumHydra_5xB_202511",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.11.01",
+    "To": "2025.11.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T22:04:09.3541440+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.11.01 - 2025.11.30)",
+    "deposit": 10000.0,
+    "net": 5375.27,
+    "gross_profit": 6359.16,
+    "gross_loss": -983.89,
+    "profit_factor": 6.46,
+    "recovery": 0.63,
+    "sharpe": 2.39,
+    "trades": 70.0,
+    "won": "41 (58.57%)",
+    "eq_dd_max": "8 494.57 (48.31%)",
+    "eq_dd_rel": "48.31% (8 494.57)",
+    "bal_dd_max": "614.09 (6.13%)",
+    "ticks": 3179202.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 58.57,
+    "eq_dd_max_pct": 48.31,
+    "bal_dd_max_pct": 6.13,
+    "deals": 140,
+    "curve": [
+     [
+      "2025-11-03",
+      9992.86
+     ],
+     [
+      "2025-11-04",
+      10018.01
+     ],
+     [
+      "2025-11-05",
+      9602.17
+     ],
+     [
+      "2025-11-06",
+      9496.57
+     ],
+     [
+      "2025-11-07",
+      9499.37
+     ],
+     [
+      "2025-11-10",
+      9612.79
+     ],
+     [
+      "2025-11-11",
+      9617.41
+     ],
+     [
+      "2025-11-12",
+      9644.42
+     ],
+     [
+      "2025-11-13",
+      9684.23
+     ],
+     [
+      "2025-11-14",
+      9662.36
+     ],
+     [
+      "2025-11-17",
+      9659.99
+     ],
+     [
+      "2025-11-18",
+      9649.39
+     ],
+     [
+      "2025-11-19",
+      9666.28
+     ],
+     [
+      "2025-11-20",
+      9717.83
+     ],
+     [
+      "2025-11-21",
+      9757.53
+     ],
+     [
+      "2025-11-24",
+      9802.23
+     ],
+     [
+      "2025-11-25",
+      9786.51
+     ],
+     [
+      "2025-11-26",
+      9785.75
+     ],
+     [
+      "2025-11-27",
+      9785.14
+     ],
+     [
+      "2025-11-28",
+      15375.27
+     ]
+    ],
+    "by_year": {
+     "2025": 5375.27
+    },
+    "by_month": {
+     "2025-11": 5375.27
+    },
+    "by_symbol": {
+     "XAUUSD": 5043.21,
+     "EURUSD": -197.08,
+     "AUDCAD": 438.17,
+     "USDJPY": 73.84,
+     "GBPUSD": 26.27,
+     "AUDUSD": 0.04,
+     "USDCAD": 2.14,
+     "USDCHF": 0.2,
+     "EURJPY": -4.17,
+     "GBPJPY": -8.52,
+     "CADJPY": 1.17
+    },
+    "worst_day": {
+     "day": "2025-11-05",
+     "pct": -4.15
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 53.75
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2155_AurumHydra_5xB_202510",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.10.01",
+    "To": "2025.10.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T21:55:45.1621389+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.10.01 - 2025.10.31)",
+    "deposit": 10000.0,
+    "net": 1472.42,
+    "gross_profit": 3720.19,
+    "gross_loss": -2247.77,
+    "profit_factor": 1.66,
+    "recovery": 0.07,
+    "sharpe": 0.49,
+    "trades": 67.0,
+    "won": "47 (70.15%)",
+    "eq_dd_max": "20 974.23 (78.52%)",
+    "eq_dd_rel": "78.52% (20 974.23)",
+    "bal_dd_max": "1 717.41 (16.25%)",
+    "ticks": 3832373.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 70.15,
+    "eq_dd_max_pct": 78.52,
+    "bal_dd_max_pct": 16.25,
+    "deals": 135,
+    "curve": [
+     [
+      "2025-10-01",
+      9927.51
+     ],
+     [
+      "2025-10-02",
+      9927.45
+     ],
+     [
+      "2025-10-03",
+      9952.1
+     ],
+     [
+      "2025-10-06",
+      9934.53
+     ],
+     [
+      "2025-10-07",
+      9767.41
+     ],
+     [
+      "2025-10-08",
+      9782.17
+     ],
+     [
+      "2025-10-09",
+      10103.06
+     ],
+     [
+      "2025-10-10",
+      10168.63
+     ],
+     [
+      "2025-10-13",
+      10338.9
+     ],
+     [
+      "2025-10-14",
+      10366.62
+     ],
+     [
+      "2025-10-15",
+      10356.72
+     ],
+     [
+      "2025-10-16",
+      10399.06
+     ],
+     [
+      "2025-10-17",
+      10474.25
+     ],
+     [
+      "2025-10-20",
+      10498.7
+     ],
+     [
+      "2025-10-21",
+      10521.67
+     ],
+     [
+      "2025-10-22",
+      10522.88
+     ],
+     [
+      "2025-10-23",
+      10548.16
+     ],
+     [
+      "2025-10-24",
+      10536.21
+     ],
+     [
+      "2025-10-27",
+      10535.04
+     ],
+     [
+      "2025-10-28",
+      10539.5
+     ],
+     [
+      "2025-10-29",
+      10551.94
+     ],
+     [
+      "2025-10-30",
+      11472.42
+     ]
+    ],
+    "by_year": {
+     "2025": 1472.42
+    },
+    "by_month": {
+     "2025-10": 1472.42
+    },
+    "by_symbol": {
+     "AUDCAD": 275.47,
+     "XAUUSD": 1008.67,
+     "EURUSD": 168.51,
+     "USDJPY": 3.04,
+     "EURJPY": 2.61,
+     "GBPJPY": 1.44,
+     "CADJPY": -0.06,
+     "GBPUSD": 9.86,
+     "AUDUSD": 2.14,
+     "USDCAD": 0.74
+    },
+    "worst_day": {
+     "day": "2025-10-07",
+     "pct": -1.68
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 14.72
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2149_AurumHydra_5xB_202509",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.09.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T21:49:23.2494358+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.09.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 14293.17,
+    "gross_profit": 15304.55,
+    "gross_loss": -1011.38,
+    "profit_factor": 15.13,
+    "recovery": 3.91,
+    "sharpe": 8.31,
+    "trades": 47.0,
+    "won": "31 (65.96%)",
+    "eq_dd_max": "3 655.78 (19.14%)",
+    "eq_dd_rel": "19.14% (3 655.78)",
+    "bal_dd_max": "884.91 (8.22%)",
+    "ticks": 2850129.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 65.96,
+    "eq_dd_max_pct": 19.14,
+    "bal_dd_max_pct": 8.22,
+    "deals": 95,
+    "curve": [
+     [
+      "2025-09-01",
+      10082.81
+     ],
+     [
+      "2025-09-02",
+      10736.32
+     ],
+     [
+      "2025-09-03",
+      10717.68
+     ],
+     [
+      "2025-09-04",
+      10747.09
+     ],
+     [
+      "2025-09-05",
+      10753.22
+     ],
+     [
+      "2025-09-08",
+      10751.8
+     ],
+     [
+      "2025-09-09",
+      10758.3
+     ],
+     [
+      "2025-09-10",
+      10758.73
+     ],
+     [
+      "2025-09-11",
+      10758.9
+     ],
+     [
+      "2025-09-12",
+      10747.06
+     ],
+     [
+      "2025-09-15",
+      10640.55
+     ],
+     [
+      "2025-09-16",
+      9892.32
+     ],
+     [
+      "2025-09-17",
+      9890.45
+     ],
+     [
+      "2025-09-18",
+      9892.13
+     ],
+     [
+      "2025-09-19",
+      9893.94
+     ],
+     [
+      "2025-09-22",
+      9892.05
+     ],
+     [
+      "2025-09-23",
+      9875.95
+     ],
+     [
+      "2025-09-24",
+      9877.78
+     ],
+     [
+      "2025-09-25",
+      9904.8
+     ],
+     [
+      "2025-09-26",
+      9906.74
+     ],
+     [
+      "2025-09-29",
+      24293.17
+     ]
+    ],
+    "by_year": {
+     "2025": 14293.17
+    },
+    "by_month": {
+     "2025-09": 14293.17
+    },
+    "by_symbol": {
+     "XAUUSD": 14430.75,
+     "EURUSD": 77.9,
+     "AUDCAD": -368.04,
+     "GBPUSD": 112.32,
+     "AUDUSD": 26.54,
+     "USDCAD": 7.65,
+     "USDCHF": 3.04,
+     "USDJPY": 3.01
+    },
+    "worst_day": {
+     "day": "2025-09-16",
+     "pct": -7.03
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 142.93
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_2144_AurumHydra_5xB_months",
+   "job": {},
+   "summary": "# j8b: AurumHydra 5x month series, part 2 of 3 (2025.08 to 2026.02)\n\nPreset AurumHydra_5x_month_FTMO.set, XAUUSD M15, a fresh 10,000 deposit each month, 1:500, real ticks.\nCollected by the tester operator on 2026-10-17 22:30 (series ran 21:44 to about 22:30).\n\n| Month | Multiple | Trades | Equity DD % |\n|---|---|---|---|\n| 2025.08 | 1.12x | 65 | 30.7 |\n| 2025.09 | 2.43x | 47 | 19.1 |\n| 2025.10 | 1.15x | 67 | 78.5 |\n| 2025.11 | 1.54x | 70 | 48.3 |\n| 2025.12 | 1.37x | 39 | 43.6 |\n| 2026.01 | 5.00x | 46 | 16.8 |\n| 2026.02 | 1.33x | 52 | 23.9 |\n\n- 5x reached in 1 of 7 months (2026.01, 5.001x); median multiple 1.37x; 0 of 7 months below 0.5x; months with\n  margin refusals 0.\n- Against `expect` (about 9/21 at 5x over the three parts): with part 1 (0/7) the running count is 1 of 14. The\n  final call waits for j8c.\n- Check from `expect`: 2026.01 tester.ini has InpGold=XAUUSD, Deposit=10000, Leverage=500.\n",
+   "state": "done"
+  },
+  {
+   "name": "2026-10-17_2144_AurumHydra_5xB_202508",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.08.01",
+    "To": "2025.08.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T21:44:21.0659415+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.08.01 - 2025.08.31)",
+    "deposit": 10000.0,
+    "net": 1159.91,
+    "gross_profit": 3440.84,
+    "gross_loss": -2280.93,
+    "profit_factor": 1.51,
+    "recovery": 0.32,
+    "sharpe": 0.97,
+    "trades": 65.0,
+    "won": "30 (46.15%)",
+    "eq_dd_max": "3 616.54 (30.74%)",
+    "eq_dd_rel": "30.74% (3 616.54)",
+    "bal_dd_max": "1 991.64 (18.76%)",
+    "ticks": 2188930.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 46.15,
+    "eq_dd_max_pct": 30.74,
+    "bal_dd_max_pct": 18.76,
+    "deals": 131,
+    "curve": [
+     [
+      "2025-08-01",
+      10032.4
+     ],
+     [
+      "2025-08-04",
+      10149.93
+     ],
+     [
+      "2025-08-05",
+      10117.15
+     ],
+     [
+      "2025-08-06",
+      10429.48
+     ],
+     [
+      "2025-08-07",
+      10462.89
+     ],
+     [
+      "2025-08-08",
+      10440.8
+     ],
+     [
+      "2025-08-11",
+      10449.96
+     ],
+     [
+      "2025-08-12",
+      10538.37
+     ],
+     [
+      "2025-08-13",
+      10539.92
+     ],
+     [
+      "2025-08-14",
+      10586.83
+     ],
+     [
+      "2025-08-15",
+      10609.51
+     ],
+     [
+      "2025-08-18",
+      8670.22
+     ],
+     [
+      "2025-08-19",
+      8690.94
+     ],
+     [
+      "2025-08-20",
+      8767.59
+     ],
+     [
+      "2025-08-21",
+      8782.4
+     ],
+     [
+      "2025-08-22",
+      9297.4
+     ],
+     [
+      "2025-08-25",
+      9247.1
+     ],
+     [
+      "2025-08-26",
+      9231.49
+     ],
+     [
+      "2025-08-27",
+      9230.72
+     ],
+     [
+      "2025-08-28",
+      9229.85
+     ],
+     [
+      "2025-08-29",
+      11159.91
+     ]
+    ],
+    "by_year": {
+     "2025": 1159.91
+    },
+    "by_month": {
+     "2025-08": 1159.91
+    },
+    "by_symbol": {
+     "AUDCAD": 993.42,
+     "EURUSD": -2.23,
+     "XAUUSD": 5.6,
+     "EURJPY": 73.41,
+     "GBPJPY": 42.08,
+     "CADJPY": 17.51,
+     "USDJPY": 34.94,
+     "GBPUSD": -1.98,
+     "AUDUSD": -1.62,
+     "USDCAD": -0.6,
+     "USDCHF": -0.38,
+     "AUDJPY": -0.24
+    },
+    "worst_day": {
+     "day": "2025-08-18",
+     "pct": -18.28
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 11.6
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1648_AurumHydra_5xA_202501_202502_202503_202504_202505_202506_202507",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.07.01",
+    "To": "2025.07.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:48:57.5510909+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.07.01 - 2025.07.31)",
+    "deposit": 10000.0,
+    "net": -2504.16,
+    "gross_profit": 1953.46,
+    "gross_loss": -4457.62,
+    "profit_factor": 0.44,
+    "recovery": -0.41,
+    "sharpe": -2.28,
+    "trades": 55.0,
+    "won": "34 (61.82%)",
+    "eq_dd_max": "6 061.56 (48.44%)",
+    "eq_dd_rel": "48.44% (6 061.56)",
+    "bal_dd_max": "2 950.01 (28.24%)",
+    "ticks": 1951342.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 61.82,
+    "eq_dd_max_pct": 48.44,
+    "bal_dd_max_pct": 28.24,
+    "deals": 111,
+    "curve": [
+     [
+      "2025-07-01",
+      9999.44
+     ],
+     [
+      "2025-07-02",
+      10215.2
+     ],
+     [
+      "2025-07-03",
+      10261.11
+     ],
+     [
+      "2025-07-04",
+      10258.76
+     ],
+     [
+      "2025-07-07",
+      10318.33
+     ],
+     [
+      "2025-07-08",
+      10417.16
+     ],
+     [
+      "2025-07-09",
+      10445.85
+     ],
+     [
+      "2025-07-10",
+      10440.47
+     ],
+     [
+      "2025-07-11",
+      10156.98
+     ],
+     [
+      "2025-07-14",
+      10195.25
+     ],
+     [
+      "2025-07-15",
+      9620.47
+     ],
+     [
+      "2025-07-16",
+      9681.67
+     ],
+     [
+      "2025-07-17",
+      9704.16
+     ],
+     [
+      "2025-07-18",
+      10066.37
+     ],
+     [
+      "2025-07-21",
+      9857.75
+     ],
+     [
+      "2025-07-22",
+      9853.77
+     ],
+     [
+      "2025-07-23",
+      9865.91
+     ],
+     [
+      "2025-07-24",
+      9861.15
+     ],
+     [
+      "2025-07-25",
+      9863.16
+     ],
+     [
+      "2025-07-28",
+      9872.89
+     ],
+     [
+      "2025-07-29",
+      9929.05
+     ],
+     [
+      "2025-07-30",
+      7495.84
+     ]
+    ],
+    "by_year": {
+     "2025": -2504.16
+    },
+    "by_month": {
+     "2025-07": -2504.16
+    },
+    "by_symbol": {
+     "XAUUSD": -3424.4,
+     "EURUSD": 476.8,
+     "AUDCAD": 374.45,
+     "USDJPY": 52.8,
+     "GBPUSD": 3.56,
+     "AUDUSD": 6.06,
+     "USDCAD": 3.28,
+     "USDCHF": 3.29
+    },
+    "worst_day": {
+     "day": "2025-07-30",
+     "pct": -24.51
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -25.04
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1643_AurumHydra_5xA_202501_202502_202503_202504_202505_202506",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.06.01",
+    "To": "2025.06.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:43:39.5908511+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.06.01 - 2025.06.30)",
+    "deposit": 10000.0,
+    "net": -4065.8,
+    "gross_profit": 546.53,
+    "gross_loss": -4612.33,
+    "profit_factor": 0.12,
+    "recovery": -0.46,
+    "sharpe": -3.02,
+    "trades": 49.0,
+    "won": "21 (42.86%)",
+    "eq_dd_max": "8 838.79 (63.33%)",
+    "eq_dd_rel": "63.33% (8 838.79)",
+    "bal_dd_max": "4 157.31 (41.20%)",
+    "ticks": 2161338.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 42.86,
+    "eq_dd_max_pct": 63.33,
+    "bal_dd_max_pct": 41.2,
+    "deals": 98,
+    "curve": [
+     [
+      "2025-06-02",
+      10048.19
+     ],
+     [
+      "2025-06-03",
+      10091.51
+     ],
+     [
+      "2025-06-04",
+      10084.71
+     ],
+     [
+      "2025-06-05",
+      10038.75
+     ],
+     [
+      "2025-06-06",
+      10030.8
+     ],
+     [
+      "2025-06-09",
+      9221.28
+     ],
+     [
+      "2025-06-10",
+      9139.33
+     ],
+     [
+      "2025-06-11",
+      9317.16
+     ],
+     [
+      "2025-06-12",
+      9316.16
+     ],
+     [
+      "2025-06-13",
+      9310.58
+     ],
+     [
+      "2025-06-16",
+      9321.92
+     ],
+     [
+      "2025-06-17",
+      9360.13
+     ],
+     [
+      "2025-06-18",
+      9359.5
+     ],
+     [
+      "2025-06-19",
+      9358.08
+     ],
+     [
+      "2025-06-20",
+      9400.9
+     ],
+     [
+      "2025-06-23",
+      9421.47
+     ],
+     [
+      "2025-06-24",
+      9419.07
+     ],
+     [
+      "2025-06-25",
+      9423.88
+     ],
+     [
+      "2025-06-26",
+      9430.52
+     ],
+     [
+      "2025-06-27",
+      5934.2
+     ]
+    ],
+    "by_year": {
+     "2025": -4065.8
+    },
+    "by_month": {
+     "2025-06": -4065.8
+    },
+    "by_symbol": {
+     "XAUUSD": -4308.47,
+     "EURUSD": 105.07,
+     "USDJPY": -126.45,
+     "AUDCAD": 263.81,
+     "GBPUSD": -1.13,
+     "AUDUSD": 0.66,
+     "USDCAD": 0.71
+    },
+    "worst_day": {
+     "day": "2025-06-27",
+     "pct": -37.07
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -40.66
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1639_AurumHydra_5xA_202501_202502_202503_202504_202505",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.05.01",
+    "To": "2025.05.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:39:44.3457869+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.05.01 - 2025.05.31)",
+    "deposit": 10000.0,
+    "net": -5285.91,
+    "gross_profit": 152.17,
+    "gross_loss": -5438.08,
+    "profit_factor": 0.03,
+    "recovery": -0.45,
+    "sharpe": -5.0,
+    "trades": 31.0,
+    "won": "12 (38.71%)",
+    "eq_dd_max": "11 759.86 (71.38%)",
+    "eq_dd_rel": "71.38% (11 759.86)",
+    "bal_dd_max": "5 285.91 (52.86%)",
+    "ticks": 1235296.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 38.71,
+    "eq_dd_max_pct": 71.38,
+    "bal_dd_max_pct": 52.86,
+    "deals": 63,
+    "curve": [
+     [
+      "2025-05-01",
+      9585.51
+     ],
+     [
+      "2025-05-02",
+      9566.7
+     ],
+     [
+      "2025-05-05",
+      9624.59
+     ],
+     [
+      "2025-05-06",
+      9614.77
+     ],
+     [
+      "2025-05-07",
+      9679.09
+     ],
+     [
+      "2025-05-08",
+      9675.59
+     ],
+     [
+      "2025-05-09",
+      9665.73
+     ],
+     [
+      "2025-05-12",
+      9657.17
+     ],
+     [
+      "2025-05-13",
+      9677.73
+     ],
+     [
+      "2025-05-14",
+      4714.09
+     ]
+    ],
+    "by_year": {
+     "2025": -5285.91
+    },
+    "by_month": {
+     "2025-05": -5285.91
+    },
+    "by_symbol": {
+     "XAUUSD": -5356.39,
+     "EURUSD": -59.46,
+     "EURJPY": 40.89,
+     "GBPJPY": 17.63,
+     "CADJPY": 10.78,
+     "USDJPY": 4.91,
+     "AUDCAD": 55.73
+    },
+    "worst_day": {
+     "day": "2025-05-14",
+     "pct": -51.29
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -52.86
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1637_AurumHydra_5xA_202501_202502_202503_202504",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.04.01",
+    "To": "2025.04.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:37:31.4118215+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.04.01 - 2025.04.30)",
+    "deposit": 10000.0,
+    "net": -6035.03,
+    "gross_profit": 951.2,
+    "gross_loss": -6986.23,
+    "profit_factor": 0.14,
+    "recovery": -0.71,
+    "sharpe": -5.0,
+    "trades": 28.0,
+    "won": "8 (28.57%)",
+    "eq_dd_max": "8 489.16 (68.16%)",
+    "eq_dd_rel": "68.16% (8 489.16)",
+    "bal_dd_max": "6 853.55 (63.35%)",
+    "ticks": 589935.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 28.57,
+    "eq_dd_max_pct": 68.16,
+    "bal_dd_max_pct": 63.35,
+    "deals": 57,
+    "curve": [
+     [
+      "2025-04-01",
+      10181.14
+     ],
+     [
+      "2025-04-02",
+      10154.01
+     ],
+     [
+      "2025-04-03",
+      10808.37
+     ],
+     [
+      "2025-04-04",
+      9725.79
+     ],
+     [
+      "2025-04-07",
+      3964.97
+     ]
+    ],
+    "by_year": {
+     "2025": -6035.03
+    },
+    "by_month": {
+     "2025-04": -6035.03
+    },
+    "by_symbol": {
+     "XAUUSD": -5770.89,
+     "EURUSD": 122.34,
+     "AUDCAD": -438.71,
+     "EURJPY": 2.44,
+     "GBPJPY": -4.64,
+     "CADJPY": -1.21,
+     "USDJPY": -2.0,
+     "GBPUSD": 31.44,
+     "AUDUSD": 22.94,
+     "USDCAD": -0.67,
+     "USDCHF": 3.93
+    },
+    "worst_day": {
+     "day": "2025-04-07",
+     "pct": -59.23
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -60.35
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1632_AurumHydra_5xA_202501_202502_202503",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.03.01",
+    "To": "2025.03.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:32:38.9537838+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.03.01 - 2025.03.31)",
+    "deposit": 10000.0,
+    "net": 11771.75,
+    "gross_profit": 12414.58,
+    "gross_loss": -642.83,
+    "profit_factor": 19.31,
+    "recovery": 3.16,
+    "sharpe": 7.16,
+    "trades": 79.0,
+    "won": "46 (58.23%)",
+    "eq_dd_max": "3 719.42 (18.19%)",
+    "eq_dd_rel": "19.17% (2 484.12)",
+    "bal_dd_max": "173.02 (1.52%)",
+    "ticks": 2390112.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 58.23,
+    "eq_dd_max_pct": 18.19,
+    "bal_dd_max_pct": 1.52,
+    "deals": 159,
+    "curve": [
+     [
+      "2025-03-03",
+      10614.88
+     ],
+     [
+      "2025-03-04",
+      10907.34
+     ],
+     [
+      "2025-03-05",
+      11120.51
+     ],
+     [
+      "2025-03-06",
+      11107.91
+     ],
+     [
+      "2025-03-07",
+      11277.26
+     ],
+     [
+      "2025-03-10",
+      11339.49
+     ],
+     [
+      "2025-03-11",
+      11238.79
+     ],
+     [
+      "2025-03-12",
+      11246.93
+     ],
+     [
+      "2025-03-13",
+      11295.96
+     ],
+     [
+      "2025-03-14",
+      11302.52
+     ],
+     [
+      "2025-03-17",
+      11300.29
+     ],
+     [
+      "2025-03-18",
+      11311.27
+     ],
+     [
+      "2025-03-19",
+      11310.66
+     ],
+     [
+      "2025-03-20",
+      11310.09
+     ],
+     [
+      "2025-03-25",
+      11309.43
+     ],
+     [
+      "2025-03-26",
+      11310.21
+     ],
+     [
+      "2025-03-27",
+      11295.21
+     ],
+     [
+      "2025-03-28",
+      21771.75
+     ]
+    ],
+    "by_year": {
+     "2025": 11771.75
+    },
+    "by_month": {
+     "2025-03": 11771.75
+    },
+    "by_symbol": {
+     "AUDCAD": 1662.48,
+     "XAUUSD": 10549.67,
+     "EURUSD": -332.63,
+     "USDJPY": -25.17,
+     "GBPUSD": -30.96,
+     "AUDUSD": -29.32,
+     "USDCAD": -16.52,
+     "EURJPY": -2.02,
+     "GBPJPY": -3.81,
+     "CADJPY": -2.14,
+     "USDCHF": 2.17
+    },
+    "worst_day": {
+     "day": "2025-03-11",
+     "pct": -0.89
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 117.72
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1629_AurumHydra_5xA_202501_202502",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.02.01",
+    "To": "2025.02.28",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:29:09.9171588+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.02.01 - 2025.02.28)",
+    "deposit": 10000.0,
+    "net": 2416.84,
+    "gross_profit": 2797.71,
+    "gross_loss": -380.87,
+    "profit_factor": 7.35,
+    "recovery": 0.46,
+    "sharpe": 1.87,
+    "trades": 41.0,
+    "won": "28 (68.29%)",
+    "eq_dd_max": "5 237.86 (30.56%)",
+    "eq_dd_rel": "30.56% (5 237.86)",
+    "bal_dd_max": "248.31 (2.48%)",
+    "ticks": 2488070.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 68.29,
+    "eq_dd_max_pct": 30.56,
+    "bal_dd_max_pct": 2.48,
+    "deals": 83,
+    "curve": [
+     [
+      "2025-02-03",
+      9756.42
+     ],
+     [
+      "2025-02-04",
+      9752.03
+     ],
+     [
+      "2025-02-05",
+      9967.22
+     ],
+     [
+      "2025-02-06",
+      9975.08
+     ],
+     [
+      "2025-02-07",
+      9979.87
+     ],
+     [
+      "2025-02-10",
+      9986.53
+     ],
+     [
+      "2025-02-11",
+      9984.15
+     ],
+     [
+      "2025-02-12",
+      9987.92
+     ],
+     [
+      "2025-02-13",
+      9993.86
+     ],
+     [
+      "2025-02-14",
+      10007.52
+     ],
+     [
+      "2025-02-17",
+      10009.32
+     ],
+     [
+      "2025-02-18",
+      10014.73
+     ],
+     [
+      "2025-02-19",
+      10014.27
+     ],
+     [
+      "2025-02-20",
+      10020.53
+     ],
+     [
+      "2025-02-21",
+      10021.87
+     ],
+     [
+      "2025-02-24",
+      10032.11
+     ],
+     [
+      "2025-02-25",
+      10013.82
+     ],
+     [
+      "2025-02-26",
+      10020.66
+     ],
+     [
+      "2025-02-27",
+      12416.84
+     ]
+    ],
+    "by_year": {
+     "2025": 2416.84
+    },
+    "by_month": {
+     "2025-02": 2416.84
+    },
+    "by_symbol": {
+     "XAUUSD": 2401.4,
+     "EURUSD": -213.88,
+     "AUDCAD": 159.68,
+     "USDJPY": 55.55,
+     "GBPUSD": 2.47,
+     "AUDUSD": 1.32,
+     "EURJPY": 7.58,
+     "GBPJPY": 2.25,
+     "CADJPY": 0.47
+    },
+    "worst_day": {
+     "day": "2025-02-03",
+     "pct": -2.44
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 24.17
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1625_AurumHydra_5xA_months",
+   "job": {},
+   "summary": "# j8a: AurumHydra 5x month series, part 1 of 3 (2025.01 to 2025.07)\n\nPreset AurumHydra_5x_month_FTMO.set, XAUUSD M15, a fresh 10,000 deposit each month, 1:500, real ticks.\nCollected by hand on 2026-10-17 at 21:45, because the tester agent had hit its daily run cap.\n\n| Month | Multiple | Trades | Equity DD % |\n|---|---|---|---|\n| 2025.01 | 1.67x | 60 | 18.9 |\n| 2025.02 | 1.24x | 41 | 30.6 |\n| 2025.03 | 2.18x | 79 | 18.2 |\n| 2025.04 | 0.40x | 28 | 68.2 |\n| 2025.05 | 0.47x | 31 | 71.4 |\n| 2025.06 | 0.59x | 49 | 63.3 |\n| 2025.07 | 0.75x | 55 | 48.4 |\n\n- 5x reached in 0 of 7 months; median multiple 0.75x; 2 of 7 months below 0.5x; months with margin refusals 0.\n- Against `expect` (about 9/21 at 5x over the three parts): part 1 gives 0/7, well behind that pace. The final\n  call waits for j8b and j8c.\n- Check from `expect`: 2025.01 tester.ini has InpGold=XAUUSD, Deposit=10000, Leverage=500; its report shows a\n  10,000 deposit and 100% real ticks.\n",
+   "state": "done"
+  },
+  {
+   "name": "2026-10-17_1625_AurumHydra_5xA_202501",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.01.01",
+    "To": "2025.01.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T16:25:27.1519734+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.01.01 - 2025.01.31)",
+    "deposit": 10000.0,
+    "net": 6700.93,
+    "gross_profit": 8839.09,
+    "gross_loss": -2138.16,
+    "profit_factor": 4.13,
+    "recovery": 2.37,
+    "sharpe": 4.91,
+    "trades": 60.0,
+    "won": "48 (80.00%)",
+    "eq_dd_max": "2 827.75 (18.93%)",
+    "eq_dd_rel": "18.93% (2 827.75)",
+    "bal_dd_max": "1 799.07 (13.13%)",
+    "ticks": 2864637.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 80.0,
+    "eq_dd_max_pct": 18.93,
+    "bal_dd_max_pct": 13.13,
+    "deals": 121,
+    "curve": [
+     [
+      "2025-01-01",
+      9993.35
+     ],
+     [
+      "2025-01-02",
+      11711.01
+     ],
+     [
+      "2025-01-03",
+      11605.49
+     ],
+     [
+      "2025-01-06",
+      12078.02
+     ],
+     [
+      "2025-01-07",
+      12310.38
+     ],
+     [
+      "2025-01-08",
+      12384.49
+     ],
+     [
+      "2025-01-09",
+      12379.74
+     ],
+     [
+      "2025-01-10",
+      12371.07
+     ],
+     [
+      "2025-01-13",
+      12365.95
+     ],
+     [
+      "2025-01-14",
+      12954.2
+     ],
+     [
+      "2025-01-15",
+      13145.73
+     ],
+     [
+      "2025-01-16",
+      13627.81
+     ],
+     [
+      "2025-01-17",
+      13665.72
+     ],
+     [
+      "2025-01-20",
+      13668.81
+     ],
+     [
+      "2025-01-21",
+      13692.64
+     ],
+     [
+      "2025-01-22",
+      13696.09
+     ],
+     [
+      "2025-01-23",
+      13697.69
+     ],
+     [
+      "2025-01-24",
+      13700.41
+     ],
+     [
+      "2025-01-27",
+      13698.73
+     ],
+     [
+      "2025-01-28",
+      11938.44
+     ],
+     [
+      "2025-01-29",
+      11939.98
+     ],
+     [
+      "2025-01-30",
+      16700.93
+     ]
+    ],
+    "by_year": {
+     "2025": 6700.93
+    },
+    "by_month": {
+     "2025-01": 6700.93
+    },
+    "by_symbol": {
+     "AUDCAD": -133.48,
+     "EURUSD": 978.47,
+     "GBPUSD": 353.18,
+     "AUDUSD": 6.5,
+     "USDCAD": 28.03,
+     "USDCHF": 19.99,
+     "USDJPY": -6.63,
+     "XAUUSD": 5049.51,
+     "EURJPY": 222.65,
+     "GBPJPY": 123.12,
+     "CADJPY": 59.59
+    },
+    "worst_day": {
+     "day": "2025-01-28",
+     "pct": -12.85
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 67.01
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1559_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603_202604_202605_202606_202607_202608_202609",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1559_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603_202604_202605_202606_202607_202608",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1559_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603_202604_202605_202606_202607",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1558_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603_202604_202605_202606",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1558_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603_202604_202605",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1558_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603_202604",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1558_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602_202603",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1557_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601_202602",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1557_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512_202601",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1557_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511_202512",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1556_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510_202511",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.11.01",
+    "To": "2025.11.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:56:23.4078906+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.11.01 - 2025.11.30)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1555_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509_202510",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.10.01",
+    "To": "2025.10.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:55:42.5048940+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.10.01 - 2025.10.31)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1554_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508_202509",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.09.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:54:57.1263886+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.09.01 - 2025.09.30)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1554_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507_202508",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.08.01",
+    "To": "2025.08.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:54:21.9011617+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.08.01 - 2025.08.31)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1553_AurumHydra_5x_202501_202502_202503_202504_202505_202506_202507",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.07.01",
+    "To": "2025.07.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:53:50.4294726+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.07.01 - 2025.07.31)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1553_AurumHydra_5x_202501_202502_202503_202504_202505_202506",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.06.01",
+    "To": "2025.06.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:53:17.8036120+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.06.01 - 2025.06.30)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1552_AurumHydra_5x_202501_202502_202503_202504_202505",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.05.01",
+    "To": "2025.05.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:52:41.3830586+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.05.01 - 2025.05.31)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1552_AurumHydra_5x_202501_202502_202503_202504",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.04.01",
+    "To": "2025.04.30",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:52:09.3663396+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.04.01 - 2025.04.30)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1551_AurumHydra_5x_202501_202502_202503",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.03.01",
+    "To": "2025.03.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:51:37.4013479+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.03.01 - 2025.03.31)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1551_AurumHydra_5x_202501_202502",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.02.01",
+    "To": "2025.02.28",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:51:04.8832557+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.02.01 - 2025.02.28)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1550_AurumHydra_5x_months",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-17_1550_AurumHydra_5x_202501",
+   "job": {
+    "Expert": "AurumHydra",
+    "Symbol": "XAUUSD",
+    "From": "2025.01.01",
+    "To": "2025.01.31",
+    "Deposit": 10000,
+    "Leverage": 500,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-17T15:50:29.7055643+02:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumHydra",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.01.01 - 2025.01.31)",
+    "deposit": 0.0,
+    "net": 0.0,
+    "gross_profit": 0.0,
+    "gross_loss": 0.0,
+    "profit_factor": 0.0,
+    "recovery": 0.0,
+    "sharpe": 0.0,
+    "trades": 0.0,
+    "won": "0 (0.00%)",
+    "eq_dd_max": "0.00 (0.00%)",
+    "eq_dd_rel": "0.00% (0.00)",
+    "bal_dd_max": "0.00 (0.00%)",
+    "ticks": 0.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 0.0,
+    "eq_dd_max_pct": 0.0,
+    "bal_dd_max_pct": 0.0,
+    "deals": 0,
+    "curve": [],
+    "by_year": {},
+    "by_month": {},
+    "by_symbol": {},
+    "worst_day": null,
+    "months_positive": 0,
+    "months": 0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-17_1545_AurumHydra_5x_months",
+   "state": "no report (run killed or still going)"
+  },
   {
    "name": "2026-10-17_1116_AurumHydra_size1b_on",
    "job": {
@@ -24209,6 +28596,13 @@ window.AURUM = {
    "description": "The main Claude Code session: picks ideas, hands each step to a role agent, reads the gates' verdicts and keeps the ledger. Asks the owner before anything live."
   },
   {
+   "name": "fidelity",
+   "model": "sonnet",
+   "tools": "Read, Grep, Glob, Bash, Write, Edit",
+   "description": "Measures model vs reality: pairs the FTMO demo's fills with a Strategy Tester run over the same days (tools/fill_check.py) and the tester with the Python model (research/tester_fidelity.py). Pipeline steps 16-17. Runs on Sonnet: parsing and comparing, no research judgement.",
+   "steps": "16-17"
+  },
+  {
    "name": "monitor",
    "model": "haiku",
    "tools": "Read, Grep, Glob, Bash, PowerShell, Write",
@@ -24225,7 +28619,7 @@ window.AURUM = {
   {
    "name": "researcher",
    "model": "haiku",
-   "tools": "Read, Grep, Glob, Bash, WebSearch, WebFetch",
+   "tools": "Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, Edit",
    "description": "Finds candidate edges (papers, market structure) and fetches market data. Pipeline steps 2 and 4. Use when the orchestrator needs a list of new ideas checked against the rejected list, or a data set downloaded.",
    "steps": "2 and 4"
   },
@@ -24237,8 +28631,15 @@ window.AURUM = {
    "steps": ""
   },
   {
+   "name": "scanner",
+   "model": "haiku",
+   "tools": "Read, Grep, Glob, Bash, Write",
+   "description": "Runs the brute-force edge scan (tools/edge_scan.py) on a new rule family or new data and gates the survivors (tools/gates.py). Pipeline step 3. Mechanical work, so it runs on Haiku; judging a survivor is the orchestrator's.",
+   "steps": "3"
+  },
+  {
    "name": "tester-operator",
-   "model": "sonnet",
+   "model": "haiku",
    "tools": "Read, Grep, Glob, Bash, PowerShell, Write",
    "description": "Runs MT5 Strategy Tester jobs on Terminal 16 (FTMO demo) and parses the reports. Pipeline steps 15 and 16. Use to launch one tester run, collect its report, and compare it with the expected figures.",
    "steps": "15 and 16"
@@ -24257,37 +28658,38 @@ window.AURUM = {
   ],
   "weights": {
    "breakout": 1.0,
-   "noise": 0.6088017801888469
+   "noise": 0.6088017801888469,
+   "scan_slot_EURUSD_s25_L4_short": 1.0294392575797875,
+   "scan_slot_EURUSD_s21_L8_short": 1.0339760072551898,
+   "scan_cal_wed_EURUSD_s25_L2_short": 11.546111768491794
   },
   "since": "2018-01-01",
   "sharpe": {
    "Hydra book": 3.371,
    "+ breakout": 3.428,
    "+ noise": 3.558,
-   "+ breakout + noise": 3.614
+   "+ scan_slot_EURUSD_s25_L4_short": 3.356,
+   "+ scan_slot_EURUSD_s21_L8_short": 3.364,
+   "+ scan_cal_wed_EURUSD_s25_L2_short": 3.331,
+   "+ breakout + noise + scan_slot_EURUSD_s25_L4_short + scan_slot_EURUSD_s21_L8_short + scan_cal_wed_EURUSD_s25_L2_short": 3.508
   }
  },
  "demo": {
   "today": {
-   "day": "2026-10-17",
+   "day": "2026-10-18",
    "alert": false,
-   "experts_lines": 1,
+   "experts_lines": 0,
    "orders_by_leg": {},
    "journal_trade_lines": 0,
    "day_stop": [],
    "final_stop": [],
    "failed": [],
-   "phase": [
-    "AurumFunded: phase 1 started, initial balance 10000.00, target 11000.00, day stop 300.00, final stop at 9150.00"
-   ],
+   "phase": [],
    "skipped": [],
    "clock": [],
-   "last_lines": [
-    "AurumFunded: phase 1 started, initial balance 10000.00, target 11000.00, day stop 300.00, final stop at 9150.00"
-   ],
+   "last_lines": [],
    "logs_found": [
-    "20261017.log",
-    "20261017.log"
+    "20261018.log"
    ]
   },
   "log": "# Demo log\n\n## 2026-10-17 (Saturday)\n\n- Trades per leg: not logged (0 EA lines, 0 orders, 0 journal trade lines).\n- P/L of the day: not logged.\n- Slippage on fills: not logged (no fills).\n- Day stop / final stop / margin error / trades without broker stop: none in the log.\n- Odd: no trades logged; EA not attached? Saturday, so the forex market is closed and zero activity is expected; the log file 20261017.log exists. Tester window open until 2026-10-18 18:00, Terminal 16 reported running.\n\n\n"

@@ -200,11 +200,14 @@ Rules of the work:
   paper) or new data, and the scanner agent only runs on a family or data not scanned yet.
 - **Ideas:** the researcher's first batch is `docs/ideas/2026-10-17.md` (4 ideas, abstracts only). Next runs lead
   with non-paper sources (open code, write-ups, market structure). Idea 2, Osler's round-number stop cascades (NY
-  Fed SR125 / SR150), was read in full on 2026-10-18 and is in `docs/candidates.json` as `osler_round` (step 3,
-  testing), with the paper's numbers and a step 5-7 test spec. Prior: low. The papers' gross edge is 0.3-2.4 bp
-  after a cross defined ex post (1996-98 data), against our ~1.2 bp cost. Next: quant-coder builds
-  `research/osler_round.py` to that spec (real-time cross k pips past 00/50, 15-120 min hold, arbitrary-level null,
-  breakout-leg correlation). If round levels do no better than arbitrary ones, reject it as a channel breakout.
+  Fed SR125 / SR150), was read in full and tested on 2026-10-18 (`research/osler_round.py`, USDJPY + EURUSD M1
+  2009-26, 512 variants against 300 arbitrary-level grids): **rejected at steps 5-7**. No variant reaches net Sharpe 0.5
+  in both halves. The median gross per trade is negative, and round levels do no better than arbitrary ones
+  (median -0.14 / -0.09 bp). Touch reversals are 1-3 pp lower at round levels, the opposite of the paper. The new
+  rejected family is "Round-number levels". Ideas 1, 3 and 4 in that file are still abstract-only (Krohn-Vala auctions,
+  S&P expiry pinning, expiry-week drift). The next idea needs a full read or a new researcher batch before any code.
+  Process note: the quant-coder subagent has no Bash in the relay ("don't ask" mode), so it writes the script unrun and
+  the orchestrator runs it with `python research/<name>.py`.
 - **Agents (relay roles and models):** orchestrator (Opus, judges and plans), reviewer (Opus, on request), researcher
   (Haiku, daily), scanner (Haiku, on hand-over), fidelity (Sonnet, weekly or on hand-over), tester operator (Sonnet,
   weekend window), monitor (Haiku, daily demo check). Opus stays on judgement only.
