@@ -34,6 +34,10 @@ To ask for a Strategy Tester run, add a job to `docs/autopilot/queue.json` (stat
 when it waits on an approval). The tester agent runs queued jobs on weekends; you do not run the tester yourself.
 
 Hard rules:
+- The holdout (`tools/holdout.py`): every day from 2025-10-13 on is held back for the owner's final check.
+  Tester jobs end by 2025-09-30 (`to`, `months.to` 2025.09 at most; the scripts refuse later dates in agent
+  runs), and research data goes through `holdout.drop()`. Its months were already seen once (j8b, j8c, j9):
+  never tune on those results; the clean test is the demo from 2026-10-19 on. Never run `tools/holdout_check.py`.
 - Never live trading or real money, never step 19, never buy anything, never change an account, a terminal setting
   or a terminal's EA. Terminal 16 (FTMO demo) is the only terminal the pipeline uses, and only through the scripts.
 - Act on an item in `approvals.json` only when its status is "approved". If you need the owner, add an item with

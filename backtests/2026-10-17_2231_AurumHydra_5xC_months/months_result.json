@@ -6,6 +6,10 @@
  "share_goal_reached": 0.0,
  "median_multiple": 0.913,
  "share_below_half": 0.0,
+ "p_3x": 0.0,
+ "p_4x": 0.0,
+ "p_5x": 0.0,
+ "p_ruin": 0.0,
  "months_with_margin_refusals": 0,
  "months": [
   {

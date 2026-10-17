@@ -53,6 +53,12 @@ button:hover{border-color:var(--acc)}
 .kv{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--dim)}.kv b{color:var(--tx);font-weight:500}
 .job{font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line)}.job span{float:right}
 .st-done{color:var(--ok)}.st-running{color:var(--warn)}.st-failed{color:var(--bad)}.st-queued{color:var(--acc)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.ctl select,.qf input,.qf select{background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:4px 7px;min-width:0}
+.qf{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:12px;margin-top:6px}
+.qf label{display:flex;flex-direction:column;gap:2px;color:var(--dim)}.qf .w{grid-column:1/-1}
+#msg{font-size:12px;color:var(--dim);min-height:1.2em;white-space:pre-wrap}#msg.bad{color:var(--bad)}#msg.ok{color:var(--ok)}
+details summary{cursor:pointer;color:var(--dim);font-size:12.5px}
 @media (max-width:900px){main{grid-template-columns:1fr}aside{display:none}}
 </style>
 </head>
@@ -84,6 +90,34 @@ button:hover{border-color:var(--acc)}
     <div id="feed"></div>
   </section>
   <aside class="r">
+    <h2>Controls</h2>
+    <div class="ctl">
+      <button id="bpause">pause agents</button>
+      <button id="brelease">release T16 hold</button>
+    </div>
+    <div class="ctl">
+      <select id="role"><option>orchestrator</option><option>tester</option><option>researcher</option><option>monitor</option><option>scanner</option><option>fidelity</option></select>
+      <button id="bagent">start now</button>
+    </div>
+    <details><summary>queue a tester job</summary>
+      <form id="qf" class="qf">
+        <label>EA<select name="expert"><option>AurumHydra</option><option>AurumFunded</option></select></label>
+        <label>symbol<input name="symbol" value="XAUUSD"></label>
+        <label class="w">preset<input name="preset" value="mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set"></label>
+        <label>period<select name="period"><option>M15</option><option>M1</option><option>M5</option><option>M30</option><option>H1</option></select></label>
+        <label>tag<input name="tag" value="own1"></label>
+        <label>deposit<input name="deposit" value="10000"></label>
+        <label>leverage<input name="leverage" value="500"></label>
+        <label>months from<input name="months_from" placeholder="2025.01"></label>
+        <label>months to<input name="months_to" placeholder="2025.09"></label>
+        <label>or from<input name="from" placeholder="2024.01.01"></label>
+        <label>to<input name="to" placeholder="2025.09.30"></label>
+        <label class="w">set (Name=value,...)<input name="set" placeholder="InpBreakRiskPct=0"></label>
+        <label class="w">what to expect<input name="expect"></label>
+        <button class="w" type="submit">queue</button>
+      </form>
+    </details>
+    <div id="msg"></div>
     <h2>Relay</h2><div id="relay"></div>
     <h2>Last run per agent</h2><div id="lastruns"></div>
     <h2>Queue (last 12)</h2><div id="jobs"></div>
@@ -186,7 +220,22 @@ setInterval(()=>{
   $("#age").textContent=lastEv?fmtAge(now-lastEv)+" ago":"-";
 },100);
 
+let paused=false;
+async function post(path,body){
+  const m=$("#msg");m.className="";m.textContent="…";
+  try{
+    const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-Aurum":"1"},body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>({ok:false,msg:"HTTP "+r.status}));
+    m.className=j.ok?"ok":"bad";m.textContent=j.msg;
+  }catch(e){m.className="bad";m.textContent=String(e)}
+  poll();
+}
+$("#bpause").onclick=()=>post(paused?"/api/resume":"/api/pause");
+$("#brelease").onclick=()=>post("/api/release");
+$("#bagent").onclick=()=>post("/api/agent",{role:$("#role").value});
+$("#qf").onsubmit=e=>{e.preventDefault();post("/api/queue",Object.fromEntries(new FormData(e.target)))};
 function renderState(s){
+  paused=s.paused;$("#bpause").textContent=paused?"resume agents":"pause agents";
   $("#pause").classList.toggle("hide",!s.paused);
   const h=$("#hold");h.classList.toggle("hide",!s.hold);if(s.hold)h.textContent="Terminal 16 held until "+(s.hold.until||"?").replace("T"," ").slice(0,16);
   const al=$("#alist");al.replaceChildren();

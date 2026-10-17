@@ -19,14 +19,16 @@ $log = "agent-$Role"
 
 if (Test-Path $Pause) { Write-Log $log "skipped: paused (logs\autopilot\PAUSE exists)"; exit 0 }
 
-# Model per role: the agent roles carry their model in .claude/agents/*.md (monitor, researcher, scanner: haiku;
-# fidelity: sonnet); the tester runs on sonnet, the orchestrator on opus.
+# Model router, by the kind of work: routine on haiku (monitor, researcher, scanner, tester: run scripts, read,
+# summarise), code on sonnet (fidelity; the orchestrator's quant-coder subagent), judgment on opus (the orchestrator
+# and its reviewer subagent). Agent roles carry their model in .claude/agents/*.md. All runs use the same Claude Code
+# login (no API key, no switch of auth); a run that hits a usage limit backs the relay off (below).
 $cfg = @{
     monitor      = @{ Args = @("--agent", "monitor");    Turns = 25; Minutes = 20 }
     researcher   = @{ Args = @("--agent", "researcher"); Turns = 40; Minutes = 60 }
     scanner      = @{ Args = @("--agent", "scanner");    Turns = 25; Minutes = 30 }
     fidelity     = @{ Args = @("--agent", "fidelity");   Turns = 30; Minutes = 40 }
-    tester       = @{ Args = @("--model", "sonnet");     Turns = 40; Minutes = 45 }
+    tester       = @{ Args = @("--model", "haiku");      Turns = 40; Minutes = 45 }
     orchestrator = @{ Args = @("--model", "opus");       Turns = 80; Minutes = 120 }
 }[$Role]
 
@@ -62,6 +64,8 @@ $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
     $psi.RedirectStandardError = $true
     $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
     $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    # Marks the run as an agent's: tools\run-tester.ps1 and tools\run-months.ps1 then refuse the holdout (tools/holdout.py).
+    $psi.EnvironmentVariables["AURUM_AGENT"] = "1"
 
     $started = Get-Date
     Write-Log $log "start: $($cfg.Args -join ' '), at most $($cfg.Turns) turns / $($cfg.Minutes) min"

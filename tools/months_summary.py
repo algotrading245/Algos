@@ -1,5 +1,6 @@
 """Summary of a month-by-month tester series (tools/run-months.ps1): each month's end multiple of its fresh deposit,
-the share of months that reached the goal, the median, and the share that lost more than half.  Writes
+the share of months that reached the goal, the median, the share that lost more than half, and P(3x), P(4x), P(5x)
+and P(ruin) (a month ending at or below 0.2x) - the odds tools/target_odds.py estimates.  Writes
 months_result.json next to months.json.
 
     python tools/months_summary.py backtests/<date>_AurumHydra_5x_months
@@ -20,6 +21,7 @@ ROUND = re.compile(r"goal round of \S+ ended, equity [\d.]+ from [\d.]+ \(([\d.]
 # Orders the broker's own margin or volume limits refused. On Terminal 16 the symbols carry FTMO's margins, not a
 # 1:500 broker's, so a month with refusals is a month where the 5x sizes did not fit; with none, the account's
 # 1:500 tester leverage was the only margin in play and the month stands for a 1:500 broker too.
+RUIN = 0.2  # a month ending at or below this multiple counts as ruin (as in tools/target_odds.py)
 MARGIN = re.compile(r"no money|not enough money|invalid volume|volume limit", re.I)
 
 
@@ -49,6 +51,8 @@ def main(folder):
            "share_goal_reached": float((best >= goal).mean()) if len(x) else None,
            "median_multiple": float(np.median(x)) if len(x) else None,
            "share_below_half": float((x < 0.5).mean()) if len(x) else None,
+           **{f"p_{k}x": float((best >= k).mean()) if len(x) else None for k in (3, 4, 5)},
+           "p_ruin": float((x <= RUIN).mean()) if len(x) else None,
            "months_with_margin_refusals": sum(1 for r in rows if r.get("margin_refusals")), "months": rows}
     (d / "months_result.json").write_text(json.dumps(out, indent=1) + "\n")
     for r in rows:
@@ -59,6 +63,7 @@ def main(folder):
               f"(held to month end {out['share_goal_at_month_end']:.0%}), median {out['median_multiple']:.2f}x, "
               f"below 0.5x {out['share_below_half']:.0%}; months with margin refusals "
               f"{out['months_with_margin_refusals']}")
+        print("P(3x) {p_3x:.0%}  P(4x) {p_4x:.0%}  P(5x) {p_5x:.0%}  P(ruin) {p_ruin:.0%}".format(**out))
     print(f"wrote {d / 'months_result.json'}")
 
 

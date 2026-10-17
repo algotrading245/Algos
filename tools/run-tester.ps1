@@ -63,6 +63,11 @@ if ($Collect) {
     exit 0
 }
 if (-not $Expert -or -not $Symbol) { throw "pass -Expert and -Symbol (or -Collect <folder>)" }
+# The holdout (tools/holdout.py): an agent run (AURUM_AGENT=1, set by tools\autopilot\run-agent.ps1) never tests on it.
+$holdStart = [regex]::Match((Get-Content (Join-Path $PSScriptRoot "holdout.py") -Raw), 'START = pd.Timestamp\("([0-9-]+)"\)').Groups[1].Value
+if ($env:AURUM_AGENT -eq "1" -and $To.Replace(".", "-") -ge $holdStart) {
+    throw "refused: -To $To reaches the holdout (from $holdStart, tools/holdout.py); agent runs end before it"
+}
 $exe = Join-Path $Terminal "terminal64.exe"
 if (-not (Test-Path $exe)) { throw "$exe not found; pass -Terminal <install folder>" }
 
@@ -95,11 +100,20 @@ Write-Host "compiled $Expert"
 # Every input's default from the EA source, then the preset lines, then the overrides, in the tester's form:
 # name=value||start||step||stop||N (numbers), name=value. Without the defaults, an input missing from the preset kept
 # whatever value the terminal last used for it, so two runs of the same job could differ.
+# The inputs of the shared legs sit in mql5\Include\Aurum\*.mqh (#include <Aurum\...>), with defaults that are macros
+# the wrapper may #define first (#ifndef in the include), so the source is read with its Aurum includes in place and
+# the first #define of a name wins.
 $values = [ordered]@{}
 $skipped = @()
-Get-Content (Join-Path $repo "mql5\Experts\$Expert\$Expert.mq5") | ForEach-Object {
+$macros = @{}
+$lines = foreach ($l in Get-Content (Join-Path $repo "mql5\Experts\$Expert\$Expert.mq5")) {
+    if ($l -match '^\s*#include\s+<(Aurum\\[^>]+)>') { Get-Content (Join-Path $repo "mql5\Include\$($Matches[1])") } else { $l }
+}
+$lines | ForEach-Object {
+    if ($_ -match '^\s*#define\s+(\w+)\s+(.+?)\s*$' -and -not $macros.ContainsKey($Matches[1])) { $macros[$Matches[1]] = $Matches[2] }
     if ($_ -match '^\s*s?input\s+(?:const\s+)?\w+\s+(Inp\w+)\s*=\s*([^;]+);') {
         $name = $Matches[1]; $value = $Matches[2].Trim()
+        if ($macros.ContainsKey($value)) { $value = $macros[$value] }
         if ($value -match '^"(.*)"$') { $values[$name] = $Matches[1] }
         elseif ($value -match '^(-?\d+(\.\d+)?|true|false)$') { $values[$name] = $value }
         else { $skipped += $name }    # enum names, D'...' dates, expressions: left to the preset or the terminal

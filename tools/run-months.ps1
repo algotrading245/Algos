@@ -51,6 +51,9 @@ $m = [datetime]::ParseExact($FromMonth, "yyyy.MM", $null)
 $last = [datetime]::ParseExact($ToMonth, "yyyy.MM", $null)
 while ($m -le $last) { $months += $m.ToString("yyyy.MM"); $m = $m.AddMonths(1) }
 if (-not $months) { throw "no month between $FromMonth and $ToMonth" }
+# The holdout (tools/holdout.py): an agent run (AURUM_AGENT=1, set by tools\autopilot\run-agent.ps1) never tests on it.
+$endMonth = [regex]::Match((Get-Content (Join-Path $PSScriptRoot "holdout.py") -Raw), 'END_MONTH = "([0-9.]+)"').Groups[1].Value
+if ($env:AURUM_AGENT -eq "1" -and $ToMonth -gt $endMonth) { throw "refused: -ToMonth $ToMonth reaches the holdout (after $endMonth, tools/holdout.py); agent runs end before it" }
 
 $dir = if ($Out) { Full $Out } else { Join-Path $repo ("backtests\{0}_{1}_{2}_months" -f (Get-Date -Format "yyyy-MM-dd_HHmm"), $Expert, $Tag) }
 New-Item -ItemType Directory -Force -Path $dir | Out-Null

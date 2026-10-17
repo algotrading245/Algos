@@ -16,8 +16,9 @@ B. Start the next "queued" job, in file order:
    1. `powershell -ExecutionPolicy Bypass -File tools/autopilot/terminal.ps1 -Hold` closes Terminal 16 and keeps it
       closed until the window ends. Exit code 2 or 3, or "refused"/"did not close": stop, note it in `runs.md`.
    2. `powershell -ExecutionPolicy Bypass -File tools/run-tester.ps1 -Expert <expert> -Symbol <symbol> -Preset <preset> -Period <period> -Deposit <deposit> -Leverage <leverage> -Tag <tag> -From <from> -To <to> -Set <a=1,b=2> -Detach`
-      Leave out `-Set` when the job has none; pass the `set` list joined with commas, no spaces. Leave out `-To`
-      only when the job has no `to` (the run then ends today, so say so in `summary.md`: it cannot be repeated exactly).
+      Leave out `-Set` when the job has none; pass the `set` list joined with commas, no spaces. Always pass `-To`.
+      The holdout (`tools/holdout.py`): a `to` on or after 2025-10-13, or `months.to` after 2025.09, is refused by
+      the script; set such a job to "failed" with note "reaches the holdout" and go on to the next one.
       Every input not in the preset or `set` is now taken from the EA source's default, never from the terminal.
       For a job with `compare_set` (leg on vs off), run the base first with tag `<tag>_off`; when it is done, run it
       again as a second run with `-Set` = set plus compare_set and tag `<tag>_on`, and put both folders in the job.

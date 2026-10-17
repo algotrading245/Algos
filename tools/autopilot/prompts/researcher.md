@@ -26,6 +26,7 @@ answer questions in this run: decide, do the work, and stop.
    If the push fails, leave the commit local and say so. Use plain `git ...` from the repo folder, never `git -C`, and
    one command per Bash call (no `&&`, `;` or pipes): other forms are refused.
 
-Do not build or test anything; the orchestrator picks ideas up. Finish with one line listing the idea titles,
+Do not build or test anything; the orchestrator picks ideas up. Never look at our own results after 2025-10-12:
+those days are the owner's holdout (`tools/holdout.py`). Finish with one line listing the idea titles,
 then the hand-over as the very last line: `HANDOFF: orchestrator <n> new ideas` (or `HANDOFF: none no new ideas`
 when you found nothing new).

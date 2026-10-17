@@ -28,6 +28,30 @@ Rules of the work:
 - Commit and push to the session's working branch after each finished piece of work (earlier sessions:
   `claude/exciting-hopper-r6sdmc`; the cloud session of 2026-10-14: `claude/intelligent-turing-j0nrmf`).
 
+## Restructure of 2026-10-18 (owner's six steps)
+
+1. **One leg library.** The legs, sizing and handlers of both EAs are in `mql5/Include/Aurum/` (`Inputs.mqh`,
+   `Legs.mqh`). `AurumHydra.mq5` and `AurumFunded.mq5` are thin wrappers that `#define AURUM_*` defaults before the
+   include (the include's `#ifndef` gives the rest). Breakout and noise legs are on by default: Hydra 0.125 / 0.275,
+   Funded half that (0.0625 / 0.1375). All other EAs moved to `mql5/Experts/_archive/` (see its README).
+   `tools/run-tester.ps1` reads the wrapper with its Aurum includes inlined and resolves the macros, so the source
+   defaults it writes into tester.ini are the ones the EA compiles with.
+2. **InpTarget** (3, 4 or 5) in AurumHydra: aim at that multiple with the goal scale that gave it the best odds
+   (`tools/target_odds.py`: P(3x/4x/5x) and P(ruin) per scale; 2.5 is within a point of the best for all three).
+   Presets `AurumHydra_target3x/4x/5x_FTMO.set`. `tools/months_summary.py` reports the share of months at 3x/4x/5x.
+3. **Holdout.** `tools/holdout.py`: 2025-10-13 on (tester months after 2025.09) is the owner's. Agent runs
+   (`AURUM_AGENT=1`, set by `run-agent.ps1`) are refused by run-tester/run-months on those dates; `tools/holdout_check.py`
+   is the owner's one-time check and refuses agents. Honest note: j8b, j8c and j9 already ran 2025.10-2026.09 months
+   before the holdout existed, so the agents have seen it. The clean out-of-sample test is the demo from 2026-10-19 on.
+   **Model router** in `run-agent.ps1`: haiku for routine roles (monitor, researcher, scanner, tester), sonnet for code
+   (fidelity, quant-coder), opus for judgment (orchestrator, reviewer). Same Claude Code login for all.
+4. **Live page controls.** `python tools/live_server.py` (127.0.0.1:8765) now has buttons: pause/resume the relay
+   (`logs/autopilot/PAUSE`), release Terminal 16, start an agent role now, and a form that appends a job to
+   `queue.json` (holdout dates refused). POSTs need the local host, a local Origin and header `X-Aurum: 1`.
+   The claude.ai dashboard is a read-only cloud page (it cannot reach this PC).
+5. **Tester terminal** separate from the demo terminal: see "Terminals" below once installed.
+6. **Improvement loop** on both EAs through the relay, on months up to 2025.09.
+
 ## Demo and autopilot (2026-10-17)
 
 - **FTMO demo running:** AurumFunded 1.03 (repo version, candidate legs off) is attached in Terminal 16 to an XAUUSD
