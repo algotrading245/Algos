@@ -142,11 +142,11 @@
         "from": "2025.01",
         "to": "2026.09"
       },
-      "status": "running",
+      "status": "failed",
       "needs": null,
       "folder": "backtests\\2026-10-17_1550_AurumHydra_5x_months",
       "expect": "The 5x preset's question on Terminal 16: in how many of the 21 months 2025-01 to 2026-09 does one round from a fresh 10,000 at 1:500 reach 5x? The preset header gives 9 of 21 on the 1:500 broker it was built for (.pc symbols); the Python model about 47%. Months with margin refusals are months where FTMO's symbol margins, not 1:500, capped the sizes: read those apart. A result near 9/21 with no refusals means FTMO data stands in for a 1:500 broker for this EA.",
-      "note": "Queued 2026-10-17 by the interactive session: queue jobs now take to and months (gap 3). Deposit 10,000 because j4's 100 deposit hit the minimum lot; the multiple does not depend on the deposit above that. First start 2026-10-17 15:45 failed in every month before the tester ran: run-months.ps1 splatted an array into run-tester.ps1, which bound the arguments by position (\"-Leverage\" into Deposit). Fixed (hashtable), requeued; the failed folder backtests6-10-17_1545_AurumHydra_5x_months is left untracked."
+      "note": "Queued 2026-10-17 by the interactive session: queue jobs now take to and months (gap 3). Deposit 10,000 because j4's 100 deposit hit the minimum lot; the multiple does not depend on the deposit above that. First start 2026-10-17 15:45 failed in every month before the tester ran: run-months.ps1 splatted an array into run-tester.ps1, which bound the arguments by position (\"-Leverage\" into Deposit). Fixed (hashtable), requeued; the failed folder backtests6-10-17_1545_AurumHydra_5x_months is left untracked. Tester 2026-10-17 16:00: FAILED again, second script bug. In tools/run-months.ps1 line 88 `$tag = ... -f $Tag` overwrites $Tag (PowerShell variables are case-insensitive), so each month's tag extends the previous one (5x_202501_202502_...); from 2025.12 the file path is too long and every later month failed (Could not find a part of the path ...-holding.png). The series ended in about 9 minutes; months.json lists 2025.01-2025.11 as done, but months_summary.py crashes with ZeroDivisionError (deposit 0), so those runs have no usable report. Fix: rename the variable (e.g. $monthTag), make months_summary.py cope with empty results, delete the untracked chained folders, requeue."
     }
   ]
 }
