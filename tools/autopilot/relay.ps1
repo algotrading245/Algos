@@ -10,19 +10,13 @@
 #   3. A hand-over that is due: that agent.
 #   4. No agent for $IdleMinutes: the researcher if it has not run for a day, else the fidelity check if it has not
 #      run for a week, else the orchestrator.
-# Daily caps keep the subscription usage bounded; a role at its cap is skipped until tomorrow.
+# No daily caps: usage is bounded by one agent at a time, the hand-over gap and the usage/rate-limit back-off.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
 $IdleMinutes = 120
-$Caps = @{ orchestrator = 10; researcher = 3; tester = 24; scanner = 2; fidelity = 2 }
 
-function Start-Agent([string]$Role, [string]$Why, [switch]$Quiet) {
-    if ((Get-RunsToday $Role) -ge $Caps[$Role]) {
-        if ($DryRun) { Write-Output "$Role at its daily cap" }
-        elseif (-not $Quiet) { Write-Log "relay" "skipped $Role ($Why): daily cap of $($Caps[$Role]) runs reached" }
-        return
-    }
+function Start-Agent([string]$Role, [string]$Why) {
     if ($DryRun) { Write-Output "would start $Role ($Why)"; return }
     Write-Log "relay" "start $Role ($Why)"
     $a = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $PSScriptRoot "run-agent.ps1"), "-Role", $Role)
@@ -70,8 +64,8 @@ function Get-LastEnd([string]$Role) {
     if (Test-Path $f) { try { [datetime](Get-Content $f -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
 }
 $researched = Get-LastEnd "researcher"
-if (($now - $researched).TotalHours -ge 24 -and (Get-RunsToday "researcher") -lt $Caps.researcher) {
+if (($now - $researched).TotalHours -ge 24) {
     Start-Agent "researcher" "idle, no research for a day"
-} elseif (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7 -and (Get-RunsToday "fidelity") -lt $Caps.fidelity) {
+} elseif (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) {
     Start-Agent "fidelity" "idle, no fidelity check for a week"
-} else { Start-Agent "orchestrator" "idle for $IdleMinutes min" -Quiet }
+} else { Start-Agent "orchestrator" "idle for $IdleMinutes min" }

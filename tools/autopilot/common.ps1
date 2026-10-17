@@ -86,7 +86,7 @@ function Test-TesterWork {
     return (-not $busy)
 }
 
-# Agent runs of a role started today (from its log), for the relay's daily caps.
+# Agent runs of a role started today (from its log) (the relay no longer caps runs; kept for reports).
 function Get-RunsToday([string]$Role) {
     $f = Join-Path $LogDir "$(Get-Date -Format yyyy-MM-dd)_agent-$Role.log"
     if (-not (Test-Path $f)) { return 0 }
