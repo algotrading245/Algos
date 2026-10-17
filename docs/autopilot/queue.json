@@ -202,10 +202,10 @@
         "from": "2026.03",
         "to": "2026.09"
       },
-      "status": "running",
+      "status": "done",
       "needs": null,
       "expect": "Part 3 of 3 of the 5x month series; see j8a. After this part, judge all 21 months against 9/21.",
-      "note": "Queued by the orchestrator 2026-10-17 16:20 with j8a. Started by the tester 2026-10-17 22:31.",
+      "note": "Queued by the orchestrator 2026-10-17 16:20 with j8a. Started by the tester 2026-10-17 22:31. Collected 2026-10-17 23:05: 0/7 months at 5x, median 0.91x, 0 below 0.5x, 0 margin refusals. All three parts: 1 of 21 at 5x. See summary.md.",
       "folder": "backtests\\2026-10-17_2231_AurumHydra_5xC_months"
     }
   ]
