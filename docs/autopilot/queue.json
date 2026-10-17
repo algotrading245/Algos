@@ -1,5 +1,5 @@
 {
-  "about": "Strategy Tester jobs for the tester agent (tools/autopilot/prompts/tester.md). It runs queued jobs on Terminal 16 in the weekend window (Saturday 00:00 to Sunday 18:00 local), one at a time, in this order. status: queued | running | done | failed | hold (hold waits for the approval in needs).",
+  "about": "Strategy Tester jobs for the tester agent (tools/autopilot/prompts/tester.md). It runs queued jobs on Terminal 16 in the weekend window (Saturday 00:00 to Sunday 18:00 local), one at a time, in this order. status: queued | running | done | failed | hold (hold waits for the approval in needs). from/to (yyyy.MM.dd) bound a run; a job without to runs to the day it starts and cannot be repeated exactly. A job with months {from, to} (yyyy.MM) is a series of one fresh-deposit run per calendar month through tools/run-months.ps1 (the 5x EA's test); its folder is the _months folder.",
   "jobs": [
     {
       "id": "j1",
@@ -45,7 +45,10 @@
       "leverage": 33,
       "tag": "funded",
       "set": [],
-      "compare_set": ["InpBreakRiskPct=0.125", "InpNoiseMult=0.275"],
+      "compare_set": [
+        "InpBreakRiskPct=0.125",
+        "InpNoiseMult=0.275"
+      ],
       "from": "2024.01.01",
       "status": "done",
       "needs": null,
@@ -63,8 +66,16 @@
       "deposit": 100,
       "leverage": 500,
       "tag": "5x",
-      "set": ["InpGold=XAUUSD", "InpYen=USDJPY", "InpEuro=EURUSD", "InpGridSymbol=AUDCAD"],
-      "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
+      "set": [
+        "InpGold=XAUUSD",
+        "InpYen=USDJPY",
+        "InpEuro=EURUSD",
+        "InpGridSymbol=AUDCAD"
+      ],
+      "compare_set": [
+        "InpBreakRiskPct=0.5",
+        "InpNoiseMult=0.275"
+      ],
       "from": "2024.01.01",
       "status": "done",
       "needs": null,
@@ -83,7 +94,10 @@
       "leverage": 500,
       "tag": "size1",
       "set": [],
-      "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
+      "compare_set": [
+        "InpBreakRiskPct=0.5",
+        "InpNoiseMult=0.275"
+      ],
       "from": "2024.01.01",
       "status": "done",
       "needs": null,
@@ -102,7 +116,10 @@
       "leverage": 500,
       "tag": "size1b",
       "set": [],
-      "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
+      "compare_set": [
+        "InpBreakRiskPct=0.5",
+        "InpNoiseMult=0.275"
+      ],
       "from": "2024.01.01",
       "status": "done",
       "needs": null,
@@ -110,6 +127,26 @@
       "folder_on": "backtests\\2026-10-17_1116_AurumHydra_size1b_on",
       "expect": "Step 16 for AurumHydra, replacing j5. Same model as j5 (research/hydra_tester_expect.py): legs off +1184% / 10.7%, on +1574% / 11.5%, return per DD 110 -> 136; tester drawdown likely above the model's. j5 (legs on plus InpMonthEndBoost=2, no halt) gave +1460% / 13.11%, so the clean legs-on run should land near or a little under that; the legs-off run clearly lower. Before judging, check each report's input list: off run InpBreakRiskPct=0.0, InpNoiseMult=0.0, InpMonthEndBoost=1.0, InpMaxDrawdownPct=35.0; on run the same but 0.5 / 0.275. The off run should show no USDJPY breakout magics (+26/+27) and no noise magics (+28/+29). Step 16 test: return per unit of equity drawdown higher with the legs on.",
       "note": "Queued by the orchestrator 2026-10-17 10:05. The preset now writes the leg, boost, halt and goal inputs at the EA's defaults, because the tester keeps the previous run's value of any input a preset leaves out (j5). run-tester.ps1 lets -Set override preset lines, so the on run gets 0.5 / 0.275. Tester 2026-10-17 11:16: off run done, inputs verified (0 / 0 / 1.0 / 35): +725.13% / 12.48% eq DD / PF 1.70 / 2262 trades, return per DD 58.1, no US100/US500 trades; legs-on run started. Tester 2026-10-17 12:35: legs-on run done, inputs verified (0.5 / 0.275 / 1.0 / 35): +1076.18% / 15.54% eq DD / PF 1.49 / 4173 trades, return per DD 69.2 (off 58.1: higher with legs on); US100/US500 trade. See summary.md in the on folder. Judged by the orchestrator 2026-10-17 13:10: both legs pass step 16 in AurumHydra. Return per equity DD 58.1 -> 69.2 (+19%; model 110 -> 136, +24%). The tester kept more of the model's log growth than the j3 Funded runs (off 83%, on 87%, against 67-74%), so the return is above the 70% expectation (+725% vs about +500% off, +1076% vs about +620% on); the drawdown is above the model's as expected (12.48% vs 10.7%, 15.54% vs 11.5%). The deepest stretch moves: legs off it is 2024-07/08 (2024-07 off -6.0%, on +1.8%: USDJPY breakout +4.1, US100 +1.7, US500 +1.8 points), legs on it is 2026-01 (off -8.3%, on -13.0%: noise -3.9 points, breakout -1.0, next to AUDCAD -4.5 and EURUSD -2.2 in both runs). By symbol the breakout adds USDJPY 9,695 -> 25,860; noise US100.cash +4,181, US500.cash -1,092 (third negative S&P half on the same 2024-26 window, Python had it flat; not new evidence, weights not refitted). j5 against this on run is in effect a clean month-end-boost pair (the 35% halt never fired): boost 2.0 gave +1460% / 13.11%, return per DD 111 against 69, but the boost doubles the fix legs' whole size (they trade only on that day), so it is a re-weighting, a rejected family; kept in the 5x preset, not adopted for size 1. research/hydra_j6_compare.py. Next: step 17 (demo forward test) waits on the owner's a3."
+    },
+    {
+      "id": "j7",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_5x_month.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "5x",
+      "set": [],
+      "months": {
+        "from": "2025.01",
+        "to": "2026.09"
+      },
+      "status": "running",
+      "needs": null,
+      "folder": "backtests\\2026-10-17_1545_AurumHydra_5x_months",
+      "expect": "The 5x preset's question on Terminal 16: in how many of the 21 months 2025-01 to 2026-09 does one round from a fresh 10,000 at 1:500 reach 5x? The preset header gives 9 of 21 on the 1:500 broker it was built for (.pc symbols); the Python model about 47%. Months with margin refusals are months where FTMO's symbol margins, not 1:500, capped the sizes: read those apart. A result near 9/21 with no refusals means FTMO data stands in for a 1:500 broker for this EA.",
+      "note": "Queued 2026-10-17 by the interactive session: queue jobs now take to and months (gap 3). Deposit 10,000 because j4's 100 deposit hit the minimum lot; the multiple does not depend on the deposit above that."
     }
   ]
 }
