@@ -52,7 +52,8 @@ Rules of the work:
 5. **Terminals.** The Strategy Tester has its own MT5 install, `C:\MetaTrader 5 - Tester` (portable data folder found
    via `origin.txt`; FTMO-Demo history, ticks, symbols and servers.dat copied from Terminal 16, never accounts.dat).
    `run-tester.ps1` / `run-months.ps1` default to it and link `MQL5\Experts\<EA>` and `MQL5\Include\Aurum` into it on
-   every run. It needs a one-time FTMO demo login by the owner (until then the tester logs "tester didn't start").
+   every run. It needs a one-time FTMO demo login by the owner: until `configccounts.dat` exists in its data
+   folder, `run-tester.ps1` refuses and the relay does not wake the tester (queued jobs just wait).
    Terminal 16 ("MetaTrader 5 - 16") keeps the demo EA and is no longer closed for jobs: the weekend window and the
    `terminal.ps1 -Hold` step are gone, tester jobs run any day. Equivalence check of the library refactor
    (`backtests/2026-10-18_0102_AurumHydra_5xEQ_months`, run before the move): 2026.01-03 give 5.00x / 1.33x / 0.91x

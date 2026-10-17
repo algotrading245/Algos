@@ -69,6 +69,14 @@ function Test-TesterWork {
         }
         return $false
     }
+    # The tester install needs one login by the owner (config\accounts.dat) before any job can start.
+    $data = Get-ChildItem "$env:APPDATA\MetaQuotes\Terminal" -Directory | Where-Object {
+        $o = Join-Path $_.FullName "origin.txt"
+        (Test-Path $o) -and ("$(Get-Content $o -Raw)".Trim().TrimEnd('\') -eq $Tester)
+    } | Select-Object -First 1
+    if (-not $data -or -not (Test-Path (Join-Path $data.FullName "config\accounts.dat"))) {
+        if (-not @($work | Where-Object { $_.status -eq "running" })) { return $false }
+    }
     # A running job whose tester process is still alive needs no Claude run yet.
     $busy = @($work | Where-Object { $_.status -eq "running" } | Where-Object {
         $f = if ($_.folder_on) { $_.folder_on } else { $_.folder }

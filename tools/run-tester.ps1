@@ -80,6 +80,10 @@ if (-not $DataFolder) {
         } | Select-Object -First 1 -ExpandProperty FullName
     if (-not $DataFolder) { throw "No data folder for $Terminal yet. Start it once, log in, then close it." }
 }
+# MT5 writes config\accounts.dat at the first login; without one the tester does not start.
+if (-not (Test-Path (Join-Path $DataFolder "config\accounts.dat"))) {
+    throw "$Terminal has no account login yet. Start it once, log in to the FTMO demo, then close it."
+}
 Write-Host "terminal $Terminal"
 Write-Host "data     $DataFolder"
 
