@@ -4,9 +4,11 @@
 #
 #   Aurum Keeper        at logon and every 15 min    keeps the PC awake and Terminal 16 open (keeper.ps1)
 #   Aurum Monitor       Mon-Fri 23:15                monitor agent (haiku): demo check-in
-#   Aurum Orchestrator  daily 07:30 and 19:30        orchestrator (opus): one pipeline task per run
-#   Aurum Tester        Sat and Sun hourly           tester agent (sonnet), only when a tester job needs it
-#   Aurum Researcher    Sunday 10:00                 researcher agent (haiku): new ideas
+#   Aurum Relay         every 5 min                  the agent team (relay.ps1): each agent hands over to the next,
+#                                                    which starts 15 min after it finishes; tester jobs in the
+#                                                    weekend window first; orchestrator after 2 h idle; researcher daily
+#
+# The relay replaces the fixed-time Orchestrator, Tester and Researcher tasks of the first install; they are removed.
 #
 # The tasks run only while this user is logged on (Terminal 16 needs the desktop), with normal rights, and do not wake
 # the PC. A missed start runs as soon as the PC is available again.
@@ -35,17 +37,16 @@ Register "Aurum Keeper" @((New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOM
 Register "Aurum Monitor" (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At 23:15) `
     (Action "run-agent.ps1" "-Role monitor") "Monitor agent (haiku): daily demo check-in into docs\demo_log.md."
 
-Register "Aurum Orchestrator" @((New-ScheduledTaskTrigger -Daily -At 07:30), (New-ScheduledTaskTrigger -Daily -At 19:30)) `
-    (Action "run-agent.ps1" "-Role orchestrator") "Orchestrator (opus): one pipeline task per run, commits and pushes."
+$every5 = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 5)
+Register "Aurum Relay" $every5 (Action "relay.ps1" "") `
+    "Agent relay: orchestrator (opus), tester (sonnet) and researcher (haiku) hand over to each other (tools\autopilot\relay.ps1)."
 
-$tester = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Saturday, Sunday -At 00:30
-$tester.Repetition = (New-ScheduledTaskTrigger -Once -At 00:30 -RepetitionInterval (New-TimeSpan -Hours 1) `
-    -RepetitionDuration (New-TimeSpan -Hours 23)).Repetition
-Register "Aurum Tester" $tester (Action "run-agent.ps1" "-Role tester -IfWork") `
-    "Tester agent (sonnet): runs docs\autopilot\queue.json jobs on Terminal 16 in the weekend window."
-
-Register "Aurum Researcher" (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 10:00) `
-    (Action "run-agent.ps1" "-Role researcher") "Researcher agent (haiku): up to 5 new ideas into docs\ideas\."
+foreach ($old in "Aurum Orchestrator", "Aurum Tester", "Aurum Researcher") {
+    if (Get-ScheduledTask -TaskPath $folder -TaskName $old -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskPath $folder -TaskName $old -Confirm:$false
+        Write-Output "removed $folder$old (the relay runs this agent now)"
+    }
+}
 
 Start-ScheduledTask -TaskPath $folder -TaskName "Aurum Keeper"
 Get-ScheduledTask -TaskPath $folder | ForEach-Object {

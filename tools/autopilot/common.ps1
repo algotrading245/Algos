@@ -7,6 +7,8 @@ $Repo     = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $LogDir   = Join-Path $Repo "logs\autopilot"
 $HoldFile = Join-Path $LogDir "hold-terminal"
 $Pause    = Join-Path $LogDir "PAUSE"
+$Relay    = Join-Path $LogDir "relay.json"
+$GapMinutes = 15    # relay: minutes between one agent finishing and the agent it handed over to starting
 $T16      = "C:\Program Files\MetaTrader 5 - 16"
 $T16Exe   = Join-Path $T16 "terminal64.exe"
 New-Item -ItemType Directory -Force $LogDir | Out-Null
@@ -39,4 +41,37 @@ function Get-Hold {
     try { $h = Get-Content $HoldFile -Raw | ConvertFrom-Json; $until = [datetime]$h.until } catch { $until = Get-Date 0 }
     if ($until -le (Get-Date)) { Remove-Item $HoldFile -Force; return $null }
     return $h
+}
+
+# True when the tester agent has something to do: inside the weekend window, a queued job, or a running job whose
+# tester process has ended. With no job left it releases the autopilot's hold on Terminal 16 itself.
+function Test-TesterWork {
+    if (-not (Test-Window)) { return $false }
+    $q = Get-Content (Join-Path $Repo "docs\autopilot\queue.json") -Raw | ConvertFrom-Json
+    $work = @($q.jobs | Where-Object { $_.status -in @("queued", "running") })
+    if (-not $work) {
+        $h = Get-Hold
+        if ($h -and $h.by -eq "autopilot") {
+            Remove-Item $HoldFile -Force
+            Write-Log "keeper" "hold released: no tester job left"
+        }
+        return $false
+    }
+    # A running job whose tester process is still alive needs no Claude run yet.
+    $busy = @($work | Where-Object { $_.status -eq "running" } | Where-Object {
+        $f = if ($_.folder_on) { $_.folder_on } else { $_.folder }
+        $jf = if ($f) { Join-Path $Repo "$f\job.json" }
+        if ($jf -and (Test-Path $jf)) {
+            $j = Get-Content $jf -Raw | ConvertFrom-Json
+            Get-Process -Id $j.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $j.Exe }
+        }
+    })
+    return (-not $busy)
+}
+
+# Agent runs of a role started today (from its log), for the relay's daily caps.
+function Get-RunsToday([string]$Role) {
+    $f = Join-Path $LogDir "$(Get-Date -Format yyyy-MM-dd)_agent-$Role.log"
+    if (-not (Test-Path $f)) { return 0 }
+    return @(Select-String -Path $f -Pattern '^\S+ \S+  start: ').Count
 }

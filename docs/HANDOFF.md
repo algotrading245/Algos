@@ -41,6 +41,12 @@ Rules of the work:
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
   AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17). j4 AurumHydra stays on hold until the
   orchestrator finds j1 and j2 close to their expectation (rule in `tools/autopilot/prompts/orchestrator.md`).
+- **Autopilot = agent relay** (`tools/autopilot/relay.ps1`, task "Aurum Relay" every 5 min; it replaced the
+  fixed-time Orchestrator, Tester and Researcher tasks). Each agent ends with `HANDOFF: <role> <reason>`;
+  `run-agent.ps1` writes it to `logs/autopilot/relay.json` and the relay starts that agent 15 min later
+  (`$GapMinutes` in `common.ps1`). Order per tick: PAUSE / busy / usage-limit back-off (60 min) -> tester work in the
+  weekend window -> due hand-over -> after 2 h idle the researcher (if none for a day) or the orchestrator. Daily caps:
+  orchestrator 10, researcher 3, tester 24. Keeper (every 15 min) and Monitor (Mon-Fri 23:15) stay fixed tasks.
 
 ## Current state (2026-10-15, short)
 

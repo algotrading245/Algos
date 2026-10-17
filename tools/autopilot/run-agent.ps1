@@ -1,11 +1,12 @@
-# Runs one unattended Claude Code session for a pipeline role, started by the "Aurum ..." scheduled tasks.
+# Runs one unattended Claude Code session for a pipeline role, started by the relay (relay.ps1) or the monitor task.
 #
 #   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher [-IfWork]
 #
 # - Skips when logs\autopilot\PAUSE exists (create that file to pause every agent; delete it to resume).
 # - One Claude run at a time on this PC (named mutex); a run that finds another one busy waits up to 20 minutes.
-# - -IfWork (tester role): starts Claude only inside the weekend window and only when docs\autopilot\queue.json
-#   has a queued or running job; with no job left it releases the autopilot's hold on Terminal 16 itself.
+# - -IfWork (tester role): starts Claude only when Test-TesterWork (common.ps1) finds a job to start or collect.
+# - Afterwards the agent's last "HANDOFF: <role> <reason>" line goes to logs\autopilot\relay.json, so the relay
+#   starts that agent $GapMinutes later.
 # - Permissions come from tools\autopilot\settings.json in dontAsk mode: anything not listed there is refused,
 #   nothing waits for a prompt. Each run is killed after its time limit.
 # - Output: logs\autopilot\<date>_agent-<role>.log; the last run's outcome: logs\autopilot\last-<role>.json.
@@ -26,29 +27,7 @@ $cfg = @{
     orchestrator = @{ Args = @("--model", "opus");       Turns = 80; Minutes = 120 }
 }[$Role]
 
-if ($IfWork) {
-    if (-not (Test-Window)) { exit 0 }
-    $q = Get-Content (Join-Path $Repo "docs\autopilot\queue.json") -Raw | ConvertFrom-Json
-    $work = @($q.jobs | Where-Object { $_.status -in @("queued", "running") })
-    if (-not $work) {
-        $h = Get-Hold
-        if ($h -and $h.by -eq "autopilot") {
-            Remove-Item $HoldFile -Force
-            Write-Log "keeper" "hold released: no tester job left"
-        }
-        exit 0
-    }
-    # A running job whose tester process is still alive needs no Claude run yet.
-    $busy = @($work | Where-Object { $_.status -eq "running" } | Where-Object {
-        $f = if ($_.folder_on) { $_.folder_on } else { $_.folder }
-        $jf = if ($f) { Join-Path $Repo "$f\job.json" }
-        if ($jf -and (Test-Path $jf)) {
-            $j = Get-Content $jf -Raw | ConvertFrom-Json
-            Get-Process -Id $j.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $j.Exe }
-        }
-    })
-    if ($busy) { exit 0 }
-}
+if ($IfWork -and -not (Test-TesterWork)) { exit 0 }
 
 $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
 if (-not $mutex.WaitOne([TimeSpan]::FromMinutes(20))) { Write-Log $log "skipped: another agent run is still busy"; exit 0 }
@@ -95,6 +74,24 @@ $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
     Write-Log $log "end: exit $code$(if ($timedOut) { ', killed at the time limit' }), $([int]((Get-Date) - $started).TotalMinutes) min"
     @{ role = $Role; started = $started.ToString("s"); ended = (Get-Date).ToString("s"); exit = $code; timed_out = $timedOut } |
         ConvertTo-Json | Set-Content (Join-Path $LogDir "last-$Role.json") -Encoding UTF8
+
+    # Hand-over for the relay (relay.ps1): the agent's last "HANDOFF: <role> <reason>" line names the next agent.
+    $next = "none"; $reason = "no HANDOFF line"
+    $m = [regex]::Matches($out.Result, '(?m)^\W*HANDOFF:\W*(orchestrator|researcher|tester|none)\b[ \t:-]*(.*)$')
+    if ($m.Count) { $next = $m[$m.Count - 1].Groups[1].Value; $reason = $m[$m.Count - 1].Groups[2].Value.Trim(" `t`r*_:-".ToCharArray()) }
+    $old = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
+    $state = [ordered]@{ from = $Role; next = $next; due = (Get-Date).AddMinutes($GapMinutes).ToString("s"); reason = $reason }
+    # A run that hands over nothing (the nightly monitor) keeps a hand-over that has not started yet.
+    if ($next -eq "none" -and $old -and $old.next -ne "none") {
+        $state.from = $old.from; $state.next = $old.next; $state.due = $old.due; $state.reason = $old.reason
+    }
+    # A usage or rate limit: nothing starts for an hour (the relay waits, it never works around a limit).
+    if ("$($out.Result)`n$($err.Result)" -match '(?i)usage limit|rate limit|hit your limit|limit reached|limit will reset') {
+        $state.backoff_until = (Get-Date).AddMinutes(60).ToString("s")
+        Write-Log $log "usage or rate limit in the output: relay waits until $($state.backoff_until)"
+    }
+    $state | ConvertTo-Json | Set-Content $Relay -Encoding UTF8
+    Write-Log $log "handoff: $($state.next) at $($state.due) ($($state.reason))"
 } catch {
     Write-Log $log "error: $($_.Exception.Message)"
 } finally {
