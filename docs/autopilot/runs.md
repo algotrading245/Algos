@@ -42,3 +42,4 @@ committed).
 | 2026-10-17 23:05 | tester | Collected j8c (0/7 months at 5x, median 0.91x, 0 refusals; all 21 months: 1 at 5x); no job left, released Terminal 16 | j8 series done, needs judging |
 | 2026-10-17 23:55 | orchestrator | Judged j8a-c (5x months: 1/21 vs the preset's 9/21, not released, settings unchanged; gold made no trade in 7 of 21 months: trend signal 0 from 2026-05, and in 2026-02/04 the 0.30 gold spread cap most likely blocked buys at ~5,000 gold - same cap in AurumFunded on the demo, flagged); research/hydra_5x_months_check.py; queued j9 (2026.02-04, InpGoldMaxSpread=1.0, cause check) | j9 queued |
 | 2026-10-17 23:36 | tester | Started j9 (5xS months 2026.02-04, InpGoldMaxSpread=1.0), Terminal 16 held | j9 running |
+| 2026-10-17 23:50 | tester | Collected j9 (5xS months 2026.02-04, gold cap 1.0): gold traded in all 3 months but lost, 0.34x / 0.49x / 0.57x, 0 of 3 at 5x, 0 refusals; no job left, released Terminal 16 | j9 done, needs judging |
