@@ -28,3 +28,4 @@ committed).
 | 2026-10-17 13:40 | orchestrator | No alert, no unjudged run, no candidate at steps 5-14, no docs/ideas/: refreshed stale HANDOFF parts (current state, EA 2 tester status, "uncompiled" wording on the legs) and noted why a 5x series on FTMO data is not queued (1:500-broker result exists, no `to` in jobs, FTMO margins) | handoff refreshed, researcher next |
 | 2026-10-17 15:45 | tester | Held Terminal 16 (hold shown until 2026-10-18T01:45), started j7 months series 2025.01-2026.09 (21 runs, 10,000 at 1:500, 5x preset) in backtests/2026-10-17_1545_AurumHydra_5x_months | j7 running |
 | 2026-10-17 15:50 | tester | Held Terminal 16, restarted j7 months series 2025.01-2026.09 (21 runs) in backtests/2026-10-17_1550_AurumHydra_5x_months (after the run-months fix) | j7 running |
+| 2026-10-17 15:55 | tester | Collected j7 months series (backtests/2026-10-17_1550_AurumHydra_5x_months) | running: 8 of 21 months done |
