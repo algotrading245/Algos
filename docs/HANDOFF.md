@@ -142,6 +142,15 @@ Rules of the work:
   rounds no longer replay to today; `tools/months_summary.py` gives the share of months at 5x. The 1:500-broker check
   is built in: each month counts the broker's margin/volume refusals, and a month with none stands for a 1:500 broker
   too (FTMO's symbol margins never bit). Months with refusals are the ones to discount.
+- **j7 failed; replaced by j8a-c (orchestrator, 2026-10-17 16:20).** Three faults: the array splat (fixed), the tag
+  chain in `tools/run-months.ps1` line 88 (`$tag` is `$Tag` in PowerShell, so tags grow `5x_202501_202502_...` and
+  paths overflow from the 12th month; **still unfixed, agents may not edit `tools/`**: rename it to `$monthTag`, and
+  let `months_summary.py` skip a result with deposit 0), and the job itself: `AurumHydra_5x_month.set` leaves the
+  symbols at the source's `.pc` / `.r` defaults, so every month stopped at OnInit ("symbol XAUUSD.pc is not
+  available") and the 11 "done" months are empty reports. New preset `AurumHydra_5x_month_FTMO.set` (the 5x goal
+  inputs, FTMO's 16 names). j8a/b/c run 2025.01-07, 2025.08-2026.02, 2026.03-09 with tags `5xA/B/C`, short enough for
+  the chained tags (52 characters at most; j7 broke at 86). Judge the 21 months together against 9/21. The untracked
+  `backtests/2026-10-17_15*_AurumHydra_5x_*` folders of j7 hold nothing usable and can be deleted.
 - **Tester inputs:** `tools/run-tester.ps1` writes the EA source defaults before the preset and `set`, so a run no
   longer inherits inputs from an earlier one (the j4/j5 lesson).
 - **Demo vs tester fills:** `tools/fill_check.py` pairs each demo entry with the tester's entry for the same day, leg,
