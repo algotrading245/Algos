@@ -104,8 +104,9 @@
       "set": [],
       "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
       "from": "2024.01.01",
-      "status": "queued",
+      "status": "running",
       "needs": null,
+      "folder": "backtests\\2026-10-17_1010_AurumHydra_size1b_off",
       "expect": "Step 16 for AurumHydra, replacing j5. Same model as j5 (research/hydra_tester_expect.py): legs off +1184% / 10.7%, on +1574% / 11.5%, return per DD 110 -> 136; tester drawdown likely above the model's. j5 (legs on plus InpMonthEndBoost=2, no halt) gave +1460% / 13.11%, so the clean legs-on run should land near or a little under that; the legs-off run clearly lower. Before judging, check each report's input list: off run InpBreakRiskPct=0.0, InpNoiseMult=0.0, InpMonthEndBoost=1.0, InpMaxDrawdownPct=35.0; on run the same but 0.5 / 0.275. The off run should show no USDJPY breakout magics (+26/+27) and no noise magics (+28/+29). Step 16 test: return per unit of equity drawdown higher with the legs on.",
       "note": "Queued by the orchestrator 2026-10-17 10:05. The preset now writes the leg, boost, halt and goal inputs at the EA's defaults, because the tester keeps the previous run's value of any input a preset leaves out (j5). run-tester.ps1 lets -Set override preset lines, so the on run gets 0.5 / 0.275."
     }
