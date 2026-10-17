@@ -18,10 +18,11 @@
     {
       "id": "a3",
       "what": "Step 17 for the breakout and noise legs: turn both on in the FTMO demo's AurumFunded (Terminal 16, inputs InpBreakRiskPct=0.125 and InpNoiseMult=0.275 on the attached chart; nothing else changes). They passed step 16 in AurumFunded on 2026-10-17 (legs off +167.7% / 6.67% eq DD -> on +221.5% / 8.28%, return per drawdown 25.1 -> 26.7). Agents may not change a terminal's EA, so the owner does it, or says to keep the demo as it is. Update 2026-10-17 13:10: AurumHydra's step 16 is in too (j6, size 1 on FTMO names: legs off +725.1% / 12.48% -> on +1076.2% / 15.54%, return per drawdown 58.1 -> 69.2), so nothing else waits; both candidates are at step 17 until this is answered.",
-      "status": "approved",
+      "status": "applied",
       "asked": "2026-10-17",
       "approved": "2026-10-17",
-      "note": "Owner approved in chat on 2026-10-17: turn both legs on in the FTMO demo's AurumFunded. Agents still may not change the terminal's EA; the owner applies the inputs or asks the owner session to."
+      "note": "Owner approved in chat on 2026-10-17: turn both legs on in the FTMO demo's AurumFunded. Agents still may not change the terminal's EA; the owner applies the inputs or asks the owner session to. Applied 2026-10-17 by the owner session at the owner's request: preset mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_legs.set (phase1 plus the two inputs) is in Terminal 16's Presets, and the keeper now starts Terminal 16 with tools/autopilot/t16_attach.ini (XAUUSD M15, AurumFunded, that preset) whenever no saved chart has AurumFunded. Found on the way: the EA had been off every chart since 04:57 (the tester hold's close dropped it), so the demo made no entries since then. Takes effect at the terminal's next start after the hold; check the journal for 16 inputs read from ...phase1_legs.set.",
+      "applied": "2026-10-17"
     }
   ]
 }

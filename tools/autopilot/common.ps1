@@ -29,6 +29,18 @@ function Get-WindowEnd([datetime]$Now = (Get-Date)) {
 }
 function Test-Window { return [bool](Get-WindowEnd) }
 
+$T16Data  = Join-Path $env:APPDATA "MetaQuotes\Terminal\66FB7F5B174F9C3B2A690C49FF012FEB"
+$Attach   = Join-Path $PSScriptRoot "t16_attach.ini"
+
+# True when a saved chart of Terminal 16 has AurumFunded attached (chart files are UTF-16, written when it closes).
+function Test-DemoEA {
+    foreach ($f in Get-ChildItem (Join-Path $T16Data "MQL5\Profiles\Charts") -Recurse -Filter *.chr -ErrorAction SilentlyContinue) {
+        $t = [System.IO.File]::ReadAllText($f.FullName)
+        if ($t -match '(?ms)<expert>.*?^name=AurumFunded\s*$') { return $true }
+    }
+    return $false
+}
+
 # Terminal 16's own process; the other installs (live and other firms' accounts) are never matched.
 function Get-T16 {
     Get-CimInstance Win32_Process -Filter "Name='terminal64.exe'" |

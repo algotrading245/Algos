@@ -25,9 +25,15 @@ while ($true) {
         $t = Get-T16
         if ($t) { $state = "running" }
         elseif ($hold) { $state = "held by $($hold.by) until $($hold.until)" }
-        else {
+        elseif (Test-DemoEA) {
             Start-Process -FilePath $T16Exe -WorkingDirectory $T16
             $state = "started"
+        } else {
+            # No chart has AurumFunded (a tester session can leave the charts without it): start with t16_attach.ini,
+            # which opens XAUUSD M15 with AurumFunded and the demo preset. Checked only while the terminal is closed,
+            # when its chart files are final, so a running EA is never attached twice.
+            Start-Process -FilePath $T16Exe -WorkingDirectory $T16 -ArgumentList "/config:`"$Attach`""
+            $state = "started, AurumFunded attached"
         }
         if ($state -ne $lastState) { Write-Log "keeper" "Terminal 16: $state" }
         $lastState = $state

@@ -9,7 +9,7 @@ You are the researcher of the Aurum pipeline (steps 2 and 4 in `docs/pipeline.js
 
 Goals the work serves (see `docs/HANDOFF.md`):
 - AurumHydra: $100 -> $500 in one month. The chance is P = N(N^-1(0.2) + Sharpe * sqrt(1/12)), so only legs that
-  earn after cost and are uncorrelated with the current legs help.
+  earn after cost and are uncorrelated (or negatively correlated: a hedge) with the current legs help.
 - AurumFunded: pass a prop challenge and keep the funded account.
 
 Step 2, ideas:

@@ -15,7 +15,8 @@ Gates, in order; the first failure stops the idea (the ledger records which gate
   2 costs    Sharpe at 1.5x the cost >= 0.3 over the whole sample
   3 dsr      Deflated Sharpe Ratio (Bailey, Lopez de Prado 2014) >= 0.90, with N = every trial ever logged in
              docs/trials.jsonl plus the 47 counted before the log existed (london_breakout.py's generous count)
-  4 corr     |correlation| with the Hydra book <= 0.20 and with each Hydra leg <= 0.30
+  4 corr     correlation with the Hydra book <= +0.20 and with each Hydra leg <= +0.30; only positive correlation
+             fails (a negative one is a hedge, which helps the book)
   5 goal     with the weight fitted on data to 2017, Hydra's Sharpe from 2018 rises by >= 0.03, and so does
              P(5x in a month) = N(N^-1(0.2) + Sharpe sqrt(1/12)) (Browne 1999)
 """
@@ -115,9 +116,9 @@ def judge(cid, weight=None, stress_sharpe=None, n_extra=1):
     joint = book.index.intersection(r.index)
     cb = float(np.corrcoef(book[joint], r[joint])[0, 1])
     cl = {k: float(np.corrcoef(legs[k][joint], r[joint])[0, 1]) for k in legs}
-    worst = max(cl, key=lambda k: abs(cl[k]))
-    gate("corr", abs(cb) <= MAX_CORR_BOOK and abs(cl[worst]) <= MAX_CORR_LEG,
-         f"book {cb:+.2f}, max leg {worst} {cl[worst]:+.2f}", f"|book| <= {MAX_CORR_BOOK}, |leg| <= {MAX_CORR_LEG}")
+    worst = max(cl, key=cl.get)
+    gate("corr", cb <= MAX_CORR_BOOK and cl[worst] <= MAX_CORR_LEG,
+         f"book {cb:+.2f}, max leg {worst} {cl[worst]:+.2f}", f"book <= +{MAX_CORR_BOOK}, each leg <= +{MAX_CORR_LEG} (negative passes)")
     bk, rr = book[joint], r[joint]
     how = "weight fitted to 2017" if weight is None else "weight fixed by --weight"
     if weight is None:

@@ -65,10 +65,13 @@ Rules of the work:
   2024 day stops are the same two days in both runs; the 4 extra come in late 2025-2026, when equity is 2.5x+ and the
   3%-of-initial stop is ~1.2% of equity (see above), so they do not count against the legs. USDJPY +3,179 -> +4,671;
   noise US100.cash +977, US500.cash -57 (the S&P half flat again on 2024-26 data).
-- **Owner question (a3 in `approvals.json`, pending): step 17 = turn both legs on in the FTMO demo?** On the attached
-  AurumFunded chart in Terminal 16 set `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`, nothing else. Agents may not
-  change a terminal's EA. Or keep the demo as it is. Hydra's j6 is in (step 16 passed there too), so this is
-  the only thing both candidates wait on.
+- **a3 approved and applied (2026-10-17): step 17, both legs on in the FTMO demo.** Preset
+  `AurumFunded_FTMO_phase1_legs.set` (phase1 plus `InpBreakRiskPct=0.125`, `InpNoiseMult=0.275`). The EA had been off
+  every Terminal 16 chart since 04:57 (the tester hold's close dropped it, so no demo entries since); the keeper now
+  starts Terminal 16 with `tools/autopilot/t16_attach.ini` whenever no saved chart has AurumFunded. Takes effect at the
+  next start after the hold: check the journal for "16 inputs read from ... phase1_legs.set" and `tools/demo_check.py`.
+- **Corr gate (`tools/gates.py`) now fails only positive correlation** (book <= +0.20, each leg <= +0.30); a negative
+  one is a hedge and passes.
 - **j4 (AurumHydra 5x) was a set-up fault, not an EA result.** Its `set` renamed only 4 of Hydra's 16 symbol inputs;
   `InpStocks` (SP500.r), `InpNasdaq` (NAS100.r), the four fix pairs and six yen crosses kept the other broker's
   `.pc` / `.r` names, so the fix, stock-fall, Tokyo morning, after-holiday and noise legs never traded (only EURUSD,
