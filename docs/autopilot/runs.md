@@ -32,3 +32,4 @@ committed).
 | 2026-10-17 16:00 | tester | Collected j7 months series: tags chain across months (run-months.ps1 line 88 overwrites $Tag), paths too long from 2025.12, months_summary.py crashes (deposit 0). No new job started | j7 failed, needs script fix and requeue |
 | 2026-10-17 16:20 | orchestrator | Judged j7: besides the tag chain, the 5x preset kept the .pc symbol names, so every month stopped at OnInit (XAUUSD.pc not available) and the reports are empty; new preset AurumHydra_5x_month_FTMO.set (16 FTMO names), queued j8a-c (2025.01-2026.09 in three 7-month parts, tags 5xA/B/C to stay under the path limit); run-months.ps1 fix described in HANDOFF | j8a-c queued |
 | 2026-10-17 16:25 | tester | Held Terminal 16, started j8a (5x months 2025.01-2025.07, tag 5xA) detached | running, folder backtests/2026-10-17_1625_AurumHydra_5xA_months |
+| 2026-10-17 16:30 | tester | Collected j8a: running, 1 of 7 months done | still running, nothing committed |
