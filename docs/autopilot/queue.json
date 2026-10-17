@@ -246,8 +246,9 @@
         "from": "2024.01",
         "to": "2025.09"
       },
-      "status": "running",
+      "status": "failed",
       "folder": "backtests\\2026-10-18_0125_AurumHydra_t5_months",
+      "note_run": "Tester 2026-10-18 01:30: all 21 months failed before the tester ran - 'C:\\MetaTrader 5 - Tester has no account login yet. Start it once, log in to the FTMO demo, then close it.' No report exists; needs a human login in the tester install, then requeue.",
       "expect": "InpTarget=5 (goal 5x, scale 2.5) over the 21 in-sample months, one fresh deposit a month. tools/target_odds.py gives about 40% of rounds at 5x on the Python model; the tester so far kept less (j8: 1/21 on 2025.01-2026.09 with EA 1.33). Report P(3x/4x/5x), P(ruin), median multiple, margin refusals, and the months where gold made most of the loss."
     },
     {
@@ -255,8 +256,8 @@
       "period": "M15",
       "deposit": 10000,
       "set": [],
-      "status": "queued",
-      "folder": null,
+      "status": "running",
+      "folder": "backtests\\2026-10-18_0130_AurumHydra_t3_months",
       "needs": null,
       "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow.",
       "id": "j11",
