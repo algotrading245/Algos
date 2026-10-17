@@ -39,13 +39,15 @@ try {
     $status = & "$PSScriptRoot\terminal.ps1" -Status
     $prompt = @"
 Unattended autopilot run, role: $Role. Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
+Shell commands: run each one exactly as written and alone, with no ";", "&&", "|", "2>&1" or "echo" added. The
+permission rules match whole commands, so a compound command is refused; the exit code is reported anyway.
 Terminal 16 and tester window:
 $($status -join "`n")
 
 $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
 "@
     $argv = @("-p", "--settings", (Join-Path $PSScriptRoot "settings.json"), "--permission-mode", "dontAsk",
-        "--permission-prompts", "none", "--max-turns", $cfg.Turns, "--output-format", "text") + $cfg.Args
+        "--permission-prompts", "none", "--max-turns", $cfg.Turns, "--output-format", "json") + $cfg.Args
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $exe
     $psi.Arguments = ($argv | ForEach-Object { if ("$_" -match '\s') { '"' + $_ + '"' } else { "$_" } }) -join " "
@@ -70,14 +72,20 @@ $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
     if ($timedOut) { & taskkill.exe /PID $p.Id /T /F | Out-Null; $p.WaitForExit(30000) | Out-Null }
     $code = if ($timedOut) { -1 } else { $p.ExitCode }
 
-    Write-Log $log ("output:`n" + $out.Result.Trim() + $(if ($err.Result.Trim()) { "`nstderr:`n" + $err.Result.Trim() } else { "" }))
+    # JSON output: the answer text plus the tool calls the permission rules refused (logged so a rule can be fixed).
+    $res = try { $out.Result | ConvertFrom-Json } catch { $null }
+    $text = if ($res -and $res.result) { "$($res.result)" } else { $out.Result }
+    Write-Log $log ("output:`n" + $text.Trim() + $(if ($err.Result.Trim()) { "`nstderr:`n" + $err.Result.Trim() } else { "" }))
+    foreach ($d in @($res.permission_denials | Where-Object { $_ })) {
+        Write-Log $log "denied: $($d.tool_name) $($d.tool_input | ConvertTo-Json -Compress -Depth 3)"
+    }
     Write-Log $log "end: exit $code$(if ($timedOut) { ', killed at the time limit' }), $([int]((Get-Date) - $started).TotalMinutes) min"
     @{ role = $Role; started = $started.ToString("s"); ended = (Get-Date).ToString("s"); exit = $code; timed_out = $timedOut } |
         ConvertTo-Json | Set-Content (Join-Path $LogDir "last-$Role.json") -Encoding UTF8
 
     # Hand-over for the relay (relay.ps1): the agent's last "HANDOFF: <role> <reason>" line names the next agent.
     $next = "none"; $reason = "no HANDOFF line"
-    $m = [regex]::Matches($out.Result, '(?m)^\W*HANDOFF:\W*(orchestrator|researcher|tester|none)\b[ \t:-]*(.*)$')
+    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(orchestrator|researcher|tester|none)\b[ \t:-]*(.*)$')
     if ($m.Count) { $next = $m[$m.Count - 1].Groups[1].Value; $reason = $m[$m.Count - 1].Groups[2].Value.Trim(" `t`r*_:-".ToCharArray()) }
     $old = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $state = [ordered]@{ from = $Role; next = $next; due = (Get-Date).AddMinutes($GapMinutes).ToString("s"); reason = $reason }
@@ -86,7 +94,7 @@ $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
         $state.from = $old.from; $state.next = $old.next; $state.due = $old.due; $state.reason = $old.reason
     }
     # A usage or rate limit: nothing starts for an hour (the relay waits, it never works around a limit).
-    if ("$($out.Result)`n$($err.Result)" -match '(?i)usage limit|rate limit|hit your limit|limit reached|limit will reset') {
+    if ("$text`n$($err.Result)" -match '(?i)usage limit|rate limit|hit your limit|limit reached|limit will reset') {
         $state.backoff_until = (Get-Date).AddMinutes(60).ToString("s")
         Write-Log $log "usage or rate limit in the output: relay waits until $($state.backoff_until)"
     }
