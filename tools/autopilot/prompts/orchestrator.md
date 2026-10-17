@@ -19,8 +19,16 @@ Then pick the single most useful next task and do it, in this order of priority:
    reviewer subagent for every gate (8-11) and every EA change; follow the gate files in `docs/gates/`. EA changes:
    new legs off by default, compile with `powershell -ExecutionPolicy Bypass -File tools/autopilot/compile.ps1 -Expert <EA>`
    to 0 errors and 0 warnings.
-4. A new idea in `docs/ideas/` worth starting: steps 3-7 (full paper first, data, prototype at real costs).
-5. Nothing else: improve a gate, a test or the handoff.
+4. A new idea in `docs/ideas/` worth starting: steps 3-7 (full paper first, data, prototype at real costs). Ideas
+   marked "abstract only" need the full read first (`python tools/pdf_text.py <pdf link>`).
+   Scan survivors: `tools/edge_scan.py` writes candidates `scan_*` and logs its whole search as trials, so the DSR
+   bar is honest. A scan candidate that passes `python tools/gates.py <id>` still needs a reason (a flow or a paper)
+   before it goes into an EA; write the reason, or why none was found, into its ledger entry. Run the scan again
+   only when the data or a family changed (each run raises the bar for every later candidate).
+5. Getting more from the legs we have: compare demo fills with the tester (`python tools/demo_check.py`) and size
+   toward the goal (`tools/prop_dp.py`, `InpGoalMult`). A finding becomes a tester job or a handoff note, never a
+   direct change of the demo's inputs.
+6. Nothing else: improve a gate, a test or the handoff.
 
 To ask for a Strategy Tester run, add a job to `docs/autopilot/queue.json` (status "queued", or "hold" with `needs`
 when it waits on an approval). The tester agent runs queued jobs on weekends; you do not run the tester yourself.

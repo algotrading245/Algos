@@ -58,7 +58,11 @@ def p_goal(s):
 
 
 def trials_logged():
-    return sum(1 for _ in TRIALS.open()) if TRIALS.exists() else 0
+    """One per gates.py run, plus every rule a scan tried (tools/edge_scan.py logs its whole search as one line
+    with "count": the number of rules it looked at, not only the survivors)."""
+    if not TRIALS.exists():
+        return 0
+    return sum(int(json.loads(line).get("count", 1)) for line in TRIALS.open() if line.strip())
 
 
 def deflated(r, n_trials):

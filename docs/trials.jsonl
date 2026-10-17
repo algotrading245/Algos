@@ -1,0 +1,3 @@
+{"id": "edge_scan:slot+own", "when": "2026-10-17T15:26:44", "verdict": "2 survivors, 2 written", "count": 4720}
+{"id": "scan_slot_EURUSD_s25_L4_short", "when": "2026-10-17T15:27:11", "verdict": "FAIL at dsr"}
+{"id": "scan_slot_EURUSD_s21_L8_short", "when": "2026-10-17T15:27:15", "verdict": "FAIL at dsr"}

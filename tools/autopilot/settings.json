@@ -14,6 +14,10 @@
       "Edit(./docs/**)",
       "Edit(./backtests/**)",
       "Edit(./marketdata/**)",
+      "Write(./research/**)",
+      "Write(./docs/**)",
+      "Write(./backtests/**)",
+      "Write(./marketdata/**)",
       "Bash(python tools/*)",
       "Bash(python research/*)",
       "Bash(powershell -ExecutionPolicy Bypass -File tools/run-tester.ps1 *)",
@@ -60,9 +64,6 @@
       "Edit(./tools/**)",
       "Edit(./.claude/**)",
       "Edit(./.gitignore)",
-      "Write(./tools/**)",
-      "Write(./.claude/**)",
-      "Write(./.gitignore)",
       "Read(./.env*)",
       "Read(~/.claude/.credentials.json)"
     ]

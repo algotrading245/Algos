@@ -76,26 +76,26 @@
      "return_pct": 9.96,
      "eq_dd_max_pct": 4.02,
      "verdict": "matches the Python figures; step 15 passed"
-   },
-   {
-    "run": "backtests/2026-10-17_0535_AurumFunded_funded_on",
-    "symbol": "XAUUSD (AurumFunded 1.03, both legs on, vs backtests/2026-10-17_0505_AurumFunded_funded_off)",
-    "trades": 3468,
-    "win_rate": 50.09,
-    "profit_factor": 1.5,
-    "return_pct": 221.48,
-    "eq_dd_max_pct": 8.28,
-    "verdict": "step 16 passed in AurumFunded: legs off +167.68% / 6.67% -> on +221.48% / 8.28%, return per drawdown 25.1 -> 26.7, against an expected +185-190% / 7.5-8%; USDJPY +3,179 -> +4,671. Day stops 17 -> 21 (same two in 2024; the extra ones come at 2.5x+ equity, where the 3%-of-initial stop is ~1.2% of equity). AurumHydra's step 16 is j5 (j4 was a set-up fault)."
-   },
-   {
-    "run": "backtests/2026-10-17_1116_AurumHydra_size1b_on",
-    "symbol": "XAUUSD (AurumHydra 1.33 size 1, FTMO names, both legs on, vs backtests/2026-10-17_1010_AurumHydra_size1b_off)",
-    "trades": 4173,
-    "win_rate": 51.4,
-    "profit_factor": 1.49,
-    "return_pct": 1076.18,
-    "eq_dd_max_pct": 15.54,
-    "verdict": "step 16 passed in AurumHydra: legs off +725.13% / 12.48% -> on +1076.18% / 15.54%, return per drawdown 58.1 -> 69.2 (model 110 -> 136); the tester kept 83% / 87% of the model's log growth. USDJPY +9,695 -> +25,860. Legs on, the deepest stretch is 2026-01 (breakout -1.0, noise -3.9 points); legs off it is 2024-07/08, which the legs offset (research/hydra_j6_compare.py)."
+    },
+    {
+     "run": "backtests/2026-10-17_0535_AurumFunded_funded_on",
+     "symbol": "XAUUSD (AurumFunded 1.03, both legs on, vs backtests/2026-10-17_0505_AurumFunded_funded_off)",
+     "trades": 3468,
+     "win_rate": 50.09,
+     "profit_factor": 1.5,
+     "return_pct": 221.48,
+     "eq_dd_max_pct": 8.28,
+     "verdict": "step 16 passed in AurumFunded: legs off +167.68% / 6.67% -> on +221.48% / 8.28%, return per drawdown 25.1 -> 26.7, against an expected +185-190% / 7.5-8%; USDJPY +3,179 -> +4,671. Day stops 17 -> 21 (same two in 2024; the extra ones come at 2.5x+ equity, where the 3%-of-initial stop is ~1.2% of equity). AurumHydra's step 16 is j5 (j4 was a set-up fault)."
+    },
+    {
+     "run": "backtests/2026-10-17_1116_AurumHydra_size1b_on",
+     "symbol": "XAUUSD (AurumHydra 1.33 size 1, FTMO names, both legs on, vs backtests/2026-10-17_1010_AurumHydra_size1b_off)",
+     "trades": 4173,
+     "win_rate": 51.4,
+     "profit_factor": 1.49,
+     "return_pct": 1076.18,
+     "eq_dd_max_pct": 15.54,
+     "verdict": "step 16 passed in AurumHydra: legs off +725.13% / 12.48% -> on +1076.18% / 15.54%, return per drawdown 58.1 -> 69.2 (model 110 -> 136); the tester kept 83% / 87% of the model's log growth. USDJPY +9,695 -> +25,860. Legs on, the deepest stretch is 2026-01 (breakout -1.0, noise -3.9 points); legs off it is 2024-07/08, which the legs offset (research/hydra_j6_compare.py)."
     }
    ]
   },
@@ -193,28 +193,124 @@
      "return_pct": 39.93,
      "eq_dd_max_pct": 16.41,
      "verdict": "matches the Python figures (return 4.8 points under, drawdown 2.1 under, trades 697 vs 701; every year positive); step 15 passed for both indices, step 16 = j3 and j4 legs on vs off"
-   },
-   {
-    "run": "backtests/2026-10-17_0535_AurumFunded_funded_on",
-    "symbol": "XAUUSD (AurumFunded 1.03, both legs on, vs backtests/2026-10-17_0505_AurumFunded_funded_off)",
-    "trades": 3468,
-    "win_rate": 50.09,
-    "profit_factor": 1.5,
-    "return_pct": 221.48,
-    "eq_dd_max_pct": 8.28,
-    "verdict": "step 16 passed in AurumFunded (see the breakout's entry): return per drawdown 25.1 -> 26.7. The noise leg's own share: US100.cash +976.53, US500.cash -56.81 - the S&P half flat for the second time on 2024-26 data. AurumHydra's step 16 is j5."
-   },
-   {
-    "run": "backtests/2026-10-17_1116_AurumHydra_size1b_on",
-    "symbol": "XAUUSD (AurumHydra 1.33 size 1, FTMO names, both legs on, vs backtests/2026-10-17_1010_AurumHydra_size1b_off)",
-    "trades": 4173,
-    "win_rate": 51.4,
-    "profit_factor": 1.49,
-    "return_pct": 1076.18,
-    "eq_dd_max_pct": 15.54,
-    "verdict": "step 16 passed in AurumHydra (see the breakout's entry): return per drawdown 58.1 -> 69.2. The noise leg's own share (no index trades with the legs off): US100.cash +4,181.31, US500.cash -1,092.30 - the S&P half negative for the third time on 2024-26 data, not refitted."
+    },
+    {
+     "run": "backtests/2026-10-17_0535_AurumFunded_funded_on",
+     "symbol": "XAUUSD (AurumFunded 1.03, both legs on, vs backtests/2026-10-17_0505_AurumFunded_funded_off)",
+     "trades": 3468,
+     "win_rate": 50.09,
+     "profit_factor": 1.5,
+     "return_pct": 221.48,
+     "eq_dd_max_pct": 8.28,
+     "verdict": "step 16 passed in AurumFunded (see the breakout's entry): return per drawdown 25.1 -> 26.7. The noise leg's own share: US100.cash +976.53, US500.cash -56.81 - the S&P half flat for the second time on 2024-26 data. AurumHydra's step 16 is j5."
+    },
+    {
+     "run": "backtests/2026-10-17_1116_AurumHydra_size1b_on",
+     "symbol": "XAUUSD (AurumHydra 1.33 size 1, FTMO names, both legs on, vs backtests/2026-10-17_1010_AurumHydra_size1b_off)",
+     "trades": 4173,
+     "win_rate": 51.4,
+     "profit_factor": 1.49,
+     "return_pct": 1076.18,
+     "eq_dd_max_pct": 15.54,
+     "verdict": "step 16 passed in AurumHydra (see the breakout's entry): return per drawdown 58.1 -> 69.2. The noise leg's own share (no index trades with the legs off): US100.cash +4,181.31, US500.cash -1,092.30 - the S&P half negative for the third time on 2024-26 data, not refitted."
     }
    ]
+  },
+  {
+   "id": "scan_slot_EURUSD_s25_L4_short",
+   "name": "scan_slot_EURUSD_s25_L4_short",
+   "status": "testing",
+   "step": 9,
+   "gates": {
+    "id": "scan_slot_EURUSD_s25_L4_short",
+    "when": "2026-10-17T15:27:11",
+    "verdict": "FAIL at dsr",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "0.97 / 0.69",
+      "rule": ">= 0.5 to 2017 and from 2018"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.41",
+      "rule": ">= 0.3 at 1.5x cost"
+     },
+     {
+      "gate": "dsr",
+      "pass": false,
+      "figure": "0.403 (N=4768, luck bar 0.89)",
+      "rule": ">= 0.9"
+     },
+     {
+      "gate": "corr",
+      "pass": false,
+      "figure": "book +0.25, max leg quartet +0.31",
+      "rule": "|book| <= 0.2, |leg| <= 0.3"
+     },
+     {
+      "gate": "goal",
+      "pass": false,
+      "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.1%",
+      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+     }
+    ],
+    "weight": 1.0294392575797875,
+    "p5x": [
+     0.5522581158607921,
+     0.550616350003269
+    ]
+   }
+  },
+  {
+   "id": "scan_slot_EURUSD_s21_L8_short",
+   "name": "scan_slot_EURUSD_s21_L8_short",
+   "status": "testing",
+   "step": 9,
+   "gates": {
+    "id": "scan_slot_EURUSD_s21_L8_short",
+    "when": "2026-10-17T15:27:15",
+    "verdict": "FAIL at dsr",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "0.96 / 0.79",
+      "rule": ">= 0.5 to 2017 and from 2018"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.60",
+      "rule": ">= 0.3 at 1.5x cost"
+     },
+     {
+      "gate": "dsr",
+      "pass": false,
+      "figure": "0.471 (N=4769, luck bar 0.89)",
+      "rule": ">= 0.9"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book +0.20, max leg quartet +0.23",
+      "rule": "|book| <= 0.2, |leg| <= 0.3"
+     },
+     {
+      "gate": "goal",
+      "pass": false,
+      "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.2%",
+      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+     }
+    ],
+    "weight": 1.0339760072551898,
+    "p5x": [
+     0.5522581158607921,
+     0.5515589399725805
+    ]
+   }
   }
  ],
  "rejected": [

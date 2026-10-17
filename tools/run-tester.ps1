@@ -92,8 +92,20 @@ $text -split "`r?`n" | Where-Object { $_ -match "error|warning" } | ForEach-Obje
 if ($text -notmatch "(?<!\d)0 errors?\b") { throw "compile failed (log: $log)" }
 Write-Host "compiled $Expert"
 
-# Preset lines, then the overrides, in the tester's form: name=value||start||step||stop||N (numbers), name=value.
+# Every input's default from the EA source, then the preset lines, then the overrides, in the tester's form:
+# name=value||start||step||stop||N (numbers), name=value. Without the defaults, an input missing from the preset kept
+# whatever value the terminal last used for it, so two runs of the same job could differ.
 $values = [ordered]@{}
+$skipped = @()
+Get-Content (Join-Path $repo "mql5\Experts\$Expert\$Expert.mq5") | ForEach-Object {
+    if ($_ -match '^\s*s?input\s+(?:const\s+)?\w+\s+(Inp\w+)\s*=\s*([^;]+);') {
+        $name = $Matches[1]; $value = $Matches[2].Trim()
+        if ($value -match '^"(.*)"$') { $values[$name] = $Matches[1] }
+        elseif ($value -match '^(-?\d+(\.\d+)?|true|false)$') { $values[$name] = $value }
+        else { $skipped += $name }    # enum names, D'...' dates, expressions: left to the preset or the terminal
+    }
+}
+Write-Host "source defaults: $($values.Count) inputs$(if ($skipped) { "; not set from the source: $($skipped -join ', ')" })"
 if ($Preset) {
     Get-Content (Join-Path $repo $Preset) | Where-Object { $_ -match "^\s*Inp\w+=" } | ForEach-Object {
         $name, $value = $_.Trim() -split "=", 2
