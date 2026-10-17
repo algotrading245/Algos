@@ -17,7 +17,7 @@
     },
     {
       "id": "a3",
-      "what": "Step 17 for the breakout and noise legs: turn both on in the FTMO demo's AurumFunded (Terminal 16, inputs InpBreakRiskPct=0.125 and InpNoiseMult=0.275 on the attached chart; nothing else changes). They passed step 16 in AurumFunded on 2026-10-17 (legs off +167.7% / 6.67% eq DD -> on +221.5% / 8.28%, return per drawdown 25.1 -> 26.7). Agents may not change a terminal's EA, so the owner does it, or says to keep the demo as it is until AurumHydra's j5 is in.",
+      "what": "Step 17 for the breakout and noise legs: turn both on in the FTMO demo's AurumFunded (Terminal 16, inputs InpBreakRiskPct=0.125 and InpNoiseMult=0.275 on the attached chart; nothing else changes). They passed step 16 in AurumFunded on 2026-10-17 (legs off +167.7% / 6.67% eq DD -> on +221.5% / 8.28%, return per drawdown 25.1 -> 26.7). Agents may not change a terminal's EA, so the owner does it, or says to keep the demo as it is. Update 2026-10-17 13:10: AurumHydra's step 16 is in too (j6, size 1 on FTMO names: legs off +725.1% / 12.48% -> on +1076.2% / 15.54%, return per drawdown 58.1 -> 69.2), so nothing else waits; both candidates are at step 17 until this is answered.",
       "status": "pending",
       "asked": "2026-10-17"
     }

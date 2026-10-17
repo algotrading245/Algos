@@ -40,7 +40,8 @@ Rules of the work:
   data folder under `backup\2026-10-17_before_repo_link`.
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
   AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on - all
-  done; j5 AurumHydra size 1 legs off/on done but not a valid pair; **j6 queued** (replaces j5, see below).
+  done; j5 AurumHydra size 1 legs off/on done but not a valid pair; j6 (replaces j5) done and judged: **queue
+  empty**.
 - **AurumNoise passed step 15 (orchestrator, 2026-10-17 05:25).** US500.cash (j1): -0.68%, 26.1% equity drawdown,
   452 trades, against +1.3% / 28.6% / 451 expected - flat as the Python model said; the profit was all 2024
   (+1,689), 2025 and 2026 lost. US100.cash (j2): +39.9%, 16.4%, 697 trades, against +44.7% / 18.5% / 701; every year
@@ -66,7 +67,8 @@ Rules of the work:
   noise US100.cash +977, US500.cash -57 (the S&P half flat again on 2024-26 data).
 - **Owner question (a3 in `approvals.json`, pending): step 17 = turn both legs on in the FTMO demo?** On the attached
   AurumFunded chart in Terminal 16 set `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`, nothing else. Agents may not
-  change a terminal's EA. Or keep the demo as it is until Hydra's j6 is in.
+  change a terminal's EA. Or keep the demo as it is. Hydra's j6 is in (step 16 passed there too), so this is
+  the only thing both candidates wait on.
 - **j4 (AurumHydra 5x) was a set-up fault, not an EA result.** Its `set` renamed only 4 of Hydra's 16 symbol inputs;
   `InpStocks` (SP500.r), `InpNasdaq` (NAS100.r), the four fix pairs and six yen crosses kept the other broker's
   `.pc` / `.r` names, so the fix, stock-fall, Tokyo morning, after-holiday and noise legs never traded (only EURUSD,
@@ -90,6 +92,24 @@ Rules of the work:
   defaults); `-Set` still overrides them for the on run. **j6** (tag `size1b`) reruns the pair; expect the legs-on
   run near or a little under j5's figure and the legs-off run clearly lower, and check the input list in both
   reports before judging.
+- **j6 judged (orchestrator, 2026-10-17 13:10): both legs pass step 16 in AurumHydra.** Inputs verified in both
+  reports (off 0 / 0 / boost 1.0 / halt 35, on 0.5 / 0.275 / 1.0 / 35). Legs off +725.1%, 12.48% equity drawdown,
+  PF 1.70, 2,262 trades; legs on +1076.2%, 15.54%, PF 1.49, 4,173 trades. Return per drawdown 58.1 -> 69.2 (+19%;
+  model 110 -> 136, +24%). At size 1 the tester kept more of the model's log growth than the Funded runs did (off
+  83%, on 87%, against 67-74%). `research/hydra_j6_compare.py` (daily curves and the deals by symbol) shows the
+  deepest stretch moves: legs off it is 2024-07/08 (July -6.0% off, +1.8% on: USDJPY breakout +4.1, US100 +1.7,
+  US500 +1.8 points); legs on it is 2026-01 (-8.3% off, -13.0% on: noise -3.9, breakout -1.0, next to AUDCAD -4.5
+  and EURUSD -2.2 in both). Noise's own share (no index trades with legs off): US100.cash +4,181, US500.cash -1,092,
+  the S&P half negative a third time on the same 2024-26 window Python already had flat; not new evidence, weights
+  not refitted. **Month-end boost:** j5 against j6-on is in effect a clean boost pair (the halt never fired):
+  boost 2.0 gave +1460% / 13.11%, return per drawdown 111 against 69. The fix legs trade only on that day, so the
+  boost doubles their whole size: a re-weighting (a rejected family; a quarter-end x2 gave 3.37 -> 3.31 after 2017)
+  measured on the tester window, so not adopted for size 1; it stays in the 5x preset as tested.
+- **Next for the pipeline:** step 17 for both candidates waits on the owner (a3). A useful later tester series is
+  the 5x question itself: `AurumHydra_5x_month.set` on the 16 FTMO names, from 100, one goal round per month
+  (InpGoalRepeat=false stops the EA after a round). That needs a run per start month; queue jobs have only `from`,
+  so each run would replay ticks to today after its round ends (about an hour each, like j6). **Proposed tool change:** let queue jobs carry `to` and have the tester prompt pass it to
+  `run-tester.ps1 -To` (the script already takes it). Not queued until then.
 - **Proposed tool change (agents may not edit `tools/`):** `tools/run-tester.ps1` should write *every* input of the
   EA into `[TesterInputs]` - parse the `input` lines of the `.mq5` for their defaults, then apply the preset, then
   `-Set` - so no run can inherit a value from the terminal's last run of the same EA. Until then every preset used
