@@ -123,14 +123,26 @@ Rules of the work:
   weekend window -> due hand-over -> after 2 h idle the researcher (if none for a day) or the orchestrator. Daily caps:
   orchestrator 10, researcher 3, tester 24. Keeper (every 15 min) and Monitor (Mon-Fri 23:15) stay fixed tasks.
 
-## Current state (2026-10-15, short)
+## Current state (updated 2026-10-17 13:40; the rest of this section is from 2026-10-15)
 
-- **EAs in the repo:** AurumFunded 1.03 and AurumHydra 1.33 (1.02-1.03 / 1.33 written in the cloud without a compiler;
-  bracket balance checked, not compiled), standalone AurumBreakout 1.01 and AurumNoise 1.01 (uncompiled).
-- **Candidate legs, off by default in both main EAs until their tester runs:** USD/JPY London breakout (Sharpe ~1.2 /
-  0.8 at the real 1.2 bp, a yen effect seen in every yen market) and noise-area momentum on the S&P 500 and Nasdaq
-  (~0.7 / 0.9 at their spreads). Together: AurumFunded 3.24 -> ~3.5 from 2018, Hydra 3.37 -> ~3.6-3.7 (5x-month chance
-  ~55% -> ~59%).
+- **EAs in the repo:** AurumFunded 1.03, AurumHydra 1.33, standalone AurumBreakout 1.01 and AurumNoise 1.01. All four
+  were compiled by `tools/run-tester.ps1` on Terminal 16 for the 2026-10-17 Strategy Tester runs (j1-j6), so they
+  compile without errors; the warning count was not recorded in any summary. Recompile with
+  `tools/autopilot/compile.ps1` and record 0/0 before the next EA change is merged.
+- **Candidate legs, still off by default in both main EAs; both passed steps 15 and 16 on 2026-10-17** (see "Demo and
+  autopilot" above): USD/JPY London breakout (Sharpe ~1.2 / 0.8 at the real 1.2 bp, a yen effect seen in every yen
+  market) and noise-area momentum on the S&P 500 and Nasdaq (~0.7 / 0.9 at their spreads). Together: AurumFunded 3.24
+  -> ~3.5 from 2018, Hydra 3.37 -> ~3.6-3.7 (5x-month chance ~55% -> ~59%). Step 17 (demo with the legs on) waits on
+  the owner (a3).
+- **The 5x tester series on FTMO data is not queued, on purpose (orchestrator 2026-10-17 13:40).** The 5x preset
+  already has a tester result on the 1:500 broker it was built for (`.pc` names, one round a month 2025-01 to
+  2026-09: goal reached in 9 of 21 months, preset header). On Terminal 16 the runs would replay ticks to today after
+  each round (no `to` in queue jobs) and, at goal sizes near the cap of 50, size against FTMO's own symbol margins
+  instead of a 1:500 broker's (not checked; j4's 100 deposit already hit "too small for the minimum lot" on the
+  dip unit). That costs a weekend of tester time for figures from a broker the 5x EA will not trade on. Worth
+  doing only once `to` is added to queue jobs and a 1:500 broker's data is at hand.
+- **Ideas:** `docs/ideas/` does not exist yet; no researcher run has written one. The relay was handed to the
+  researcher on 2026-10-17 13:40 for the first batch.
 - **Prop routes** (simulated median to the first payout at 70% of the edge): FundedNext Stellar Instant 1.4 months (4.3
   if it has a 40% consistency rule), Instant Funding PRO 2.5 months (preset with the Smart Drawdown lock and a
   floating-loss stop; 2.0 months with the DP fast sizing `FAST_IF`, none lost even at half the edge), FTMO 1-Step 7.8
@@ -142,7 +154,7 @@ Rules of the work:
   15 pairs, cross-session metals, shocks, pairs, holiday transfers, SGE, oil-CAD, Bitcoin weekends - rejected; the
   London breakout and the tick/spread checks of both candidates - kept.
 
-## EA 2: AurumFunded (v1.00, compiles with 0 errors and 0 warnings, not yet run in the Strategy Tester)
+## EA 2: AurumFunded (written as v1.00; now 1.03, run in the Strategy Tester 2026-10-15 and 2026-10-17, see above)
 
 Firm chosen: **FTMO 2-Step Challenge, Swing account**. Targets 10% then 5%, daily loss 5% of the initial balance
 measured from the balance at midnight CE(S)T on equity, maximum loss 10% static, no time limit, at least 4 trading
@@ -215,9 +227,8 @@ the phase's start, the cushion rule below - both phases within 9 months 67% (cus
 
 Open points for EA 2:
 
-- Not yet run in the MT5 Strategy Tester; `tools/run-funded.ps1` runs it with a preset (written without PowerShell at
-  hand, so untested). The symbol names in the inputs (`XAUUSD`, `US500.cash`, ...) are FTMO's as
-  far as known and must be checked in the FTMO terminal.
+- Run in the MT5 Strategy Tester on FTMO's data (2026-10-15 phase runs, 2026-10-17 j3); the symbol names in the inputs
+  (`XAUUSD`, `US500.cash`, `US100.cash`, the dollar pairs and yen crosses) all traded there, so they are FTMO's.
 - FTMO's server clock is assumed to follow European summer time (`InpEuClock true`). The EA checks the clock live and
   skips the day if it is off.
 - Margin: FTMO Swing leverage is quoted (by a user on FTMO's feature board, not on FTMO's own page) as 1:30 on
@@ -263,15 +274,17 @@ AurumFunded 3.24 -> 3.30; the same breaks on the other dollar pairs do not earn,
 CAD/JPY 1.21, AUD/JPY 0.63) and the Nikkei (1.37) show it in both halves - a yen effect, too costly outside USD/JPY. Correlation with the Hydra legs |r| <= 0.03. At 0.5% risk a trade Hydra 3.37 ->
 3.48 from 2018 (3.66 with the noise leg), AurumFunded 3.24 -> 3.34; at AurumFunded's volatility 0.125% risk a
 trade gives 3.30 with a lower drawdown (11.4% -> 10.8%). Gold, EUR/JPY and the other majors do not hold. Standalone
-MQL5 version `mql5/Experts/AurumBreakout/` (uncompiled): a Strategy Tester run on USDJPY, 2024-01 on, comes next.
+MQL5 version `mql5/Experts/AurumBreakout/`: run in the Strategy Tester on USDJPY 2024-01 on (2026-10-17, +9.96%,
+4.02% eq DD, 771 trades, matches Python; step 15 passed).
 AurumFunded 1.03 carries the same leg, off by default (`InpBreakRiskPct=0`; 0.125 is the size tested next to the
 other legs, a quarter of the fix leg's risk): server hours 01:00-09:00 range, 10:00-18:00 trading, each side once a
 day at market when the ask / bid reaches the range, magic +26 / +27, sized through `SizeMult()` so the prop cushion
 and guards apply, closed by `CloseEverything()`. It also carries the noise-area leg, off by default
 (`InpNoiseMult=0`; 0.275 per index is the tested weight 0.55 split over two): S&P 500 = `InpStocks` with band 1.5,
 Nasdaq = `InpNasdaq` (US100.cash) with band 1.0, checks at server 17:00-22:30 (10:00-15:30 New York), flat at 23:00,
-notional = min(4, 2% / 14-day volatility) x equity x `InpNoiseMult` x `SizeMult()`, magic +28 / +29. Uncompiled like
-the rest of 1.02-1.03. Order of tests: the standalone AurumBreakout and AurumNoise first; if they hold, AurumFunded
+notional = min(4, 2% / 14-day volatility) x equity x `InpNoiseMult` x `SizeMult()`, magic +28 / +29. (Written
+uncompiled; since built and run in the tester, see "Current state".) Order of tests, all done by 2026-10-17 (steps 15
+and 16 passed; AurumNoise in the tester: US500 -0.68% / 26.09%, US100 +39.93% / 16.41%): the standalone AurumBreakout and AurumNoise first; if they hold, AurumFunded
 1.03 with `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`. AurumHydra 1.33 carries the same two legs, off by default and with
 the same inputs; for the 5x-month goal the tested weights are breakout at 0.5% risk a trade (`InpBreakRiskPct=0.5`,
 weight fitted to 2017) and the noise leg at 0.275 per index. Hydra has no clock check, so in the weeks the US and
