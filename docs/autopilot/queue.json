@@ -90,7 +90,24 @@
       "folder": "backtests\\2026-10-17_0705_AurumHydra_size1_off",
       "folder_on": "backtests\\2026-10-17_0825_AurumHydra_size1_on",
       "expect": "Step 16 for AurumHydra, replacing j4. research/hydra_tester_expect.py (daily legs 2024-01 to 2026-10-12, compounded, 35% halt): legs off model +1184% / 10.7% DD, legs on +1574% / 11.5%; at the 70% of log growth the j3 runs kept, about +500% off and +620% on. Daily data cannot see intraday dips and Hydra carries gold at up to 6.2x equity, so expect the tester's equity drawdown well above the model's, roughly 15-25%. Every symbol of the preset should trade (check the by-symbol list: XAUUSD, AUDCAD, the 5 dollar pairs, 4 yen crosses, US100.cash and US500.cash in the on run). Step 16 test: return per unit of equity drawdown higher with the legs on (model 110 -> 136).",
-      "note": "Queued by the orchestrator 2026-10-17 07:10 after j4 proved a set-up fault. New preset AurumHydra_FTMO_size1.set: FTMO names for all 16 symbol inputs (AurumFunded's defaults, all traded in j3), size 1, no goal mode, the EA's default 35% drawdown halt. Tester 2026-10-17 09:45: both runs done but IDENTICAL to the cent (+1460.44%, 13.11% eq DD, 4174 trades, PF 1.53). Both reports list InpBreakRiskPct=0.5 although the off run's tester.ini and the preset hold no such key: the off run probably inherited j4's leg values, so no valid off/on pair. Needs a legs-off rerun with explicit InpBreakRiskPct=0,InpNoiseMult=0. See summary.md in the on folder."
+      "note": "Queued by the orchestrator 2026-10-17 07:10 after j4 proved a set-up fault. New preset AurumHydra_FTMO_size1.set: FTMO names for all 16 symbol inputs (AurumFunded's defaults, all traded in j3), size 1, no goal mode, the EA's default 35% drawdown halt. Tester 2026-10-17 09:45: both runs done but IDENTICAL to the cent (+1460.44%, 13.11% eq DD, 4174 trades, PF 1.53). Both reports list InpBreakRiskPct=0.5 although the off run's tester.ini and the preset hold no such key: the off run probably inherited j4's leg values, so no valid off/on pair. Needs a legs-off rerun with explicit InpBreakRiskPct=0,InpNoiseMult=0. See summary.md in the on folder. Judged by the orchestrator 2026-10-17 10:05: confirmed and wider than the legs. The off run's report lists every input j4's legs-on run had that the size1 preset left out: InpBreakRiskPct=0.5, InpNoiseMult=0.275, InpMonthEndBoost=2.0 (bell, Tokyo and both fix legs doubled on each month's last weekday), InpMaxDrawdownPct=0.0 (no 35% halt; it would not have fired at 13.1%), and the goal inputs (inert at InpGoalMult=0). So both j5 runs are legs on WITH the month-end boost: +1460.44% / 13.11% eq DD, return per DD 111, about 97% of the legs-on model's log growth (ln 15.60 / ln 16.74; the boost is not in the model). No step 16 verdict. j3's inputs were checked the same way: all at the EA defaults or the funded preset, so j3 stands. Replaced by j6."
+    },
+    {
+      "id": "j6",
+      "expert": "AurumHydra",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_FTMO_size1.set",
+      "deposit": 10000,
+      "leverage": 500,
+      "tag": "size1b",
+      "set": [],
+      "compare_set": ["InpBreakRiskPct=0.5", "InpNoiseMult=0.275"],
+      "from": "2024.01.01",
+      "status": "queued",
+      "needs": null,
+      "expect": "Step 16 for AurumHydra, replacing j5. Same model as j5 (research/hydra_tester_expect.py): legs off +1184% / 10.7%, on +1574% / 11.5%, return per DD 110 -> 136; tester drawdown likely above the model's. j5 (legs on plus InpMonthEndBoost=2, no halt) gave +1460% / 13.11%, so the clean legs-on run should land near or a little under that; the legs-off run clearly lower. Before judging, check each report's input list: off run InpBreakRiskPct=0.0, InpNoiseMult=0.0, InpMonthEndBoost=1.0, InpMaxDrawdownPct=35.0; on run the same but 0.5 / 0.275. The off run should show no USDJPY breakout magics (+26/+27) and no noise magics (+28/+29). Step 16 test: return per unit of equity drawdown higher with the legs on.",
+      "note": "Queued by the orchestrator 2026-10-17 10:05. The preset now writes the leg, boost, halt and goal inputs at the EA's defaults, because the tester keeps the previous run's value of any input a preset leaves out (j5). run-tester.ps1 lets -Set override preset lines, so the on run gets 0.5 / 0.275."
     }
   ]
 }

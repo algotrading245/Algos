@@ -21,3 +21,14 @@ InpMorn3=CADJPY
 InpNasdaq=US100.cash
 InpSizeMult=1.0
 InpGoalMult=0.0
+; The Strategy Tester keeps the last run's value of every input a preset leaves out, so the inputs other Hydra presets
+; or runs change are written here at the EA's defaults (j5's legs-off run inherited j4's 5x preset and legs: job j6).
+InpGoalDays=21
+InpGoalCap=20.0
+InpGoalScale=1.0
+InpGoalRepeat=true
+InpMonthEndBoost=1.0
+InpMaxDrawdownPct=35.0
+InpBrakePct=0.0
+InpBreakRiskPct=0.0
+InpNoiseMult=0.0

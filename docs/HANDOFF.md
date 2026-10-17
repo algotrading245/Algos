@@ -40,7 +40,7 @@ Rules of the work:
   data folder under `backup\2026-10-17_before_repo_link`.
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
   AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on - all
-  done; j5 AurumHydra size 1 legs off/on queued (replaces j4, see below).
+  done; j5 AurumHydra size 1 legs off/on done but not a valid pair; **j6 queued** (replaces j5, see below).
 - **AurumNoise passed step 15 (orchestrator, 2026-10-17 05:25).** US500.cash (j1): -0.68%, 26.1% equity drawdown,
   452 trades, against +1.3% / 28.6% / 451 expected - flat as the Python model said; the profit was all 2024
   (+1,689), 2025 and 2026 lost. US100.cash (j2): +39.9%, 16.4%, 697 trades, against +44.7% / 18.5% / 701; every year
@@ -66,7 +66,7 @@ Rules of the work:
   noise US100.cash +977, US500.cash -57 (the S&P half flat again on 2024-26 data).
 - **Owner question (a3 in `approvals.json`, pending): step 17 = turn both legs on in the FTMO demo?** On the attached
   AurumFunded chart in Terminal 16 set `InpBreakRiskPct=0.125` and `InpNoiseMult=0.275`, nothing else. Agents may not
-  change a terminal's EA. Or keep the demo as it is until Hydra's j5 is in.
+  change a terminal's EA. Or keep the demo as it is until Hydra's j6 is in.
 - **j4 (AurumHydra 5x) was a set-up fault, not an EA result.** Its `set` renamed only 4 of Hydra's 16 symbol inputs;
   `InpStocks` (SP500.r), `InpNasdaq` (NAS100.r), the four fix pairs and six yen crosses kept the other broker's
   `.pc` / `.r` names, so the fix, stock-fall, Tokyo morning, after-holiday and noise legs never traded (only EURUSD,
@@ -78,6 +78,22 @@ Rules of the work:
   j3 runs' 70% of log growth, tester drawdown likely 15-25% (gold up to 6.2x equity, intraday dips). Step 16 test:
   return per drawdown higher with legs on. Later, for the 5x question itself: the 5x preset also needs these 16
   names, and one round at 100 tells little - a run of separate monthly rounds would.
+- **j5 (orchestrator, 2026-10-17 10:05): no valid off/on pair, replaced by j6.** Both runs came out identical to the
+  cent: +1460.44%, 13.11% equity drawdown, 4,174 trades, PF 1.53, return per drawdown 111, worst day -5.94%
+  (2026-06-30), 29 of 34 months positive, all 14 symbols traded (XAUUSD +41.9k, USDJPY +37.0k, US500.cash -1.0k the
+  only loser). Cause: **the Strategy Tester keeps the previous run's value of every input the preset leaves out.**
+  The off run's report lists j4's legs-on values that the size1 preset did not write: `InpBreakRiskPct=0.5`,
+  `InpNoiseMult=0.275`, `InpMonthEndBoost=2.0`, `InpMaxDrawdownPct=0.0` and the 5x goal inputs (inert at
+  `InpGoalMult=0`). So both runs were legs on *plus* the month-end boost and no 35% halt; that is ~97% of the
+  legs-on model's log growth, flattered by the boost. j3's report inputs were checked the same way and are clean.
+  Fix: `AurumHydra_FTMO_size1.set` now writes those inputs at the EA defaults (legs 0, boost 1.0, halt 35, goal
+  defaults); `-Set` still overrides them for the on run. **j6** (tag `size1b`) reruns the pair; expect the legs-on
+  run near or a little under j5's figure and the legs-off run clearly lower, and check the input list in both
+  reports before judging.
+- **Proposed tool change (agents may not edit `tools/`):** `tools/run-tester.ps1` should write *every* input of the
+  EA into `[TesterInputs]` - parse the `input` lines of the `.mq5` for their defaults, then apply the preset, then
+  `-Set` - so no run can inherit a value from the terminal's last run of the same EA. Until then every preset used
+  in the queue must list each input that any other preset or `compare_set` changes.
 - `backtests/2026-10-17_0056_AurumBreakout_USDJPY/` holds only a `tester.ini` (an aborted start before the 01:18
   run); left untracked.
 - **Autopilot = agent relay** (`tools/autopilot/relay.ps1`, task "Aurum Relay" every 5 min; it replaced the
