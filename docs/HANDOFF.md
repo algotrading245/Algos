@@ -1,7 +1,7 @@
 # Handoff: where the two-EA project stands
 
 For a session that picks this work up without the earlier conversation (for example a cloud session). Last updated
-2026-10-17.
+2026-10-18.
 
 ## Goal
 
@@ -41,7 +41,7 @@ Rules of the work:
 - **Tester queue** (`docs/autopilot/queue.json`, run by the tester agent this weekend): j1 AurumNoise US500, j2
   AurumNoise US100, j3 AurumFunded legs off/on (approval a1 given 2026-10-17), j4 AurumHydra legs off/on - all
   done; j5 AurumHydra size 1 legs off/on done but not a valid pair; j6 (replaces j5) done and judged; j7 failed;
-  j8a-c (5x months) done and judged; **j9 queued** (gold spread-cap check, 3 months).
+  j8a-c (5x months) done and judged; j9 (gold spread-cap check) done and judged 2026-10-18; no job queued.
 - **AurumNoise passed step 15 (orchestrator, 2026-10-17 05:25).** US500.cash (j1): -0.68%, 26.1% equity drawdown,
   452 trades, against +1.3% / 28.6% / 451 expected - flat as the Python model said; the profit was all 2024
   (+1,689), 2025 and 2026 lost. US100.cash (j2): +39.9%, 16.4%, 697 trades, against +44.7% / 18.5% / 701; every year
@@ -130,11 +130,23 @@ Rules of the work:
   - **j9 queued** (2026.02-04, `InpGoldMaxSpread=1.0`, tag `5xS`): a cause check only, not a 5x result.
   - There is no `docs/candidates.md` entry for the 5x preset (it is the EA's own goal mode, not a candidate leg), so
     nothing was updated there.
-- **Demo warning: AurumFunded has the same `InpGoldMaxSpread = 0.30`** (`AurumFunded.mq5:246`). If FTMO's live
-  XAUUSD spread sits above 0.30, its gold hold and gold legs never buy in the demo. The monitor/fidelity agent should
-  check Monday's journal for gold entries (or a long run of no gold buys while the trend is up). If confirmed, the fix
-  is a cap relative to price (e.g. in basis points) in both EAs: an EA change, so quant-coder, compile 0/0 and the
-  reviewer; owner approval before the demo binary changes (the junction reloads it).
+- **j9 judged (orchestrator, 2026-10-18 00:05): the cap was the cause, but lifting it makes the 5x months worse.**
+  2026.02-04 with `InpGoldMaxSpread=1.0`: gold traded in all three months (cause confirmed) and lost -6,490 / -5,492
+  / -3,304; multiples 0.34x / 0.49x / 0.57x against 1.33x / 0.91x / 0.72x with the cap at 0.30 (j8b/j8c). The
+  hold bought at the round's start and took the 2026 gold drops at full goal size (worst days 02-02 -66.3%, 03-03
+  -54.4%, 04-29 -43.1%). On those days a wide spread goes with fast gold, so the fixed 0.30 cap has worked as an
+  unplanned volatility filter. **The j8 answer, 1 of 21 months at 5x for EA 1.33 on FTMO data, stands; the cap stays
+  unchanged** (choosing a cap from three tester months would be fitting the tester window, and the only evidence so
+  far favours the current value). The remaining gap to the preset header's 9/21 (EA 1.31 on a `.pc` broker at 3 cents
+  a lot) cannot be rerun on Terminal 16. For the 5x goal the tester evidence now says the goal mode's gold hold is
+  too large for 2025-26 gold (22-48% volatility). A smaller goal size, or a hold that does not enter at the round's
+  start in high volatility, would be a new idea: it goes through the gates on the Python model from 2010, not a
+  setting picked on j8/j9.
+- **Demo note (revised 2026-10-18): AurumFunded has the same `InpGoldMaxSpread = 0.30`** (`AurumFunded.mq5:246`).
+  The tester runs on FTMO's ticks with the same cap, so j3's figures already include the days it blocks, and demo and
+  tester should agree. No EA change is proposed any more (j9 above). The monitor/fidelity agent should still check
+  that gold entries in the demo come on the same days as in a tester run over those days; a demo that never buys gold
+  while the tester does would be a fidelity finding.
 - **Proposed tool change (`tools/months_summary.py`):** its "round" field and refusal count read the tester's
   `summary.txt`, which is one log for the whole day and every run, so both are polluted by the other months. Cut
   each month's lines by the run's start and end time (as done by hand for j8), and count the EA's silent
@@ -187,7 +199,9 @@ Rules of the work:
   3.33). Simple rule scans on these instruments are exhausted; do not rerun them. New edges need a reason (a flow, a
   paper) or new data, and the scanner agent only runs on a family or data not scanned yet.
 - **Ideas:** the researcher's first batch is `docs/ideas/2026-10-17.md` (4 ideas, abstracts only). Next runs lead
-  with non-paper sources (open code, write-ups, market structure).
+  with non-paper sources (open code, write-ups, market structure). Next to start (2026-10-18): idea 2, Osler's
+  round-number stop cascades (NY Fed SR125 / SR150, readable with `tools/pdf_text.py`, data in the repo); full read
+  first, then check its overlap with the USD/JPY breakout leg.
 - **Agents (relay roles and models):** orchestrator (Opus, judges and plans), reviewer (Opus, on request), researcher
   (Haiku, daily), scanner (Haiku, on hand-over), fidelity (Sonnet, weekly or on hand-over), tester operator (Sonnet,
   weekend window), monitor (Haiku, daily demo check). Opus stays on judgement only.
