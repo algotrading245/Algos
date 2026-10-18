@@ -1,6 +1,14 @@
 {
   "about": "The model router (owner 2026-10-18). One switch picks the provider for every agent run; each role maps to a tier, and each provider names a model per tier, so a role can be moved between providers or models without touching a script. Switch it with: python tools/autopilot/router.py use qwen|claude [--role R --model M] [--tier T --model M]; read it with: python tools/autopilot/router.py show. No secrets here (the Qwen key lives in ~/.qwen/settings.json, outside the repo).",
   "provider": "claude",
+  "fallback": {
+    "about": "Limit resilience (owner 2026-10-18): when a run hits a usage, rate, quota or auth limit, run-agent.ps1 backs that provider off (logs/autopilot/provider-backoff.json, until the reset time the CLI names, else backoff_minutes) and the router sends the next runs down this list, skipping any provider that is backed off, has no key or is not installed. When none is left the relay runs code-only: the scripts (tester_step, scanner_step, code_judge) keep the pipeline going and the agents resume when a provider comes back. A provider other than claude/qwen can be added: give it \"cli\": \"qwen\" (Qwen Code drives any OpenAI-compatible API), \"key_env\": [\"<ENV VAR holding its key>\"], \"base_url\" and \"tiers\", then add its name here. Check with: python tools/autopilot/router.py available",
+    "order": [
+      "claude",
+      "qwen"
+    ],
+    "backoff_minutes": 60
+  },
   "providers": {
     "claude": {
       "about": "Claude Code CLI (claude.exe). Roles run as .claude/agents/<role>.md subagent definitions with --agent, permissions from tools/autopilot/settings.json in dontAsk mode.",

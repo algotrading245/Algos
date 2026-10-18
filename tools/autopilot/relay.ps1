@@ -13,13 +13,19 @@
 # cycle starts with the researcher again. Inside a cycle the next agent starts the moment the last one ends (this
 # script loops, no gap); between two cycles it waits $CycleBreakMinutes.
 # Order on each tick:
-#   1. PAUSE, another agent running, or a usage/rate-limit back-off: nothing.
-#   2. tester_step.py; then a tester-help.json: the tester agent. A collected job: the orchestrator judges it
+#   1. PAUSE or another agent running: nothing.
+#   2. tester_step.py (always, AI or not). Then, when no AI provider can take a run (router.py available: every
+#      provider backed off after a limit, without a key or not installed), code-only mode: code_judge.py confirms
+#      the collected jobs whose fixed expect check matched and releases the jobs waiting on them, the keeper's
+#      tester_step/scanner_step keep the tester and the scans going, and no agent starts until a provider is back.
+#      Otherwise a tester-help.json: the tester agent. A collected job: the orchestrator judges it
 #      (Sonnet when the script's fixed expect check matched, Opus when it did not).
 #   3. The next agent at once: the one named in the last HANDOFF line, else the next in the chain. Skipped when it
 #      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
 #      has not run for a week, the researcher while 3 or more ideas are untested.
-# No daily caps: usage is bounded by one agent at a time, the hand-over gap and the usage/rate-limit back-off.
+# No daily caps: usage is bounded by one agent at a time and the cycle break. A usage/rate limit backs off only the
+# provider that hit it (run-agent.ps1 -> router.py backoff); the next provider in router.json's fallback order takes
+# the runs, and with none left the relay runs code-only (step 2) until one is back.
 # Which CLI and model a role runs on is the router's (tools/autopilot/router.json): switch the whole system between
 # Claude and Qwen with python tools/autopilot/router.py use qwen|claude. This script only names a tier (routine,
 # code, judge) when a run should be cheaper than its role's default.
@@ -61,10 +67,28 @@ while ($true) {
 
     $r = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $now = Get-Date
-    if ($r -and $r.backoff_until -and [datetime]$r.backoff_until -gt $now) { break }
-
     # 2. The tester script: collect a finished job, start the next queued one (fast when idle; its own lock).
     & python.exe (Join-Path $Repo "tools\autopilot\tester_step.py") 2>&1 | Out-Null
+
+    # No AI provider can run (all limited, keyless or missing): code-only. The scripts keep the pipeline moving and
+    # the agents resume on the first tick a provider is back. The log says so once on entering and once on leaving.
+    $av = & python.exe (Join-Path $PSScriptRoot "router.py") available 2>$null | Select-Object -Last 1
+    $avo = try { "$av" | ConvertFrom-Json } catch { $null }
+    $codeOnlyFlag = Join-Path $LogDir "code-only.flag"
+    if ($avo -and -not $avo.any) {
+        $why = ($avo.providers.PSObject.Properties | ForEach-Object { "$($_.Name) $($_.Value)" }) -join "; "
+        if ($DryRun) { Write-Output "code-only: no AI provider available ($why); would run code_judge.py"; break }
+        if (-not (Test-Path $codeOnlyFlag)) {
+            Write-Log "relay" "code-only mode: no AI provider available ($why)"
+            Set-Content $codeOnlyFlag (Get-Date).ToString("s") -Encoding ASCII
+        }
+        & python.exe (Join-Path $PSScriptRoot "code_judge.py") 2>&1 | ForEach-Object { if ("$_".Trim()) { Write-Log "relay" "code_judge: $_" } }
+        break
+    }
+    if (Test-Path $codeOnlyFlag) {
+        Remove-Item $codeOnlyFlag -Force -ErrorAction SilentlyContinue
+        Write-Log "relay" "code-only mode over: $($avo.first) is available, agents resume"
+    }
     if (Test-TesterWork) {
         if ($startedHere -contains "tester") { break }
         $startedHere += "tester"

@@ -11,12 +11,19 @@
 #   python tools/autopilot/router.py clear --role orchestrator           # drop an override
 #   python tools/autopilot/router.py resolve --role tester [--tier code] [--model opus]
 #       -> one JSON line for run-agent.ps1: {"provider","model","tier","turns","minutes","agent","settings"}
+#          provider "none" when no provider can run (all backed off, no key, not installed): code-only mode
+#   python tools/autopilot/router.py available                # {"any": true|false, "first", "providers": {...}}
+#   python tools/autopilot/router.py backoff --provider claude [--minutes 60] [--stdin]   # after a limit
+#   python tools/autopilot/router.py backoff --provider claude --clear                    # limit lifted early
 #
 # No secret is ever stored here: the Qwen key lives in ~/.qwen/settings.json, outside the repo.
 import argparse
 import json
 import os
+import re
+import shutil
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -51,23 +58,35 @@ def resolve(r, role, tier=None, model=None):
         sys.exit(f"router.json names provider '{provider}', which it does not define")
     t = tier or ov.get("tier") or cfg["tier"]
 
-    # A provider that cannot authenticate is not a reason for the pipeline to idle: fall back to the other one and
-    # say so (run-agent.ps1 logs it). Putting the key in ~/.qwen/settings.json switches the runs to Qwen at once.
-    fell_back = None
-    if provider == "qwen" and not qwen_key():
-        fell_back = "qwen has no API key (see ~/.qwen/settings.json)"
-        provider = "claude" if "claude" in r["providers"] else provider
+    # A provider that cannot run (backed off after a limit, no key, not installed) is not a reason for the pipeline
+    # to idle: walk the fallback order and say so (run-agent.ps1 logs it). None left: provider "none", code-only.
+    wanted = provider
+    skipped = []
+    for cand in chain(r, wanted):
+        why = unavailable(r, cand)
+        if not why:
+            provider = cand
+            break
+        skipped.append(f"{cand} {why}")
+    else:
+        return {"provider": "none", "cli": None, "model": None, "tier": t, "turns": cfg.get("turns", 40),
+                "minutes": cfg.get("minutes", 60), "fell_back": "; ".join(skipped), "agent": None,
+                "agent_file": None, "args": [], "settings": None, "base_url": None, "key_env": []}
+    fell_back = "; ".join(skipped) if provider != wanted else None
     p = r["providers"][provider]
-    if model:
-        # A tier name of the active provider is accepted as a shortcut ("--model judge").
+    if model and (provider == wanted or model in p["tiers"]):
+        # A tier name of the active provider is accepted as a shortcut ("--model judge"). A literal model of the
+        # provider we fell back from ("opus") means nothing here, so the tier decides instead.
         m = p["tiers"].get(model, model)
     else:
         m = ov.get("model") if (ov.get("provider") or r["provider"]) == provider else None
         m = m or p["tiers"].get(t)
         if not m:
             sys.exit(f"provider '{provider}' has no model for tier '{t}'")
+    cli = cli_of(r, provider)
     return {
         "provider": provider,
+        "cli": cli,
         "model": m,
         "tier": t,
         "turns": cfg.get("turns", 40),
@@ -75,11 +94,153 @@ def resolve(r, role, tier=None, model=None):
         "fell_back": fell_back,
         # Claude runs four roles as a subagent definition (--agent) and the other two on the tier model alone. Qwen
         # has no --agent flag, so run-agent.ps1 inlines the same definition into the prompt instead.
-        "agent": cfg.get("claude_agent") if provider == "claude" else None,
-        "agent_file": (cfg.get("agent_file") or None) if provider != "claude" else None,
+        "agent": cfg.get("claude_agent") if cli == "claude" else None,
+        "agent_file": (cfg.get("agent_file") or None) if cli != "claude" else None,
         "args": p.get("args") or [],
-        "settings": ("tools/autopilot/settings.json" if provider == "claude" else ".qwen/settings.json"),
+        "settings": ("tools/autopilot/settings.json" if cli == "claude" else ".qwen/settings.json"),
+        # An extra OpenAI-compatible provider run through Qwen Code: run-agent.ps1 points OPENAI_BASE_URL at base_url
+        # and copies its key from the first key_env variable set (never from an argument).
+        "base_url": p.get("base_url"),
+        "key_env": list(p.get("key_env") or []),
     }
+
+
+# ---------------------------------------------------------------- fallback and per-provider back-off
+
+BACKOFF = REPO / "logs" / "autopilot" / "provider-backoff.json"
+
+
+def cli_of(r, provider):
+    """Which CLI drives a provider: claude, or qwen (Qwen Code, also for any other OpenAI-compatible API)."""
+    return (r["providers"].get(provider) or {}).get("cli") or provider
+
+
+def chain(r, first):
+    """The provider to try first, then the rest of the fallback order."""
+    order = list((r.get("fallback") or {}).get("order") or [])
+    return [first] + [p for p in order if p != first and p in r["providers"]]
+
+
+def read_backoff():
+    try:
+        b = json.loads(BACKOFF.read_text(encoding="utf-8-sig"))
+        return b if isinstance(b, dict) else {}
+    except Exception:
+        return {}
+
+
+def backed_off(provider):
+    """The back-off entry of a provider while it lasts, else None."""
+    e = read_backoff().get(provider)
+    try:
+        if e and datetime.fromisoformat(e["until"]) > datetime.now():
+            return e
+    except Exception:
+        pass
+    return None
+
+
+def installed(cli):
+    if cli == "claude":
+        npm = Path(os.environ.get("APPDATA", "")) / "npm" / "node_modules" / "@anthropic-ai" / "claude-code" / "bin" / "claude.exe"
+        return npm.exists() or bool(shutil.which("claude.exe") or shutil.which("claude"))
+    if cli == "qwen":
+        entry = Path(os.environ.get("APPDATA", "")) / "npm" / "node_modules" / "@qwen-code" / "qwen-code" / "cli-entry.js"
+        return entry.exists() and bool(shutil.which("node"))
+    return False
+
+
+def has_key(r, provider):
+    p = r["providers"][provider]
+    if cli_of(r, provider) == "claude":
+        return True                      # Claude Code signs in by itself (subscription login)
+    names = p.get("key_env")
+    if not names:
+        return qwen_key()
+    return any(str(os.environ.get(n, "")).strip() for n in names) or user_env_has(names)
+
+
+def user_env_has(names):
+    """A Windows user environment variable set after this process started (setx) counts too."""
+    if os.name != "nt":
+        return False
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+            for n in names:
+                try:
+                    if str(winreg.QueryValueEx(k, n)[0]).strip():
+                        return True
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    return False
+
+
+def unavailable(r, provider):
+    """Why a provider cannot take a run now, or None when it can."""
+    e = backed_off(provider)
+    if e:
+        return f"backed off until {e['until']} ({e.get('reason', 'limit')})"
+    if not installed(cli_of(r, provider)):
+        return "is not installed"
+    if not has_key(r, provider):
+        return "has no API key"
+    return None
+
+
+RESET_AT = re.compile(r"resets?\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", re.I)
+RESET_EPOCH = re.compile(r"limit reached\|(\d{10})")
+
+
+def reset_time(text, minutes):
+    """When a limit ends: the time the CLI names ("resets 3pm", "...limit reached|<epoch>"), else now + minutes.
+    Never more than 7 days and never less than 5 minutes away."""
+    now = datetime.now()
+    until = now + timedelta(minutes=minutes)
+    m = RESET_EPOCH.search(text or "")
+    if m:
+        until = datetime.fromtimestamp(int(m.group(1)))
+    else:
+        m = RESET_AT.search(text or "")
+        if m:
+            h, mi, ap = int(m.group(1)), int(m.group(2) or 0), (m.group(3) or "").lower()
+            if ap == "pm" and h < 12:
+                h += 12
+            if ap == "am" and h == 12:
+                h = 0
+            if h < 24 and mi < 60:
+                until = now.replace(hour=h, minute=mi, second=0, microsecond=0)
+                if until <= now:
+                    until += timedelta(days=1)
+    until += timedelta(minutes=2)
+    return min(max(until, now + timedelta(minutes=5)), now + timedelta(days=7))
+
+
+def cmd_backoff(r, provider, minutes, reason, text, clear):
+    b = read_backoff()
+    if clear:
+        b.pop(provider, None)
+        print(f"{provider}: back-off cleared")
+    else:
+        if provider not in r["providers"]:
+            sys.exit(f"unknown provider '{provider}'")
+        mins = minutes or int((r.get("fallback") or {}).get("backoff_minutes") or 60)
+        until = reset_time(text, mins) if text else datetime.now() + timedelta(minutes=mins)
+        b[provider] = {"until": until.isoformat(timespec="seconds"), "reason": (reason or "limit")[:160],
+                       "set": datetime.now().isoformat(timespec="seconds")}
+        print(f"{provider}: backed off until {b[provider]['until']}")
+    BACKOFF.parent.mkdir(parents=True, exist_ok=True)
+    BACKOFF.write_text(json.dumps(b, indent=2) + "\n", encoding="utf-8")
+
+
+def cmd_available(r):
+    """One JSON line: is any provider able to take a run, and why not for each that cannot."""
+    order = chain(r, r["provider"])
+    state = {p: (unavailable(r, p) or "ok") for p in order}
+    print(json.dumps({"any": any(v == "ok" for v in state.values()),
+                      "first": next((p for p in order if state[p] == "ok"), None), "providers": state}))
 
 
 def cmd_show(r):
@@ -94,12 +255,17 @@ def cmd_show(r):
         mark = "  (override)" if isinstance(ov, dict) and ov else ""
         if got.get("fell_back"):
             mark += f"  [FALLBACK: {got['fell_back']}]"
-        print(f"  {role:13s} tier {got['tier']:8s} -> {got['provider']} {got['model']:18s} "
+        print(f"  {role:13s} tier {got['tier']:8s} -> {got['provider']} {str(got['model'] or 'code-only'):18s} "
               f"{got['turns']:3d} turns / {got['minutes']:3d} min{mark}")
     if r["provider"] == "qwen" or any(isinstance(v, dict) and v.get("provider") == "qwen"
                                       for v in (r.get("overrides") or {}).values()):
         print(f"qwen api key in {QWEN_SETTINGS}: "
               f"{'found' if qwen_key() else 'MISSING (runs fall back to claude until it is set)'}")
+    order = chain(r, r["provider"])
+    print("fallback order: " + " -> ".join(order) + " -> code-only")
+    for name in order:
+        why = unavailable(r, name)
+        print(f"  {name:7s} {why or 'ok'}")
 
 
 KEY_VARS = ("DASHSCOPE_API_KEY", "BAILIAN_TOKEN_PLAN_API_KEY", "BAILIAN_CODING_PLAN_API_KEY", "OPENAI_API_KEY")
@@ -314,6 +480,13 @@ def main():
     p.add_argument("--stdin", action="store_true", help="read the key from stdin instead of a hidden prompt")
     p.add_argument("--show", action="store_true", help="print which key is stored, masked")
     p.add_argument("--clear", action="store_true", help="remove the stored key")
+    sub.add_parser("available", help="can any provider take a run now (JSON)")
+    p = sub.add_parser("backoff", help="hold a provider back after a limit, so runs fall back down the order")
+    p.add_argument("--provider", required=True)
+    p.add_argument("--minutes", type=int, help="default: fallback.backoff_minutes, or the reset time --stdin names")
+    p.add_argument("--reason")
+    p.add_argument("--stdin", action="store_true", help="read the CLI's limit message from stdin for its reset time")
+    p.add_argument("--clear", action="store_true", help="lift the back-off now")
     a = ap.parse_args()
     r = load()
 
@@ -330,6 +503,13 @@ def main():
         cmd_show(r)
     elif a.cmd == "resolve":
         print(json.dumps(resolve(r, a.role, tier=a.tier, model=a.model)))
+    elif a.cmd == "qwen-key":
+        cmd_qwen_key(a)
+    elif a.cmd == "available":
+        cmd_available(r)
+    elif a.cmd == "backoff":
+        text = sys.stdin.read() if a.stdin else ""
+        cmd_backoff(r, a.provider, a.minutes, a.reason, text, a.clear)
 
 
 if __name__ == "__main__":

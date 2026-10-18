@@ -16,11 +16,16 @@
 #   either. Each run is killed after its time limit (Qwen also has its own --max-wall-time).
 # - Output: logs\autopilot\<date>_agent-<role>.log; the last run's outcome (with its provider and model):
 #   logs\autopilot\last-<role>.json.
+# - Limits (owner 2026-10-18): a run that hits a usage, rate, quota or auth limit backs only that provider off
+#   (router.py backoff, until the reset time the CLI names), keeps the hand-over on this role, and runs once more on
+#   the next provider in router.json's fallback order (-NoRetry marks that second run). When the router finds no
+#   provider at all it answers "none" and this script exits at once: the relay then runs code-only (relay.ps1).
 param(
     [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher", "scanner", "fidelity")][string]$Role,
     [ValidateSet("routine", "code", "judge")][string]$Tier,
     [string]$Model,
-    [switch]$IfWork
+    [switch]$IfWork,
+    [switch]$NoRetry
 )
 . "$PSScriptRoot\common.ps1"
 $log = "agent-$Role"
@@ -40,9 +45,13 @@ $Minutes = [int]$route.minutes
 
 if ($IfWork -and -not (Test-TesterWork)) { exit 0 }
 
-# The router falls back to the other provider when the one it points at cannot authenticate (a Qwen run with no API
-# key), so the pipeline never idles over a missing key. Say so in the log.
+# The router walks the fallback order past any provider that is backed off after a limit, has no key or is not
+# installed, so the pipeline never idles over one of them. Say so in the log; with none left, the relay runs code-only.
+if ($route.provider -eq "none") { Write-Log $log "skipped: no AI provider available ($($route.fell_back)); code-only until one is back"; exit 0 }
 if ($route.fell_back) { Write-Log $log "router fallback: $($route.fell_back); this run goes to $($route.provider) $($route.model)" }
+# Which CLI drives the provider: claude, or qwen (Qwen Code also drives any other OpenAI-compatible provider).
+$cli = if ($route.cli) { "$($route.cli)" } else { "$($route.provider)" }
+$limitHit = $false
 
 $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
 if (-not $mutex.WaitOne([TimeSpan]::FromMinutes(20))) { Write-Log $log "skipped: another agent run is still busy"; exit 0 }
@@ -60,7 +69,7 @@ function Get-AgentBody([string]$RelPath) {
 
 try {
     # What runs: Claude's own exe, or node on Qwen Code's entry script (its .cmd wrapper would swallow stdin).
-    if ($route.provider -eq "qwen") {
+    if ($cli -eq "qwen") {
         $exe = (Get-Command node.exe -ErrorAction Stop).Source
         $entry = Join-Path $env:APPDATA "npm\node_modules\@qwen-code\qwen-code\cli-entry.js"
         if (-not (Test-Path $entry)) { throw "Qwen Code is not installed at $entry (npm install -g @qwen-code/qwen-code)" }
@@ -89,9 +98,9 @@ $agentBody
 
     # What differs between the two CLIs, said once. It sits after the fixed prompt parts so a repeat run still hits
     # the provider's prompt cache for everything above it.
-    $providerSection = if ($route.provider -eq "qwen") { @"
+    $providerSection = if ($cli -eq "qwen") { @"
 
---- This run's tools (Qwen Code, model $($route.model)) ---
+--- This run's tools (Qwen Code, provider $($route.provider), model $($route.model)) ---
 These instructions were written for Claude Code; the same work has different tool names here. Read a file with
 read_file, write one with write_file, change part of one with edit, search contents with grep_search, find files with
 glob, fetch a page with web_fetch, search the web with web_search, and run every command with run_shell_command.
@@ -144,7 +153,7 @@ Latest decisions (docs/memory/decisions.jsonl, newest last):
 $recent
 "@
 
-    if ($route.provider -eq "qwen") {
+    if ($cli -eq "qwen") {
         $argv = @($entry, "-m", $route.model, "-o", "stream-json", "--include-partial-messages",
             "--max-session-turns", $Turns, "--max-wall-time", "${Minutes}m", "--approval-mode", "yolo") +
             @($route.args)
@@ -168,9 +177,17 @@ $recent
     $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
     # Marks the run as an agent's: tools\run-tester.ps1 and tools\run-months.ps1 then refuse the holdout (tools/holdout.py).
     $psi.EnvironmentVariables["AURUM_AGENT"] = "1"
-    if ($route.provider -eq "qwen") {
+    if ($cli -eq "qwen") {
         # Qwen prints a sandbox warning on every yolo run; the project's deny list is the gate here, not a sandbox.
         $psi.EnvironmentVariables["QWEN_CODE_SUPPRESS_YOLO_WARNING"] = "1"
+        # Another OpenAI-compatible provider run through Qwen Code: its endpoint, and its key copied from the first of
+        # its key_env variables that is set (process or user environment). The key is never logged.
+        if ($route.base_url) { $psi.EnvironmentVariables["OPENAI_BASE_URL"] = "$($route.base_url)" }
+        foreach ($kv in @($route.key_env | Where-Object { $_ })) {
+            $kval = [Environment]::GetEnvironmentVariable($kv, "Process")
+            if (-not $kval) { $kval = [Environment]::GetEnvironmentVariable($kv, "User") }
+            if ($kval) { $psi.EnvironmentVariables["OPENAI_API_KEY"] = $kval; break }
+        }
     }
 
     $started = Get-Date
@@ -259,11 +276,22 @@ $recent
     if ($m.Count -eq 0 -and $old -and $old.next -ne "none") {
         $state.from = $old.from; $state.next = $old.next; $state.due = $old.due; $state.reason = $old.reason
     }
-    # A usage, session, quota or auth limit: nothing starts for an hour (the relay waits, it never works around it).
-    # Both CLIs word these differently; "session limit" is Claude's weekly/session cap, the rest are Qwen's API side.
-    if ("$text`n$($err.Result)" -match '(?i)usage limit|rate limit|session limit|hit your limit|limit reached|limit will reset|quota|insufficient balance|invalid api key|incorrect api key|arrearage|access denied') {
-        $state.backoff_until = (Get-Date).AddMinutes(60).ToString("s")
-        Write-Log $log "usage, session, quota or auth limit in the output: relay waits until $($state.backoff_until)"
+    # A usage, session, quota or auth limit backs off this provider only, until the reset time the message names
+    # (router.py backoff), and keeps the hand-over on this role so the next provider in the fallback order picks the
+    # same work up (or, with none left, the relay goes code-only until one is back). Both CLIs word these differently;
+    # "session limit" is Claude's weekly/session cap, the rest are Qwen's API side. Only a failed or near-empty run
+    # counts, so a long report that merely mentions a rate limit does not trip it; stderr always counts.
+    $limitRx = '(?i)usage limit|rate limit|session limit|hit your limit|limit reached|limit will reset|quota|insufficient balance|invalid api key|incorrect api key|arrearage|access denied'
+    $limitText = if ($code -ne 0 -or $text.Trim().Length -lt 600) { "$text`n$($err.Result)" } else { "$($err.Result)" }
+    if ($limitText -match $limitRx) {
+        $limitHit = $true
+        # PowerShell 5.1 mangles quotes in native arguments and drops empty ones, so the reason is kept plain.
+        $why = (([regex]::Match($limitText, "(?i)[^\r\n]{0,60}($limitRx)[^\r\n]{0,60}").Value) -replace '["''\\]', '').Trim()
+        if (-not $why) { $why = "limit" }
+        $boOut = $limitText | & python.exe (Join-Path $PSScriptRoot "router.py") backoff --provider $route.provider --stdin --reason $why 2>&1
+        Write-Log $log "limit on $($route.provider): $(($boOut | Select-Object -Last 1)); the hand-over stays on $Role"
+        $state.next = $Role; $state.due = (Get-Date).ToString("s")
+        $state.reason = "rerun after a $($route.provider) limit" + $(if ($m.Count -eq 0 -and $old) { " (was: $($old.reason))" } else { "" })
     }
     $state | ConvertTo-Json | Set-Content $Relay -Encoding UTF8
     Write-Log $log "handoff: $($state.next) at $($state.due) ($($state.reason))"
@@ -271,4 +299,19 @@ $recent
     Write-Log $log "error: $($_.Exception.Message)"
 } finally {
     $mutex.ReleaseMutex()
+}
+
+# After a limit, one more try on the next provider right away (the mutex is free again); -NoRetry stops a loop.
+if ($limitHit -and -not $NoRetry) {
+    $av = & python.exe (Join-Path $PSScriptRoot "router.py") available 2>$null | Select-Object -Last 1
+    $avo = try { "$av" | ConvertFrom-Json } catch { $null }
+    if ($avo -and $avo.any) {
+        Write-Log $log "retrying $Role on $($avo.first)"
+        $again = @{ Role = $Role; NoRetry = $true }
+        if ($Tier) { $again.Tier = $Tier }
+        if ($Model) { $again.Model = $Model }
+        & $PSCommandPath @again
+    } else {
+        Write-Log $log "no other AI provider available: the relay runs code-only until one is back"
+    }
 }
