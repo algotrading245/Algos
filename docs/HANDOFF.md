@@ -92,7 +92,13 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
    +52.6% / 2.19% / 0 / 2024-04-30. The tester keeps 0.84 of the model's log growth (j12 0.79, both inside lesson 4).
    PASS. On the same daily model j12 has 5 day stops; the tester has 8. Still open: the EA never logs the trailing stop
    level. Proposed log line for a later AurumFunded change (reviewer first): print the new floor when the day-start
-   peak rises. Prop routes: FTMO
+   peak rises.
+   **j14 judged 2026-10-18** (`research/ifpro_tester_expect.py`, same book, lock floor -8.5% to -3.5% at +5%, FAST_IF
+   until the lock): Instant Funding PRO tester +109.8% / 6.71% eq DD / 1 day stop + 13 floating 1.7% stops, against a
+   model of +202.4% / 5.65% / 4 day stops. The tester keeps 0.67 of the model's log growth: the bottom of lesson 4's
+   band (j12 0.79, j13 0.84). PASS at the edge. The 13 floating stops act inside the day and are not in the daily model;
+   they are the likely cost (j14 keeps 0.85 of j12's share). Not tuned. Open, no tester time: read j14's deals on the
+   floating-stop days to price the 1.7% stop (would a looser setting keep more, inside the firm's rules?). Prop routes: FTMO
    2-Step (demo now) plus the two instant-funding accounts (no challenge, payout from +5%), presets in AurumFunded.
 
 ## Demo and autopilot (2026-10-17)
