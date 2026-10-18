@@ -54,7 +54,7 @@ Notes: Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2
 
 ## scan_slot_EURUSD_s25_L4_short (`scan_slot_EURUSD_s25_L4_short`)
 
-Status **testing**, pipeline step 9 of 20. Source: -.
+Status **rejected**, pipeline step 9 of 20. Source: -.
 
 
 
@@ -68,9 +68,11 @@ Gates (2026-10-17): **FAIL at dsr**
 | corr | FAIL | book +0.25, max leg quartet +0.31 | |book| <= 0.2, |leg| <= 0.3 |
 | goal | FAIL | Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.1% | Sharpe gain >= 0.03, weight fitted to 2017 |
 
+Notes: Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed DSR (0.403 against 0.9), correlation (book +0.25) and goal (Hydra 2018+ 3.37 -> 3.36); no flow or paper gives it a reason. The status 'testing' was stale.
+
 ## scan_slot_EURUSD_s21_L8_short (`scan_slot_EURUSD_s21_L8_short`)
 
-Status **testing**, pipeline step 9 of 20. Source: -.
+Status **rejected**, pipeline step 9 of 20. Source: -.
 
 
 
@@ -84,9 +86,11 @@ Gates (2026-10-17): **FAIL at dsr**
 | corr | pass | book +0.20, max leg quartet +0.23 | |book| <= 0.2, |leg| <= 0.3 |
 | goal | FAIL | Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
 
+Notes: Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed DSR (0.471 against 0.9) and goal (Hydra 2018+ 3.37 -> 3.36); no flow or paper gives it a reason. The status 'testing' was stale.
+
 ## scan_cal_wed_EURUSD_s25_L2_short (`scan_cal_wed_EURUSD_s25_L2_short`)
 
-Status **testing**, pipeline step 9 of 20. Source: -.
+Status **rejected**, pipeline step 9 of 20. Source: -.
 
 
 
@@ -99,6 +103,8 @@ Gates (2026-10-17): **FAIL at halves**
 | dsr | FAIL | 0.125 (N=26010, luck bar 2.23) | >= 0.9 |
 | corr | pass | book +0.01, max leg quartet +0.03 | |book| <= 0.2, |leg| <= 0.3 |
 | goal | FAIL | Hydra 2018+ 3.37 -> 3.33 at weight 11.5; P(5x) 55.2% -> 54.8% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+Notes: Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed halves (1.03 / 0.41), DSR (0.125 against 0.9) and goal (Hydra 2018+ 3.37 -> 3.33), as the scans record already said. The status 'testing' was stale.
 
 ## Round-number stop cascades (Osler) (`osler_round`)
 

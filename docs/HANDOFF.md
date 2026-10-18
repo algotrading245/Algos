@@ -55,13 +55,16 @@ each finished piece of work.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
   4x in 4 (19%), 5x in 2 (10%), 0 ruin months — but the "0 ruin" hides broker stop-outs (margin level < 50%) in
   7/10/9 months; that is the 4x/5x shortfall against the model (lesson 19). The goal model
-  (`research/hydra_goal_margin_model.py`, EA+legs round 4) now gives P(goal) 35.9 / 26.1 / 19.0% over 184 months
-  2010-2025.09 — **upper bounds**: reviewer REDO, the other legs' per-order 50% free-margin clip is biased low, the
-  edge penalty unclipped, month-end boost and noise hours/size missing.
-- **Next pipeline work (no tester time):** quant-coder round 5 of the margin model (sequential per-order clip with
-  the pair count per leg, edge penalty × clip ratio, month-end boost ×2, noise from 17:00 with vol leverage, a clip-
-  path check), then the reviewer; then the margin-aware size cap (inputs off by default, the 21 months as a check
-  only); then fidelity: the FTMO demo's symbol margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100.
+  (`research/hydra_goal_margin_model.py`, EA+legs round 5: per-order clip, month-end boost ×2) gives P(goal)
+  39.7 / 28.8 / 22.3% over 184 months 2010-2025.09 (edge 1.0, preset) — a **loose upper bound only**: reviewer
+  REDO, the noise is still round 4's constant ticket (NSXUSD M1 missing), on the 21 tester months the model reaches
+  the goal 10/10/9 times against the tester's 9/4/2. Model iteration stopped (run limit); do not quote r5 edge-0.7.
+- **Next pipeline work (no tester time):** the margin-aware size cap from 2010-2025.09 (inputs off by default, the
+  21 months as a check only), held below the round-5 hit size (min 15, p5 20 — a ceiling, never the cap value),
+  with the round-5 REDO items fixed or stated as limits: fix before cross order (Legs.mqh:1093-1098), C1 needs an
+  explicit no-clip branch returning 1.0 plus a five-parts unit test, noise P&L not rescaled, boost not haircut at
+  edge 0.7, EA sizes on balance not equity. Researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a
+  stated proxy). Then fidelity: the FTMO demo's symbol margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
   tester time: j12-vs-j3 deal lists on the three extra day-stop days; j14's floating-stop days to price the 1.7%
@@ -70,7 +73,8 @@ each finished piece of work.
   opens Monday. The monitor reports in `docs/demo_log.md`; fidelity pairs demo fills with a tester run weekly.
   Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap).
 - **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the next job comes from
-  the round-5 model work above. Judgements live in each `backtests/<folder>/summary.md`.
+  the size-cap work above. Scan candidates scan_slot_EURUSD_s25_L4_short, s21_L8_short and
+  scan_cal_wed_EURUSD_s25_L2_short rejected 2026-10-18 (gates.py failed 2026-10-17). Judgements live in each `backtests/<folder>/summary.md`.
 - **Research pipeline:** simple-rule scans on the histdata symbols are exhausted (all four `edge_scan.py` families
   run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
   into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels rejected at steps 5-7 (new rejected

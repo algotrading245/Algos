@@ -219,8 +219,9 @@
   {
    "id": "scan_slot_EURUSD_s25_L4_short",
    "name": "scan_slot_EURUSD_s25_L4_short",
-   "status": "testing",
+   "status": "rejected",
    "step": 9,
+   "notes": "Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed DSR (0.403 against 0.9), correlation (book +0.25) and goal (Hydra 2018+ 3.37 -> 3.36); no flow or paper gives it a reason. The status 'testing' was stale.",
    "gates": {
     "id": "scan_slot_EURUSD_s25_L4_short",
     "when": "2026-10-17T15:27:11",
@@ -267,8 +268,9 @@
   {
    "id": "scan_slot_EURUSD_s21_L8_short",
    "name": "scan_slot_EURUSD_s21_L8_short",
-   "status": "testing",
+   "status": "rejected",
    "step": 9,
+   "notes": "Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed DSR (0.471 against 0.9) and goal (Hydra 2018+ 3.37 -> 3.36); no flow or paper gives it a reason. The status 'testing' was stale.",
    "gates": {
     "id": "scan_slot_EURUSD_s21_L8_short",
     "when": "2026-10-17T15:27:15",
@@ -315,8 +317,9 @@
   {
    "id": "scan_cal_wed_EURUSD_s25_L2_short",
    "name": "scan_cal_wed_EURUSD_s25_L2_short",
-   "status": "testing",
+   "status": "rejected",
    "step": 9,
+   "notes": "Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed halves (1.03 / 0.41), DSR (0.125 against 0.9) and goal (Hydra 2018+ 3.37 -> 3.33), as the scans record already said. The status 'testing' was stale.",
    "gates": {
     "id": "scan_cal_wed_EURUSD_s25_L2_short",
     "when": "2026-10-17T15:44:57",

@@ -1,5 +1,39 @@
 """The AurumHydra goal model with margin and a broker stop-out, hour by hour.
 
+ROUND 5 CHANGES (against round 4; the reviewer sent round 4 back, REDO). "r4" below = the round-4 variant, which this
+script still builds (BOOST 1, single-ticket clip, constant noise at 16, penalty in the residual) for comparison and
+as a check; "r5" = the new main variant. Neither was run when this was written.
+  H1  Per-order sequential clip (Legs.mqh:625 RiskLots, :1749 NotionalLots clip EACH ORDER to InpMarginPct of the free
+      margin left at that moment). A ticket now carries its parts (one per pair: fix 5, cross 3, fall 5, after 5,
+      morning 3, noise 2 indices, the others 1). Each part is clipped in turn: ratio_j = min(1, CLIP * free_left /
+      want_j), free_left less that part's used margin; the ticket's ratio = sum of ratio_j * share_j (share_j = the
+      part's share of the ticket's notional), used for its margin and its pnl. Shares: the real split where build_legs
+      has it (morning and after are built pair by pair, noise by index leverage), EQUAL parts for fix, cross, fall
+      (their pnl comes from one call over all pairs; a per-pair call would overwrite the fixbars cache).
+  H2  Edge penalty. The day's penalty (E.other less the edge-1.0 other) is shared over the day's tickets in proportion
+      to their notional and scaled by each ticket's clip ratio like the rest of its pnl (the edge set only gives a
+      day total, no per-leg difference). The residual then holds bell + the hourly-vs-file differences only.
+  M4  Month-end boost (InpMonthEndBoost 2.0 in all target presets). The Python files that make the tickets have NO
+      boost: tools/backtest_hydra.py fix() takes risk=0.005 flat (line 156, line 193 res.loc[d] += w * risk ...), the
+      hydra_legs_daily.csv.gz columns come from it and from quartet(); no 'boost' anywhere in tools/backtest_hydra.py or
+      tools/quartet_model.py, and research/hydra_t5b_months_model.py:10 says it is "not modelled". BOOST (here 2.0)
+      doubles notional and pnl of the fix and cross tickets (the EA's fix loop, Legs.mqh:1144, runs on FixDay only),
+      of the Tokyo ticket on FixDay (Legs.mqh:186) and the bell pnl in the residual on FixDay; also the pnl in lmode
+      0/2 and the no-margin path (E.other, E.rr), so every r5 column includes it and every r4 column does not.
+      FixDay as in Legs.mqh:1013: a weekday whose next weekday (Friday: Monday) is in another month.
+  M5  Noise opens at 17:00 server (the first check j=0 is at NOISE_OPEN + 30 = minute 1020, Legs.mqh:29-31, 1782-1788)
+      and each index is sized SizeMult * InpNoiseMult 0.275 * min(4, 0.02 / vol) (Legs.mqh:1722, 1831), vol = sample
+      std (n-1) of the last 14 close-to-close returns of sessions before the day (close = server minute 1380 = 16:00
+      New York, open = minute 990), from marketdata/histdata/SPXUSD and NSXUSD M1. Not done (loud line) if the index
+      data is missing.
+  L   Stale text on the 'other' margin rate (part 1) corrected.
+  C   Check C in part 4: CLIP 1e12 (no clip) in EA+legs against the plumbing mode, plus the r4 replication check.
+CLIP, the legs' margin switch and the ticket variant are parameters now (go(..., clip=, legmargin=)).
+Outputs: 3a (tester vs models, with the disagreeing months), 3b (r3 / r4 / r5 side by side), 3c (hit size r3 / r4 / r5),
+3d (other-leg pnl, full for r5, sums for r4), part 4 checks, and a ROUND 5 SUMMARY block at the end.
+The text below this line is the description of round 3 / 4; where it differs from the list above, the list above wins
+(e.g. "one clip per ticket", "noise a constant", "no boost" describe the r4 variant only).
+
 The tester (FTMO data, 1:500, deposit 10000) ended 7 / 10 / 9 of 21 single-month goal runs (3x / 4x / 5x,
 2024.01-2025.09) in a stop-out (margin level below 50%, deal comment "so 4x.xx%", median multiple 0.5x), while
 research/hydra_t5b_months_model.py has no margin and rides the same hours out. This script adds margin to the model.
@@ -55,6 +89,7 @@ The hold's notional as a fraction of equity is pos = sig * 0.107 / vol, at most 
 
     python research/hydra_goal_margin_model.py
 """
+import copy
 import json
 import math
 import re
@@ -81,6 +116,9 @@ MARGIN = True                      # False: the hourly code without margin (dail
 TOL = 0.997                        # lesson 18: goal reached counts at 0.3% below
 STOP_LEVEL = 0.5                   # broker stop-out at margin level 50%
 CLIP = 0.5                         # one order may use at most half of the free margin (InpMarginPct 50)
+BOOST = 2.0                        # InpMonthEndBoost of the target presets; 1.0 switches the boost off (r5 variant)
+NOISE_MULT = 0.275                 # InpNoiseMult
+SUMM = {}                          # numbers collected for the ROUND 5 SUMMARY block
 GRID_RISK, HOLD_TARGET, HOLD_SWAP, HOLD_COST = 0.035, 0.107, 0.068, 0.8
 START_DAY = "2010-06-01"           # the legs file starts here
 HOLD_EPOCH = int((holdout.START - pd.Timestamp("1970-01-01")).total_seconds())
@@ -235,8 +273,8 @@ def part1(runs):
           + ("  -> POOR (median error above 25%), the rates below are used as fitted anyway" if np.median(rel) > 0.25
              else ""))
     if "other" in rate and rate["other"] > 0:
-        print("note: 'other' symbols (contract size unknown) carry margin in the fit; the model has no such leg and "
-              "ignores that rate")
+        print("note: 'other' symbols (the indices, contract size unknown) carry margin in the fit; since round 4 the "
+              "noise tickets use that rate (a_other below; a_fx when nnls gives 0)")
     a_gold, a_fx = rate.get("gold", 0.0), rate.get("fx", 0.0)
     if a_gold <= 0 or a_fx <= 0:
         print("WARNING: a fitted rate is 0, the model will carry no margin for that leg")
@@ -479,8 +517,8 @@ def build_legs(b):
     file_pnl["noise"] = _cut(0.55 * cand["noise"], days)         # as m.daily(): 0.55 * the candidate file's noise
     dst = np.array([t.dst().total_seconds() > 0 for t in (days + pd.Timedelta(hours=12)).tz_localize("America/New_York")])
 
-    def add(day, h0, h1, segs, kd, pnl, cmp, name):
-        tix[day].append((h0, h1, segs, kd, float(pnl), cmp, max(s[2] for s in segs), name))
+    def add(day, h0, h1, segs, kd, pnl, cmp, name, shares=(1.0,)):
+        tix[day].append((h0, h1, segs, kd, float(pnl), cmp, max(s[2] for s in segs), name, tuple(shares)))
 
     def row(name, sym, kd, hours, nots, pnl_arr, ntix, source, note):
         nz = np.asarray(nots)
@@ -509,18 +547,28 @@ def build_legs(b):
     n_fall = _cut((f0 - f1) / (c_fall * 1e-4), days)
     re_fall = _cut(f1, days)
     n_morn, re_morn = np.zeros(n), np.zeros(n)
+    morn_p, aft_p = [], []                                   # per-pair notionals: the parts of the morning / after tickets
     for p, c in bh.MORNING.items():
         y0 = bh.morning(0.005, costx=0.0, pairs={p: c})
         y1 = bh.morning(0.005, costx=1.0, pairs={p: c})
-        n_morn += _cut((y0 - y1) / (c * 1e-4), days)
+        morn_p.append(_cut((y0 - y1) / (c * 1e-4), days))
+        n_morn += morn_p[-1]
         re_morn += _cut(y1, days)
     n_aft, re_aft = np.zeros(n), np.zeros(n)
     for p in ("EURUSD", "GBPUSD", "AUDUSD", "USDCAD", "USDCHF"):
         c = bh.AFTER[p][1]
         y0 = bh.after(0.01, costx=0.0, pairs=(p,))
         y1 = bh.after(0.01, costx=1.0, pairs=(p,))
-        n_aft += _cut((y0 - y1) / (c * 1e-4), days)
+        aft_p.append(_cut((y0 - y1) / (c * 1e-4), days))
+        n_aft += aft_p[-1]
         re_aft += _cut(y1, days)
+
+    def shr(parts, d_):
+        """Share of each pair in the ticket's notional on day d_ (the real per-pair split, H1)."""
+        v = np.array([max(x[d_], 0.0) for x in parts])
+        return tuple(v / v.sum()) if v.sum() > 0 else (1.0 / len(parts),) * len(parts)
+
+    eq5, eq3 = (0.2,) * 5, (1.0 / 3.0,) * 3
     for name, mine, key in (("fix", re_fix, "fix"), ("cross", re_cross, "cross"), ("fall", re_fall, "fall"),
                             ("morning", re_morn, "morning"), ("after", re_aft, "after")):
         print(f"  {name}: recomputed daily pnl against the file column: max abs diff {np.abs(mine - file_pnl[key]).max():.2e} "
@@ -529,16 +577,17 @@ def build_legs(b):
     for d_ in range(n):
         if n_pre[d_] > 1e-12 or n_post[d_] > 1e-12:
             segs = [(16, 18, n_pre[d_])] + ([(18, 19, n_post[d_])] if n_post[d_] > 1e-12 else [])
-            add(d_, 16, 19, [s for s in segs if s[2] > 1e-12], 1, file_pnl["fix"][d_], True, "fix")
+            add(d_, 16, 19, [s for s in segs if s[2] > 1e-12], 1, file_pnl["fix"][d_], True, "fix", eq5)
         if n_cross[d_] > 1e-12:
-            add(d_, 16, 18, [(16, 18, n_cross[d_])], 1, file_pnl["cross"][d_], True, "cross")
+            add(d_, 16, 18, [(16, 18, n_cross[d_])], 1, file_pnl["cross"][d_], True, "cross", eq3)
         if n_fall[d_] > 1e-12:
-            add(d_, 17, 18, [(17, 18, n_fall[d_])], 1, file_pnl["fall"][d_], True, "fall")
+            add(d_, 17, 18, [(17, 18, n_fall[d_])], 1, file_pnl["fall"][d_], True, "fall", eq5)
         if n_morn[d_] > 1e-12:
             s = int(dst[d_])
-            add(d_, 1 + s, 4 + s, [(1 + s, 4 + s, n_morn[d_])], 1, file_pnl["morning"][d_], True, "morning")
+            add(d_, 1 + s, 4 + s, [(1 + s, 4 + s, n_morn[d_])], 1, file_pnl["morning"][d_], True, "morning",
+                shr(morn_p, d_))
         if n_aft[d_] > 1e-12:
-            add(d_, 9, 15, [(9, 15, n_aft[d_])], 1, file_pnl["after"][d_], True, "after")
+            add(d_, 9, 15, [(9, 15, n_aft[d_])], 1, file_pnl["after"][d_], True, "after", shr(aft_p, d_))
     cnt = lambda nm: sum(1 for d_ in range(n) for t in tix[d_] if t[7] == nm)
     row("fix", "EURUSD GBPUSD AUDUSD USDCAD USDCHF", 1, "16-18 (pre-fix), 18-19 (post-fix)", n_pre + n_post, file_pnl["fix"], cnt("fix"),
         "backtest_hydra.fix(0.005, cost=1.2, parts=True); window start -120..0 / 0..60 min round the London 4pm fix = server 18:00",
@@ -553,6 +602,7 @@ def build_legs(b):
     row("after", "EURUSD GBPUSD AUDUSD USDCAD USDCHF", 1, "9-15", n_aft, file_pnl["after"], cnt("after"),
         "backtest_hydra.after(0.01, costx=1.0), 5..360 min after server 9:00", "the five pairs' notionals summed in one segment")
     # ---- the Quartet: dip, Tokyo fixing, EUR/USD midday (the bell at 23:00 has no bar)
+    bell, full = np.zeros(n), {k: np.zeros(n) for k in ("dip", "tokyo", "meridian")}     # kept if the split fails
     try:
         import quartet_model as qm
         cap = {}
@@ -663,28 +713,175 @@ def build_legs(b):
     nn = np.where(file_pnl["noise"] != 0, 1.1, 0.0)
     for d_ in range(n):
         if nn[d_] > 0:
-            add(d_, 16, 23, [(16, 23, nn[d_])], 2, file_pnl["noise"][d_], True, "noise")
+            add(d_, 16, 23, [(16, 23, nn[d_])], 2, file_pnl["noise"][d_], True, "noise", (0.5, 0.5))
     row("noise", "US500 NAS100", 2, "16-23 (16:30-23:00)", nn, file_pnl["noise"], cnt("noise"),
         "candidate_legs_daily.csv.gz x 0.55 (as m.daily()); InpNoiseMult 0.275",
-        "constant notional 1.1 = 0.275 * 2 per index * 2 indices on days with a pnl; hours 16:30-23:00 assumed")
+        "ROUND 4 NOISE (r4 variant only): constant notional 1.1 = 0.275 * 2 per index * 2 indices on days with a pnl; "
+        "hours 16:30-23:00 assumed")
+    # ---- round 5 noise (M5): opens at 17:00, each index 0.275 * min(4, 0.02 / vol) with the EA's vol (noise_lev)
+    noise_new = None
+    try:
+        lev = noise_lev(days)
+        noise_new = [None] * n
+        nz, miss, nt_all = 0, 0, []
+        for d_ in range(n):
+            if file_pnl["noise"][d_] == 0:
+                continue
+            nz += 1
+            ls = [lev[0][d_], lev[1][d_]]
+            if any(np.isnan(x) for x in ls):
+                miss += 1
+                ls = [2.0 if np.isnan(x) else x for x in ls]       # no index history: the old 2 per index
+            nts = [NOISE_MULT * x for x in ls]
+            tot_ = sum(nts)
+            nt_all.append(tot_)
+            noise_new[d_] = (17, 23, [(17, 23, tot_)], 2, float(file_pnl["noise"][d_]), True, tot_, "noise",
+                             tuple(x / tot_ for x in nts))
+        a_ = np.array(nt_all)
+        info.append(dict(name="noise r5", sym="US500 NAS100", kd="other", hours="17-23 (17:00 first check, flat 23:00)",
+                         n=nz, med=float(np.median(a_)), p90=float(np.percentile(a_, 90)), mx=float(a_.max()),
+                         got=float(file_pnl["noise"].sum()), ref=float(file_pnl["noise"].sum()), nopnl=0,
+                         source="SPXUSD / NSXUSD M1 (noise_lev): 0.275 * min(4, 0.02 / vol) per index, vol = std (n-1) of "
+                                "the last 14 session close-to-close returns (Legs.mqh:1662-1725, 1831)",
+                         note=f"ROUND 5 NOISE: pnl unchanged (0.55 x file); {miss} of {nz} ticket days had no index history "
+                              f"and use 2.0 per index; the two indices are the parts of the ticket (share by notional)"))
+    except Exception as ex:
+        noise_new = None
+        print("!" * 100)
+        print(f"!! NOISE SIZING (M5): NOT DONE ({type(ex).__name__}: {ex}); the r5 variant keeps the constant 1.1 at "
+              f"16:00 like round 4")
+        print("!" * 100)
     for d_ in range(n):
         tix[d_].sort(key=lambda t: (t[0], t[7]))
-    return SimpleNamespace(tix=tix, info=info, file_pnl=file_pnl)
+    dow = days.dayofweek.to_numpy()
+    nxt = days + pd.to_timedelta(np.where(dow == 4, 3, 1), unit="D")
+    fixday = ((nxt.month != days.month) & (dow < 5)).astype(float)    # Legs.mqh:1013 FixDay
+    return SimpleNamespace(tix=tix, info=info, file_pnl=file_pnl, bell=bell, full=full, fixday=fixday,
+                           noise_new=noise_new)
 
 
-def attach_legs(E, L):
-    """Residual of edge set E: its daily other pnl less the tickets, booked unclipped at the close (see the docstring).
-    The tickets are shared by all edge sets and always carry the edge-1.0 file pnl; for edge 0.7 the whole edge penalty
-    (the day's other pnl less the tickets) therefore lands in the unclipped residual, so the booked total is still
-    E.other. Intended: the clip then scales only the edge-1.0 part of each leg, and the legs' margin is the same."""
-    E.tix = L.tix
-    E.res = [E.other[d] - sum(t[4] for t in L.tix[d]) for d in range(len(E.other))]
+def noise_lev(days):
+    """min(4, 0.02 / vol) of the S&P 500 and the Nasdaq for every model day, the way NoisePrepare() does it (Legs.mqh:
+    1662-1725): looking back from the day over at most 3 * 14 + 15 calendar days, weekdays only, a session counts if
+    the price at server minute 990 (9:30 NY) and at 1380 (16:00 NY) exist; its close is collected, and while fewer than
+    14 sessions are counted it must also have the 12 half-hour checks (minutes 1020 .. 1350); the 15th session only
+    needs its close. vol = sample std (n-1) of the 14 close-to-close returns of the 15 collected closes; a day needs
+    the 990 price too. 'Price at minute m' = close of the M1 bar opened at m-1 (iBarShift of t-60, exact). Server clock
+    = New York + 7, the M1 files are on server time. Returns [spx, ndx] arrays (NaN where the EA would not trade)."""
+    need = [989] + [1019 + 30 * j for j in range(12)] + [1379]
+    out = []
+    t0 = (days - pd.Timestamp("1970-01-01")) // pd.Timedelta(days=1)
+    for sym in ("SPXUSD", "NSXUSD"):
+        f = DATA / f"{sym}_M1.csv.gz"
+        if not f.exists():
+            raise FileNotFoundError(str(f))
+        d = pd.read_csv(f, usecols=["time", "close"], dtype={"time": np.int64, "close": np.float64})
+        d = d[d.time < HOLD_EPOCH]
+        mod = (d.time.to_numpy() % 86400) // 60
+        keep = np.isin(mod, need)
+        piv = pd.DataFrame({"day": d.time.to_numpy()[keep] // 86400, "m": mod[keep],
+                            "c": d.close.to_numpy()[keep]}).groupby(["day", "m"]).c.last().unstack()
+        del d
+        oc = {int(dd): float(c) for dd, c, o in zip(piv.index, piv[1379], piv[989])
+              if not (np.isnan(c) or np.isnan(o)) and c > 0 and o > 0}
+        chk = piv[[1019 + 30 * j for j in range(12)]].notna().all(axis=1)
+        full_ = set(int(x) for x in chk.index[chk.to_numpy()])
+        has_open = set(int(x) for x in piv.index[piv[989].notna().to_numpy()])
+        lev = np.full(len(days), np.nan)
+        for i, T in enumerate(t0.to_numpy()):
+            T = int(T)
+            if T not in has_open:
+                continue
+            closes, n_ = [], 0
+            for k in range(1, 3 * 14 + 15 + 1):
+                dd = T - k
+                if (dd + 3) % 7 >= 5:                     # epoch day 0 was a Thursday; Monday = 0
+                    continue
+                c = oc.get(dd)
+                if c is None:
+                    continue
+                closes.append(c)
+                if n_ < 14 and dd not in full_:
+                    continue
+                n_ += 1
+                if n_ > 14:
+                    break
+            if n_ < 14 or len(closes) < 15:
+                continue
+            r_ = np.array([closes[k] / closes[k + 1] - 1.0 for k in range(14)])
+            vol = float(np.sqrt(((r_ - r_.mean()) ** 2).sum() / 13.0))
+            if vol > 0:
+                lev[i] = min(4.0, 0.02 / vol)
+        out.append(lev)
+        ok = ~np.isnan(lev)
+        print(f"  noise_lev {sym}: {int(ok.sum())} of {len(days)} model days have a lev"
+              + (f", median {np.median(lev[ok]):.2f}, 10th {np.percentile(lev[ok], 10):.2f}, "
+                 f"90th {np.percentile(lev[ok], 90):.2f}, first day {days[ok][0].date()}" if ok.any() else ""))
+    return out
+
+
+VAR4 = SimpleNamespace(name="r4", boost=1.0, noise_new=False, single=True, h2=False)     # round 4 as it was
+VAR5 = SimpleNamespace(name="r5", boost=BOOST, noise_new=True, single=False, h2=True)    # round 5 main variant
+
+
+def assemble(L, E, E1, var):
+    """A copy of edge set E with the tickets of variant var (VAR4 / VAR5) and its residual. Per day:
+    - boost (M4): on FixDay the fix and cross tickets and the Tokyo ticket get notional and pnl x var.boost; the same
+      extra pnl, plus the boost on the bell and on the Tokyo / fix / cross pnl that has no ticket, is added to the
+      day's E.other / E.rr (so lmode 0/2 and the no-margin path carry it) and sits in the residual for lmode 1;
+    - noise (M5): the r5 ticket from L.noise_new (17:00, EA vol) replaces the constant r4 ticket, if it was built;
+    - clip shape (H1): var.single gives every ticket one part (round 4: one clip per ticket), else its real parts;
+    - edge penalty (H2): pen = E.other less E1.other of the day, shared over the day's tickets in proportion to their
+      (boosted) notional, so the clip scales it like the rest of each ticket's pnl; the residual keeps only the bell,
+      the un-ticketed pnl and the hourly-vs-file differences. With var.h2 False the whole penalty is in the residual.
+    The booked total at clip ratio 1 is the variant's E.other on every day, whatever the options."""
+    n = len(E.other)
+    B = var.boost
+    fx = L.fixday
+    fp = L.file_pnl
+    extra = (B - 1.0) * fx * (fp["fix"] + fp["cross"] + L.full["tokyo"] + L.bell)
+    pen = np.array(E.other) - np.array(E1.other)
+    V = copy.copy(E)
+    use_new = var.noise_new and L.noise_new is not None
+    tix, res = [], []
+    for d in range(n):
+        out = []
+        for t in L.tix[d]:
+            if use_new and t[7] == "noise":
+                continue
+            f = B if (fx[d] and t[7] in ("fix", "cross", "tokyo")) else 1.0
+            segs = [(a_, b_, x * f) for a_, b_, x in t[2]] if f != 1.0 else t[2]
+            out.append([t[0], t[1], segs, t[3], t[4] * f, t[5], t[6] * f, t[7], (1.0,) if var.single else t[8]])
+        if use_new and L.noise_new[d] is not None:
+            t = L.noise_new[d]
+            out.append([t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], (1.0,) if var.single else t[8]])
+        if var.h2 and out and pen[d] != 0.0:
+            tot = sum(o[6] for o in out)
+            if tot > 0:
+                for o in out:
+                    o[4] += pen[d] * o[6] / tot
+        out.sort(key=lambda t: (t[0], t[7]))
+        tix.append([tuple(o) for o in out])
+        res.append(E.other[d] + extra[d] - sum(o[4] for o in out))
+    V.tix, V.res = tix, res
+    V.other = (np.array(E.other) + extra).tolist()
+    V.rr_np = E.rr_np + extra
+    V.rr = V.rr_np.tolist()
+    V.vol = float(np.std(V.rr_np, ddof=1))
+    V.var = var.name
+    return V
 
 
 def print_legs(L, rt):
     print("=" * 100)
-    print("PART 0  the other legs as tickets with their own margin (round 4)")
-    print(f"margin rates: gold {rt.ag:.5f}, FX {rt.af:.5f}, other {rt.ao:.5f} of USD notional; entry clip {CLIP} of free margin")
+    print("PART 0  the other legs as tickets with their own margin (round 4; round 5 adds parts, boost, noise r5)")
+    print(f"margin rates: gold {rt.ag:.5f}, FX {rt.af:.5f}, other {rt.ao:.5f} of USD notional; entry clip {CLIP} of free "
+          f"margin, per ORDER (parts: fix 5, cross 3, fall 5, after 5 pairs, morning 3, noise 2 indices, rest 1)")
+    print(f"notional / pnl below are the raw tickets (no boost, 'noise' = round 4's constant). BOOST {BOOST} (FixDay only) "
+          f"doubles fix, cross, Tokyo notional and pnl and the bell pnl in the r5 variant; 'noise r5' replaces 'noise' "
+          f"in r5. Tickets with a part split: " + ", ".join(
+              f"{nm} {len(next((t[8] for d_ in range(len(L.tix)) for t in L.tix[d_] if t[7] == nm), (1,)))}"
+              for nm in ("fix", "cross", "fall", "morning", "after", "noise")))
     print("leg       symbols  kind   hours (server)  tickets  notional per unit of equity*size on ticket days: median "
           " p90   max | pnl in tickets / file column (size 1, summed)  ticket-less days with pnl")
     for x in L.info:
@@ -762,7 +959,31 @@ def legs_margin(tix, rat, hr, k, ag, af, ao):
     return k * tot
 
 
-def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
+def open_ratio(t, free, k0, ag, af, ao, clip):
+    """Clip ratio of the ticket t opened with `free` margin free (H1). Round 4 / one part: min(1, clip * free / want).
+    Several parts: each part (share s_j of the ticket's notional) is a separate order, clipped in turn to clip * the
+    free margin left after the parts before it (Legs.mqh:625 / 1749); ratio = sum of s_j * ratio_j."""
+    rate = ag if t[3] == 0 else (af if t[3] == 1 else ao)
+    want = k0 * t[6] * rate
+    if want <= 0:
+        return 1.0
+    sh = t[8]
+    if len(sh) == 1:
+        return min(1.0, clip * free / want)
+    left, tot, allone = free, 0.0, True
+    for s_ in sh:
+        w = want * s_
+        if w <= 0:
+            tot += s_
+            continue
+        c = min(1.0, clip * left / w)
+        allone = allone and c >= 1.0
+        tot += s_ * c
+        left = max(left - c * w, 0.0)
+    return 1.0 if allone else tot
+
+
+def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0, clip=CLIP, legmargin=True):
     """One day the way the EA trades it. All notionals in USD of the round's equity units (start 1.0).
     Returns stopped. size = GoalSize at the day's first hour (live equity then); sizef(eq) = GoalSize at the live
     equity of the moment (same goal, days left, cap, vol).
@@ -783,6 +1004,9 @@ def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
     hold, grid and the tickets already open), its margin (ratio * notional * rate by kind) counts in the stop-out check
     and the free margin while the bars of its segments run; its pnl * ratio is booked at the close together with the
     residual E.res (unclipped, no margin). A ticket with no bar in its window is booked at ratio 1 without margin.
+    Round 5: a ticket with several parts (t[8] = shares) is clipped order by order (open_ratio); clip is a parameter
+    (1e12 = no clip); legmargin False takes the tickets' margin out of the free margin and the stop-out check (plumbing
+    check C only).
     lmode 2 (plumbing check): tickets booked at ratio 1, margin the constant om * eo * size, so it must equal lmode 0.
     Stop-out inside a bar when equity at the bar's worst < 50% of margin: the round ends at 0.5 * margin."""
     a, e_ = E.starts[d], E.starts[d + 1]
@@ -805,7 +1029,7 @@ def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
         if abs(diff) > HOLD_BAND * max(T, H):
             if diff > 0.0:
                 free = max(eq - H * ag - G * af - omm, 0.0)
-                add = min(diff, CLIP * free / ag) if ag > 0 else diff
+                add = min(diff, clip * free / ag) if ag > 0 else diff
                 H += add
                 eq -= add * HC
             else:
@@ -819,10 +1043,10 @@ def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
             hr = E.hour[i]
             for j, t in enumerate(tix):
                 if rat[j] is None and t[0] <= hr < t[1]:
-                    free = max(eq - H * ag - G * af - legs_margin(tix, rat, hr, k0, ag, af, ao), 0.0)
-                    want = k0 * t[6] * (ag if t[3] == 0 else (af if t[3] == 1 else ao))
-                    rat[j] = min(1.0, CLIP * free / want) if want > 0 else 1.0
-            omm = legs_margin(tix, rat, hr, k0, ag, af, ao)
+                    lm_ = legs_margin(tix, rat, hr, k0, ag, af, ao) if legmargin else 0.0
+                    free = max(eq - H * ag - G * af - lm_, 0.0)
+                    rat[j] = open_ratio(t, free, k0, ag, af, ao, clip)
+            omm = legs_margin(tix, rat, hr, k0, ag, af, ao) if legmargin else 0.0
         marg = H * ag + G * af + omm
         ext = (E.alo[i] if s > 0 else E.ahi[i]) if s else 0.0
         adv = s * G * ext + H * math.expm1(E.glow[i])
@@ -880,7 +1104,7 @@ def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
                 base = max(eq - fh - fg, 0.0) * sizef(eq) * GRID_RISK / (GRID_RISK_STEPS * E.unit[i])
             for _ in range(len(lv), abs(t)):
                 free = max(eq - H * ag - G * af - omm, 0.0)
-                n = min(base, CLIP * free / af) if af > 0 else base
+                n = min(base, clip * free / af) if af > 0 else base
                 if n <= 1e-9:
                     break                                 # no free margin: no more levels this cycle
                 lv.append(n)
@@ -920,7 +1144,7 @@ def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
 
 
 def run_round(E, d0, d1, days, cap, vol, goal, margin, a_gold=0.0, a_fx=0.0, ea=False, om=0.0, fixed=None,
-              mins=None, ao=0.0, lmode=0):
+              mins=None, ao=0.0, lmode=0, clip=CLIP, legmargin=True):
     """One goal round from day d0 over at most `days` days of the month (d0, d1). Returns (min(eq, goal), stopped).
     margin False: the daily totals of one_round(). margin True: the first margin model (size-1 hold and grid
     re-sized every day). ea True: the EA-like model (ea_day), flat at the round's start, om = other legs' margin
@@ -944,7 +1168,7 @@ def run_round(E, d0, d1, days, cap, vol, goal, margin, a_gold=0.0, a_fx=0.0, ea=
             size = goal_size(eq, goal, days - k, cap, vol)
             sizef = lambda x, left=days - k: goal_size(x, goal, left, cap, vol)
         if ea:
-            stopped = ea_day(E, d, size, S, a_gold, a_fx, om, sizef, ao, lmode)
+            stopped = ea_day(E, d, size, S, a_gold, a_fx, om, sizef, ao, lmode, clip, legmargin)
             eq = S["eq"]
             if stopped:
                 LAST[0] = d
@@ -1020,90 +1244,137 @@ def go(E, d0, d1, days, cap, vol, goal, mode, rt, **kw):
 MODES = (("ea", "EA-like"), ("om", "EA+OM"), ("lg", "EA+legs"))
 
 
-def part3a(E1, runs, rt):
+def part3a(E4, E5, runs, rt):
+    """21 tester months. E5 = round 5 set (boost, parts, noise r5, per-order clip); E4 = round 4 set (no boost, one clip
+    per ticket, constant noise). Columns no margin / EA-like / EA+OM / EA+legs are all on E5 and include the boost; the
+    last column is round 4's EA+legs on E4 (no boost). Counts go to SUMM['3a'][goal]."""
     print("=" * 100)
     print(f"PART 3a  tester against model, 21 months, preset (23 days, cap 50, vol 0.0156), edge 1.0, "
           f"a_gold {rt.ag:.5f}, a_fx {rt.af:.5f}, a_other {rt.ao:.5f}, OTHER_MARGIN {rt.om:.3f}")
+    print(f"ROWS WITH THE MONTH-END BOOST (x{BOOST} on FixDay): no margin, EA-like, EA+OM and EA+legs r5 (all on the round-5 "
+          f"set). WITHOUT the boost: the last column 'EA+legs r4' (round 4: one clip per ticket, constant noise ticket). "
+          f"The tester run had InpMonthEndBoost 2.0.")
     print("EA-like: live-equity sizes, grid base from balance, panic exit, no other legs' margin; EA+OM adds a constant "
-          "share for them (a sensitivity, not a fit); EA+legs (main) gives each leg its own margin and clip")
+          "share for them (a sensitivity, not a fit); EA+legs r5 (main) gives each leg its own margin and a per-order clip")
+    SUMM["3a"] = {}
     for goal in (3, 4, 5):
         print(f"\n=== goal {goal}x")
         print("month    tester  tester SO date | no margin | EA-like  SO  date       | EA+OM   SO  date       "
-              "| EA+legs SO  date       nobar")
+              "| EA+legs r5 SO date      nobar | EA+legs r4 SO (no boost)")
         c = defaultdict(int)
+        dis = []
         for run in runs[goal]:
             d0, d1 = MONTHS[pd.Period(f"{run['month'][:4]}-{run['month'][4:]}", "M")]
-            nm, _ = go(E1, d0, d1, *PRESET[:2], PRESET[2], goal, "nm", rt)
+            nm, _ = go(E5, d0, d1, *PRESET[:2], PRESET[2], goal, "nm", rt)
             res = {}
             for key, _ in MODES:
-                v, so = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, key, rt)
+                v, so = go(E5, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, key, rt)
                 res[key] = (v, so, str(DAYS_IDX[LAST[0]].date()) if so else "", ACC["nobar"])
+            v4, so4 = go(E4, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "lg", rt)
             tso = run["so"] is not None
             tdate = run["rows"][run["so"]][0][:10] if tso else ""
             cells = " | ".join(f"{res[k][0]:6.2f}x {'yes' if res[k][1] else 'no ':3s} {res[k][2]:10s}" for k, _ in MODES)
-            print(f"{run['month']}  {run['mult']:5.2f}x  {tdate:10s}     | {nm:6.2f}x   | {cells}  {res['lg'][3]:3d}")
+            print(f"{run['month']}  {run['mult']:5.2f}x  {tdate:10s}     | {nm:6.2f}x   | {cells}  {res['lg'][3]:3d} "
+                  f"| {v4:6.2f}x {'yes' if so4 else 'no '}")
             c["months"] += 1
             c["tester_reach"] += run["mult"] >= goal * TOL
             c["nm_reach"] += nm >= goal * TOL
             c["tester_so"] += tso
+            c["r4_reach"] += v4 >= goal * TOL
+            c["r4_so"] += so4
             for key, _ in MODES:
                 v, st_ = res[key][0], res[key][1]
                 c[key + "_reach"] += v >= goal * TOL
                 c[key + "_so"] += st_
                 c[key + "_agree"] += tso == st_
                 c[key + "_both"] += tso and st_
+            treach, mreach = run["mult"] >= goal * TOL, res["lg"][0] >= goal * TOL
+            if treach != mreach or tso != res["lg"][1]:
+                dis.append(f"   {run['month']}: tester {run['mult']:.2f}x {'goal' if treach else 'no goal'}, "
+                           f"{'stop-out ' + tdate if tso else 'no stop-out'} | model r5 {res['lg'][0]:.2f}x "
+                           f"{'goal' if mreach else 'no goal'}, {'stop-out ' + res['lg'][2] if res['lg'][1] else 'no stop-out'}")
         print(f"goal {goal}x: months {c['months']}; goal reached (0.3% tolerance) tester {c['tester_reach']}, "
-              f"no margin {c['nm_reach']}, EA-like {c['ea_reach']}, EA+OM {c['om_reach']}, EA+legs {c['lg_reach']}; "
-              f"stop-outs tester {c['tester_so']}, EA-like {c['ea_so']}, EA+OM {c['om_so']}, EA+legs {c['lg_so']}; "
+              f"no margin {c['nm_reach']}, EA-like {c['ea_reach']}, EA+OM {c['om_reach']}, EA+legs r5 {c['lg_reach']}, "
+              f"EA+legs r4 {c['r4_reach']}; "
+              f"stop-outs tester {c['tester_so']}, EA-like {c['ea_so']}, EA+OM {c['om_so']}, EA+legs r5 {c['lg_so']}, "
+              f"EA+legs r4 {c['r4_so']}; "
               f"stop-out agreement (month by month, months stopped in both in brackets) EA-like {c['ea_agree']} "
-              f"({c['ea_both']}), EA+OM {c['om_agree']} ({c['om_both']}), EA+legs {c['lg_agree']} ({c['lg_both']}) "
+              f"({c['ea_both']}), EA+OM {c['om_agree']} ({c['om_both']}), EA+legs r5 {c['lg_agree']} ({c['lg_both']}) "
               f"of {c['months']}")
+        print(f"months where tester and EA+legs r5 disagree on goal reached or on stop-out ({len(dis)} of {c['months']}):")
+        for x in dis:
+            print(x)
+        SUMM["3a"][goal] = dict(c)
 
 
 def stats(rows, goal):
-    """rows: (period, no margin, EA, EA stopped, EA+OM, EA+OM stopped, EA+legs, EA+legs stopped). Returns months,
-    P(goal) without margin, then (P(goal), P(stop-out), P(ruin), median) for EA-like, EA+OM, EA+legs."""
-    c = [np.array([x[i] for x in rows], dtype=float) for i in range(1, 8)]
+    """rows: (period, no margin r5, then (end, stopped) pairs). Returns months, P(goal) without margin, then
+    (P(goal), P(stop-out), P(ruin), median) for every pair."""
+    n = (len(rows[0]) - 2) // 2
+    c = [np.array([x[i] for x in rows], dtype=float) for i in range(1, 2 + 2 * n)]
     out = [len(rows), np.mean(c[0] >= goal * TOL)]
-    for v, so in ((1, 2), (3, 4), (5, 6)):
+    for k in range(n):
+        v, so = 1 + 2 * k, 2 + 2 * k
         out += [np.mean(c[v] >= goal * TOL), np.mean(c[so]), np.mean(c[v] <= m.RUIN + 1e-9), np.median(c[v])]
     return tuple(out)
 
 
-def part3b(sets, rt):
+def part3b(sets4, sets5, rt):
+    """sets4 / sets5: {edge: E} of the round 4 and round 5 variants. Columns: no margin r5; round 3 EA-like and round 4
+    EA+legs (both on the round 4 set, no boost); EA-like, EA+OM, EA+legs on the round 5 set (boost). The rows of the
+    preset / 'all' / edge 1.0 and 0.7 go to SUMM['3b']. 'odds' vol: each set's own std of its daily total."""
     print("=" * 100)
     print("PART 3b  month-start rounds, every month with >= 15 days, 2010-06 to 2025-09 (history from the legs file)")
     months = [(p, d0, d1) for p, (d0, d1) in MONTHS.items() if d1 - d0 >= 15]
     print(f"{len(months)} months {months[0][0]} .. {months[-1][0]}; a_gold {rt.ag:.5f}, a_fx {rt.af:.5f}, "
           f"a_other {rt.ao:.5f}, OTHER_MARGIN {rt.om:.3f}")
     print("EA-like = lots kept, 25% hold band, grid base from balance and live size, level clip, panic exit, live-equity "
-          "sizes, no other legs' margin; EA+OM adds a constant share for the other legs; EA+legs (main) their own "
-          "margin and entry clip. P(SO) = broker stop-out, P(ruin) = round ends at or below 0.2x (either way)")
-    print("goal  settings  edge  period       months | P(goal) no margin | EA-like: P(goal) P(SO) P(ruin) median | "
-          "EA+OM: P(goal) P(SO) P(ruin) median | EA+legs: P(goal) P(SO) P(ruin) median")
+          "sizes, no other legs' margin; EA+OM adds a constant share for the other legs; EA+legs their own margin and a "
+          "per-order entry clip. P(SO) = broker stop-out, P(ruin) = round ends at or below 0.2x (either way)")
+    print(f"BOOST: columns marked r5 INCLUDE the month-end boost (x{BOOST} on FixDay), the per-order clip, the edge penalty "
+          f"scaled by each ticket's clip and, only if the NOISE SIZING (M5) line above did not say NOT DONE, the noise "
+          f"opened at 17:00 with the EA's vol sizing (otherwise round 4's constant noise ticket). Columns r3 / r4 do NOT "
+          f"(round 4 set: no boost, one clip per ticket, constant noise ticket, whole edge penalty in the residual). "
+          f"Upper bound still: the other legs' intraday paths are not modelled.")
+    print("goal  settings  edge  period       months | P(goal) no margin r5 | r3 EA-like: P(goal) P(SO) P(ruin) median | "
+          "r4 EA+legs: ... | r5 EA-like: ... | r5 EA+OM: ... | r5 EA+legs: ...")
+    SUMM["3b"] = {}
     for goal in (3, 4, 5):
         for name, days, cap in (("odds", 21, 20.0), ("preset", 23, 50.0)):
-            for edge, E in sets.items():
-                vol = E.vol if name == "odds" else PRESET[2]
+            for edge in sets5:
+                E4, E5 = sets4[edge], sets5[edge]
                 rows = []
                 for p, d0, d1 in months:
-                    nm, _ = go(E, d0, d1, days, cap, vol, goal, "nm", rt)
-                    ea, so1 = go(E, d0, d1, days, cap, vol, goal, "ea", rt)
-                    eo, so2 = go(E, d0, d1, days, cap, vol, goal, "om", rt)
-                    lg, so3 = go(E, d0, d1, days, cap, vol, goal, "lg", rt)
-                    rows.append((p, nm, ea, so1, eo, so2, lg, so3))
+                    v4 = E4.vol if name == "odds" else PRESET[2]
+                    v5 = E5.vol if name == "odds" else PRESET[2]
+                    nm, _ = go(E5, d0, d1, days, cap, v5, goal, "nm", rt)
+                    ea3, s1 = go(E4, d0, d1, days, cap, v4, goal, "ea", rt)
+                    lg4, s2 = go(E4, d0, d1, days, cap, v4, goal, "lg", rt)
+                    ea5, s3 = go(E5, d0, d1, days, cap, v5, goal, "ea", rt)
+                    om5, s4 = go(E5, d0, d1, days, cap, v5, goal, "om", rt)
+                    lg5, s5 = go(E5, d0, d1, days, cap, v5, goal, "lg", rt)
+                    rows.append((p, nm, ea3, s1, lg4, s2, ea5, s3, om5, s4, lg5, s5))
                 for label, sel in (("all", rows), ("to 2017", [x for x in rows if x[0].year <= 2017]),
                                    ("2018 on", [x for x in rows if x[0].year >= 2018])):
                     r_ = stats(sel, goal)
                     cols = " | ".join(f"{100 * r_[k]:6.1f}% {100 * r_[k + 1]:5.1f}% {100 * r_[k + 2]:5.1f}% "
-                                      f"{r_[k + 3]:6.2f}x" for k in (2, 6, 10))
+                                      f"{r_[k + 3]:6.2f}x" for k in (2, 6, 10, 14, 18))
                     print(f"{goal}x    {name:8s} {edge:3.1f}   {label:8s}   {r_[0]:5d} | {100 * r_[1]:10.1f}%       | "
                           f"{cols}")
+                    if label == "all":
+                        SUMM["3b"][(goal, name, edge)] = dict(
+                            months=r_[0], nm=r_[1], r3=(r_[2], r_[3]), r4=(r_[6], r_[7]), r5ea=(r_[10], r_[11]),
+                            r5om=(r_[14], r_[15]), r5=(r_[18], r_[19]))
 
 
-def part3c(E1, rt):
+def part3c(E4, E5, rt):
+    """Margin level section on E5 (round 5, with the boost). Hit-size section for r3 EA-like (E4), r4 EA+legs (E4) and
+    r5 EA+legs (E5); min and 5th percentile of the hit size go to SUMM['3c']."""
+    E1 = E5
     print("=" * 100)
     print("PART 3c  margin level and the size that reaches the stop-out or ruin (edge 1.0, month-start rounds)")
+    print(f"Margin-level lines: round 5 set, INCLUDING the month-end boost (x{BOOST}). Hit-size lines: r3 EA-like and r4 "
+          f"EA+legs WITHOUT the boost (round 4 set), r5 EA+legs WITH it.")
     months = [(p, d0, d1) for p, (d0, d1) in MONTHS.items() if d1 - d0 >= 15]
     print("Daily minimum margin level = the lowest (equity at the bar's worst) / margin over the day's bars. 'Days with "
           "margin open' = days with any margin open in some bar (hold, grid or a leg); the share below 100% is "
@@ -1130,12 +1401,14 @@ def part3c(E1, rt):
           f"{sizes} at which the round ends in a stop-out ('stop-out size'), and the smallest at which it ends in a "
           f"stop-out OR in ruin (equity <= {m.RUIN}x, 'hit size'); percentiles across the {len(months)} months "
           "(inf = not reached up to the largest size)")
-    for key, tag in MODES:
+    SUMM["3c"] = {}
+    for key, tag, EX in (("ea", "r3 EA-like (no boost)", E4), ("lg", "r4 EA+legs (no boost)", E4),
+                         ("lg", "r5 EA+legs (boost)", E5)):
         first, hit = [], []
         for p, d0, d1 in months:
             so_sz = any_sz = math.inf
             for sz in sizes:
-                v, so = go(E1, d0, d1, 23, 1e9, 1.0, 1e9, key, rt, fixed=float(sz))
+                v, so = go(EX, d0, d1, 23, 1e9, 1.0, 1e9, key, rt, fixed=float(sz))
                 if any_sz == math.inf and (so or v <= m.RUIN + 1e-9):
                     any_sz = sz
                 if so:
@@ -1146,9 +1419,11 @@ def part3c(E1, rt):
         for lab, arr in (("stop-out size", first), ("hit size     ", hit)):
             f = np.array(arr, dtype=float)
             pc = " ".join(f"{q}th {np.percentile(f, q):g}" for q in (1, 5, 10, 25, 50))
-            print(f"{tag:8s} {lab}: min {f.min():g}  {pc}  never {int(np.isinf(f).sum())}  | share of months hit at size "
+            print(f"{tag:22s} {lab}: min {f.min():g}  {pc}  never {int(np.isinf(f).sum())}  | share of months hit at size "
                   f"5: {100 * np.mean(f <= 5):.1f}%, 10: {100 * np.mean(f <= 10):.1f}%, 20: {100 * np.mean(f <= 20):.1f}%, "
                   f"50: {100 * np.mean(f <= 50):.1f}%")
+            if lab.startswith("hit"):
+                SUMM["3c"][tag] = (float(f.min()), float(np.percentile(f, 5)))
 
 
 def tester_other(run):
@@ -1167,9 +1442,11 @@ def tester_other(run):
     return out, last
 
 
-def part3d(E1, runs, rt):
+def part3d(E1, runs, rt, tag="r5", brief=False):
+    """tag r5: round 5 set (boost); r4: round 4 set (no boost). brief: only the sums. Sums go to SUMM['3d'][tag]."""
     print("=" * 100)
-    print("PART 3d  other legs per tester month: tester realised pnl against the model's (lesson 7), preset, edge 1.0")
+    print(f"PART 3d [{tag}{', boost x' + str(BOOST) if tag == 'r5' else ', no boost'}{', sums only' if brief else ''}]  "
+          "other legs per tester month: tester realised pnl against the model's (lesson 7), preset, edge 1.0")
     print("Other legs = every tester symbol except XAU* and AUDCAD; the model side = the tickets marked comparable "
           "(fix, cross, fall, morning, after, Tokyo, Meridian, breakout, noise; not dip or the bell). Both over the "
           "same days: the model's booked days up to the tester's last deal date; shares of the round's start equity "
@@ -1180,8 +1457,9 @@ def part3d(E1, runs, rt):
     rows_all = []
     for goal in (3, 4, 5):
         print(f"\n=== goal {goal}x")
-        print("month    days | tester other | model clipped | model unclipped | clip effect | fidelity (tester - unclipped) "
-              "| stopped t/m | unopened tickets")
+        if not brief:
+            print("month    days | tester other | model clipped | model unclipped | clip effect | fidelity (tester - unclipped) "
+                  "| stopped t/m | unopened tickets")
         for run in runs[goal]:
             d0, d1 = MONTHS[pd.Period(f"{run['month'][:4]}-{run['month'][4:]}", "M")]
             _, so = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "lg", rt)
@@ -1200,9 +1478,10 @@ def part3d(E1, runs, rt):
             rows_all.append((tst, cl, un))
             for k_, v_ in (("t", tst), ("c", cl), ("u", un)):
                 tot[(goal, k_)] += v_
-            print(f"{run['month']}  {len(keep):3d} | {100 * tst:+10.1f}% | {100 * cl:+11.1f}% | {100 * un:+13.1f}% | "
-                  f"{100 * (cl - un):+9.1f}% | {100 * (tst - un):+10.1f}% | "
-                  f"{'yes' if tso else 'no ':3s} / {'yes' if so else 'no ':3s} | {nob}")
+            if not brief:
+                print(f"{run['month']}  {len(keep):3d} | {100 * tst:+10.1f}% | {100 * cl:+11.1f}% | {100 * un:+13.1f}% | "
+                      f"{100 * (cl - un):+9.1f}% | {100 * (tst - un):+10.1f}% | "
+                      f"{'yes' if tso else 'no ':3s} / {'yes' if so else 'no ':3s} | {nob}")
         t, c_, u = tot[(goal, "t")], tot[(goal, "c")], tot[(goal, "u")]
         print(f"goal {goal}x sum over the months: tester {100 * t:+.1f}%, model clipped {100 * c_:+.1f}%, unclipped "
               f"{100 * u:+.1f}% of start equity; tester - clipped {100 * (t - c_):+.1f}% = clip effect "
@@ -1215,9 +1494,47 @@ def part3d(E1, runs, rt):
           f"unclipped {100 * np.median(a[:, 2]):+.1f}%; median clip effect {100 * np.median(a[:, 1] - a[:, 2]):+.2f}%, "
           f"median fidelity {100 * np.median(a[:, 0] - a[:, 2]):+.1f}%; sums tester {100 * a[:, 0].sum():+.1f}%, "
           f"clipped {100 * a[:, 1].sum():+.1f}%, unclipped {100 * a[:, 2].sum():+.1f}%")
+    SUMM.setdefault("3d", {})[tag] = dict(
+        by_goal={g: (tot[(g, "t")], tot[(g, "c")], tot[(g, "u")]) for g in (3, 4, 5)},
+        all=(a[:, 0].sum(), a[:, 1].sum(), a[:, 2].sum()))
 
 
-def part4(E1, runs, rt, L, b):
+def check_c(E, runs, rt, months):
+    """Check C. C1 (strict plumbing, PASS/FAIL): lmode 1 with clip 1e12 (nothing clipped, hold and grid too) and the
+    tickets' margin off, against lmode 2 (tickets at ratio 1, no margin) with the same clip; same GoalSize schedule.
+    Over the 63 tester-month rounds and over the month-start rounds at goals 3, 4, 5 (preset). C2 (information): lmode 1
+    with clip 1e12 but the tickets' margin ON against lmode 2 with the constant OTHER_MARGIN: not expected to be equal
+    because a stop-out or the free margin sees different margins; the count of rounds that differ is shown."""
+    big = 1e12
+    out = {}
+    for lab, rounds in (("tester months", [(g, MONTHS[pd.Period(f"{r['month'][:4]}-{r['month'][4:]}", "M")])
+                                           for g in (3, 4, 5) for r in runs[g]]),
+                        ("month-start rounds", [(g, (d0, d1)) for g in (3, 4, 5) for _, (d0, d1) in months])):
+        w1 = w2 = 0.0
+        n_flag = n_c2 = 0
+        for g, (d0, d1) in rounds:
+            a1, f1 = go(E, d0, d1, PRESET[0], PRESET[1], PRESET[2], g, "lg", rt, clip=big, legmargin=False)
+            a2, f2 = go(E, d0, d1, PRESET[0], PRESET[1], PRESET[2], g, "lg0", rt, clip=big, om=0.0)
+            w1 = max(w1, abs(a1 - a2))
+            n_flag += f1 != f2
+            if lab == "tester months":
+                c1, g1 = go(E, d0, d1, PRESET[0], PRESET[1], PRESET[2], g, "lg", rt, clip=big)
+                c2, g2 = go(E, d0, d1, PRESET[0], PRESET[1], PRESET[2], g, "lg0", rt, clip=big)
+                w2 = max(w2, abs(c1 - c2))
+                n_c2 += (abs(c1 - c2) > 1e-9) or (g1 != g2)
+        ok = w1 < 1e-9 and n_flag == 0
+        out[lab] = (w1, n_flag, len(rounds), ok)
+        print(f"(C1) {lab}: CLIP=1e12 lmode 1 (ticket margin off) against lmode 2: max abs end-equity diff {w1:.2e} over "
+              f"{len(rounds)} rounds, stop flags different in {n_flag}  -> {'PASS' if ok else 'FAIL'}")
+        if lab == "tester months":
+            print(f"(C2) {lab}: CLIP=1e12 lmode 1 WITH the tickets' own margin against lmode 2 with constant OTHER_MARGIN "
+                  f"{rt.om:.3f}: max abs diff {w2:.2e}, rounds that differ {n_c2} of {len(rounds)} (information: the two "
+                  f"carry different margins, so a difference is expected where margin is binding)")
+    return out
+
+
+def part4(E4_1, E4_7, E5_1, E5_7, runs, rt, L, b):
+    E1 = E4_1
     print("=" * 100)
     print("PART 4  self-checks")
     worst, n = margin_off_diff(E1, runs)
@@ -1258,6 +1575,40 @@ def part4(E1, runs, rt, L, b):
           f"hourly): max abs diff {np.abs(exp - res).max():.2e}")
     print(f"     the residual itself: max abs {100 * np.abs(res).max():.3f}% of equity at size 1, mean abs "
           f"{100 * np.abs(res).mean():.4f}%, days with |res| > 0.05% {int((np.abs(res) > 5e-4).sum())} of {n_d}")
+    print("(4) H2 / M4 booked total: tickets at ratio 1 + residual against the variant's E.other (identity), and the engine "
+          "with every ratio 1 (lmode 2, no margin) against lmode 0 (E.other booked) over the 63 tester months:")
+    booked = {}
+    for nm_, E in (("r4 edge 1.0", E4_1), ("r4 edge 0.7", E4_7), ("r5 edge 1.0", E5_1), ("r5 edge 0.7", E5_7)):
+        arr = max(abs(sum(t[4] for t in E.tix[d]) + E.res[d] - E.other[d]) for d in range(len(E.other)))
+        w = 0.0
+        for goal in (3, 4, 5):
+            for run in runs[goal]:
+                d0, d1 = MONTHS[pd.Period(f"{run['month'][:4]}-{run['month'][4:]}", "M")]
+                v0, _ = go(E, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "ea", rt)
+                v2, _ = go(E, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "lg0", rt, om=0.0, legmargin=False)
+                w = max(w, abs(v0 - v2))
+        booked[nm_] = (arr, w)
+        print(f"     {nm_}: max |sum ticket pnl + res - other| {arr:.2e}; engine lmode 2 vs lmode 0 max end-equity diff "
+              f"{w:.2e} -> {'PASS' if arr < 1e-9 and w < 1e-9 else 'FAIL'}")
+    pen_tot = {nm_: float(np.abs(np.array(E.other) - np.array(E4_1.other)).sum())
+               for nm_, E in (("edge 0.7 r4", E4_7), ("edge 0.7 r5", E5_7))}
+    print(f"     edge penalty (E.other less edge-1.0 other), summed |.| over days: r4 {pen_tot['edge 0.7 r4']:.4f}, r5 "
+          f"{pen_tot['edge 0.7 r5']:.4f} (r5 differs by the boost extra only; r5 edge 0.7 carries edge 1.0's boost extra)")
+    mo = [(p, (d0, d1)) for p, (d0, d1) in MONTHS.items() if d1 - d0 >= 15]
+    cres = check_c(E5_1, runs, rt, mo)
+    SUMM["check_c"] = cres
+    SUMM["booked"] = booked
+    c4 = SUMM.get("3a", {})
+    want_goal, want_so = {3: 10, 4: 8, 5: 8}, {3: 7, 4: 8, 5: 9}
+    if c4:
+        got_goal = {g: c4[g]["r4_reach"] for g in (3, 4, 5)}
+        got_so = {g: c4[g]["r4_so"] for g in (3, 4, 5)}
+        ok = got_goal == want_goal and got_so == want_so
+        SUMM["r4_repl"] = (got_goal, got_so, ok)
+        print(f"(R4) round 4 replication: BOOST=1, single-ticket clip, constant noise, whole penalty in the residual, lmode 1 "
+              f"on the 21 months: goal reached 3x/4x/5x {got_goal[3]}/{got_goal[4]}/{got_goal[5]} (round 4 printed "
+              f"{want_goal[3]}/{want_goal[4]}/{want_goal[5]}), stop-outs {got_so[3]}/{got_so[4]}/{got_so[5]} (round 4 printed "
+              f"{want_so[3]}/{want_so[4]}/{want_so[5]}) -> {'PASS' if ok else 'FAIL'}")
 
 
 def main():
@@ -1271,15 +1622,66 @@ def main():
     r = m.daily().reindex(b.days).fillna(0.0)
     E1, E7 = edge_set(b, r, 1.0), edge_set(b, r, 0.7)
     L = build_legs(b)
-    attach_legs(E1, L)
-    attach_legs(E7, L)
+    E4_1, E4_7 = assemble(L, E1, E1, VAR4), assemble(L, E7, E1, VAR4)
+    E5_1, E5_7 = assemble(L, E1, E1, VAR5), assemble(L, E7, E1, VAR5)
     print_legs(L, rt)
-    part2_checks(b, E1, m.daily(), runs)
-    part3a(E1, runs, rt)
-    part3b({1.0: E1, 0.7: E7}, rt)
-    part3c(E1, rt)
-    part3d(E1, runs, rt)
-    part4(E1, runs, rt, L, b)
+    part2_checks(b, E4_1, m.daily(), runs)
+    part3a(E4_1, E5_1, runs, rt)
+    part3b({1.0: E4_1, 0.7: E4_7}, {1.0: E5_1, 0.7: E5_7}, rt)
+    part3c(E4_1, E5_1, rt)
+    part3d(E5_1, runs, rt, "r5", brief=False)
+    part3d(E4_1, runs, rt, "r4", brief=True)
+    part4(E4_1, E4_7, E5_1, E5_7, runs, rt, L, b)
+    summary(runs, rt, L)
+
+
+def summary(runs, rt, L):
+    """The ROUND 5 SUMMARY block, from the numbers the parts above collected in SUMM."""
+    print("=" * 100)
+    print("ROUND 5 SUMMARY")
+    noise_r5 = "noise 17:00 with EA vol" if L.noise_new is not None else "round 4's constant noise ticket (M5 not done)"
+    print(f"r3 = round 3 EA-like; r4 = round 4 EA+legs (no boost, one clip per ticket, constant noise); r5 = round 5 EA+legs "
+          f"(INCLUDES boost x{BOOST} on fix days, per-order clip, edge penalty scaled by the clip, {noise_r5}). "
+          f"Still an upper bound on P(goal): the other legs' intraday paths are not modelled.")
+    if L.noise_new is None:
+        print("!! NOISE SIZING (M5): NOT DONE - r5 uses the constant 1.1 noise ticket")
+    a = SUMM.get("3a", {})
+    print("3a  21 tester months, preset, edge 1.0 (goal reached / stop-outs):")
+    print("      goal | tester reach  SO | r5 no-margin reach | r5 EA-like reach SO | r5 EA+OM reach SO | "
+          "r5 EA+legs reach SO | r4 EA+legs reach SO")
+    for g in (3, 4, 5):
+        if g in a:
+            c = a[g]
+            print(f"      {g}x   | {c['tester_reach']:8d} {c['tester_so']:6d} | {c['nm_reach']:12d}       | "
+                  f"{c['ea_reach']:10d} {c['ea_so']:6d}  | {c['om_reach']:9d} {c['om_so']:6d} | "
+                  f"{c['lg_reach']:11d} {c['lg_so']:6d}   | {c['r4_reach']:9d} {c['r4_so']:6d}")
+    print("      (tester from the earlier report: goal 9/4/2, stop-outs 7/10/9 at 3x/4x/5x; the lines above are computed)")
+    b3 = SUMM.get("3b", {})
+    print("3b  184 month-start rounds, P(goal) / P(stop-out) %, 'all' period; r3 | r4 | r5:")
+    for (g, nm_, edge), v in sorted(b3.items()):
+        print(f"      {g}x {nm_:6s} edge {edge:.1f}: r3 {100 * v['r3'][0]:5.1f} / {100 * v['r3'][1]:5.1f} | r4 "
+              f"{100 * v['r4'][0]:5.1f} / {100 * v['r4'][1]:5.1f} | r5 {100 * v['r5'][0]:5.1f} / {100 * v['r5'][1]:5.1f}"
+              f"  (months {v['months']}, no margin r5 {100 * v['nm']:.1f})")
+    c3 = SUMM.get("3c", {})
+    print("3c  hit size (smallest fixed size with a stop-out or ruin), min and 5th percentile over the month-start rounds:")
+    for tag, (mn_, p5) in c3.items():
+        print(f"      {tag:24s} min {mn_:g}, 5th percentile {p5:g}")
+    d3 = SUMM.get("3d", {})
+    print("3d  other-leg pnl over the 63 tester rounds, sum, % of start equity (tester / model clipped / model unclipped):")
+    for tag, v in d3.items():
+        t, c_, u = v["all"]
+        print(f"      {tag}: tester {100 * t:+.1f}%, clipped {100 * c_:+.1f}%, unclipped {100 * u:+.1f}%   by goal: " + "  ".join(
+            f"{g}x {100 * x[0]:+.1f}/{100 * x[1]:+.1f}/{100 * x[2]:+.1f}" for g, x in v["by_goal"].items()))
+    cc = SUMM.get("check_c", {})
+    for lab, (w1, nf, n_, ok) in cc.items():
+        print(f"Check C1 ({lab}, {n_} rounds): max abs diff {w1:.2e}, stop flags different {nf} -> {'PASS' if ok else 'FAIL'}")
+    bk = SUMM.get("booked", {})
+    if bk:
+        print("Booked total = E.other at ratio 1: " + "; ".join(
+            f"{k} {v[0]:.1e}/{v[1]:.1e} {'PASS' if v[0] < 1e-9 and v[1] < 1e-9 else 'FAIL'}" for k, v in bk.items()))
+    rr = SUMM.get("r4_repl")
+    if rr:
+        print(f"Round 4 replication (BOOST=1, single clip): goal {rr[0]}, stop-outs {rr[1]} -> {'PASS' if rr[2] else 'FAIL'}")
 
 
 if __name__ == "__main__":
