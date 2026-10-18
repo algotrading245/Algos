@@ -1,6 +1,6 @@
 # Handoff: where the two-EA project stands (one page)
 
-For a session that picks this work up without the earlier conversation. Last updated 2026-10-18 (owner's change 6:
+For a session that picks this work up without the earlier conversation. Last updated 2026-10-19 (owner's change 6:
 this file is the current state only; the full history, all job judgements j1-j15, the **"Tested and rejected"** list,
 the **Scans** record and the EA / prop-route details are in `docs/HANDOFF_archive.md`).
 
@@ -59,15 +59,19 @@ each finished piece of work.
   39.7 / 28.8 / 22.3% over 184 months 2010-2025.09 (edge 1.0, preset) — a **loose upper bound only**: reviewer
   REDO, the noise is still round 4's constant ticket (NSXUSD M1 missing), on the 21 tester months the model reaches
   the goal 10/10/9 times against the tester's 9/4/2. Model iteration stopped (run limit); do not quote r5 edge-0.7.
-- **Size cap (candidate `hydra_size_cap`, run 1 of 3, 2026-10-18):** `research/hydra_size_cap.py` fixed the
+- **Size cap (candidate `hydra_size_cap`, run 2 of 3, 2026-10-18/19):** `research/hydra_size_cap.py` fixed the
   round-5 REDO items (C1 no-clip branch + unit tests, fix before cross, boost haircut at edge 0.7; noise P&L and
   balance-vs-equity sizing stay stated limits) and swept static InpGoalCap 3-14 against 50. Keep cap 50: every cap
   <=14 loses 19-25 pp of P(goal) for near-zero stop-outs (with the fixes, cap 50 gives 39.7/28.8/22.8%). Reviewer
   PASS WITH CHANGES: caps 15-49 are untested (cap 50 binds in 55-76% of rounds, median day-1 size asked 36-47).
-- **Next pipeline work (no tester time):** size cap run 2, a dynamic margin-aware cap. Size is limited so that the
-  margin level projected after the day's orders stays above a threshold fixed before the run (EA input off by
-  default), and it must beat static caps 20-45 as well as 50. Pre-register it; the 21 tester months are a check
-  only. Researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a stated proxy). Then fidelity: the FTMO
+  **Run 2 (2026-10-19, `research/hydra_size_cap2.py` + `.out.txt`):** static caps 20-45 do not beat 50 by the
+  pre-registered rule (3x to 2017: 27.5/31.9/38.5/39.6/42.9/44.0% vs 44.0%; 45 ties 50), so cap 50 stays. The
+  dynamic arm was void: it projected margin before the EA's 50% free-margin clip and summed tickets not open
+  together, so s_dyn <= 2.9 at every threshold (reviewer PASS WITH CHANGES; lesson logged).
+- **Next pipeline work (no tester time):** size cap run 3, the last: a corrected dynamic cap (margin after the clip
+  in the EA's order, leg margin as the peak of segments open together, thresholds near 1-2, a unit test running
+  ea_day at the cap, a degeneracy guard printed before the sweep). If it cannot be built cleanly, close the idea
+  with cap 50 kept. Researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a stated proxy). Then fidelity: the FTMO
   demo's symbol margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
@@ -83,7 +87,8 @@ each finished piece of work.
   run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
   into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels rejected at steps 5-7 (new rejected
   family); ideas 1, 3, 4 of `docs/ideas/2026-10-17.md` are **unverified** (abstract only) and go last; the
-  2026-10-18 batch waits for the orchestrator's pick. `pdf_text.py` retries mirrors before marking a paper
+  2026-10-18 batch waits for the orchestrator's pick (`ideas_taken.txt` marks its idea 1, the volatility window,
+  "in progress" but no candidate exists for it: open it or clear the mark). `pdf_text.py` retries mirrors before marking a paper
   unreadable.
 
 ## Waiting on the owner
