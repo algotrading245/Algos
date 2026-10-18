@@ -5,8 +5,8 @@
 #   Aurum Keeper        at logon and every 15 min    keeps the PC awake and Terminal 16 open (keeper.ps1)
 #   Aurum Monitor       Mon-Fri 23:15                monitor agent (haiku): demo check-in
 #   Aurum Relay         every 5 min                  the agent team (relay.ps1): each agent hands over to the next,
-#                                                    which starts 15 min after it finishes; tester jobs in the
-#                                                    weekend window first; orchestrator after 2 h idle; researcher daily
+#                                                    which starts at once (no gap inside a cycle); a 30 min break
+#                                                    between cycles; tester and scanner steps are scripts (keeper)
 #
 # The relay replaces the fixed-time Orchestrator, Tester and Researcher tasks of the first install; they are removed.
 #

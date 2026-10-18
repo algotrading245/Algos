@@ -252,8 +252,9 @@ $recent
     if ($m.Count) { $next = $m[$m.Count - 1].Groups[1].Value; $reason = $m[$m.Count - 1].Groups[2].Value.Trim(" `t`r*_:-".ToCharArray()) }
     $old = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $state = [ordered]@{ from = $Role; next = $next; due = (Get-Date).AddMinutes($GapMinutes).ToString("s"); reason = $reason }
-    # A run that hands over nothing (the nightly monitor) keeps a hand-over that has not started yet.
-    if ($next -eq "none" -and $old -and $old.next -ne "none") {
+    # A run without a HANDOFF line (the nightly monitor, a cut-off run) keeps a hand-over that has not started yet,
+    # e.g. its own provisional one; an explicit "HANDOFF: none" ends the cycle.
+    if ($m.Count -eq 0 -and $old -and $old.next -ne "none") {
         $state.from = $old.from; $state.next = $old.next; $state.due = $old.due; $state.reason = $old.reason
     }
     # A usage, session, quota or auth limit: nothing starts for an hour (the relay waits, it never works around it).

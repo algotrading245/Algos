@@ -153,6 +153,144 @@ def cmd_use(r, provider, role, tier, model):
     cmd_show(r)
 
 
+# ---------------------------------------------------------------- the Qwen credential, without it passing through an agent
+#
+# The key is never an argument (it would land in the shell's history and in an agent's transcript): qwen-key reads it
+# from a hidden prompt, or from stdin with --stdin. It is stored only in ~/.qwen/settings.json, outside the repo, and
+# is printed masked at most.
+
+ENDPOINTS = [
+    ("Token Plan, global (Singapore)", "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
+     "BAILIAN_TOKEN_PLAN_API_KEY"),
+    ("Token Plan, China (Beijing)", "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+     "BAILIAN_TOKEN_PLAN_API_KEY"),
+    ("Coding Plan, international", "https://coding-intl.dashscope.aliyuncs.com/v1", "BAILIAN_CODING_PLAN_API_KEY"),
+    ("Coding Plan, China", "https://coding.dashscope.aliyuncs.com/v1", "BAILIAN_CODING_PLAN_API_KEY"),
+    ("Standard API key, international", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "DASHSCOPE_API_KEY"),
+    ("Standard API key, China", "https://dashscope.aliyuncs.com/compatible-mode/v1", "DASHSCOPE_API_KEY"),
+    ("Standard API key, US", "https://dashscope-us.aliyuncs.com/compatible-mode/v1", "DASHSCOPE_API_KEY"),
+]
+PROJECT_QWEN_SETTINGS = REPO / ".qwen" / "settings.json"
+
+
+def mask(key):
+    return f"...{key[-4:]}" if key and len(key) > 4 else "(none)"
+
+
+def probe(base_url, key, model):
+    """One minimal chat completion against base_url. Returns (ok, message); the message never holds the key."""
+    import urllib.error
+    import urllib.request
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1}).encode()
+    req = urllib.request.Request(base_url.rstrip("/") + "/chat/completions", data=body,
+                                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=45) as resp:
+            d = json.loads(resp.read().decode("utf-8", "replace"))
+        return True, f"HTTP 200, answered as model {d.get('model') or model}"
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace").replace(key, "<key>")[:220]
+        return False, f"HTTP {e.code}: {detail}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {str(e).replace(key, '<key>')[:220]}"
+
+
+def write_user_env(var, key):
+    """Stores one environment variable in ~/.qwen/settings.json, keeping whatever else is there."""
+    path = Path(os.path.expanduser(QWEN_SETTINGS))
+    try:
+        s = json.loads(path.read_text(encoding="utf-8-sig"))
+        if not isinstance(s, dict):
+            s = {}
+    except Exception:
+        s = {}
+    env = s.setdefault("env", {})
+    for name in KEY_VARS:          # one credential, one name: drop the others so no stale copy is left behind
+        if name != var:
+            env.pop(name, None)
+    env[var] = key
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(s, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def write_project_route(model_id, base_url, env_var):
+    """Points the project's modelProviders route for model_id at the endpoint that answered. No secret is written."""
+    try:
+        s = json.loads(PROJECT_QWEN_SETTINGS.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return "the project's .qwen/settings.json is unreadable; its route was not updated"
+    routes = ((s.get("modelProviders") or {}).get("openai")) or []
+    hit = next((m for m in routes if isinstance(m, dict) and m.get("id") == model_id), None)
+    if hit is None:
+        hit = {"id": model_id}
+        routes.append(hit)
+        s.setdefault("modelProviders", {})["openai"] = routes
+    changed = hit.get("baseUrl") != base_url or hit.get("envKey") != env_var
+    hit["baseUrl"], hit["envKey"] = base_url, env_var
+    if changed:
+        PROJECT_QWEN_SETTINGS.write_text(json.dumps(s, indent=2) + "\n", encoding="utf-8")
+    return ("route updated" if changed else "route already correct") + f": {model_id} -> {base_url} (env {env_var})"
+
+
+def cmd_qwen_key(a):
+    path = Path(os.path.expanduser(QWEN_SETTINGS))
+    if a.show:
+        try:
+            env = (json.loads(path.read_text(encoding="utf-8-sig")) or {}).get("env") or {}
+        except Exception:
+            env = {}
+        found = [(k, v) for k, v in env.items() if k in KEY_VARS and str(v).strip()]
+        print(f"{path}: " + (", ".join(f"{k} = {mask(str(v))}" for k, v in found) if found else "no key stored"))
+        return
+    if a.clear:
+        try:
+            s = json.loads(path.read_text(encoding="utf-8-sig"))
+        except Exception:
+            s = {}
+        env = s.get("env") or {}
+        for name in KEY_VARS:
+            env.pop(name, None)
+        if env:
+            s["env"] = env
+        else:
+            s.pop("env", None)
+        path.write_text(json.dumps(s, indent=2) + "\n", encoding="utf-8")
+        print(f"removed the stored key from {path}")
+        return
+
+    if a.stdin:
+        key = sys.stdin.readline().strip()
+    else:
+        import getpass
+        key = getpass.getpass("Paste the Alibaba Model Studio API key (input is hidden, it is not stored anywhere "
+                              "else): ").strip()
+    if not key:
+        sys.exit("no key read")
+
+    if a.base_url and a.var:
+        var, base = a.var, a.base_url
+        ok, msg = probe(base, key, a.model)
+        print(f"{base}: {msg}")
+        if not ok:
+            sys.exit("that endpoint refused the key; nothing was stored")
+    else:
+        print(f"trying {a.model} against the Alibaba Model Studio endpoints (one 1-token call each):")
+        var = base = None
+        for name, url, env_var in ENDPOINTS:
+            ok, msg = probe(url, key, a.model)
+            print(f"  {'OK  ' if ok else 'no  '} {name:34s} {msg.splitlines()[0][:110]}")
+            if ok and not var:
+                var, base = env_var, url
+        if not var:
+            sys.exit("no endpoint accepted the key with that model id; nothing was stored. "
+                     "Try --model with the id your plan serves, or set --var and --base-url yourself.")
+    stored = write_user_env(var, key)
+    print(f"stored {var} = {mask(key)} in {stored} (outside the repo; not committed)")
+    print(write_project_route(a.model, base, var))
+    print("now check: python tools/autopilot/router.py show")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -168,6 +306,14 @@ def main():
     p.add_argument("--role", required=True)
     p.add_argument("--tier")
     p.add_argument("--model")
+    p = sub.add_parser("qwen-key", help="store the Qwen API key in ~/.qwen/settings.json (hidden prompt, never an "
+                                        "argument) after finding the endpoint that serves the model")
+    p.add_argument("--model", default="qwen3.8-max", help="model id to test and to point the route at")
+    p.add_argument("--var", help="store under this env var name instead of probing (needs --base-url)")
+    p.add_argument("--base-url", help="use this endpoint instead of probing (needs --var)")
+    p.add_argument("--stdin", action="store_true", help="read the key from stdin instead of a hidden prompt")
+    p.add_argument("--show", action="store_true", help="print which key is stored, masked")
+    p.add_argument("--clear", action="store_true", help="remove the stored key")
     a = ap.parse_args()
     r = load()
 
