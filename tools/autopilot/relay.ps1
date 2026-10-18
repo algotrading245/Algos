@@ -8,13 +8,14 @@
 #   1. PAUSE, another agent running, or a usage/rate-limit back-off: nothing.
 #   2. A tester job to start or collect: tester (it goes first, so the tester install is never idle).
 #   3. A hand-over that is due: that agent.
-#   4. No agent for $IdleMinutes: the researcher if it has not run for a day, else the fidelity check if it has not
-#      run for a week, else the orchestrator.
+#   4. No agent for $IdleMinutes: the researcher if it has not run for $ResearchHours hours, else the fidelity check if
+#      it has not run for a week, else the orchestrator.
 # No daily caps: usage is bounded by one agent at a time, the hand-over gap and the usage/rate-limit back-off.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
-$IdleMinutes = 120
+$IdleMinutes = 15      # owner 2026-10-18: start the next piece of work 15 min after the last one (was 120)
+$ResearchHours = 4     # a new research run at most every 4 hours when nothing else is handed over (was 24)
 
 function Start-Agent([string]$Role, [string]$Why) {
     if ($DryRun) { Write-Output "would start $Role ($Why)"; return }
@@ -64,8 +65,8 @@ function Get-LastEnd([string]$Role) {
     if (Test-Path $f) { try { [datetime](Get-Content $f -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
 }
 $researched = Get-LastEnd "researcher"
-if (($now - $researched).TotalHours -ge 24) {
-    Start-Agent "researcher" "idle, no research for a day"
+if (($now - $researched).TotalHours -ge $ResearchHours) {
+    Start-Agent "researcher" "idle, no research for $ResearchHours hours"
 } elseif (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) {
     Start-Agent "fidelity" "idle, no fidelity check for a week"
 } else { Start-Agent "orchestrator" "idle for $IdleMinutes min" }
