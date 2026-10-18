@@ -230,6 +230,16 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
     month in 10 at 5x and a quarter of months below 0.5x.
   - Open, no tester time: a daily-equity comparison of tester and model on 2024.10 and 2025.07, the largest misses,
     to find where the tester's size departs from `GoalSize()`.
+- **j11b judged (orchestrator, 2026-10-18): InpTarget=3 reaches 3x in 9 of 21 months (43%), no ruin. Pass.**
+  The judgement is in `backtests/2026-10-18_0601_AurumHydra_t3b_months/summary.md`; the evidence is
+  `research/hydra_t3b_months_model.py` (j10b's model at goal 3x).
+  - Yardsticks: the same-months model gives 9-10 of 21 (odds settings, edge 0.7-1.0) and 12 (preset). `target_odds`
+    gives 32-43%, and month-start rounds from 2010 give 28-41%. P(4x) is 0 everywhere.
+  - Ruin: 0 of 21 against the model's 3-9 (lowest 0.27x), the same narrow tail as j10b. The cause is not measured.
+    2024.10 and 2025.07 are again the largest misses.
+  - The script's `p_5x` 2 is log pollution: the day's `summary.txt` holds j10b's 5.00x lines first. The true count is 0.
+  - **j15 queued:** InpTarget=4 (`AurumHydra_target4x_FTMO.set`, tag t4b) on the same 21 months, which completes
+    3x/4x/5x. Expect P(4x) 22-32% (target_odds, scale 2.5). In-sample, not tuned.
 - **Demo note (revised 2026-10-18): AurumFunded has the same `InpGoldMaxSpread = 0.30`** (`AurumFunded.mq5:246`).
   The tester runs on FTMO's ticks with the same cap, so j3's figures already include the days it blocks, and demo and
   tester should agree. No EA change is proposed any more (j9 above). The monitor/fidelity agent should still check
@@ -238,7 +248,10 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
 - **Proposed tool change (`tools/months_summary.py`):** its "round" field and refusal count read the tester's
   `summary.txt`, which is one log for the whole day and every run, so both are polluted by the other months. Cut
   each month's lines by the run's start and end time (as done by hand for j8), and count the EA's silent
-  InpMarginPct clip too, which is not a refusal in the log. Also: the AUDCAD grid retries every second while the
+  InpMarginPct clip too, which is not a refusal in the log. Line 44-45 takes the *first* "goal round of <month>
+  ended" line (`float(hit[0])`). j11b showed that this reads an earlier run's round on the same day: 2024.12 and
+  2025.09 read j10b's 5.00x. The least change is `hit[-1]`; the clean fix is the time cut. Also write the run's goal
+  (InpTarget) into `months.json` so `months_result.json` does not fall back to `goal` 5.0. Also: the AUDCAD grid retries every second while the
   market is closed (log spam, a small later EA fix).
 - **Proposed tool change (agents may not edit `tools/`):** `tools/run-tester.ps1` should write *every* input of the
   EA into `[TesterInputs]` - parse the `input` lines of the `.mq5` for their defaults, then apply the preset, then

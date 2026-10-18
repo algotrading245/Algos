@@ -45,6 +45,41 @@ Flagged to the orchestrator in the decision line.
 - The 5x count in this file is not a 5x result; the multiples show 0 at 5x.
 - Nothing tuned on these months.
 
+## Judgement (orchestrator, 2026-10-18)
+
+Step 16, `research/hydra_t3b_months_model.py`: the j10b same-months model (`research/hydra_t5b_months_model.py`) at
+goal 3x on these 21 months. A month counts as at a level from 0.3% below it, because the tester's multiple is the final
+balance after the last fill (2.999x).
+
+| Source | Months at 3x | P(4x) | P(ruin) | Median |
+|---|---|---|---|---|
+| Model, odds settings, edge 1.0 | 10 of 21 (48%) | 0 | 14% (3) | 2.97x |
+| Model, odds settings, edge 0.7 | 9 of 21 (43%) | 0 | 24% (5) | 1.71x |
+| Model, preset settings, edge 1.0 and 0.7 | 12 of 21 (57%) | 0 | 43% (9) | 3.00x |
+| Tester | 9 of 21 (43%) | 0 | 0% | 1.82x |
+| `target_odds.py`, every weekday a round, scale 2.5 | 32% (0.7) to 43% (1.0) | | 16% / 12% | |
+| Month-start rounds from 2010, odds settings | 28% (0.7) to 41% (1.0) | | | |
+
+- **Pass on the goal measure.** 9 of 21 at 3x is inside every yardstick: the same-months model (9-12), `target_odds`
+  (32-43%) and the month-start base rate (28-41%).
+- Month by month, odds model at edge 1.0 against the tester: both reach 3x in 7 months (2024.03, 09, 12; 2025.01,
+  02, 03, 09). Only the model: 2024.01, 2024.10, 2025.08. Only the tester: 2024.04, 2024.07. The preset model shares
+  8 months; model only: 2024.01, 2024.10, 2025.07, 2025.08; tester only: 2025.02. Log correlation 0.29 / 0.35 (odds),
+  0.58 / 0.60 (preset).
+- **The ruin tail is narrower than the model's, as in j10b.** The model ruins 3-9 of 21 months (at 0.2x); the tester
+  ruins none (lowest 0.27x, 2024.08, with an 86.8% equity drawdown). "Tester keeps X of model log growth" does not
+  mean anything here: the model's ruins (clipped at 0.01x) take its log sum to 1.25 / -4.09 / -12.74 / -18.07, against
+  the tester's 4.46. The cause is still not measured.
+- 2024.10 (tester 0.57x, model 3.00x) and 2025.07 (tester 0.84x, preset model 3.00x) are again the largest misses, as
+  in j10b. A daily-equity comparison of those two months is the open fidelity item (no tester time needed).
+- **The script's 5x count is log pollution.** The tester's `summary.txt` for a day holds the lines of every run that
+  day. `tools/months_summary.py` takes the first "goal round of <month> ended" line. For 2024.12 and 2025.09 that is
+  j10b's 5.00x line from 04:33 and 05:04. j11b's own lines (06:37, 07:16) say 3.00x, goal 3.0x. True count at 5x: 0.
+  `months_result.json`'s `goal` 5.0 is the script's default; `months.json` carries no goal. The tool fix is described
+  in HANDOFF.
+- For the mission: on these months, InpTarget=3 reaches 3x in 43% of rounds with no ruin. InpTarget=5 (j10b) reaches 5x
+  in 10%. Nothing tuned on these months.
+
 ## Files
 
 Per-month `result.json` and `tester.ini` are in each `..._t3b_2024MM` folder; `months.json` and `months_result.json`
