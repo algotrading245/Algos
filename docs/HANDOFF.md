@@ -86,7 +86,13 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
    (21,616) and on (24,182), near the legs-on end; DD inside the range. That passes, but there are 3 more day stops
    (2024-05-01, 2024-08-05, 2025-02-28), and on those days j3 lost less or gained (2024-05-01 j3 +0.2% vs j12 -2.7%). So
    half-size legs do not explain them; the shared library takes a different path there. Recorded, not tuned. Open
-   follow-up, needs no tester time: compare the j12 and j3 legs-on deal lists for those three days. Prop routes: FTMO
+   follow-up, needs no tester time: compare the j12 and j3 legs-on deal lists for those three days.
+   **j13 judged 2026-10-18 03:17** (`research/fnext_tester_expect.py`, the library's legs in the model, j12 used as the
+   calibration): FundedNext preset tester +42.4% / 2.39% eq DD / no day stop / +5% on 2024-05-01, against a model of
+   +52.6% / 2.19% / 0 / 2024-04-30. The tester keeps 0.84 of the model's log growth (j12 0.79, both inside lesson 4).
+   PASS. On the same daily model j12 has 5 day stops; the tester has 8. Still open: the EA never logs the trailing stop
+   level. Proposed log line for a later AurumFunded change (reviewer first): print the new floor when the day-start
+   peak rises. Prop routes: FTMO
    2-Step (demo now) plus the two instant-funding accounts (no challenge, payout from +5%), presets in AurumFunded.
 
 ## Demo and autopilot (2026-10-17)
