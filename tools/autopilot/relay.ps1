@@ -20,17 +20,20 @@
 #      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
 #      has not run for a week, the researcher while 3 or more ideas are untested.
 # No daily caps: usage is bounded by one agent at a time, the hand-over gap and the usage/rate-limit back-off.
+# Which CLI and model a role runs on is the router's (tools/autopilot/router.json): switch the whole system between
+# Claude and Qwen with python tools/autopilot/router.py use qwen|claude. This script only names a tier (routine,
+# code, judge) when a run should be cheaper than its role's default.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
 $CycleBreakMinutes = 30   # owner 2026-10-18: no gap inside a cycle, a break after it before the next cycle starts
 $Chain = @("researcher", "scanner", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
 
-function Start-Agent([string]$Role, [string]$Why, [string]$Model = $null) {
-    if ($DryRun) { Write-Output "would start $Role ($Why)$(if ($Model) { " on $Model" })"; return }
-    Write-Log "relay" "start $Role ($Why)$(if ($Model) { " on $Model" })"
+function Start-Agent([string]$Role, [string]$Why, [string]$Tier = $null) {
+    if ($DryRun) { Write-Output "would start $Role ($Why)$(if ($Tier) { " at the $Tier tier" })"; return }
+    Write-Log "relay" "start $Role ($Why)$(if ($Tier) { " at the $Tier tier" })"
     $a = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $PSScriptRoot "run-agent.ps1"), "-Role", $Role)
-    if ($Model) { $a += @("-Model", $Model) }
+    if ($Tier) { $a += @("-Tier", $Tier) }
     & powershell.exe @a
 }
 
@@ -47,6 +50,9 @@ function Get-LastEnd([string]$Role) {
     $f = Join-Path $LogDir "last-$Role.json"
     if (Test-Path $f) { try { [datetime](Get-Content $f -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
 }
+# Roles this tick already started. Without it the chain can wrap round to a role that has just run and, if that run
+# ends at once (a usage limit, a configuration fault), start it again and again inside one tick.
+$startedHere = @()
 while ($true) {
     if (Test-Path $Pause) { break }
     $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
@@ -60,15 +66,19 @@ while ($true) {
     # 2. The tester script: collect a finished job, start the next queued one (fast when idle; its own lock).
     & python.exe (Join-Path $Repo "tools\autopilot\tester_step.py") 2>&1 | Out-Null
     if (Test-TesterWork) {
+        if ($startedHere -contains "tester") { break }
+        $startedHere += "tester"
         Start-Agent "tester" "tester_step.py asked for help"
         break
     }
     $judge = @(Get-ToJudge)
     if ($judge.Count) {
+        if ($startedHere -contains "orchestrator") { break }
         # A collected job is judged at once. The script compared result and expect with a fixed check: a match is
-        # routine (Sonnet confirms and records); anything else is judgment (Opus).
-        $m = if (@($judge | Where-Object { -not $_.match }).Count) { "opus" } else { "sonnet" }
-        Start-Agent "orchestrator" ("judge " + (($judge | ForEach-Object { $_.id }) -join ", ")) $m
+        # routine (the router's code tier confirms and records); anything else is judgment (its judge tier).
+        $tier = if (@($judge | Where-Object { -not $_.match }).Count) { "judge" } else { "code" }
+        $startedHere += "orchestrator"
+        Start-Agent "orchestrator" ("judge " + (($judge | ForEach-Object { $_.id }) -join ", ")) $tier
         $r2 = try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null }
         if ($r2 -and $r2.from -eq "orchestrator" -and $r2.next -ne "none") { continue }
         break
@@ -82,13 +92,17 @@ while ($true) {
         $from = $next; $next = $null
     }
     if (-not $next) {
-        # The chain: the agent after the one that ran last, skipping those with nothing to do; past the end, a new cycle.
+        # The chain: the agent after the one that ran last, skipping those with nothing to do and those this tick
+        # already started; past the end, a new cycle.
         $i = [array]::IndexOf($Chain, $from)
         $guard = 0
-        do { $i++; if ($i -ge $Chain.Count) { $i = 0 }; $guard++ } until ((Test-Runnable $Chain[$i]) -or ($guard -gt $Chain.Count))
-        if ($guard -gt $Chain.Count) { break }   # nobody in the chain has anything to do
+        do {
+            $i++; if ($i -ge $Chain.Count) { $i = 0 }; $guard++
+        } until (((Test-Runnable $Chain[$i]) -and ($startedHere -notcontains $Chain[$i])) -or ($guard -gt $Chain.Count))
+        if ($guard -gt $Chain.Count) { break }   # nobody in the chain has anything to do (or nothing left to start)
         $next = $Chain[$i]
     }
+    if ($startedHere -contains $next) { Write-Log "relay" "$next already ran in this tick: waiting for the next one"; break }
     if ($next -eq "researcher") {
         # A new cycle: take the break first.
         $ends = @(Get-ChildItem $LogDir -Filter "last-*.json" | ForEach-Object {
@@ -105,6 +119,7 @@ while ($true) {
         [ordered]@{ from = $next; next = "none"; due = $now.ToString("s"); reason = "started by the relay" } |
             ConvertTo-Json | Set-Content $Relay -Encoding UTF8
     }
+    $startedHere += $next
     Start-Agent $next $(if ($from) { "cycle: after $from" } else { "cycle start" })
 
     if ($DryRun) { break }

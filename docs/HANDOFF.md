@@ -20,10 +20,20 @@ each finished piece of work.
 ## How the work runs (2026-10-18)
 
 - **Relay of agents** (`tools/autopilot/relay.ps1`, every 5 min): researcher → scanner → orchestrator → tester →
-  fidelity, no gap inside a cycle, 30 min between cycles. Models: Opus judges and plans (orchestrator, reviewer),
-  Sonnet codes and confirms routine judge runs (quant-coder, fidelity, a judge run whose fixed expect check matched),
-  Haiku does routine work (researcher, tester help, monitor). One agent at a time (mutex); usage limits back the
-  relay off 60 min. Prompts: fixed parts first (memory, role) so repeats hit the cache, status last.
+  fidelity, no gap inside a cycle, 30 min between cycles; a role that has nothing to do is skipped, and no role runs
+  twice in one tick. One agent at a time (mutex); usage, session and quota limits back the relay off 60 min.
+  Prompts: fixed parts first (memory, role) so repeats hit the cache, status last.
+- **Model router** (`tools/autopilot/router.json` + `router.py`): one switch picks the provider for every role —
+  **Claude Code** or **Qwen Code** — and each role maps to a tier (routine / code / judge) that each provider names a
+  model for. Switch the whole system with `python tools/autopilot/router.py use qwen|claude`, one role apart with
+  `... use claude --role orchestrator`, a tier's model with `... use qwen --tier code --model qwen3-coder-plus`;
+  `... show` prints the current mapping. If the provider it points at cannot authenticate (a Qwen run with no API
+  key) the run falls back to the other provider and says so in the log, so the pipeline never idles over a key.
+  Qwen specifics: no `--agent` flag, so `run-agent.ps1` inlines the role definition into the prompt and the two
+  subagents are mirrored into `.qwen/agents/` (`python tools/autopilot/mirror_agents.py` after any change to
+  `.claude/agents/`); permissions come from `.qwen/settings.json` (committed: the deny list, which is the only gate
+  because runs use `--approval-mode yolo` — deny still outranks yolo) and the API key is an environment variable in
+  `~/.qwen/settings.json` (user level, outside the repo, never committed).
 - **Mechanical work is scripts, not agents:** `tools/autopilot/tester_step.py` starts and collects tester jobs,
   writes each `summary.md`, commits, and routes a collected job to the orchestrator (`logs/autopilot/to-judge.json`);
   the tester agent only runs when the script writes `tester-help.json`. `tools/autopilot/scanner_step.py` works

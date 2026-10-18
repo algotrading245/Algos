@@ -32,14 +32,14 @@ function Register($name, $triggers, $action, $text) {
 
 $every15 = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 15)
 Register "Aurum Keeper" @((New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"), $every15) `
-    (Action "keeper.ps1" "") "Keeps the PC awake and FTMO-demo Terminal 16 open (tools\autopilot\keeper.ps1)."
+    (Action "keeper.ps1" "") "Keeps the PC awake and FTMO-demo Terminal 16 open, and runs the tester and scanner scripts every minute (tools\autopilot\keeper.ps1)."
 
 Register "Aurum Monitor" (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At 23:15) `
-    (Action "run-agent.ps1" "-Role monitor") "Monitor agent (haiku): daily demo check-in into docs\demo_log.md."
+    (Action "run-agent.ps1" "-Role monitor") "Monitor agent: daily demo check-in into docs\demo_log.md (its model comes from tools\autopilot\router.json)."
 
 $every5 = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 5)
 Register "Aurum Relay" $every5 (Action "relay.ps1" "") `
-    "Agent relay: orchestrator (opus), tester (sonnet) and researcher (haiku) hand over to each other (tools\autopilot\relay.ps1)."
+    "Agent relay: the chain researcher, scanner, orchestrator, tester, fidelity hands over to itself; provider and models come from tools\autopilot\router.json (tools\autopilot\relay.ps1)."
 
 foreach ($old in "Aurum Orchestrator", "Aurum Tester", "Aurum Researcher") {
     if (Get-ScheduledTask -TaskPath $folder -TaskName $old -ErrorAction SilentlyContinue) {

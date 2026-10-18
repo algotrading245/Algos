@@ -1,0 +1,134 @@
+{
+  "about": "Qwen Code's project settings for the Aurum autopilot (owner 2026-10-18), the counterpart of tools/autopilot/settings.json for Claude. No secret lives here: the API key is an environment variable, set in ~/.qwen/settings.json (user level, outside the repo) under \"env\", because a modelProviders route reads its credential from process.env[envKey] and never from a settings file. Which provider and model each role runs on is tools/autopilot/router.json; switch with: python tools/autopilot/router.py use qwen|claude. IMPORTANT: runs use --approval-mode yolo, so permissions.deny below is the ONLY gate (deny outranks yolo). Never run with --safe-mode or --bare: both drop settings-sourced deny rules. Re-audit this list when Qwen Code is updated, since a new built-in tool registers until it is denied.",
+  "security": {
+    "auth": {
+      "selectedType": "openai",
+      "enforcedType": "openai"
+    }
+  },
+  "modelProviders": {
+    "openai": [
+      {
+        "id": "qwen3.8-max",
+        "name": "Qwen3.8 Max (Alibaba Model Studio, international)",
+        "envKey": "DASHSCOPE_API_KEY",
+        "baseUrl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      },
+      {
+        "id": "qwen3.8-max-tp",
+        "name": "Qwen3.8 Max (Token Plan key: use this route instead if your key is a BAILIAN token-plan key)",
+        "envKey": "BAILIAN_TOKEN_PLAN_API_KEY",
+        "baseUrl": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1"
+      },
+      {
+        "id": "qwen3-coder-plus",
+        "name": "Qwen3 Coder Plus (cheaper: for the routine and code tiers)",
+        "envKey": "DASHSCOPE_API_KEY",
+        "baseUrl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      }
+    ]
+  },
+  "tools": {
+    "approvalMode": "yolo"
+  },
+  "telemetry": {
+    "enabled": false,
+    "logPrompts": false
+  },
+  "general": {
+    "enableAutoUpdate": false
+  },
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push origin --force*)",
+      "Bash(git push origin -f*)",
+      "Bash(git push origin +*)",
+      "Bash(git reset*)",
+      "Bash(git checkout*)",
+      "Bash(git switch*)",
+      "Bash(git restore*)",
+      "Bash(git clean*)",
+      "Bash(git rebase*)",
+      "Bash(git stash*)",
+      "Bash(git add -A*)",
+      "Bash(git add .*)",
+      "Bash(git add --all*)",
+      "Bash(git add *.ex5*)",
+      "Bash(git commit -a*)",
+      "Bash(git commit --all*)",
+      "Bash(rm *)",
+      "Bash(rmdir*)",
+      "Bash(rd *)",
+      "Bash(del *)",
+      "Bash(erase *)",
+      "Bash(Remove-Item*)",
+      "Bash(mv *)",
+      "Bash(move *)",
+      "Bash(Move-Item*)",
+      "Bash(Rename-Item*)",
+      "Bash(taskkill*)",
+      "Bash(Stop-Process*)",
+      "Bash(kill *)",
+      "Bash(killall*)",
+      "Bash(shutdown*)",
+      "Bash(schtasks*)",
+      "Bash(sc *)",
+      "Bash(reg *)",
+      "Bash(regedit*)",
+      "Bash(setx*)",
+      "Bash(Start-Process*)",
+      "Bash(*terminal64*)",
+      "Bash(*MetaTrader*)",
+      "Bash(*accounts.dat*)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(pip install*)",
+      "Bash(pip3 install*)",
+      "Bash(winget*)",
+      "Bash(choco*)",
+      "Bash(qwen*)",
+      "Bash(claude*)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(Invoke-WebRequest*)",
+      "Bash(Invoke-RestMethod*)",
+      "Bash(Invoke-Expression*)",
+      "Bash(iwr *)",
+      "Bash(irm *)",
+      "Bash(iex *)",
+      "Bash(nc *)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(powershell -Command*)",
+      "Bash(powershell -EncodedCommand*)",
+      "Bash(pwsh *)",
+      "Bash(cmd *)",
+      "Bash(mshta*)",
+      "Bash(rundll32*)",
+      "Read(./.env*)",
+      "Read(~/.qwen/**)",
+      "Read(~/.claude/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gitconfig)",
+      "Edit(~/.qwen/**)",
+      "Write(~/.qwen/**)",
+      "Edit(./.qwen/**)",
+      "Write(./.qwen/**)",
+      "Edit(./tools/**)",
+      "Write(./tools/**)",
+      "Edit(./.claude/**)",
+      "Write(./.claude/**)",
+      "Edit(./.gitignore)",
+      "Write(./.gitignore)",
+      "Edit(./docs/memory/mission.md)",
+      "Write(./docs/memory/mission.md)",
+      "Edit(./docs/memory/decisions.jsonl)",
+      "Write(./docs/memory/decisions.jsonl)"
+    ]
+  },
+  "$version": 4
+}

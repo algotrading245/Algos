@@ -1,0 +1,35 @@
+{
+  "about": "The model router (owner 2026-10-18). One switch picks the provider for every agent run; each role maps to a tier, and each provider names a model per tier, so a role can be moved between providers or models without touching a script. Switch it with: python tools/autopilot/router.py use qwen|claude [--role R --model M] [--tier T --model M]; read it with: python tools/autopilot/router.py show. No secrets here (the Qwen key lives in ~/.qwen/settings.json, outside the repo).",
+  "provider": "qwen",
+  "providers": {
+    "claude": {
+      "about": "Claude Code CLI (claude.exe). Roles run as .claude/agents/<role>.md subagent definitions with --agent, permissions from tools/autopilot/settings.json in dontAsk mode.",
+      "tiers": {
+        "routine": "haiku",
+        "code": "sonnet",
+        "judge": "opus"
+      }
+    },
+    "qwen": {
+      "about": "Qwen Code CLI (node on @qwen-code/qwen-code/cli-entry.js). No --agent flag: run-agent.ps1 inlines .claude/agents/<role>.md into the prompt, and the two subagents the orchestrator delegates to are mirrored into .qwen/agents/ (python tools/autopilot/mirror_agents.py). Permissions from .qwen/settings.json (project, committed: the deny list, which is the only gate because runs use --approval-mode yolo) and ~/.qwen/settings.json (user, holds the API key under \"env\": DASHSCOPE_API_KEY, or BAILIAN_TOKEN_PLAN_API_KEY for a token-plan key - then use the qwen3.8-max-tp model route). Limits are the CLI's own: --max-session-turns (exit 53) and --max-wall-time (exit 55).",
+      "args": ["--auth-type", "openai"],
+      "tiers": {
+        "routine": "qwen3.8-max",
+        "code": "qwen3.8-max",
+        "judge": "qwen3.8-max"
+      }
+    }
+  },
+  "roles": {
+    "about": "One entry per relay role. tier picks the model from the active provider's tier table; turns/minutes bound the run. claude_agent is the .claude/agents definition Claude runs the role with (--agent); null means Claude runs it on the tier model alone. agent_file is that definition's path, which Qwen has no flag for, so run-agent.ps1 inlines it into the prompt instead.",
+    "monitor": { "tier": "routine", "turns": 25, "minutes": 20, "claude_agent": "monitor", "agent_file": ".claude/agents/monitor.md" },
+    "researcher": { "tier": "routine", "turns": 40, "minutes": 60, "claude_agent": "researcher", "agent_file": ".claude/agents/researcher.md" },
+    "scanner": { "tier": "routine", "turns": 25, "minutes": 30, "claude_agent": "scanner", "agent_file": ".claude/agents/scanner.md" },
+    "tester": { "tier": "routine", "turns": 40, "minutes": 45, "claude_agent": null, "agent_file": ".claude/agents/tester-operator.md" },
+    "fidelity": { "tier": "code", "turns": 30, "minutes": 40, "claude_agent": "fidelity", "agent_file": ".claude/agents/fidelity.md" },
+    "orchestrator": { "tier": "judge", "turns": 80, "minutes": 120, "claude_agent": null, "agent_file": null }
+  },
+  "overrides": {
+    "about": "Per-role exceptions to the provider switch: {\"<role>\": {\"provider\": \"claude\", \"model\": \"opus\"}}. Empty means every role follows the switch above."
+  }
+}
