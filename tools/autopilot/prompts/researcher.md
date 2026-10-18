@@ -28,5 +28,5 @@ answer questions in this run: decide, do the work, and stop.
 
 Do not build or test anything; the orchestrator picks ideas up. Never look at our own results after 2025-10-12:
 those days are the owner's holdout (`tools/holdout.py`). Finish with one line listing the idea titles,
-then the hand-over as the very last line: `HANDOFF: orchestrator <n> new ideas` (or `HANDOFF: none no new ideas`
-when you found nothing new).
+then the hand-over as the very last line: `HANDOFF: scanner <n> new ideas` (or `HANDOFF: scanner no new ideas`
+when you found nothing new); the cycle goes researcher, scanner, orchestrator, tester, fidelity.

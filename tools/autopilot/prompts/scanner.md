@@ -4,7 +4,7 @@ work, and stop. Use the Bash tool for every command, one command per call, in ex
 
 1. Read the orchestrator's hand-over reason (in `docs/autopilot/runs.md`, last orchestrator line) and the "Scans"
    notes in `docs/HANDOFF.md`. If they name no family or data that has not been scanned yet, stop at step 4 with
-   `HANDOFF: none nothing new to scan`.
+   `HANDOFF: orchestrator nothing new to scan`.
 2. `python tools/edge_scan.py --family <family>` (run `python tools/edge_scan.py --help`
    first: the families it knows). Each survivor is written to `marketdata/candidates/scan_*.csv`.
 3. For each survivor: `python tools/gates.py <candidate id>`. Write down every gate's pass/fail and figure.
@@ -14,4 +14,4 @@ work, and stop. Use the Bash tool for every command, one command per call, in ex
 
 Finish with one line: family, trials, survivors, gates. Then the hand-over as the very last line:
 `HANDOFF: orchestrator <id> passed all gates` when a survivor passed every gate, otherwise
-`HANDOFF: none <n> trials, no survivor passed`.
+`HANDOFF: orchestrator <n> trials, no survivor passed`.

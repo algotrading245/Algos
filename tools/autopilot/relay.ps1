@@ -4,18 +4,18 @@
 #
 #   powershell -ExecutionPolicy Bypass -File tools\autopilot\relay.ps1 [-DryRun]     (-DryRun: say what would start)
 #
+# The agents run as one chain, a cycle: researcher -> scanner -> orchestrator -> tester -> fidelity, then the next cycle
+# starts with the researcher again (owner 2026-10-18). Each agent starts $GapMinutes after the one before it.
 # Order on each tick:
 #   1. PAUSE, another agent running, or a usage/rate-limit back-off: nothing.
 #   2. A tester job to start or collect: tester (it goes first, so the tester install is never idle).
-#   3. A hand-over that is due: that agent.
-#   4. No agent for $IdleMinutes: the researcher if it has not run for $ResearchHours hours, else the fidelity check if
-#      it has not run for a week, else the orchestrator.
+#   3. The next agent once its gap is over: the one named in the last HANDOFF line, else the next in the chain.
+#      The tester is skipped when there is no tester work, the fidelity check unless it has not run for a week.
 # No daily caps: usage is bounded by one agent at a time, the hand-over gap and the usage/rate-limit back-off.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
-$IdleMinutes = 15      # owner 2026-10-18: start the next piece of work 15 min after the last one (was 120)
-$ResearchHours = 4     # a new research run at most every 4 hours when nothing else is handed over (was 24)
+$Chain = @("researcher", "scanner", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
 
 function Start-Agent([string]$Role, [string]$Why) {
     if ($DryRun) { Write-Output "would start $Role ($Why)"; return }
@@ -37,36 +37,34 @@ if ($r -and $r.backoff_until -and [datetime]$r.backoff_until -gt $now) { exit 0 
 # 2. Tester work in the weekend window.
 if (Test-TesterWork) { Start-Agent "tester" "tester job to start or collect"; exit 0 }
 
-# 3. A due hand-over. It is cleared before the agent starts, so it runs once.
-if ($r -and $r.next -and $r.next -ne "none") {
-    if ([datetime]$r.due -gt $now) { if ($DryRun) { Write-Output "waiting: $($r.next) due $($r.due)" }; exit 0 }
-    $next = $r.next
-    if (-not $DryRun) {
-        $r.next = "none"
-        $r | ConvertTo-Json | Set-Content $Relay -Encoding UTF8
-    }
-    if ($next -eq "tester") {
-        Write-Log "relay" "hand-over to tester from $($r.from) dropped: no tester work (window closed or no job)"
-        exit 0
-    }
-    Start-Agent $next "hand-over from $($r.from): $($r.reason)"
-    exit 0
-}
-
-# 4. Idle: nobody has run for $IdleMinutes.
-$last = @(Get-ChildItem $LogDir -Filter "last-*.json" | ForEach-Object {
-    try { [datetime](Get-Content $_.FullName -Raw | ConvertFrom-Json).ended } catch { }
-})
-$lastEnd = if ($last) { $last | Sort-Object | Select-Object -Last 1 } else { Get-Date 0 }
-if (($now - $lastEnd).TotalMinutes -lt $IdleMinutes) { if ($DryRun) { Write-Output "last agent ended ${lastEnd}: not idle yet" }; exit 0 }
-
+# 3. The next agent in the cycle. A HANDOFF line names it; without one the chain decides. Nothing runs before the gap is over.
 function Get-LastEnd([string]$Role) {
     $f = Join-Path $LogDir "last-$Role.json"
     if (Test-Path $f) { try { [datetime](Get-Content $f -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
 }
-$researched = Get-LastEnd "researcher"
-if (($now - $researched).TotalHours -ge $ResearchHours) {
-    Start-Agent "researcher" "idle, no research for $ResearchHours hours"
-} elseif (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) {
-    Start-Agent "fidelity" "idle, no fidelity check for a week"
-} else { Start-Agent "orchestrator" "idle for $IdleMinutes min" }
+function Test-Runnable([string]$Role) {
+    switch ($Role) {
+        "tester"   { return [bool](Test-TesterWork) }
+        "fidelity" { return (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) }
+        default    { return $true }
+    }
+}
+if ($r -and $r.due -and [datetime]$r.due -gt $now) { if ($DryRun) { Write-Output "waiting: next agent due $($r.due)" }; exit 0 }
+$next = if ($r -and $r.next -and $r.next -ne "none") { $r.next } else { $null }
+$from = if ($r -and $r.from) { $r.from } else { $null }
+if ($next -and -not (Test-Runnable $next)) {
+    Write-Log "relay" "hand-over to $next from $from skipped: nothing for it to do"
+    $from = $next; $next = $null
+}
+if (-not $next) {
+    # The chain: the agent after the one that ran last, skipping those with nothing to do; past the end, a new cycle.
+    $i = [array]::IndexOf($Chain, $from)
+    do { $i++; if ($i -ge $Chain.Count) { $i = 0 } } until (Test-Runnable $Chain[$i])
+    $next = $Chain[$i]
+}
+if (-not $DryRun) {
+    # Written before the agent starts, so an agent that fails still moves the chain on.
+    [ordered]@{ from = $next; next = "none"; due = $now.ToString("s"); reason = "started by the relay" } |
+        ConvertTo-Json | Set-Content $Relay -Encoding UTF8
+}
+Start-Agent $next $(if ($from) { "cycle: after $from" } else { "cycle start" })
