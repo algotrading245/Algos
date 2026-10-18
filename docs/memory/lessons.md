@@ -43,6 +43,12 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
       misses stop-outs where other legs were open (2024.01, 2024.07, 2025.06). Until the other legs' margin and their
       50% free-margin clip are modelled, do not quote its P(goal) as the EA's odds. Evidence:
       `research/hydra_goal_margin_model.py` (2026-10-18 run); t5b reports 2024.01 and 2025.06.
+    - Amended 2026-10-18 (reviewer-checked): the EA clips each order to 50% of the free margin left (`Legs.mqh:625,
+      1749`), so a 5-pair leg can take about 97% of it, and the month-end boost (2.0 in the target presets) doubles
+      fix, bell and tokyo on the last weekday. A model that clips one combined ticket and leaves out the boost shrinks
+      the other legs' margin and pnl. It can match the tester's stop-out count (7 / 8 / 9 against 7 / 10 / 9) and
+      still overstate goals (8 / 8 against 4 / 2 at 4x / 5x), so its P(goal) is an upper bound. Evidence: round 4 of
+      `research/hydra_goal_margin_model.py`.
 
 ## Strategy and data
 

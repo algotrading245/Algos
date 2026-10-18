@@ -20,8 +20,32 @@ research/hydra_t5b_months_model.py has no margin and rides the same hours out. T
           bar's adverse path, other legs booked at the close on day-open size. EA+OM adds OTHER_MARGIN (median ratio
           of non-AUDCAD FX + other margin to equity * size at the tester's stop-outs) as a constant share of
           day-open equity * size: a sensitivity, not a fit.
+          EA+legs (round 4, the main mode): the other legs get their own margin and their own order clip. Every leg
+          is a list of tickets (entry hour, segments (hour from, hour to, notional per unit of day-open equity * size),
+          the day's pnl from marketdata/hydra_legs_daily.csv.gz / candidate_legs_daily.csv.gz, unchanged). At the first
+          bar whose hour is inside the ticket's window ea_day sizes it as day-open equity * size * notional, clips it to
+          CLIP * free margin of that moment (free = equity less hold, grid and the other legs already open), carries its
+          margin (gold / FX / other rate of part 1, USD notional) in the stop-out check while the bars of its window run,
+          and books its pnl * clip ratio at the day's close. NO INTRADAY PATH EXISTS for the legs (the files hold daily
+          results), so the pnl is still booked at the close and the margin is released after the window; a leg's open
+          loss never enters the stop-out check. A ticket whose window has no bar (hours 23 and 0, holidays) is booked
+          unclipped without margin. E.res = E.other less all tickets (bell at 23:00, which has no bar, the quartet part
+          that could not be split, hold / grid hourly against daily mismatch, the edge penalty, days with a pnl but no
+          notional) is booked unclipped at the close, so for every edge the booked total equals E.other.
+          Notionals (build_legs): fix, cross, fall, morning, after by the cost-linearity trick (their pnl is linear in
+          the cost, the stop branch does not depend on it, so notional = (pnl at cost 0 - pnl) / (cost * 1e-4)); dip,
+          Tokyo, Meridian from tools/quartet_model.py (weights replicated from backtest_hydra.quartet); breakout from
+          the USD/JPY 01:00-09:00 range; noise a constant. Every leg, its hours, notional statistics and each assumption
+          is printed by part 0. EA+OM stays as a comparison column; EA-like has no other margin at all.
   Part 3  (a) tester against model per month and goal, (b) month-start rounds 2010-06 on, (c) EA-like daily minimum
-          margin level and the fixed size at which a month first ends in a stop-out (percentiles across months).
+          margin level and the fixed size at which a month first ends in a stop-out or in ruin (percentiles across
+          months), (d) per tester month: the other legs' realised pnl in the tester against the model's (clipped and
+          before the clip), to split the tester/model gap into margin clip and leg fidelity (lesson 7).
+  Part 4  self-checks: margin off equals one_round(); EA+legs with no clip and constant margin equals EA+OM; the legs'
+          pnl, hold and grid add up to the daily file.
+Round 4 changes against round 3: other legs with their own margin and clip (above); part 3c counts ruin as a hit
+(own column next to stop-out) and words the day share precisely; the daily minimum margin level is recorded for every
+day (inf when nothing was open) so the share can be given over all days too; v1 is no longer reported.
 Known limitation: server hours 23 and 0 have no data (lesson 9), nothing is modelled in them.
 
 Units. The grid's pnl at size 1 is 0.035 * wt[|q|] * sign * (log price move) / (risk * unit), so the notional of
@@ -70,6 +94,7 @@ HC, GC = HOLD_COST * 1e-4 / 2, 1.8e-4 / 2   # cost per unit of traded notional, 
 DAYS_IDX = []                      # the model's days (Timestamps), filled by build_bars()
 GRID_PANIC = 1.0                   # InpGridPanic: the grid is closed inside the hour at levels + 1 + this many steps
 LAST = [-1]                      # day index of the last stop-out seen by run_round (-1: none)
+ACC = {}                         # run_round's by-products: ol (day, clipped, unclipped other-leg pnl), nobar, last, mins
 
 
 def num(s):
@@ -177,7 +202,7 @@ def part1(runs):
     obs = [stopout_obs(r) for goal in runs for r in runs[goal] if r["so"] is not None]
     if not obs:
         print("no stop-outs found, using 1:500 for both")
-        return 1 / 500, 1 / 500, 0.0
+        return 1 / 500, 1 / 500, 1 / 500, 0.0
     print("equity = balance of the last deal row at the stop-out second (all closes, 'end of test' included); "
           "notionals = every position open just before that second")
     use = [c for c in ("gold", "fx", "other") if any(o[c] > 0 for o in obs)]
@@ -234,7 +259,7 @@ def part1(runs):
               f"size {size:5.1f}  non-AUDCAD margin {mg:9,.0f}  ratio {ratios[-1]:.3f}")
     om = float(np.median(ratios))
     print(f"OTHER_MARGIN (median of the {len(ratios)} ratios) = {om:.3f} of day-open equity * size")
-    return a_gold, a_fx, om
+    return a_gold, a_fx, a_oth, om
 
 
 # ---------------------------------------------------------------- part 2: bars
@@ -375,7 +400,7 @@ def build_bars():
                         gret=(lp_g - prev_g)[s0:], glow=(lo_g - prev_g)[s0:], aret=(lp_a - prev_a)[s0:],
                         alo=(lo_a - prev_a)[s0:], ahi=(hi_a - prev_a)[s0:], mode=gmode[s0:], az=gaz[s0:],
                         sd=gsd[s0:], unit=gunit[s0:], night=gnight[s0:], apr=prev_a[s0:], avgp=avgp[s0:],
-                        unitp=unitp[s0:])
+                        unitp=unitp[s0:], hour=idx.hour[s0:].to_numpy())
     b.hinc[0] = 0.0
     per = days.to_period("M")
     for p in per.unique():
@@ -404,7 +429,272 @@ def edge_set(b, r, edge):
         pen=k * (mu_h + mu_g), gret=b.gret.tolist(), glow=b.glow.tolist(), aret=b.aret.tolist(),
         alo=b.alo.tolist(), ahi=b.ahi.tolist(), mode=b.mode.tolist(), az=b.az.tolist(), sd=b.sd.tolist(),
         unit=b.unit.tolist(), night=b.night.tolist(), apr=b.apr.tolist(), avgp=b.avgp.tolist(),
-        unitp=b.unitp.tolist())
+        unitp=b.unitp.tolist(), hour=b.hour.tolist())
+
+
+# ---------------------------------------------------------------- the other legs as tickets (round 4)
+
+def usdjpy_range(days):
+    """Range of USD/JPY 01:00-09:00 server time of every day, as a fraction of the mid price (breakout leg: the
+    London range the EA trades out of). M1 high/low, close if the file has none; NaN on days without data."""
+    f = DATA / "USDJPY_M1.csv.gz"
+    cols = list(pd.read_csv(f, nrows=0).columns)
+    hl = "high" in cols and "low" in cols
+    use = ["time", "high", "low"] if hl else ["time", "close"]
+    d = pd.read_csv(f, usecols=use, dtype={c: (np.int64 if c == "time" else np.float64) for c in use})
+    d = d[d.time < HOLD_EPOCH]
+    mod = (d.time.to_numpy() % 86400) // 60
+    d = d[(mod >= 60) & (mod < 540)]
+    g = d.groupby(d.time // 86400)
+    hi, lo = (g.high.max(), g.low.min()) if hl else (g.close.max(), g.close.min())
+    del d
+    key = ((days - pd.Timestamp("1970-01-01")) // pd.Timedelta(days=1)).to_numpy()
+    h, l_ = hi.reindex(key).to_numpy(), lo.reindex(key).to_numpy()
+    return (h - l_) / ((h + l_) / 2.0)
+
+
+def _cut(x, days):
+    """A daily series on the model's days through holdout.drop(), 0 where it has no value, as a numpy array."""
+    return holdout.drop(x).reindex(days).fillna(0.0).to_numpy()
+
+
+def build_legs(b):
+    """The other legs as tickets, per model day. A ticket is (h0, h1, segs, kd, pnl, cmp, nmax, name): entry hour,
+    exit hour (server clock, exclusive), segs = [(hour from, hour to, notional per unit of day-open equity * size)],
+    kd 0 gold / 1 FX / 2 other (the margin rate), pnl = the leg's daily result at size 1 from the two gz files
+    (unchanged), cmp True for the legs the tester's 'other symbols' comparison covers (not gold, not AUDCAD), nmax
+    the largest notional of its segments (what the entry clip is sized on).
+    Returns SimpleNamespace(tix, info, ok): tix[d] sorted by entry hour, info = rows for the printout."""
+    days = b.days
+    n = len(days)
+    tix = [[] for _ in range(n)]
+    info = []
+    legs = pd.read_csv(ROOT / "marketdata" / "hydra_legs_daily.csv.gz", index_col=0, parse_dates=True)
+    cand = pd.read_csv(ROOT / "marketdata" / "candidate_legs_daily.csv.gz", index_col=0, parse_dates=True)
+    need = {"quartet", "grid", "hold", "fix", "cross", "fall", "morning", "after"}
+    if not need <= set(legs.columns) or not {"breakout", "noise"} <= set(cand.columns):
+        raise SystemExit(f"legs files lack columns: have {list(legs.columns)} and {list(cand.columns)}")
+    file_pnl = {c: _cut(legs[c], days) for c in need}
+    file_pnl["breakout"] = _cut(cand["breakout"], days)
+    file_pnl["noise"] = _cut(0.55 * cand["noise"], days)         # as m.daily(): 0.55 * the candidate file's noise
+    dst = np.array([t.dst().total_seconds() > 0 for t in (days + pd.Timedelta(hours=12)).tz_localize("America/New_York")])
+
+    def add(day, h0, h1, segs, kd, pnl, cmp, name):
+        tix[day].append((h0, h1, segs, kd, float(pnl), cmp, max(s[2] for s in segs), name))
+
+    def row(name, sym, kd, hours, nots, pnl_arr, ntix, source, note):
+        nz = np.asarray(nots)
+        nz = nz[nz > 0]
+        has = np.array([any(t[7] == name for t in tix[d_]) for d_ in range(n)])
+        got = float(sum(t[4] for d_ in range(n) for t in tix[d_] if t[7] == name))
+        info.append(dict(name=name, sym=sym, kd=("gold", "fx", "other")[kd], hours=hours, n=ntix,
+                         med=float(np.median(nz)) if len(nz) else 0.0, p90=float(np.percentile(nz, 90)) if len(nz) else 0.0,
+                         mx=float(nz.max()) if len(nz) else 0.0, got=got, ref=float(pnl_arr.sum()),
+                         nopnl=int(((pnl_arr != 0) & ~has).sum()), source=source, note=note))
+
+    import backtest_hydra as bh
+    # ---- fix / cross / fall / morning / after: pnl is linear in the cost (the stop branch does not depend on it),
+    #      so notional per unit of equity = (pnl at cost 0 - pnl at cost c) / (c * 1e-4) = weight * risk / distance
+    c_fix, c_cross, c_fall = 1.2, 2.0, 1.2
+    pre0, post0 = bh.fix(0.005, cost=0.0, parts=True)
+    pre1, post1 = bh.fix(0.005, cost=c_fix, parts=True)
+    n_pre = _cut((pre0 - pre1) / (c_fix * 1e-4), days)
+    n_post = _cut((post0 - post1) / (c_fix * 1e-4), days)
+    re_fix = _cut(pre1 + post1, days)
+    x0 = bh.fix(0.005, cost=0.0, pairs=bh.FIXCROSS, name="HYDRA_FIXX", after=False)
+    x1 = bh.fix(0.005, cost=c_cross, pairs=bh.FIXCROSS, name="HYDRA_FIXX", after=False)
+    n_cross = _cut((x0 - x1) / (c_cross * 1e-4), days)
+    re_cross = _cut(x1, days)
+    f0, f1 = bh.fall(0.005, cost=0.0), bh.fall(0.005, cost=c_fall)
+    n_fall = _cut((f0 - f1) / (c_fall * 1e-4), days)
+    re_fall = _cut(f1, days)
+    n_morn, re_morn = np.zeros(n), np.zeros(n)
+    for p, c in bh.MORNING.items():
+        y0 = bh.morning(0.005, costx=0.0, pairs={p: c})
+        y1 = bh.morning(0.005, costx=1.0, pairs={p: c})
+        n_morn += _cut((y0 - y1) / (c * 1e-4), days)
+        re_morn += _cut(y1, days)
+    n_aft, re_aft = np.zeros(n), np.zeros(n)
+    for p in ("EURUSD", "GBPUSD", "AUDUSD", "USDCAD", "USDCHF"):
+        c = bh.AFTER[p][1]
+        y0 = bh.after(0.01, costx=0.0, pairs=(p,))
+        y1 = bh.after(0.01, costx=1.0, pairs=(p,))
+        n_aft += _cut((y0 - y1) / (c * 1e-4), days)
+        re_aft += _cut(y1, days)
+    for name, mine, key in (("fix", re_fix, "fix"), ("cross", re_cross, "cross"), ("fall", re_fall, "fall"),
+                            ("morning", re_morn, "morning"), ("after", re_aft, "after")):
+        print(f"  {name}: recomputed daily pnl against the file column: max abs diff {np.abs(mine - file_pnl[key]).max():.2e} "
+              f"(sum recomputed {mine.sum():.4f}, file {file_pnl[key].sum():.4f})")
+    k_cnt = defaultdict(int)
+    for d_ in range(n):
+        if n_pre[d_] > 1e-12 or n_post[d_] > 1e-12:
+            segs = [(16, 18, n_pre[d_])] + ([(18, 19, n_post[d_])] if n_post[d_] > 1e-12 else [])
+            add(d_, 16, 19, [s for s in segs if s[2] > 1e-12], 1, file_pnl["fix"][d_], True, "fix")
+        if n_cross[d_] > 1e-12:
+            add(d_, 16, 18, [(16, 18, n_cross[d_])], 1, file_pnl["cross"][d_], True, "cross")
+        if n_fall[d_] > 1e-12:
+            add(d_, 17, 18, [(17, 18, n_fall[d_])], 1, file_pnl["fall"][d_], True, "fall")
+        if n_morn[d_] > 1e-12:
+            s = int(dst[d_])
+            add(d_, 1 + s, 4 + s, [(1 + s, 4 + s, n_morn[d_])], 1, file_pnl["morning"][d_], True, "morning")
+        if n_aft[d_] > 1e-12:
+            add(d_, 9, 15, [(9, 15, n_aft[d_])], 1, file_pnl["after"][d_], True, "after")
+    cnt = lambda nm: sum(1 for d_ in range(n) for t in tix[d_] if t[7] == nm)
+    row("fix", "EURUSD GBPUSD AUDUSD USDCAD USDCHF", 1, "16-18 (pre-fix), 18-19 (post-fix)", n_pre + n_post, file_pnl["fix"], cnt("fix"),
+        "backtest_hydra.fix(0.005, cost=1.2, parts=True); window start -120..0 / 0..60 min round the London 4pm fix = server 18:00",
+        "fix hour 18:00 fixed (the 2-3 weeks a year the US and UK DST differ are 1 h off); pre and post sized on max(n_pre, n_post)")
+    row("cross", "AUDJPY CADJPY GBPJPY", 1, "16-18", n_cross, file_pnl["cross"], cnt("cross"),
+        "backtest_hydra.fix(0.005, cost=2.0, pairs=FIXCROSS, name=HYDRA_FIXX, after=False)", "as fix")
+    row("fall", "EURUSD GBPUSD AUDUSD USDCAD USDCHF", 1, "17-18", n_fall, file_pnl["fall"], cnt("fall"),
+        "backtest_hydra.fall(0.005, cost=1.2), start -60 min before the fix", "as fix")
+    row("morning", "EURJPY GBPJPY CADJPY", 1, "1-4 (US winter), 2-5 (US DST)", n_morn, file_pnl["morning"], cnt("morning"),
+        "backtest_hydra.morning(0.005, costx=1.0), -60..+60 min round the 9:55 Tokyo fixing = server 02:55 (03:55 in US DST)",
+        "window by the US DST flag of the day; the three pairs' notionals summed in one segment")
+    row("after", "EURUSD GBPUSD AUDUSD USDCAD USDCHF", 1, "9-15", n_aft, file_pnl["after"], cnt("after"),
+        "backtest_hydra.after(0.01, costx=1.0), 5..360 min after server 9:00", "the five pairs' notionals summed in one segment")
+    # ---- the Quartet: dip, Tokyo fixing, EUR/USD midday (the bell at 23:00 has no bar)
+    try:
+        import quartet_model as qm
+        cap = {}
+        orig = (qm.q.bt.trades, qm.q.bm.trades)
+
+        def wrap(key, fn):
+            def g(*a, **k):
+                w = fn(*a, **k)
+                cap[key] = w[~w.index.duplicated()].copy()
+                return w
+            return g
+        qm.q.bt.trades, qm.q.bm.trades = wrap("tokyo", orig[0]), wrap("meridian", orig[1])
+        try:
+            data = qm.datasets()
+        finally:
+            qm.q.bt.trades, qm.q.bm.trades = orig
+        W = {leg: qm.walk(d, qm.FEATS + qm.EXTRA[leg], 2014, 0.5, 0.1) for leg, d in data.items()}
+        for leg, d in data.items():                              # backtest_hydra.quartet(0.67, 0.80)
+            lost = (d.r * d.mult).to_numpy() < 0
+            k = np.zeros(len(d), int)
+            for i in range(1, len(d)):
+                k[i] = min(3, k[i - 1] + 1) if lost[i - 1] else 0
+            W[leg] = W[leg] * 0.67 ** k / 0.80
+        day_ix = {d: i for i, d in enumerate(days)}
+        qpnl = np.zeros(n)
+        bell = np.zeros(n)
+        dip_n, tok_n, mer_n = np.zeros(n), np.zeros(n), np.zeros(n)
+        full = {k: np.zeros(n) for k in ("dip", "tokyo", "meridian")}      # each leg's whole pnl, ticket or not
+        clipped = 0
+        for leg, d in data.items():
+            w = np.nan_to_num(W[leg], nan=1.0)
+            pnl_row = (qm.SIZE[leg] * d.r * d.mult).to_numpy() * w
+            dayv = d.day.tolist()                                # Timestamps, hashable against day_ix
+            if leg == "bell":
+                for dv, p_ in zip(dayv, pnl_row):
+                    if dv in day_ix:
+                        bell[day_ix[dv]] += p_
+                continue
+            if leg != "dip":
+                ref = cap[leg].ref.reindex(d.day).to_numpy()
+                aa = cap[leg].a.reindex(d.day).to_numpy()
+                bb = cap[leg].b.reindex(d.day).to_numpy() if "b" in cap[leg].columns else aa + 90
+            for i in range(len(d)):
+                di = day_ix.get(dayv[i])
+                if di is None:
+                    continue
+                qpnl[di] += pnl_row[i]
+                full[leg][di] += pnl_row[i]
+                if leg == "dip":
+                    a = int(round(d.tod.iloc[i] * 420 + 60))
+                    nt, h0, h1 = qm.SIZE["dip"] * d.mult.iloc[i] * w[i], a // 60, -(-(a + 240) // 60)
+                    dip_n[di] = max(dip_n[di], nt)
+                    kd = 0
+                else:
+                    if not (ref[i] > 0) or np.isnan(aa[i]):
+                        continue
+                    nt = qm.SIZE[leg] * w[i] / (3.0 * ref[i] * 1e-4)
+                    if nt > 30.0:
+                        clipped += 1
+                        nt = 30.0
+                    a = int(aa[i])
+                    b_ = int(bb[i]) if not np.isnan(bb[i]) else a + 90
+                    h0, h1, kd = a // 60, -(-b_ // 60), 1
+                    (tok_n if leg == "tokyo" else mer_n)[di] = max((tok_n if leg == "tokyo" else mer_n)[di], nt)
+                if nt > 1e-12 and h1 > h0:
+                    add(di, h0, h1, [(h0, h1, nt)], kd, pnl_row[i], leg != "dip", leg)
+        print(f"  quartet legs rebuilt as backtest_hydra.quartet(0.67, 0.80): sum of the four legs against the file's "
+              f"quartet column: max abs diff {np.abs(qpnl + bell - file_pnl['quartet']).max():.2e} on "
+              f"{int((np.abs(qpnl + bell) > 0).sum())} days (the bell is {bell.sum():.3f} of it and stays in the residual)")
+        print(f"  Tokyo / Meridian notional clipped at 30 on {clipped} tickets")
+        tkt = lambda nm: [t for d_ in range(n) for t in tix[d_] if t[7] == nm]
+        for nm, sym, kd, nn, src, note in (
+                ("dip", "XAUUSD", 0, dip_n, "quartet_model.datasets()['dip'], SIZE['dip'] * mult * weight",
+                 "entry minute a = tod * 420 + 60, held 4 h (EA text); gold rate"),
+                ("tokyo", "USDJPY", 1, tok_n, "quartet_model.datasets()['tokyo'] + backtest_tokyo.trades(got=1) a, b, ref",
+                 "notional = SIZE * weight / (3 * ref * 1e-4), ref in bp; hours from the trades frame (b missing: a + 90)"),
+                ("meridian", "EURUSD", 1, mer_n, "quartet_model.datasets()['meridian'] + backtest_meridian.trades() a, b, ref",
+                 "as Tokyo")):
+            ts = tkt(nm)
+            hh = sorted({(t[0], t[1]) for t in ts})
+            ph = max(set((t[0], t[1]) for t in ts), key=lambda z: sum(1 for t in ts if (t[0], t[1]) == z)) if ts else None
+            row(nm, sym, kd, f"{len(hh)} distinct windows, most common {ph[0]}-{ph[1]}" if ph else "none", nn, full[nm],
+                len(ts), src, note)
+        row("bell", "XAUUSD", 0, "23:00 (no bar)", np.zeros(n), bell, 0, "quartet_model.datasets()['bell']",
+            "NO MARGIN AND NO CLIP: the hourly file has no bar at 23:00-00:00; its pnl stays in the residual")
+    except Exception as ex:                                      # the quartet stays in the residual, visibly
+        print(f"  !! QUARTET SPLIT FAILED ({type(ex).__name__}: {ex}); dip, Tokyo, Meridian and the bell stay in the "
+              f"residual with NO margin and NO clip")
+        info.append(dict(name="quartet", sym="XAUUSD USDJPY EURUSD", kd="-", hours="-", n=0, med=0.0, p90=0.0, mx=0.0,
+                         got=0.0, ref=float(file_pnl["quartet"].sum()), nopnl=0, source="failed", note=str(ex)))
+    # ---- breakout (USD/JPY London range) and noise (S&P 500, Nasdaq)
+    try:
+        rf = usdjpy_range(days)
+        okb = (file_pnl["breakout"] != 0) & (rf > 0)
+        nb = np.where(okb, np.minimum(0.00125 / np.where(rf > 0, rf, 1.0), 50.0), 0.0)
+        const = False
+    except Exception as ex:
+        print(f"  !! breakout range failed ({type(ex).__name__}: {ex}); constant notional 0.5 on its trade days")
+        nb = np.where(file_pnl["breakout"] != 0, 0.5, 0.0)
+        const = True
+    for d_ in range(n):
+        if nb[d_] > 0:
+            add(d_, 10, 18, [(10, 18, nb[d_])], 1, file_pnl["breakout"][d_], True, "breakout")
+    row("breakout", "USDJPY", 1, "10-18 (entry at 10:00 assumed)", nb, file_pnl["breakout"], cnt("breakout"),
+        "candidate_legs_daily.csv.gz; Legs.mqh breakout risk 0.125% of equity at the range distance",
+        ("CONSTANT 0.5 (range failed); " if const else "") + "notional = 0.00125 / (USDJPY range 01:00-09:00 as a fraction of "
+        "price), at most 50; entry hour 10 and exit 18 assumed, not read from a log")
+    nn = np.where(file_pnl["noise"] != 0, 1.1, 0.0)
+    for d_ in range(n):
+        if nn[d_] > 0:
+            add(d_, 16, 23, [(16, 23, nn[d_])], 2, file_pnl["noise"][d_], True, "noise")
+    row("noise", "US500 NAS100", 2, "16-23 (16:30-23:00)", nn, file_pnl["noise"], cnt("noise"),
+        "candidate_legs_daily.csv.gz x 0.55 (as m.daily()); InpNoiseMult 0.275",
+        "constant notional 1.1 = 0.275 * 2 per index * 2 indices on days with a pnl; hours 16:30-23:00 assumed")
+    for d_ in range(n):
+        tix[d_].sort(key=lambda t: (t[0], t[7]))
+    return SimpleNamespace(tix=tix, info=info, file_pnl=file_pnl)
+
+
+def attach_legs(E, L):
+    """Residual of edge set E: its daily other pnl less the tickets, booked unclipped at the close (see the docstring).
+    The tickets are shared by all edge sets and always carry the edge-1.0 file pnl; for edge 0.7 the whole edge penalty
+    (the day's other pnl less the tickets) therefore lands in the unclipped residual, so the booked total is still
+    E.other. Intended: the clip then scales only the edge-1.0 part of each leg, and the legs' margin is the same."""
+    E.tix = L.tix
+    E.res = [E.other[d] - sum(t[4] for t in L.tix[d]) for d in range(len(E.other))]
+
+
+def print_legs(L, rt):
+    print("=" * 100)
+    print("PART 0  the other legs as tickets with their own margin (round 4)")
+    print(f"margin rates: gold {rt.ag:.5f}, FX {rt.af:.5f}, other {rt.ao:.5f} of USD notional; entry clip {CLIP} of free margin")
+    print("leg       symbols  kind   hours (server)  tickets  notional per unit of equity*size on ticket days: median "
+          " p90   max | pnl in tickets / file column (size 1, summed)  ticket-less days with pnl")
+    for x in L.info:
+        print(f"{x['name']:9s} {x['sym']}  [{x['kd']}]  {x['hours']}  tickets {x['n']}  notional {x['med']:.3f} {x['p90']:.3f} "
+              f"{x['mx']:.3f} | pnl {x['got']:.3f} / {x['ref']:.3f}  days without ticket {x['nopnl']}")
+        print(f"            source: {x['source']}")
+        print(f"            assumption: {x['note']}")
+    print("gold-only legs (hold, dip, bell) and the grid are not in the 'other symbols' comparison of part 3d; hold and "
+          "grid are the hourly model itself. A leg's pnl is booked at the close (no intraday path), only its margin sits "
+          "in the open hours.")
 
 
 # ---------------------------------------------------------------- part 2: rounds
@@ -451,11 +741,28 @@ def margin_day(E, d, size, st, a_gold, a_fx):
 def new_state():
     """EA-like state: eq equity, H held gold notional, lv open grid level notionals, s side, base cycle level
     notional, pd grid killed by the panic exit (until |z| < 0.5), fh / fg floating pnl of the hold and the grid
-    (balance = eq - fh - fg), mins the daily minimum margin levels seen."""
-    return dict(eq=1.0, H=0.0, lv=[], s=0, base=0.0, pd=False, fh=0.0, fg=0.0, mins=[])
+    (balance = eq - fh - fg), mins the daily minimum margin levels seen (inf: no margin open that day), ol per
+    booked day (other legs' pnl of the tester-comparable legs after the clip, before it), nobar the tickets whose
+    window had no bar."""
+    return dict(eq=1.0, H=0.0, lv=[], s=0, base=0.0, pd=False, fh=0.0, fg=0.0, mins=[], ol=[], nobar=0)
 
 
-def ea_day(E, d, size, S, ag, af, om, sizef):
+def legs_margin(tix, rat, hr, k, ag, af, ao):
+    """Margin of the open tickets in the bar of hour hr: k (= day-open equity * size) * sum over tickets with a clip
+    ratio (opened) of ratio * notional * rate, for the segments with from <= hr < to."""
+    tot = 0.0
+    for j, t in enumerate(tix):
+        c = rat[j]
+        if c is None:
+            continue
+        rate = ag if t[3] == 0 else (af if t[3] == 1 else ao)
+        for hs, he, nt in t[2]:
+            if hs <= hr < he:
+                tot += c * nt * rate
+    return k * tot
+
+
+def ea_day(E, d, size, S, ag, af, om, sizef, ao=0.0, lmode=0):
     """One day the way the EA trades it. All notionals in USD of the round's equity units (start 1.0).
     Returns stopped. size = GoalSize at the day's first hour (live equity then); sizef(eq) = GoalSize at the live
     equity of the moment (same goal, days left, cap, vol).
@@ -469,14 +776,23 @@ def ea_day(E, d, size, S, ag, af, om, sizef):
     the average the grid closes at that price and stays dead until |z| < 0.5 at a close. Bars carry no order inside
     the hour, so panic and the margin stop are compared by the fraction of the bar's adverse path at which each is
     reached (the less extreme price wins).
-    Other legs (the rest of the day's pnl) are booked at the day's close on the day-open size; their margin is
-    om * day-open equity * size (constant) and counts in the free margin.
+    Other legs, lmode 0: the rest of the day's pnl is booked at the day's close on the day-open size; their margin is
+    om * day-open equity * size (constant) and counts in the free margin (EA+OM; om 0 is EA-like).
+    lmode 1 (EA+legs): every ticket of the day (E.tix[d]) is opened at the first bar inside its window: notional =
+    day-open equity * size * ticket notional, clipped to 50% of the free margin of that bar (equity at its start less
+    hold, grid and the tickets already open), its margin (ratio * notional * rate by kind) counts in the stop-out check
+    and the free margin while the bars of its segments run; its pnl * ratio is booked at the close together with the
+    residual E.res (unclipped, no margin). A ticket with no bar in its window is booked at ratio 1 without margin.
+    lmode 2 (plumbing check): tickets booked at ratio 1, margin the constant om * eo * size, so it must equal lmode 0.
     Stop-out inside a bar when equity at the bar's worst < 50% of margin: the round ends at 0.5 * margin."""
     a, e_ = E.starts[d], E.starts[d + 1]
     eq, H, lv, s, base = S["eq"], S["H"], S["lv"], S["s"], S["base"]
     pdead, fh, fg = S["pd"], S["fh"], S["fg"]
     eo = eq
-    omm = om * eo * size
+    k0 = eo * size
+    tix = E.tix[d] if lmode else ()
+    rat = [None] * len(tix) if lmode == 1 else None
+    omm = om * eo * size if lmode != 1 else 0.0
     G = sum(lv)
     mn = math.inf
     T = eq * size * E.pos[a]
@@ -499,6 +815,14 @@ def ea_day(E, d, size, S, ag, af, om, sizef):
     pen = eo * size * E.pen
     panic_at = GRID_LEVELS + 1 + GRID_PANIC
     for i in range(a, e_):
+        if tix and rat is not None:                           # EA+legs: open the tickets whose window has started
+            hr = E.hour[i]
+            for j, t in enumerate(tix):
+                if rat[j] is None and t[0] <= hr < t[1]:
+                    free = max(eq - H * ag - G * af - legs_margin(tix, rat, hr, k0, ag, af, ao), 0.0)
+                    want = k0 * t[6] * (ag if t[3] == 0 else (af if t[3] == 1 else ao))
+                    rat[j] = min(1.0, CLIP * free / want) if want > 0 else 1.0
+            omm = legs_margin(tix, rat, hr, k0, ag, af, ao)
         marg = H * ag + G * af + omm
         ext = (E.alo[i] if s > 0 else E.ahi[i]) if s else 0.0
         adv = s * G * ext + H * math.expm1(E.glow[i])
@@ -572,25 +896,43 @@ def ea_day(E, d, size, S, ag, af, om, sizef):
                 eq -= n * GC
             fg *= G / g0 if g0 > 0 else 0.0
     eq -= H * HOLD_SWAP / 252.0
-    eq = max(0.0, eq + eo * size * E.other[d])
+    if lmode:
+        book = E.res[d]
+        cl = un = 0.0
+        for j, t in enumerate(tix):
+            c = 1.0
+            if rat is not None:
+                if rat[j] is None:
+                    S["nobar"] += 1                           # no bar inside the window: booked unclipped, no margin
+                else:
+                    c = rat[j]
+            book += c * t[4]
+            if t[5]:
+                cl += c * t[4]
+                un += t[4]
+        eq = max(0.0, eq + k0 * book)
+        S["ol"].append((d, k0 * cl, k0 * un))
+    else:
+        eq = max(0.0, eq + eo * size * E.other[d])
     S.update(eq=eq, H=H, lv=lv, s=s, base=base, pd=pdead, fh=fh, fg=fg)
-    if mn < math.inf:
-        S["mins"].append(mn)
+    S["mins"].append(mn)
     return False
 
 
 def run_round(E, d0, d1, days, cap, vol, goal, margin, a_gold=0.0, a_fx=0.0, ea=False, om=0.0, fixed=None,
-              mins=None):
+              mins=None, ao=0.0, lmode=0):
     """One goal round from day d0 over at most `days` days of the month (d0, d1). Returns (min(eq, goal), stopped).
     margin False: the daily totals of one_round(). margin True: the first margin model (size-1 hold and grid
     re-sized every day). ea True: the EA-like model (ea_day), flat at the round's start, om = other legs' margin
     (OTHER_MARGIN) as a share of day-open equity * size. fixed: a constant size instead of GoalSize (the round then
     only ends at a stop-out or ruin, pass goal 1e9). mins: list that collects the daily minimum margin levels
-    (EA-like). LAST[0] = day of the stop-out."""
+    (EA-like). ao = margin rate of the 'other' kind; lmode 0 EA+OM, 1 EA+legs, 2 plumbing check (see ea_day).
+    LAST[0] = day of the stop-out; ACC = booked other-leg pnl per day, unbooked tickets, last day, daily minima."""
     eq, stopped = 1.0, False
     LAST[0] = -1
-    st = [E.gex[E.starts[d0]], 1.0]
+    d = d0 - 1
     S = new_state()
+    st = [E.gex[E.starts[d0]], 1.0]
     for k in range(min(days, d1 - d0)):
         d = d0 + k
         if ea:
@@ -602,7 +944,7 @@ def run_round(E, d0, d1, days, cap, vol, goal, margin, a_gold=0.0, a_fx=0.0, ea=
             size = goal_size(eq, goal, days - k, cap, vol)
             sizef = lambda x, left=days - k: goal_size(x, goal, left, cap, vol)
         if ea:
-            stopped = ea_day(E, d, size, S, a_gold, a_fx, om, sizef)
+            stopped = ea_day(E, d, size, S, a_gold, a_fx, om, sizef, ao, lmode)
             eq = S["eq"]
             if stopped:
                 LAST[0] = d
@@ -619,6 +961,7 @@ def run_round(E, d0, d1, days, cap, vol, goal, margin, a_gold=0.0, a_fx=0.0, ea=
             break
     if mins is not None and ea:
         mins.extend(S["mins"])
+    ACC.update(ol=S["ol"], nobar=S["nobar"], last=d, mins=S["mins"])
     return min(eq, goal), stopped
 
 
@@ -635,6 +978,13 @@ def part2_checks(b, E1, r, runs):
           f"max {100 * d.max():.3f}%, days in the model not in the file {int((~ok).sum())}")
     miss = len(r.index.difference(b.days))
     print(f"days in the daily() series not in the hourly bars: {miss}")
+    worst, n = margin_off_diff(E1, runs)
+    print(f"no-margin hourly model against one_round(), preset, edge 1.0, {n} month-goal rounds: "
+          f"max abs difference {worst:.2e}")
+
+
+def margin_off_diff(E1, runs):
+    """Worst |one_round() - run_round(margin False)| over the tester months at every goal, and the round count."""
     worst = 0.0
     n = 0
     for goal in (3, 4, 5):
@@ -645,56 +995,74 @@ def part2_checks(b, E1, r, runs):
             mine_v, _ = run_round(E1, d0, d1, *PRESET[:2], PRESET[2], goal, False)
             worst = max(worst, abs(ref_v - mine_v))
             n += 1
-    print(f"no-margin hourly model against one_round(), preset, edge 1.0, {n} month-goal rounds: "
-          f"max abs difference {worst:.2e}")
+    return worst, n
 
 
 # ---------------------------------------------------------------- part 3
 
-def part3a(E1, runs, a_gold, a_fx, om):
+def go(E, d0, d1, days, cap, vol, goal, mode, rt, **kw):
+    """One round in a mode. nm: no margin; ea: EA-like (no other legs' margin); om: EA+OM (constant share); lg: EA+legs
+    (tickets with their own margin and clip); lg0: the plumbing check (tickets at ratio 1, constant margin of om, must
+    equal om). rt = SimpleNamespace(ag, af, ao, om). Returns (min(eq, goal), stopped)."""
+    if mode == "nm":
+        return run_round(E, d0, d1, days, cap, vol, goal, False)
+    k = dict(a_gold=rt.ag, a_fx=rt.af, ea=True, ao=rt.ao)
+    if mode == "om":
+        k["om"] = rt.om
+    elif mode == "lg":
+        k["lmode"] = 1
+    elif mode == "lg0":
+        k.update(lmode=2, om=rt.om)
+    k.update(kw)
+    return run_round(E, d0, d1, days, cap, vol, goal, True, **k)
+
+
+MODES = (("ea", "EA-like"), ("om", "EA+OM"), ("lg", "EA+legs"))
+
+
+def part3a(E1, runs, rt):
     print("=" * 100)
     print(f"PART 3a  tester against model, 21 months, preset (23 days, cap 50, vol 0.0156), edge 1.0, "
-          f"a_gold {a_gold:.5f}, a_fx {a_fx:.5f}, OTHER_MARGIN {om:.3f}")
-    print("EA-like: live-equity sizes, grid base from balance, panic exit; EA+OM adds the other legs' margin "
-          "(a sensitivity, not a fit)")
+          f"a_gold {rt.ag:.5f}, a_fx {rt.af:.5f}, a_other {rt.ao:.5f}, OTHER_MARGIN {rt.om:.3f}")
+    print("EA-like: live-equity sizes, grid base from balance, panic exit, no other legs' margin; EA+OM adds a constant "
+          "share for them (a sensitivity, not a fit); EA+legs (main) gives each leg its own margin and clip")
     for goal in (3, 4, 5):
         print(f"\n=== goal {goal}x")
-        print("month    tester  tester SO date | no margin | v1  SO  date       | EA-like  SO  date       "
-              "| EA+OM   SO  date")
+        print("month    tester  tester SO date | no margin | EA-like  SO  date       | EA+OM   SO  date       "
+              "| EA+legs SO  date       nobar")
         c = defaultdict(int)
         for run in runs[goal]:
             d0, d1 = MONTHS[pd.Period(f"{run['month'][:4]}-{run['month'][4:]}", "M")]
-            nm, _ = run_round(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, False)
-            mg, so = run_round(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, True, a_gold, a_fx)
-            dv1 = str(DAYS_IDX[LAST[0]].date()) if so else ""
-            ea, so2 = run_round(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, True, a_gold, a_fx, ea=True)
-            dv2 = str(DAYS_IDX[LAST[0]].date()) if so2 else ""
-            eo, so3 = run_round(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, True, a_gold, a_fx, ea=True, om=om)
-            dv3 = str(DAYS_IDX[LAST[0]].date()) if so3 else ""
+            nm, _ = go(E1, d0, d1, *PRESET[:2], PRESET[2], goal, "nm", rt)
+            res = {}
+            for key, _ in MODES:
+                v, so = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, key, rt)
+                res[key] = (v, so, str(DAYS_IDX[LAST[0]].date()) if so else "", ACC["nobar"])
             tso = run["so"] is not None
             tdate = run["rows"][run["so"]][0][:10] if tso else ""
-            print(f"{run['month']}  {run['mult']:5.2f}x  {tdate:10s}     | {nm:6.2f}x   | {mg:6.2f}x "
-                  f"{'yes' if so else 'no ':3s} {dv1:10s} | {ea:6.2f}x  {'yes' if so2 else 'no ':3s} {dv2:10s} | "
-                  f"{eo:6.2f}x {'yes' if so3 else 'no ':3s} {dv3:10s}")
+            cells = " | ".join(f"{res[k][0]:6.2f}x {'yes' if res[k][1] else 'no ':3s} {res[k][2]:10s}" for k, _ in MODES)
+            print(f"{run['month']}  {run['mult']:5.2f}x  {tdate:10s}     | {nm:6.2f}x   | {cells}  {res['lg'][3]:3d}")
             c["months"] += 1
             c["tester_reach"] += run["mult"] >= goal * TOL
             c["nm_reach"] += nm >= goal * TOL
             c["tester_so"] += tso
-            for key, val, st_ in (("v1", mg, so), ("ea", ea, so2), ("eo", eo, so3)):
-                c[key + "_reach"] += val >= goal * TOL
+            for key, _ in MODES:
+                v, st_ = res[key][0], res[key][1]
+                c[key + "_reach"] += v >= goal * TOL
                 c[key + "_so"] += st_
                 c[key + "_agree"] += tso == st_
                 c[key + "_both"] += tso and st_
         print(f"goal {goal}x: months {c['months']}; goal reached (0.3% tolerance) tester {c['tester_reach']}, "
-              f"no margin {c['nm_reach']}, v1 {c['v1_reach']}, EA-like {c['ea_reach']}, EA+OM {c['eo_reach']}; "
-              f"stop-outs tester {c['tester_so']}, v1 {c['v1_so']}, EA-like {c['ea_so']}, EA+OM {c['eo_so']}; "
-              f"stop-out agreement (month by month, both stopped in brackets) v1 {c['v1_agree']} ({c['v1_both']}), "
-              f"EA-like {c['ea_agree']} ({c['ea_both']}), EA+OM {c['eo_agree']} ({c['eo_both']}) of {c['months']}")
+              f"no margin {c['nm_reach']}, EA-like {c['ea_reach']}, EA+OM {c['om_reach']}, EA+legs {c['lg_reach']}; "
+              f"stop-outs tester {c['tester_so']}, EA-like {c['ea_so']}, EA+OM {c['om_so']}, EA+legs {c['lg_so']}; "
+              f"stop-out agreement (month by month, months stopped in both in brackets) EA-like {c['ea_agree']} "
+              f"({c['ea_both']}), EA+OM {c['om_agree']} ({c['om_both']}), EA+legs {c['lg_agree']} ({c['lg_both']}) "
+              f"of {c['months']}")
 
 
 def stats(rows, goal):
-    """rows: (period, no margin, v1, v1 stopped, EA, EA stopped, EA+OM, EA+OM stopped). Returns, for no margin,
-    v1, EA and EA+OM: months, then (P(goal), P(stop-out), P(ruin), median) per variant."""
+    """rows: (period, no margin, EA, EA stopped, EA+OM, EA+OM stopped, EA+legs, EA+legs stopped). Returns months,
+    P(goal) without margin, then (P(goal), P(stop-out), P(ruin), median) for EA-like, EA+OM, EA+legs."""
     c = [np.array([x[i] for x in rows], dtype=float) for i in range(1, 8)]
     out = [len(rows), np.mean(c[0] >= goal * TOL)]
     for v, so in ((1, 2), (3, 4), (5, 6)):
@@ -702,28 +1070,28 @@ def stats(rows, goal):
     return tuple(out)
 
 
-def part3b(sets, a_gold, a_fx, om):
+def part3b(sets, rt):
     print("=" * 100)
     print("PART 3b  month-start rounds, every month with >= 15 days, 2010-06 to 2025-09 (history from the legs file)")
     months = [(p, d0, d1) for p, (d0, d1) in MONTHS.items() if d1 - d0 >= 15]
-    print(f"{len(months)} months {months[0][0]} .. {months[-1][0]}; a_gold {a_gold:.5f}, a_fx {a_fx:.5f}, "
-          f"OTHER_MARGIN {om:.3f}")
-    print("v1 = size-1 hold and grid re-sized every day; EA = EA-like hold (lots kept, 25% band, diff-only clip), "
-          "grid (cycle base from balance and live size, level clip, panic exit), live-equity sizes; EA+OM adds the "
-          "other legs' margin")
-    print("goal  settings  edge  period       months | P(goal) no margin | v1: P(goal) P(SO) P(ruin) median | "
-          "EA: P(goal) P(SO) P(ruin) median | EA+OM: P(goal) P(SO) P(ruin) median")
+    print(f"{len(months)} months {months[0][0]} .. {months[-1][0]}; a_gold {rt.ag:.5f}, a_fx {rt.af:.5f}, "
+          f"a_other {rt.ao:.5f}, OTHER_MARGIN {rt.om:.3f}")
+    print("EA-like = lots kept, 25% hold band, grid base from balance and live size, level clip, panic exit, live-equity "
+          "sizes, no other legs' margin; EA+OM adds a constant share for the other legs; EA+legs (main) their own "
+          "margin and entry clip. P(SO) = broker stop-out, P(ruin) = round ends at or below 0.2x (either way)")
+    print("goal  settings  edge  period       months | P(goal) no margin | EA-like: P(goal) P(SO) P(ruin) median | "
+          "EA+OM: P(goal) P(SO) P(ruin) median | EA+legs: P(goal) P(SO) P(ruin) median")
     for goal in (3, 4, 5):
         for name, days, cap in (("odds", 21, 20.0), ("preset", 23, 50.0)):
             for edge, E in sets.items():
                 vol = E.vol if name == "odds" else PRESET[2]
                 rows = []
                 for p, d0, d1 in months:
-                    nm, _ = run_round(E, d0, d1, days, cap, vol, goal, False)
-                    mg, so = run_round(E, d0, d1, days, cap, vol, goal, True, a_gold, a_fx)
-                    ea, so2 = run_round(E, d0, d1, days, cap, vol, goal, True, a_gold, a_fx, ea=True)
-                    eo, so3 = run_round(E, d0, d1, days, cap, vol, goal, True, a_gold, a_fx, ea=True, om=om)
-                    rows.append((p, nm, mg, so, ea, so2, eo, so3))
+                    nm, _ = go(E, d0, d1, days, cap, vol, goal, "nm", rt)
+                    ea, so1 = go(E, d0, d1, days, cap, vol, goal, "ea", rt)
+                    eo, so2 = go(E, d0, d1, days, cap, vol, goal, "om", rt)
+                    lg, so3 = go(E, d0, d1, days, cap, vol, goal, "lg", rt)
+                    rows.append((p, nm, ea, so1, eo, so2, lg, so3))
                 for label, sel in (("all", rows), ("to 2017", [x for x in rows if x[0].year <= 2017]),
                                    ("2018 on", [x for x in rows if x[0].year >= 2018])):
                     r_ = stats(sel, goal)
@@ -733,56 +1101,185 @@ def part3b(sets, a_gold, a_fx, om):
                           f"{cols}")
 
 
-def part3c(E1, a_gold, a_fx, om):
+def part3c(E1, rt):
     print("=" * 100)
-    print("PART 3c  margin level and the size that reaches the stop-out, from EA-like state (edge 1.0)")
+    print("PART 3c  margin level and the size that reaches the stop-out or ruin (edge 1.0, month-start rounds)")
     months = [(p, d0, d1) for p, (d0, d1) in MONTHS.items() if d1 - d0 >= 15]
+    print("Daily minimum margin level = the lowest (equity at the bar's worst) / margin over the day's bars. 'Days with "
+          "margin open' = days with any margin open in some bar (hold, grid or a leg); the share below 100% is "
+          "stated both over those days and over all days played (a day with nothing open has level inf and counts "
+          "as not below).")
     for goal in (3, 4, 5):
-        for tag, o in (("EA-like", 0.0), ("EA+OM", om)):
+        for key, tag in MODES:
             mins = []
+            ends = []
             for p, d0, d1 in months:
-                run_round(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, True, a_gold, a_fx, ea=True, om=o,
-                          mins=mins)
-            x = 100 * np.array(mins)
-            print(f"goal {goal}x {tag:8s}: daily minimum margin level over the days the goal rounds traded "
-                  f"({len(x)} days, {len(months)} month-start rounds), % : 0.1th {np.percentile(x, 0.1):.0f}  "
-                  f"1st {np.percentile(x, 1):.0f}  5th {np.percentile(x, 5):.0f}  50th {np.percentile(x, 50):.0f}  "
-                  f"share of days below 100% {100 * np.mean(x < 100):.1f}%, below 70% {100 * np.mean(x < 70):.1f}%")
+                v, so = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, key, rt, mins=mins)
+                ends.append((v <= m.RUIN + 1e-9, so))
+            allx = np.array(mins, dtype=float)
+            x = 100 * allx[np.isfinite(allx)]
+            print(f"goal {goal}x {tag:8s}: {len(allx)} days played in {len(months)} rounds, {len(x)} with margin open; "
+                  f"minimum level of those days, %: 0.1th {np.percentile(x, 0.1):.0f}  1st {np.percentile(x, 1):.0f}  "
+                  f"5th {np.percentile(x, 5):.0f}  50th {np.percentile(x, 50):.0f} | share of days with margin open "
+                  f"whose minimum level < 100%: {100 * np.mean(x < 100):.1f}%, < 70%: {100 * np.mean(x < 70):.1f}% | "
+                  f"over all days: < 100% {100 * np.sum(x < 100) / len(allx):.1f}%, < 70% {100 * np.sum(x < 70) / len(allx):.1f}% "
+                  f"| rounds ending in stop-out {sum(e[1] for e in ends)}, in ruin (<= {m.RUIN}x) "
+                  f"{sum(e[0] for e in ends)}, of {len(ends)}")
     sizes = (2, 3, 5, 7, 10, 15, 20, 30, 40, 50, 70, 100)
-    print("\nsize at which the margin level hits 50%: for each month-start round (23 days) the smallest FIXED size of "
-          f"{sizes} at which EA-like state ends in a stop-out; percentiles across the {len(months)} months "
-          "(inf = no stop-out up to the largest size)")
-    for tag, o in (("EA-like", 0.0), ("EA+OM", om)):
-        first = []
+    print("\nsize at which the month first ends badly: for each month-start round (23 days) the smallest FIXED size of "
+          f"{sizes} at which the round ends in a stop-out ('stop-out size'), and the smallest at which it ends in a "
+          f"stop-out OR in ruin (equity <= {m.RUIN}x, 'hit size'); percentiles across the {len(months)} months "
+          "(inf = not reached up to the largest size)")
+    for key, tag in MODES:
+        first, hit = [], []
         for p, d0, d1 in months:
-            hit = math.inf
+            so_sz = any_sz = math.inf
             for sz in sizes:
-                _, so = run_round(E1, d0, d1, 23, 1e9, 1.0, 1e9, True, a_gold, a_fx, ea=True, om=o, fixed=float(sz))
+                v, so = go(E1, d0, d1, 23, 1e9, 1.0, 1e9, key, rt, fixed=float(sz))
+                if any_sz == math.inf and (so or v <= m.RUIN + 1e-9):
+                    any_sz = sz
                 if so:
-                    hit = sz
+                    so_sz = sz
                     break
-            first.append(hit)
-        f = np.array(first, dtype=float)
-        pc = " ".join(f"{q}th {np.percentile(f, q):g}" for q in (1, 5, 10, 25, 50))
-        print(f"{tag:8s}: min {f.min():g}  {pc}  months never stopped {int(np.isinf(f).sum())}  "
-              f"| share of months stopped at size 5: ", end="")
-        print(f"{100 * np.mean(f <= 5):.1f}%, 10: {100 * np.mean(f <= 10):.1f}%, 20: {100 * np.mean(f <= 20):.1f}%, "
-              f"50: {100 * np.mean(f <= 50):.1f}%")
+            first.append(so_sz)
+            hit.append(any_sz)
+        for lab, arr in (("stop-out size", first), ("hit size     ", hit)):
+            f = np.array(arr, dtype=float)
+            pc = " ".join(f"{q}th {np.percentile(f, q):g}" for q in (1, 5, 10, 25, 50))
+            print(f"{tag:8s} {lab}: min {f.min():g}  {pc}  never {int(np.isinf(f).sum())}  | share of months hit at size "
+                  f"5: {100 * np.mean(f <= 5):.1f}%, 10: {100 * np.mean(f <= 10):.1f}%, 20: {100 * np.mean(f <= 20):.1f}%, "
+                  f"50: {100 * np.mean(f <= 50):.1f}%")
+
+
+def tester_other(run):
+    """Net pnl (commission + swap + profit) per day and symbol of the tester's non-gold, non-AUDCAD symbols,
+    from the deal rows. {'YYYY.MM.DD': {symbol: net}} and the last deal date."""
+    out = defaultdict(lambda: defaultdict(float))
+    last = ""
+    for x in run["rows"]:
+        sym = x[2].upper()
+        if not sym or x[3] not in ("buy", "sell"):
+            continue
+        last = max(last, x[0][:10])
+        if sym.startswith("XAU") or sym == "AUDCAD":
+            continue
+        out[x[0][:10]][sym] += num(x[8]) + num(x[9]) + num(x[10])
+    return out, last
+
+
+def part3d(E1, runs, rt):
+    print("=" * 100)
+    print("PART 3d  other legs per tester month: tester realised pnl against the model's (lesson 7), preset, edge 1.0")
+    print("Other legs = every tester symbol except XAU* and AUDCAD; the model side = the tickets marked comparable "
+          "(fix, cross, fall, morning, after, Tokyo, Meridian, breakout, noise; not dip or the bell). Both over the "
+          "same days: the model's booked days up to the tester's last deal date; shares of the round's start equity "
+          "(tester: net / deposit). 'clipped' = EA+legs after the entry clip, 'unclipped' = same model before it. "
+          "Stopped: tester / model.")
+    tot = defaultdict(float)
+    per = defaultdict(lambda: defaultdict(float))
+    rows_all = []
+    for goal in (3, 4, 5):
+        print(f"\n=== goal {goal}x")
+        print("month    days | tester other | model clipped | model unclipped | clip effect | fidelity (tester - unclipped) "
+              "| stopped t/m | unopened tickets")
+        for run in runs[goal]:
+            d0, d1 = MONTHS[pd.Period(f"{run['month'][:4]}-{run['month'][4:]}", "M")]
+            _, so = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "lg", rt)
+            ol, nob = list(ACC["ol"]), ACC["nobar"]
+            net, last = tester_other(run)
+            keep = [(d, cl, un) for d, cl, un in ol if DAYS_IDX[d].strftime("%Y.%m.%d") <= last]
+            dates = {DAYS_IDX[d].strftime("%Y.%m.%d") for d, _, _ in keep}
+            tst = 0.0
+            for dt in dates:
+                for sym, v in net.get(dt, {}).items():
+                    tst += v / run["deposit"]
+                    per[goal][sym] += v / run["deposit"]
+            cl = sum(x[1] for x in keep)
+            un = sum(x[2] for x in keep)
+            tso = run["so"] is not None
+            rows_all.append((tst, cl, un))
+            for k_, v_ in (("t", tst), ("c", cl), ("u", un)):
+                tot[(goal, k_)] += v_
+            print(f"{run['month']}  {len(keep):3d} | {100 * tst:+10.1f}% | {100 * cl:+11.1f}% | {100 * un:+13.1f}% | "
+                  f"{100 * (cl - un):+9.1f}% | {100 * (tst - un):+10.1f}% | "
+                  f"{'yes' if tso else 'no ':3s} / {'yes' if so else 'no ':3s} | {nob}")
+        t, c_, u = tot[(goal, "t")], tot[(goal, "c")], tot[(goal, "u")]
+        print(f"goal {goal}x sum over the months: tester {100 * t:+.1f}%, model clipped {100 * c_:+.1f}%, unclipped "
+              f"{100 * u:+.1f}% of start equity; tester - clipped {100 * (t - c_):+.1f}% = clip effect "
+              f"{100 * (c_ - u):+.1f}% (model clipped less unclipped) + fidelity {100 * (t - u):+.1f}% "
+              f"(tester less unclipped)")
+        print("   tester other-leg pnl by symbol, summed over the months, % of start equity: "
+              + "  ".join(f"{s} {100 * v:+.1f}" for s, v in sorted(per[goal].items(), key=lambda kv: kv[1])))
+    a = np.array(rows_all)
+    print(f"\nall 63 rounds: median per round tester {100 * np.median(a[:, 0]):+.1f}%, clipped {100 * np.median(a[:, 1]):+.1f}%, "
+          f"unclipped {100 * np.median(a[:, 2]):+.1f}%; median clip effect {100 * np.median(a[:, 1] - a[:, 2]):+.2f}%, "
+          f"median fidelity {100 * np.median(a[:, 0] - a[:, 2]):+.1f}%; sums tester {100 * a[:, 0].sum():+.1f}%, "
+          f"clipped {100 * a[:, 1].sum():+.1f}%, unclipped {100 * a[:, 2].sum():+.1f}%")
+
+
+def part4(E1, runs, rt, L, b):
+    print("=" * 100)
+    print("PART 4  self-checks")
+    worst, n = margin_off_diff(E1, runs)
+    print(f"(1) margin off against one_round(): max abs difference {worst:.2e} over {n} rounds "
+          f"({'OK' if worst < 1e-9 else 'DIFFERENT'})")
+    dmax, flags, n2 = 0.0, 0, 0
+    for goal in (3, 4, 5):
+        for run in runs[goal]:
+            d0, d1 = MONTHS[pd.Period(f"{run['month'][:4]}-{run['month'][4:]}", "M")]
+            v1, s1 = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "om", rt)
+            v2, s2 = go(E1, d0, d1, PRESET[0], PRESET[1], PRESET[2], goal, "lg0", rt)
+            dmax = max(dmax, abs(v1 - v2))
+            flags += s1 != s2
+            n2 += 1
+    print(f"(2) EA+legs with every clip ratio 1 and the constant margin against EA+OM: max abs end-equity difference "
+          f"{dmax:.2e}, stop-out flags different in {flags} of {n2} rounds ({'OK' if dmax < 1e-9 and flags == 0 else 'DIFFERENT'})")
+    n_d = len(E1.other)
+    sum_t = np.array([sum(t[4] for t in L.tix[d]) for d in range(n_d)])
+    res = np.array(E1.res)
+    hg = day_sums(np.array(E1.hinc) + np.array(E1.ginc), b)
+    fp = L.file_pnl
+    daily = m.daily().reindex(b.days).fillna(0.0).to_numpy()
+    cols = sum(fp[c] for c in fp)
+    print(f"(3a) the ten file columns summed against m.daily(): max abs diff {np.abs(cols - daily).max():.2e} over {n_d} days "
+          f"(a nonzero value means the legs file has more columns than the ten used)")
+    print(f"(3b) tickets + residual + hourly hold + hourly grid against the model's daily total (edge 1.0): max abs diff "
+          f"{np.abs(sum_t + res + hg - np.array(E1.rr)).max():.2e}; tickets + residual against E.other: "
+          f"{np.abs(sum_t + res - np.array(E1.other)).max():.2e}")
+    named = {c for c in fp if c not in ("quartet", "grid", "hold")}
+    exp = fp["quartet"] + fp["grid"] + fp["hold"] - hg
+    tick_named = defaultdict(lambda: np.zeros(n_d))
+    for d in range(n_d):
+        for t in L.tix[d]:
+            tick_named[t[7] if t[7] in named else "quartet"][d] += t[4]
+    for c in named | {"quartet"}:
+        exp = exp + (fp[c] if c in named else 0.0) - tick_named[c] if c != "quartet" else exp - tick_named[c]
+    print(f"(3c) residual against its parts (legs' file less tickets, quartet file less its tickets, hold+grid file less "
+          f"hourly): max abs diff {np.abs(exp - res).max():.2e}")
+    print(f"     the residual itself: max abs {100 * np.abs(res).max():.3f}% of equity at size 1, mean abs "
+          f"{100 * np.abs(res).mean():.4f}%, days with |res| > 0.05% {int((np.abs(res) > 5e-4).sum())} of {n_d}")
 
 
 def main():
     runs = scan_runs()
     print("tester runs found: " + ", ".join(f"{g}x {len(v)}" for g, v in runs.items()))
-    a_gold, a_fx, om = part1(runs)
+    a_gold, a_fx, a_oth, om = part1(runs)
+    rt = SimpleNamespace(ag=a_gold, af=a_fx, ao=a_oth, om=om)
     b = build_bars()
     print("KNOWN LIMITATION (lesson 9): server hours 23 and 0 have no data in the hourly file, so no bar, panic, "
           "stop-out or grid action is modelled in them; a move there shows up only in the next bar's return")
     r = m.daily().reindex(b.days).fillna(0.0)
-    E1 = edge_set(b, r, 1.0)
+    E1, E7 = edge_set(b, r, 1.0), edge_set(b, r, 0.7)
+    L = build_legs(b)
+    attach_legs(E1, L)
+    attach_legs(E7, L)
+    print_legs(L, rt)
     part2_checks(b, E1, m.daily(), runs)
-    part3a(E1, runs, a_gold, a_fx, om)
-    part3b({1.0: E1, 0.7: edge_set(b, r, 0.7)}, a_gold, a_fx, om)
-    part3c(E1, a_gold, a_fx, om)
+    part3a(E1, runs, rt)
+    part3b({1.0: E1, 0.7: E7}, rt)
+    part3c(E1, rt)
+    part3d(E1, runs, rt)
+    part4(E1, runs, rt, L, b)
 
 
 if __name__ == "__main__":

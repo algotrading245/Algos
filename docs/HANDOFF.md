@@ -326,7 +326,7 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
     - Without the other legs, its sizes are upper limits. No size cap may be derived from it.
   - The month-end boost (InpMonthEndBoost 2.0) and server hours 23 and 0 are not modelled. None of the tester's
     stop-outs falls in those hours.
-  - **Next (no tester time, nothing tuned on the 21 tester months):**
+  - **Next (no tester time, nothing tuned on the 21 tester months):** step 1 is done (round 4, next item).
     1. quant-coder, round 4 of the same script:
        - (a) give each other leg its own notional and entry hour from the EA inputs and schedules, clip its order to
          50% of the free margin at that hour, and carry its margin through its open hours in the stop-out check;
@@ -338,6 +338,68 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
        default, and the tester on the 21 months as a check only.
     3. Fidelity: check the FTMO demo's symbol margin for XAUUSD and AUDCAD against the fitted 1:50 / 1:100, without
        writing down any account detail.
+- **Goal model round 4, "EA+legs" (orchestrator, 2026-10-18 18:40): reviewer REDO. The plumbing passes, but the
+  other legs' clip is biased low, so P(goal) is still an upper bound.** Script: `research/hydra_goal_margin_model.py`
+  (lmode 1).
+  - What round 4 adds: each other leg (fix, cross, fall, morning, after, dip, tokyo, meridian, breakout, noise)
+    becomes tickets. Each ticket has its own entry and exit hour, notional and margin rate, plus a 50% free-margin
+    clip at entry. Its margin counts in the stop-out check, and its pnl × clip ratio is booked at the close. The
+    residual (the bell, plus the hourly-against-file difference) is booked unclipped and without margin.
+  - Checks:
+    - Every leg's pnl rebuilt from tickets matches its file to about 1e-16.
+    - lmode 2 equals EA+OM (6.66e-16, 0 of 63 flags). This check does not reach the clip path.
+    - The residual is at most 12.45% of equity at size 1.
+  - 21 tester months, tester / EA+legs / round 3 (EA-like):
+
+    | goal | goal reached | stop-outs | stop-out agrees |
+    |---|---|---|---|
+    | 3x | 9 / 10 / 12 | 7 / 7 / 5 | 19 of 21 |
+    | 4x | 4 / 8 / 10 | 10 / 8 / 7 | 17 |
+    | 5x | 2 / 8 / 10 | 9 / 9 / 7 | 17 |
+
+    EA+legs now catches 2024.01. Where it disagrees with the tester:
+    - It stops out where the tester does not: 2024.04 at every goal, and 2025.07 at 5x.
+    - It reaches the goal where the tester stops out: 2024.10 at every goal, 2024.06 at 4x/5x, 2024.07 at 4x.
+    - It reaches the goal in 2025.02 at 4x/5x, where the tester ends at 1.6x.
+  - Other-leg pnl, summed (3d, % of start equity), tester / clipped / unclipped:
+    - 3x: +785 / +518 / +3209
+    - 4x: +669 / +598 / +3234
+    - 5x: +883 / +722 / +4482
+
+    So the clip carries most of the legs' result.
+  - Quotable (as an upper bound, with the caveats below), 184 month-start rounds 2010-06 to 2025.09, preset, edge
+    1.0:
+    - EA+legs P(goal) 35.9 / 26.1 / 19.0%, P(stop-out) 23.4 / 32.1 / 35.3%.
+    - The same rounds in round 3 (EA-like): P(goal) 48.4 / 42.9 / 40.8%.
+    - 3c: the smallest goal size with a stop-out is 15, and the 5th percentile is 20 (EA-like: 10).
+  - Not to be quoted:
+    - the edge-0.7 EA+legs rows (the edge penalty sits unclipped in the residual, so they come out too low);
+    - the 3d sums as a fidelity figure;
+    - the stop-out match as validation (the margin rates were fitted on these 26 stop-outs, and the "other" rate on
+      one of them).
+  - Reviewer's findings, the ones to fix:
+    - (H1) The EA clips each order in turn to 50% of the free margin left (`Legs.mqh:625, 1749`). A 5-pair leg (fix,
+      fall, after) can use about 97% of it, and a 3-pair leg about 87%. The model clips one combined ticket at 50%,
+      so the legs' margin and pnl come out too small.
+    - (H2) The edge penalty is booked unclipped.
+    - (M4) The month-end boost (`InpMonthEndBoost=2.0` in every target preset; `Legs.mqh:179-186, 1144`) is not
+      modelled. It doubles fix, bell and tokyo on the last weekday.
+    - (M5) Noise opens at 16 in the model; the EA's first check is at 17:00 server. The EA sizes noise by
+      `min(4, 0.02/vol)` (`Legs.mqh:1722, 1831`); the model uses a constant 1.1.
+    - (L) The text at `:238-239` about the "other" rate is stale.
+  - **Next (no tester time, nothing tuned on the 21 tester months):**
+    1. quant-coder, round 5:
+       - a sequential per-order clip, with the pair count per leg;
+       - the edge penalty scaled by the clip ratio;
+       - the month-end boost ×2;
+       - noise from 17:00, with the vol leverage;
+       - a check that runs the clip path (CLIP very large, so lmode 1 must equal lmode 2);
+       - then rerun and get the reviewer's check.
+    2. If the 4x/5x goal counts then come near 4 / 2, build the margin-aware size cap from the 2010-2025.09 history.
+       If not, build the cap anyway and take the 3c hit-size 5th percentile (about 20) as a conservative upper limit.
+       The cap must not rest on the clip-sensitive P(goal). Either way: the reviewer checks it, the new inputs are off
+       by default, and the 21 tester months are a check only.
+    3. Fidelity: the FTMO demo's symbol margin, as in step 3 above.
 - **Tester question (2026-10-18 09:53), answered by the orchestrator.**
   - The question: "Re-judge j11b: its 9 of 21 at 3x is a round-field count; the multiples give 3 of 21."
   - The answer is no; the judgement stands. The tester counted a strict `multiple >= 3.0`, which drops j11b's 2.999x
