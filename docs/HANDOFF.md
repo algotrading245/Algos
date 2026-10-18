@@ -240,6 +240,28 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
   - The script's `p_5x` 2 is log pollution: the day's `summary.txt` holds j10b's 5.00x lines first. The true count is 0.
   - **j15 queued:** InpTarget=4 (`AurumHydra_target4x_FTMO.set`, tag t4b) on the same 21 months, which completes
     3x/4x/5x. Expect P(4x) 22-32% (target_odds, scale 2.5). In-sample, not tuned.
+- **j15 judged (orchestrator, 2026-10-18 10:15): InpTarget=4 reaches 4x in 4 of 21 months (19%), no ruin, median
+  1.10x.** The judgement is in `backtests/2026-10-18_0755_AurumHydra_t4b_months/summary.md`; the evidence is
+  `research/hydra_t4b_months_model.py`. 2024.12 at 3.992x counts as 4x because its own log line says 4.00x.
+  - Yardsticks: 4/21 is inside month-start rounds from 2010 (17-25%) and just under `target_odds` (22-32%). The
+    same-months model gives 8-9 (odds settings) and 11-12 (preset), so these months favoured the model, and the
+    tester falls short of it on its own months, as in j10b at 5x.
+  - Ruin: 0 against the model's 3-10, the third narrow tail. 2024.10 (0.61x against the model's 4.00x) is again the
+    largest miss.
+  - **Same 21 months, by the goal: InpTarget=3 reaches 3x in 9 (43%), 4 reaches 4x in 4 (19%), 5 reaches 5x in 2 (10%),
+    all with 0 ruin.** At 3x the tester matches the model. At 4x and 5x it falls short, by more as the goal grows.
+    The hypothesis is that the EA sizes more gently at the larger goal sizes. It is not measured, and nothing is tuned.
+  - No new tester job is queued: the 3x/4x/5x set is complete. The next useful work needs no tester time. It is the
+    open daily-equity comparison of tester against model on 2024.10 (the largest miss in all three runs) and 2025.07,
+    to find where the tester's size departs from `GoalSize()`. It would explain both the shortfall at the high goals
+    and the narrow ruin tail.
+- **Tester question (2026-10-18 09:53), answered by the orchestrator.**
+  - The question: "Re-judge j11b: its 9 of 21 at 3x is a round-field count; the multiples give 3 of 21."
+  - The answer is no; the judgement stands. The tester counted a strict `multiple >= 3.0`, which drops j11b's 2.999x
+    months. Their own log lines show the rounds stopped at the goal, for example `t3b_202502` summary.txt line 351145:
+    "ended, equity 30003.86 ... (3.00x, goal 3.0x)".
+  - With 0.3% tolerance, 9 of 21 months reach 3x. The tester is right that the `round` field and p_3x/p_5x must not be
+    used. Lesson 18 records the rule (reviewer-confirmed).
 - **Demo note (revised 2026-10-18): AurumFunded has the same `InpGoldMaxSpread = 0.30`** (`AurumFunded.mq5:246`).
   The tester runs on FTMO's ticks with the same cap, so j3's figures already include the days it blocks, and demo and
   tester should agree. No EA change is proposed any more (j9 above). The monitor/fidelity agent should still check
@@ -251,7 +273,9 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
   InpMarginPct clip too, which is not a refusal in the log. Line 44-45 takes the *first* "goal round of <month>
   ended" line (`float(hit[0])`). j11b showed that this reads an earlier run's round on the same day: 2024.12 and
   2025.09 read j10b's 5.00x. The least change is `hit[-1]`; the clean fix is the time cut. Also write the run's goal
-  (InpTarget) into `months.json` so `months_result.json` does not fall back to `goal` 5.0. Also: the AUDCAD grid retries every second while the
+  (InpTarget) into `months.json` so `months_result.json` does not fall back to `goal` 5.0. Count p_3x/p_4x/p_5x as
+  `multiple >= level * 0.997`, or from the month's own ended line, not from max(multiple, round) (line 49). j15's
+  p_3x read 43% where the true count is 6 of 21, lesson 18. Also: the AUDCAD grid retries every second while the
   market is closed (log spam, a small later EA fix).
 - **Proposed tool change (agents may not edit `tools/`):** `tools/run-tester.ps1` should write *every* input of the
   EA into `[TesterInputs]` - parse the `input` lines of the `.mq5` for their defaults, then apply the preset, then

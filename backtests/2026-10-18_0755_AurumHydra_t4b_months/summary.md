@@ -53,6 +53,46 @@ re-judge j11b on 3 of 21. The fix is in `tools/months_summary.py` (count `multip
   the model's, the same pattern as j10b.
 - Nothing tuned. The result is recorded for the orchestrator to judge.
 
+## Judgement (orchestrator, 2026-10-18)
+
+Step 16, `research/hydra_t4b_months_model.py`: the j10b same-months model (`research/hydra_t5b_months_model.py`) at
+goal 4x on these 21 months. A month counts as at a level from 0.3% below it, as in j11b's judgement. The tester's
+multiple is the final balance after the last fill. 2024.12's own log line says the round stopped at the goal:
+`backtests/2026-10-18_0847_AurumHydra_t4b_202412/summary.txt` line 699411, "goal round of 2024.12.01 ended, equity
+40004.42 from 10000.00 (4.00x, goal 4.0x)".
+
+| Source | Months at 4x | P(3x) | P(ruin) | Median |
+|---|---|---|---|---|
+| Model, odds settings, edge 1.0 | 9 of 21 (43%) | 43% | 14% (3) | 2.52x |
+| Model, odds settings, edge 0.7 | 8 of 21 (38%) | 43% | 24% (5) | 1.68x |
+| Model, preset settings, edge 1.0 / 0.7 | 12 / 11 of 21 (57% / 52%) | 57% / 52% | 43% / 48% | 4.00x |
+| Tester | 4 of 21 (19%) | 29% (6) | 0% | 1.10x |
+| `target_odds.py`, every weekday a round, scale 2.5 | 22% (0.7) to 32% (1.0) | | 17% / 12% | 1.11x / 1.77x |
+| Month-start rounds from 2010 (184), odds settings | 17% (0.7) to 25% (1.0) | 22% / 32% | 18% / 13% | 1.00x / 1.69x |
+
+- **Inside the base rate, below the same-months model.** 4 of 21 at 4x is inside the month-start base rate (17-25%)
+  and just under `target_odds` (22-32%). The same-months model gives 8-9 (odds) and 11-12 (preset), so these 21
+  months favoured the model, and the tester falls short of it on its own months. j10b showed the same pattern at 5x
+  (2 against 5-9).
+- Month by month, odds model at edge 1.0 against the tester: the tester's 4 months (2024.03, 09, 12; 2025.09) are
+  all model months as well, so no month reaches 4x in the tester alone. Model only: 2024.10 (tester 0.61x), 2025.01
+  (3.42x), 2025.02 (1.63x), 2025.03 (3.68x), 2025.08 (1.54x). 2024.10 is again the largest miss, as in j10b and j11b.
+  Log correlation 0.53 / 0.56 (odds), 0.62 / 0.49 (preset).
+- **Ruin tail narrower than the model's, the third time.** The model ruins 3-10 of 21 months; the tester ruins none
+  (lowest 0.35x, 2024.08, 82% equity drawdown). The cause is still not measured.
+- **Across the same 21 months, by the goal.** InpTarget=3 reaches 3x in 9 of 21 (43%, j11b). InpTarget=4 reaches 4x in
+  4 (19%, j15). InpTarget=5 reaches 5x in 2 (10%, j10b). All three have 0 ruin. At 3x the tester matches the
+  same-months model (9 against 9-10 odds). At 4x and 5x it falls short of it, by more as the goal grows. A hypothesis
+  only: the EA's day sizing is gentler than the model's at the larger goal sizes. Not measured, and nothing is
+  tuned on these months.
+- **The tester's "Correction to j11b" above is wrong, and j11b is not re-judged.** j11b's months at 2.999x and 3.0x
+  stopped at the goal. Their own log lines say 3.00x, for example
+  `backtests/2026-10-18_0643_AurumHydra_t3b_202502/summary.txt` line 351145, "goal round of 2025.02.01 ended, equity
+  30003.86 from 10000.00 (3.00x, goal 3.0x)". j11b's multiples (`months_result.json`) are 2.999-3.004 in 9 months,
+  so 9 of 21 stands. A strict `multiple >= 3.0` drops the 2.999x months; the right count takes 0.3% below the
+  level, or the month's own "ended" line. The tester is right on one point: the script's `round` field and its
+  p_3x/p_5x must not be used (this file's p_3x 43% and p_5x 9.5% are wrong; the true 3x count is 6 and the 5x count 0).
+
 ## Files
 
 Per-month results: `months.json`, `months_result.json` in this folder. Source: `months_result.json`.

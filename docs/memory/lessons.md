@@ -59,3 +59,18 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
     `python research/<name>.py`. Evidence: Osler run, 2026-10-18.
 17. **Run `git diff --cached --name-only` before committing.** Commit 031f5b6 carried 18 renames that were already
     staged, `.ex5` files among them. Evidence: commit 031f5b6. (2026-10-18)
+18. **Count how often a month series reaches the goal from the month multiples, with 0.3% tolerance, or from the
+    month's own "goal round of <month> ended" line. Never count from the `round` field, and never with a strict
+    `>= level`.**
+    - The own line is the one whose goal matches the run's (for example "goal 3.0x") and whose clock time falls inside
+      the run.
+    - The `round` field comes from the first "goal round of <month> ended" line for that month in the day-wide
+      summary.txt, and that line can belong to an earlier run that day. The p_3x/p_5x figures are built on
+      max(multiple, round) (`tools/months_summary.py:44-55`). j11b's 5x count of 2 came from j10b's lines, and j15's
+      p_3x of 43% compares with a true 6 of 21.
+    - The multiple is the balance after the last fill, so a round that stopped at the goal shows 2.999x or 3.992x. A
+      strict `>= 3.0` counted j11b as 3 of 21, where its own lines give 9.
+    - A 4x-goal run logs no 3x line, so its 3x count comes from the multiples only.
+
+    Evidence: j11b, j15 `months_result.json`; t3b_202502 summary.txt line 351145; t4b_202412 summary.txt lines 1198,
+    350303, 699411. (2026-10-18)
