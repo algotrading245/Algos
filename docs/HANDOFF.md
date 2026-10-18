@@ -59,12 +59,16 @@ each finished piece of work.
   39.7 / 28.8 / 22.3% over 184 months 2010-2025.09 (edge 1.0, preset) — a **loose upper bound only**: reviewer
   REDO, the noise is still round 4's constant ticket (NSXUSD M1 missing), on the 21 tester months the model reaches
   the goal 10/10/9 times against the tester's 9/4/2. Model iteration stopped (run limit); do not quote r5 edge-0.7.
-- **Next pipeline work (no tester time):** the margin-aware size cap from 2010-2025.09 (inputs off by default, the
-  21 months as a check only), held below the round-5 hit size (min 15, p5 20 — a ceiling, never the cap value),
-  with the round-5 REDO items fixed or stated as limits: fix before cross order (Legs.mqh:1093-1098), C1 needs an
-  explicit no-clip branch returning 1.0 plus a five-parts unit test, noise P&L not rescaled, boost not haircut at
-  edge 0.7, EA sizes on balance not equity. Researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a
-  stated proxy). Then fidelity: the FTMO demo's symbol margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100.
+- **Size cap (candidate `hydra_size_cap`, run 1 of 3, 2026-10-18):** `research/hydra_size_cap.py` fixed the
+  round-5 REDO items (C1 no-clip branch + unit tests, fix before cross, boost haircut at edge 0.7; noise P&L and
+  balance-vs-equity sizing stay stated limits) and swept static InpGoalCap 3-14 against 50. Keep cap 50: every cap
+  <=14 loses 19-25 pp of P(goal) for near-zero stop-outs (with the fixes, cap 50 gives 39.7/28.8/22.8%). Reviewer
+  PASS WITH CHANGES: caps 15-49 are untested (cap 50 binds in 55-76% of rounds, median day-1 size asked 36-47).
+- **Next pipeline work (no tester time):** size cap run 2, a dynamic margin-aware cap. Size is limited so that the
+  margin level projected after the day's orders stays above a threshold fixed before the run (EA input off by
+  default), and it must beat static caps 20-45 as well as 50. Pre-register it; the 21 tester months are a check
+  only. Researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a stated proxy). Then fidelity: the FTMO
+  demo's symbol margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
   tester time: j12-vs-j3 deal lists on the three extra day-stop days; j14's floating-stop days to price the 1.7%
