@@ -251,10 +251,46 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
   - **Same 21 months, by the goal: InpTarget=3 reaches 3x in 9 (43%), 4 reaches 4x in 4 (19%), 5 reaches 5x in 2 (10%),
     all with 0 ruin.** At 3x the tester matches the model. At 4x and 5x it falls short, by more as the goal grows.
     The hypothesis is that the EA sizes more gently at the larger goal sizes. It is not measured, and nothing is tuned.
+    (Superseded at 13:00 below: the cause is broker stop-outs, not gentler sizing.)
   - No new tester job is queued: the 3x/4x/5x set is complete. The next useful work needs no tester time. It is the
     open daily-equity comparison of tester against model on 2024.10 (the largest miss in all three runs) and 2025.07,
     to find where the tester's size departs from `GoalSize()`. It would explain both the shortfall at the high goals
     and the narrow ruin tail.
+- **Tester against model, measured (orchestrator, 2026-10-18 13:00): the gap at 4x/5x and the "0 ruin" tail are broker
+  stop-outs, which the goal model does not have.** Evidence: `research/hydra_goal_202410_compare.py` (2024.10 day by
+  day, all deals) and `research/hydra_stopout_scan.py` (all 63 single-month runs t3b/t4b/t5b, 2024.01-2025.09).
+  - 2024.10: all three runs were up 1.37-1.51x by 10-07. At 05:35 on 2024.10.08 the margin level fell below 50% (deal
+    comment `so 49.25%` / `49.58%` / `49.71%`), the tester closed everything at the low and the test ended (`end of
+    test`). The AUDCAD grid (t4b: long 4.68+1.92 lots) lost 35-42% of the balance, the gold hold 16-22%. The month
+    ended at 0.57-0.63x. The model's size-1 day on 10-08 is -0.04% at the close, so it rides the day out to 3.05x /
+    4.17x / 5.20x.
+  - All months:
+
+    | goal | months | stop-outs | tester reach | model reach (preset) | stop-outs in months the model reaches | multiple after a stop-out |
+    |---|---|---|---|---|---|---|
+    | 3x | 21 | 7 | 9 | 12 | 2 | median 0.55x (0.26-0.59) |
+    | 4x | 21 | 10 | 4 | 12 | 4 | median 0.53x (0.35-1.10) |
+    | 5x | 21 | 9 | 2 | 11 | 3 | median 0.51x (0.36-1.06) |
+
+  - The gold hold carries the largest stop-out loss in 8 of 10 at 4x (-30% to -63% of the balance); AUDCAD carries
+    2024.10. Margin level at the stop-out: 42.8-49.9%. The hold's leverage is `SizeMult()*sig*min(3, 10.7%/vol)`
+    (`Legs.mqh:957`), so at goal sizes 30-50 it is about 30x on gold, with its own clip at 50% of free margin per
+    order (`Legs.mqh:973-975`). The grid's lots also scale with `SizeMult()` (`Legs.mqh:797`). How much of the margin
+    each leg uses is not measured.
+  - What it means: tester "ruin 0" in j10b/j11b/j15 hides these stop-outs; most of the low months are stop-outs near
+    0.5x (not all: 3x 2024.02 ends at 0.49x without one). A real account has the same stop-out, so the tester is the
+    realistic one on this point, and the model, which has no margin, overstates P(goal). Its ruin is not simply
+    overstated: in about 5 stop-out months the model ends at 0.00-0.20x, below the tester's 0.5x floor. Stop-outs fall
+    in 2 / 4 / 3 of the months the model reaches. Whether the tester would have reached the goal without them is not
+    shown. The rest of the gap (for example 2025.07 at 3x, 0.84x against 3.00x, no stop-out) is not explained yet,
+    and some months go the other way (2025.02 at 3x: tester 3.00x, model 0.17x). Lesson 19 (reviewer-checked).
+  - **Next (no tester time, nothing tuned on these 21 months):** (1) quant-coder: add margin and stop-out to the goal
+    model. That needs each day's intraday worst point for XAUUSD and AUDCAD (M1/M15 histdata) and the margin per lot
+    from the tester's symbol specs, plus month-start rounds 2010 to 2025.09 at 3x/4x/5x, giving P(goal) and
+    P(stop-out). (2) Then a candidate EA change derived from that history: a margin-aware cap on the goal size or the
+    hold, so that a high-percentile intraday move cannot reach the stop-out level. It goes through the reviewer, and
+    the tester runs the same 21 months as a check only. (3) Fidelity: the tester runs at Leverage=500. Check the
+    demo account's leverage and symbol margin rates against it, without writing down any account detail.
 - **Tester question (2026-10-18 09:53), answered by the orchestrator.**
   - The question: "Re-judge j11b: its 9 of 21 at 3x is a round-field count; the multiples give 3 of 21."
   - The answer is no; the judgement stands. The tester counted a strict `multiple >= 3.0`, which drops j11b's 2.999x

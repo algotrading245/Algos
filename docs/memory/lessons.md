@@ -24,6 +24,13 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
 5. **One goal round says little about the 5x EA; it needs separate fresh-deposit months.** j4's 5x preset stopped
    after January 2024. Evidence: j4, then j8a-c via `tools/run-months.ps1`. (2026-10-17)
 6. **Keep each month series short enough for the chained tags.** j7 broke at an 86-character tag; 52 works. Evidence: j7, j8. (2026-10-17)
+19. **The goal model has no margin; the tester has the broker's stop-out.** At goal sizes 30-50, the gold hold
+    (`Legs.mqh:957`) and the AUDCAD grid (`Legs.mqh:797`), both scaled by `SizeMult()`, carry nearly all of the loss
+    when an intraday move takes the margin level below 50% (deal comment `so 4x.xx%`). The tester closes everything at
+    that price and ends the test. That ended 7 / 10 / 9 of the 21 single-month runs at 3x / 4x / 5x, at a median 0.5x;
+    2 / 4 / 3 of them were months the model reaches. Tester "ruin 0" hides these stop-outs; judge goal odds against a
+    model with margin. Evidence: `research/hydra_goal_202410_compare.py`, `research/hydra_stopout_scan.py`.
+    (2026-10-18)
 
 ## Strategy and data
 
@@ -31,8 +38,8 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
    (2025.01-2026.09), j10b 2/21 (2024.01-2025.09). `tools/target_odds.py` gives P(5x) 17% at edge 0.7 and 25% at
    edge 1.0 (5x target, scale 2.5, every weekday a round); month-start rounds give 11% / 20%. The old 40% matched P(3x)
    at the 3x target and 47% the goal-mode preset. On j10b's own months the model with target_odds' settings gave 5-9
-   of 21 at 5x with 14-24% ruin; the tester gave 2 with no ruin (lowest 0.36x). The cause of that gap is not
-   measured. 2024 also gave only 1 of 12, so 2025-26 gold volatility is not the whole cause, though j9's gold-hold
+   of 21 at 5x with 14-24% ruin; the tester gave 2 with no ruin (lowest 0.36x). On the preset-settings model, broker
+   stop-outs account for 3 of its 11 months at 5x (lesson 19); the rest of the gap is not measured. 2024 also gave only 1 of 12, so 2025-26 gold volatility is not the whole cause, though j9's gold-hold
    evidence stands. A fix is a new idea through the gates on data from 2010, never a setting picked on tester months.
    Evidence: j8a-c, j9, j10b, `research/hydra_t5b_months_model.py`. (2026-10-18)
 8. **The gold spread cap (`InpGoldMaxSpread` 0.30) works as an unplanned volatility filter; lifting it made the months
