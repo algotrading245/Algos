@@ -91,20 +91,22 @@ while ($true) {
         Write-Log "relay" "hand-over to $next from $from skipped: nothing for it to do"
         $from = $next; $next = $null
     }
+    $wrapped = $false
     if (-not $next) {
         # The chain: the agent after the one that ran last, skipping those with nothing to do and those this tick
         # already started; past the end, a new cycle.
         $i = [array]::IndexOf($Chain, $from)
         $guard = 0
         do {
-            $i++; if ($i -ge $Chain.Count) { $i = 0 }; $guard++
+            $i++; if ($i -ge $Chain.Count) { $i = 0; $wrapped = $true }; $guard++
         } until (((Test-Runnable $Chain[$i]) -and ($startedHere -notcontains $Chain[$i])) -or ($guard -gt $Chain.Count))
         if ($guard -gt $Chain.Count) { break }   # nobody in the chain has anything to do (or nothing left to start)
         $next = $Chain[$i]
     }
     if ($startedHere -contains $next) { Write-Log "relay" "$next already ran in this tick: waiting for the next one"; break }
-    if ($next -eq "researcher") {
-        # A new cycle: take the break first.
+    if ($next -eq "researcher" -or $wrapped) {
+        # A new cycle: take the break first. Also when the chain wrapped past its end to a later role (the researcher
+        # skipped with 3+ untested ideas), or the orchestrator would follow itself on every tick with no break.
         $ends = @(Get-ChildItem $LogDir -Filter "last-*.json" | ForEach-Object {
             try { [datetime](Get-Content $_.FullName -Raw | ConvertFrom-Json).ended } catch { }
         })
