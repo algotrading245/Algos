@@ -370,7 +370,7 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
   fixed-time Orchestrator, Tester and Researcher tasks). Each agent ends with `HANDOFF: <role> <reason>`;
   `run-agent.ps1` writes it to `logs/autopilot/relay.json` and the relay starts that agent 15 min later
   (`$GapMinutes` in `common.ps1`). Order per tick: PAUSE / busy / usage-limit back-off (60 min) -> tester work in the
-  weekend window -> due hand-over -> the chain researcher -> scanner -> orchestrator -> tester -> fidelity, then a new cycle (15 min between agents). No daily caps (removed
+  weekend window -> due hand-over -> the chain researcher -> scanner -> orchestrator -> tester -> fidelity, then a new cycle (no gap inside a cycle, a 30 min break between cycles). No daily caps (removed
   by the owner 2026-10-17 21:51); one agent at a time. Keeper (every 15 min) and Monitor (Mon-Fri 23:15) stay fixed tasks.
 
 ## Current state (updated 2026-10-17 13:40; the rest of this section is from 2026-10-15)
