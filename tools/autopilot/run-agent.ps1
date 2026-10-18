@@ -134,8 +134,10 @@ HANDOFF line still ends the run.
 $providerSection
 --- Current status (this changes every run; everything above is fixed) ---
 Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
-Shell commands: run each one exactly as written and alone, with no ";", "&&", "|", "2>&1" or "echo" added. The
-permission rules match whole commands, so a compound command is refused; the exit code is reported anyway.
+Shell commands: run each one alone and on one line, with paths relative to the repo root (no "cd", no backslash line
+breaks, no ";", "&&", "|", "2>&1" or "echo" added): the permission rules match whole commands, so those forms can
+be refused; the exit code is reported anyway. Quick checks may use python -c "...". Deleting, moving, killing
+processes, installing packages, network downloads and editing tools/ or .claude/ are refused by design.
 Terminal 16 (demo EA; the tester has its own install):
 $($status -join "`n")
 Latest decisions (docs/memory/decisions.jsonl, newest last):

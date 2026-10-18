@@ -1,6 +1,6 @@
 {
   "about": "The model router (owner 2026-10-18). One switch picks the provider for every agent run; each role maps to a tier, and each provider names a model per tier, so a role can be moved between providers or models without touching a script. Switch it with: python tools/autopilot/router.py use qwen|claude [--role R --model M] [--tier T --model M]; read it with: python tools/autopilot/router.py show. No secrets here (the Qwen key lives in ~/.qwen/settings.json, outside the repo).",
-  "provider": "qwen",
+  "provider": "claude",
   "providers": {
     "claude": {
       "about": "Claude Code CLI (claude.exe). Roles run as .claude/agents/<role>.md subagent definitions with --agent, permissions from tools/autopilot/settings.json in dontAsk mode.",
