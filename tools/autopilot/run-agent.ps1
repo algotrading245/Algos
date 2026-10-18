@@ -237,7 +237,7 @@ $recent
     Write-Log $log ("output:`n" + $text.Trim() + $(if ($err.Result.Trim()) { "`nstderr:`n" + $err.Result.Trim() } else { "" }))
     foreach ($d in $denials) { Write-Log $log "denied: $d" }
     $endNote = "end: exit $code"
-    if ($subtype) { $endNote += " ($subtype)" }
+    if ($null -ne $isError) { $endNote += " (subtype $subtype, is_error $isError)" }
     if ($timedOut) { $endNote += ", killed at the time limit" }
     if ($rawExit -ne $code) { $endNote += ", process exit $rawExit ignored" }
     $endNote += ", $([int]((Get-Date) - $started).TotalMinutes) min"
