@@ -7,7 +7,7 @@ questions in this run: decide, do the work, and stop.
    If no EA is attached or nothing traded, write that in one line ("no trades logged; EA not attached?").
    Start the entry with "ALERT" for a day stop, final stop, margin error, or a trade without a broker stop.
 3. Commit only that file and push:
-   `git add docs/demo_log.md` then `git commit -m "Demo log <date>"` then `git push origin HEAD`.
+   `git add docs/demo_log.md docs/memory/decisions.jsonl` then `git commit -m "Demo log <date>"` then `git push origin HEAD`.
    If the push fails, leave the commit local and say so in your last line.
 
 Never place, change or close trades, never change EA inputs, never record an account number, login or credential.

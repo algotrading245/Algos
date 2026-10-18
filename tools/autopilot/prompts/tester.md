@@ -35,7 +35,7 @@ C. No queued or running job left: nothing to start.
 
 Then append one line to `docs/autopilot/runs.md` (`| date time | tester | what you did | result |`) and commit the
 files you changed by name, never `.htm`, `.png`, `summary.txt`, `job.json` or `.ex5`:
-`git add docs/autopilot/queue.json docs/autopilot/runs.md backtests/<folder>/summary.md backtests/<folder>/result.json backtests/<folder>/tester.ini`
+`git add docs/autopilot/queue.json docs/autopilot/runs.md backtests/<folder>/summary.md backtests/<folder>/result.json backtests/<folder>/tester.ini docs/memory/decisions.jsonl`
 then `git commit -m "Tester: <job id> <what happened>"` and `git push origin HEAD` (if the push fails, leave it).
 
 Never place trades, never touch any terminal except through these scripts, never kill a process, never print an

@@ -9,7 +9,7 @@ work, and stop. Use the Bash tool for every command, one command per call, in ex
    first: the families it knows). Each survivor is written to `marketdata/candidates/scan_*.csv`.
 3. For each survivor: `python tools/gates.py <candidate id>`. Write down every gate's pass/fail and figure.
 4. Append one line to `docs/autopilot/runs.md` (`| date time | scanner | family, symbols | trials, survivors, gate
-   results |`) and commit by name: `git add docs/trials.jsonl docs/autopilot/runs.md docs/gates/<new files>`,
+   results |`) and commit by name: `git add docs/trials.jsonl docs/autopilot/runs.md docs/gates/<new files> docs/memory/decisions.jsonl`,
    `git commit -m "Scanner: <family> <result>"`, `git push origin HEAD` (if the push fails, leave it).
 
 Finish with one line: family, trials, survivors, gates. Then the hand-over as the very last line:

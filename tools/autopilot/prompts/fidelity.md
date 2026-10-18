@@ -16,7 +16,7 @@ work, and stop. Use the Bash tool for every command, one command per call, in ex
    figure in `docs/HANDOFF.md`. A median fill gap worse than the cost the gates assumed for that symbol, or a leg
    whose demo/tester entry counts differ by more than a third, starts the file with "ALERT".
 4. Append one line to `docs/autopilot/runs.md` (`| date time | fidelity | what you did | result |`) and commit by
-   name: `git add docs/autopilot/runs.md docs/autopilot/queue.json docs/fidelity/<file>` (only the files you
+   name: `git add docs/autopilot/runs.md docs/autopilot/queue.json docs/fidelity/<file> docs/memory/decisions.jsonl` (only the files you
    changed), `git commit -m "Fidelity: <result>"`, `git push origin HEAD` (if the push fails, leave it).
 
 Finish with one line: days covered, entries paired, worst gap. Then the hand-over as the very last line:

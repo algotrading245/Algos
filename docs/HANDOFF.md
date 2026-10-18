@@ -28,6 +28,22 @@ Rules of the work:
 - Commit and push to the session's working branch after each finished piece of work (earlier sessions:
   `claude/exciting-hopper-r6sdmc`; the cloud session of 2026-10-14: `claude/intelligent-turing-j0nrmf`).
 
+## Shared memory (2026-10-18)
+
+The relay's agents are stateless runs, so the project keeps one memory that every run reads first:
+- `docs/memory/mission.md`: goals, routes, pipeline and fixed rules. Owner-only; agent runs are refused edits to it
+  (`tools/autopilot/settings.json`).
+- `docs/memory/decisions.jsonl`: one JSON line per decision (when, role, kind decision/lesson/question, decision, why,
+  evidence). Append-only through `python tools/memory.py decide ...`; the relay denies Edit/Write on it. Seeded with
+  the decisions from j3 to j14.
+- `docs/memory/lessons.md`: at most 40 rules learned the hard way, each with evidence. Only the orchestrator curates
+  it, after the reviewer subagent checked the evidence (`.claude/agents/reviewer.md`, "For a lesson"). Seeded with 17.
+- `tools/memory.py`: `brief`, `decide`, `search <words> [--events]` (also searches every tool call in
+  `logs/autopilot/events/`), `commands [--role R]`, `check` (lesson limit, evidence, valid JSON).
+- `tools/autopilot/run-agent.ps1` puts the mission, the lessons and the last 15 decisions into every run's prompt
+  (about 13k characters), with the instructions to search before deciding and to log each decision. The prompts'
+  commit lines include `docs/memory/decisions.jsonl`.
+
 ## Restructure of 2026-10-18 (owner's six steps)
 
 1. **One leg library.** The legs, sizing and handlers of both EAs are in `mql5/Include/Aurum/` (`Inputs.mqh`,

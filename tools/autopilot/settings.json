@@ -65,6 +65,10 @@
       "Edit(./tools/**)",
       "Edit(./.claude/**)",
       "Edit(./.gitignore)",
+      "Edit(./docs/memory/mission.md)",
+      "Write(./docs/memory/mission.md)",
+      "Write(./docs/memory/decisions.jsonl)",
+      "Edit(./docs/memory/decisions.jsonl)",
       "Read(./.env*)",
       "Read(~/.claude/.credentials.json)"
     ]

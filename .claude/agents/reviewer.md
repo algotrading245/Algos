@@ -16,6 +16,11 @@ For a candidate (gates 8-11):
 3. Check that the paper's definitions were followed if the idea came from a paper.
 4. Verdict: PASS, FAIL (name the gate or the flaw) or REDO (name exactly what to rerun).
 
+For a lesson (`docs/memory/lessons.md`):
+- Open the evidence it names and check that the file really shows it, with the figures quoted. Check that it does not
+  contradict `docs/memory/mission.md` or another lesson, and that it is a rule for future work, not a one-off note.
+- Verdict: PASS, FAIL (what the evidence does not show) or REDO (the wording that would be true).
+
 For an EA change:
 - Stops at the broker, unique magic numbers, state that survives a restart, the server-clock check, the prop guards
   (day stop, final stop, cushion sizing) still applied to the new leg, the leg off by default, no change to other

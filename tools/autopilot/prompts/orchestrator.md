@@ -33,6 +33,17 @@ Then pick the single most useful next task and do it, in this order of priority:
 To ask for a Strategy Tester run, add a job to `docs/autopilot/queue.json` (status "queued", or "hold" with `needs`
 when it waits on an approval). The tester agent runs queued jobs on weekends; you do not run the tester yourself.
 
+Memory (the brief above comes from `docs/memory/`): you are its keeper.
+- Before you judge, plan or reject anything, `python tools/memory.py search <words>` for what was decided before;
+  do not repeat a test that a decision or lesson already settled unless the data or the code changed (say what).
+- Log every decision of your run with `python tools/memory.py decide --role orchestrator ...`.
+- Lessons: read the `kind: lesson` lines other agents logged since your last run. A lesson that holds goes into
+  `docs/memory/lessons.md` (one rule, `Evidence:`, date) only after the reviewer subagent confirmed that its evidence
+  file says so; log the outcome either way. Keep at most 40: merge or drop the weakest first, and remove a lesson that
+  newer evidence contradicts (log why). `python tools/memory.py check` must pass before you commit.
+- Never edit `docs/memory/mission.md` (refused anyway) and never edit or delete a past line of `decisions.jsonl`.
+  A `kind: question` line is for the owner: copy it into `docs/HANDOFF.md`.
+
 Hard rules:
 - The holdout (`tools/holdout.py`): every day from 2025-10-13 on is held back for the owner's final check.
   Tester jobs end by 2025-09-30 (`to`, `months.to` 2025.09 at most; the scripts refuse later dates in agent
@@ -46,7 +57,8 @@ Hard rules:
 - Do not edit `tools/`, `.claude/` or `.gitignore` (refused anyway); describe the change in the handoff instead.
 
 Finish: append one line to `docs/autopilot/runs.md` (`| date time | orchestrator | task | result |`), update
-`docs/HANDOFF.md` if the state changed, commit the files you changed by name (never `.ex5`, `.htm`, `.png`,
+`docs/HANDOFF.md` if the state changed, commit the files you changed by name (with `docs/memory/decisions.jsonl`
+and `docs/memory/lessons.md` when changed) (never `.ex5`, `.htm`, `.png`,
 `summary.txt`, `job.json`; never `git add -A` or `.`), and `git push origin HEAD`. If the push fails, leave the commit
 local and say so. Second-last line of your answer: what you did and what is next. Last line, the hand-over:
 `HANDOFF: <role> <reason>`, where role is one of

@@ -42,12 +42,34 @@ try {
     if (-not (Test-Path $exe)) { $exe = (Get-Command claude.exe -ErrorAction Stop).Source }
 
     $status = & "$PSScriptRoot\terminal.ps1" -Status
+    # Shared memory (docs/memory): the mission, the lessons and the latest decisions go into every run.
+    $mem = Join-Path $Repo "docs\memory"
+    $memText = foreach ($f in "mission.md", "lessons.md") {
+        $mp = Join-Path $mem $f
+        if (Test-Path $mp) { Get-Content $mp -Raw -Encoding UTF8 }
+    }
+    $decFile = Join-Path $mem "decisions.jsonl"
+    $recent = if (Test-Path $decFile) { (Get-Content $decFile -Encoding UTF8 | Select-Object -Last 15) -join "`n" } else { "(none yet)" }
     $prompt = @"
 Unattended autopilot run, role: $Role. Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
 Shell commands: run each one exactly as written and alone, with no ";", "&&", "|", "2>&1" or "echo" added. The
 permission rules match whole commands, so a compound command is refused; the exit code is reported anyway.
 Terminal 16 (demo EA; the tester has its own install):
 $($status -join "`n")
+
+--- Shared memory (docs/memory; mission.md is the owner's and cannot be edited) ---
+$($memText -join "`n")
+Latest decisions (docs/memory/decisions.jsonl, newest last):
+$recent
+
+Using the memory: before a decision, look at what was decided or learned before with
+python tools/memory.py search <words> (add --events to search the commands earlier agents ran). Log each decision
+you make (a job judged, an idea taken up or dropped, a setting kept, a plan changed) once, with
+python tools/memory.py decide --role $Role --decision "<what>" --why "<why>" --evidence "<file, job or commit>".
+Something the project learned that should change how we work: the same command with --kind lesson, for the
+orchestrator to review. A disagreement with the mission: --kind question. Commit docs/memory/decisions.jsonl
+together with your other files. Never write an account number, login or key into it.
+--- End of memory ---
 
 $(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
 "@

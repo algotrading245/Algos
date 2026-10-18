@@ -22,7 +22,7 @@ answer questions in this run: decide, do the work, and stop.
    paper) that a scan could not find by itself.
 3. Write them to `docs/ideas/<yyyy-MM-dd>.md`: for each, the source type, the rule in one paragraph, the source link,
    the data it needs, what it claims (with the table it comes from), and why it might not survive costs.
-4. Commit only that file and push: `git add docs/ideas/<file>`, `git commit -m "Ideas <date>"`, `git push origin HEAD`.
+4. Commit only that file and the decision log, then push: `git add docs/ideas/<file> docs/memory/decisions.jsonl`, `git commit -m "Ideas <date>"`, `git push origin HEAD`.
    If the push fails, leave the commit local and say so. Use plain `git ...` from the repo folder, never `git -C`, and
    one command per Bash call (no `&&`, `;` or pipes): other forms are refused.
 
