@@ -279,7 +279,7 @@
       "status": "running",
       "folder": "backtests\\2026-10-18_0155_AurumFunded_funded_lib",
       "needs": null,
-      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow. Started by the tester 2026-10-18 01:55 (pid 1016).",
+      "note": "Queued 2026-10-18 for step 6 (improvement loop), in-sample only: months to 2025.09, dates before 2025-10-13 (tools/holdout.py). Baseline of the shared leg library (v1.34 / Include/Aurum) in the new tester install; the orchestrator judges it and queues the improvement jobs that follow. Started by the tester 2026-10-18 01:55 (pid 1016). Orchestrator 2026-10-18 02:00: the to date 2025.10.10 is after the 2025-09-30 end the autopilot rule allows (still before the 2025-10-13 holdout); left to finish since it was already running, j13/j14 moved to 2025.09.30. Sharper yardstick for judging: the legs are half j3's, so equity at 2025-10-10 should land between j3's legs-off and legs-on equity on that date (read both daily curves; rough figure +130-170%), eq DD between 6.7% and 8.3%, about 5 day stops (j3 legs on had 5 before 2025-10-10: 2024-07-25, 2024-11-06, 2025-05-01, 2025-05-30, 2025-10-03).",
       "id": "j12",
       "expert": "AurumFunded",
       "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_funded.set",
@@ -304,7 +304,7 @@
       "leverage": 33,
       "tag": "fnext",
       "from": "2024.01.01",
-      "to": "2025.10.10",
+      "to": "2025.09.30",
       "expect": "FundedNext Stellar Instant guard (4.5% under the highest day-start equity, day stop 3%, size 0.3). Report the first date equity reaches +5% (payout), any guard halt, eq DD, worst day."
     },
     {
@@ -322,8 +322,48 @@
       "leverage": 33,
       "tag": "ifpro",
       "from": "2024.01.01",
-      "to": "2025.10.10",
+      "to": "2025.09.30",
       "expect": "Instant Funding PRO guard (-8.5% until +5%, then -3.5% for good). Report the date of +5%, any final stop, eq DD, worst day."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Rerun of j10, queued by the orchestrator 2026-10-18 02:00. j10 failed only because the tester install had no login; the tester log of 2026-10-18 shows it authorized and logged in, and j12 started at 01:55, so the cause is gone. Same preset, months and expect; new tag so the failed folder stays apart. In-sample only (months to 2025.09).",
+      "id": "j10b",
+      "expert": "AurumHydra",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_target5x_FTMO.set",
+      "leverage": 500,
+      "tag": "t5b",
+      "months": {
+        "from": "2024.01",
+        "to": "2025.09"
+      },
+      "expect": "As j10: InpTarget=5 (goal 5x, scale 2.5) over the 21 in-sample months, one fresh deposit a month. tools/target_odds.py gives about 40% of rounds at 5x on the Python model; the tester so far kept less (j8: 1/21 on 2025.01-2026.09 with EA 1.33). Report P(3x/4x/5x), P(ruin), median multiple, margin refusals, and the months where gold made most of the loss."
+    },
+    {
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "deposit": 10000,
+      "set": [],
+      "status": "queued",
+      "folder": null,
+      "needs": null,
+      "note": "Rerun of j11, queued by the orchestrator 2026-10-18 02:00 for the same reason as j10b (the missing tester login is fixed). Same preset, months and expect; new tag. In-sample only (months to 2025.09).",
+      "id": "j11b",
+      "expert": "AurumHydra",
+      "preset": "mql5/Experts/AurumHydra/AurumHydra_target3x_FTMO.set",
+      "leverage": 500,
+      "tag": "t3b",
+      "months": {
+        "from": "2024.01",
+        "to": "2025.09"
+      },
+      "expect": "As j11: InpTarget=3 on the same 21 months as j10b, to compare the odds of 3x aimed at 3x with j10b's 3x share. Report the same figures as j10b."
     }
   ]
 }

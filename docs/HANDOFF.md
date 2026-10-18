@@ -52,7 +52,8 @@ Rules of the work:
 5. **Terminals.** The Strategy Tester has its own MT5 install, `C:\MetaTrader 5 - Tester` (portable data folder found
    via `origin.txt`; FTMO-Demo history, ticks, symbols and servers.dat copied from Terminal 16, never accounts.dat).
    `run-tester.ps1` / `run-months.ps1` default to it and link `MQL5\Experts\<EA>` and `MQL5\Include\Aurum` into it on
-   every run. It needs a one-time FTMO demo login by the owner: until `configccounts.dat` exists in its data
+   every run. It needed a one-time FTMO demo login by the owner, done by 2026-10-18 01:55 (the tester log shows
+   "authorized"; j12 is the first job to run there). Without the file `configccounts.dat` in its data
    folder, `run-tester.ps1` refuses and the relay does not wake the tester (queued jobs just wait).
    Terminal 16 ("MetaTrader 5 - 16") keeps the demo EA and is no longer closed for jobs: the weekend window and the
    `terminal.ps1 -Hold` step are gone, tester jobs run any day. Equivalence check of the library refactor
@@ -61,7 +62,10 @@ Rules of the work:
    other months found in the same tester log.
 6. **Improvement loop** on both EAs through the relay, in-sample only. Queued 2026-10-18: j10 Hydra InpTarget=5 and
    j11 InpTarget=3 on months 2024.01-2025.09; j12 Funded FTMO funded, j13 FundedNext Stellar Instant, j14 Instant
-   Funding PRO, 2024-01-01 to 2025-10-10. The orchestrator judges them and queues what follows. Prop routes: FTMO
+   Funding PRO, 2024-01-01 to 2025-10-10. j10/j11 failed on the missing login and are requeued as j10b/j11b (same
+   settings, tags t5b/t3b, after j14). j12 runs to 2025-10-10 (started before the fix); j13/j14 now end 2025-09-30,
+   the autopilot's limit. j12's note has the yardstick for judging it (between j3's legs-off and legs-on equity at
+   2025-10-10, eq DD 6.7-8.3%, about 5 day stops). The orchestrator judges them and queues what follows. Prop routes: FTMO
    2-Step (demo now) plus the two instant-funding accounts (no challenge, payout from +5%), presets in AurumFunded.
 
 ## Demo and autopilot (2026-10-17)
