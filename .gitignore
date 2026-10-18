@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 .obsidian/
 .tools/
 # Claude Code: the role agents are part of the repo, the rest (worktrees, locks) is local
