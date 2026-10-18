@@ -81,7 +81,12 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
    Funding PRO, 2024-01-01 to 2025-10-10. j10/j11 failed on the missing login and are requeued as j10b/j11b (same
    settings, tags t5b/t3b, after j14). j12 runs to 2025-10-10 (started before the fix); j13/j14 now end 2025-09-30,
    the autopilot's limit. j12's note has the yardstick for judging it (between j3's legs-off and legs-on equity at
-   2025-10-10, eq DD 6.7-8.3%, about 5 day stops). The orchestrator judges them and queues what follows. Prop routes: FTMO
+   2025-10-10, eq DD 6.7-8.3%, about 5 day stops). The orchestrator judges them and queues what follows.
+   **j12 judged 2026-10-18 02:55:** +140.5%, 7.50% eq DD, 8 day stops. Equity at 2025-10-09 (24,050) sits between j3 off
+   (21,616) and on (24,182), near the legs-on end; DD inside the range. That passes, but there are 3 more day stops
+   (2024-05-01, 2024-08-05, 2025-02-28), and on those days j3 lost less or gained (2024-05-01 j3 +0.2% vs j12 -2.7%). So
+   half-size legs do not explain them; the shared library takes a different path there. Recorded, not tuned. Open
+   follow-up, needs no tester time: compare the j12 and j3 legs-on deal lists for those three days. Prop routes: FTMO
    2-Step (demo now) plus the two instant-funding accounts (no challenge, payout from +5%), presets in AurumFunded.
 
 ## Demo and autopilot (2026-10-17)
