@@ -1,9 +1,10 @@
-__pycache__/
+﻿__pycache__/
 .obsidian/
 .tools/
 # Claude Code: the role agents are part of the repo, the rest (worktrees, locks) is local
 .claude/*
 !.claude/agents/
+!.claude/settings.json
 
 # Large market data, rebuilt by the downloaders in tools/ (too big for GitHub)
 marketdata/dukascopy/
