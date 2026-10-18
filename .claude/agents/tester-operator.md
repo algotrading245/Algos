@@ -7,6 +7,12 @@ tools: Read, Grep, Glob, Bash, PowerShell, Write
 
 You are the tester operator of the Aurum pipeline (steps 15-16 in `docs/pipeline.json`).
 
+Since 2026-10-18 the queue is worked by a script (`tools/autopilot/tester_step.py`, started by the keeper and the
+relay): it launches queued jobs, collects finished ones and writes their `summary.md` itself. You are only called
+when the script wrote `logs/autopilot/tester-help.json` (a start or collect broke, the queue is malformed, the
+tester install has no login). The manual procedures below are your reference for that repair work; an interactive
+session can still use them to run a job by hand.
+
 How to run:
 - One MT5 run at a time. Launch detached so it survives the session:
   `powershell -ExecutionPolicy Bypass -File tools\run-tester.ps1 -Expert <EA> -Symbol <sym> -Preset <set> -Detach`

@@ -1,10 +1,12 @@
 # Runs one unattended Claude Code session for a pipeline role, started by the relay (relay.ps1) or the monitor task.
 #
-#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher|scanner|fidelity [-IfWork]
+#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher|scanner|fidelity [-Model haiku|sonnet|opus] [-IfWork]
 #
 # - Skips when logs\autopilot\PAUSE exists (create that file to pause every agent; delete it to resume).
 # - One Claude run at a time on this PC (named mutex); a run that finds another one busy waits up to 20 minutes.
-# - -IfWork (tester role): starts Claude only when Test-TesterWork (common.ps1) finds a job to start or collect.
+# - -IfWork: starts Claude only when Test-TesterWork (common.ps1) finds tester-agent work (tester-help.json).
+# - -Model overrides the role's default model for one run (the relay uses it: a routine judge run whose fixed
+#   expect check matched goes to Sonnet instead of Opus).
 # - Afterwards the agent's last "HANDOFF: <role> <reason>" line goes to logs\autopilot\relay.json, so the relay
 #   starts that agent $GapMinutes later.
 # - Permissions come from tools\autopilot\settings.json in dontAsk mode: anything not listed there is refused,
@@ -12,6 +14,7 @@
 # - Output: logs\autopilot\<date>_agent-<role>.log; the last run's outcome: logs\autopilot\last-<role>.json.
 param(
     [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher", "scanner", "fidelity")][string]$Role,
+    [ValidateSet("haiku", "sonnet", "opus")][string]$Model,
     [switch]$IfWork
 )
 . "$PSScriptRoot\common.ps1"
@@ -19,10 +22,10 @@ $log = "agent-$Role"
 
 if (Test-Path $Pause) { Write-Log $log "skipped: paused (logs\autopilot\PAUSE exists)"; exit 0 }
 
-# Model router, by the kind of work: routine on haiku (monitor, researcher, scanner, tester: run scripts, read,
-# summarise), code on sonnet (fidelity; the orchestrator's quant-coder subagent), judgment on opus (the orchestrator
-# and its reviewer subagent). Agent roles carry their model in .claude/agents/*.md. All runs use the same Claude Code
-# login (no API key, no switch of auth); a run that hits a usage limit backs the relay off (below).
+# Model router, by the kind of work: routine on haiku (monitor, researcher, tester help), code on sonnet (fidelity;
+# the orchestrator's quant-coder subagent; a routine judge run the relay flags with -Model sonnet), judgment on opus
+# (the orchestrator and its reviewer subagent). -Model overrides the role's default for one run. All runs use the
+# same Claude Code login (no API key, no switch of auth); a run that hits a usage limit backs the relay off (below).
 $cfg = @{
     monitor      = @{ Args = @("--agent", "monitor");    Turns = 25; Minutes = 20 }
     researcher   = @{ Args = @("--agent", "researcher"); Turns = 40; Minutes = 60 }
@@ -31,6 +34,7 @@ $cfg = @{
     tester       = @{ Args = @("--model", "haiku");      Turns = 40; Minutes = 45 }
     orchestrator = @{ Args = @("--model", "opus");       Turns = 80; Minutes = 120 }
 }[$Role]
+if ($Model) { $cfg.Args = @("--model", $Model) }
 
 if ($IfWork -and -not (Test-TesterWork)) { exit 0 }
 
@@ -50,17 +54,17 @@ try {
     }
     $decFile = Join-Path $mem "decisions.jsonl"
     $recent = if (Test-Path $decFile) { (Get-Content $decFile -Encoding UTF8 | Select-Object -Last 15) -join "`n" } else { "(none yet)" }
+    # Prompt order (owner 2026-10-18): the fixed parts (memory, role prompt, memory instructions) come first so a
+    # repeat run within 5 minutes hits the prompt cache and is billed cheaply; what changes every run (date, terminal
+    # status, the latest decisions) comes last.
     $prompt = @"
-Unattended autopilot run, role: $Role. Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
-Shell commands: run each one exactly as written and alone, with no ";", "&&", "|", "2>&1" or "echo" added. The
-permission rules match whole commands, so a compound command is refused; the exit code is reported anyway.
-Terminal 16 (demo EA; the tester has its own install):
-$($status -join "`n")
+Unattended autopilot run, role: $Role.
 
 --- Shared memory (docs/memory; mission.md is the owner's and cannot be edited) ---
 $($memText -join "`n")
-Latest decisions (docs/memory/decisions.jsonl, newest last):
-$recent
+--- End of memory ---
+
+$(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
 
 Using the memory: before a decision, look at what was decided or learned before with
 python tools/memory.py search <words> (add --events to search the commands earlier agents ran). Log each decision
@@ -69,9 +73,20 @@ python tools/memory.py decide --role $Role --decision "<what>" --why "<why>" --e
 Something the project learned that should change how we work: the same command with --kind lesson, for the
 orchestrator to review. A disagreement with the mission: --kind question. Commit docs/memory/decisions.jsonl
 together with your other files. Never write an account number, login or key into it.
---- End of memory ---
 
-$(Get-Content (Join-Path $PSScriptRoot "prompts\$Role.md") -Raw)
+Provisional hand-over: near the start of the run (after your first reads), write what you expect to hand over to
+with python tools/autopilot/handoff.py --next <role> --reason "<what you plan to do>" --provisional, and run it
+again without --provisional if your plan changes. It keeps the chain moving if this run is cut off; your final
+HANDOFF line still ends the run.
+
+--- Current status (this changes every run; everything above is fixed) ---
+Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
+Shell commands: run each one exactly as written and alone, with no ";", "&&", "|", "2>&1" or "echo" added. The
+permission rules match whole commands, so a compound command is refused; the exit code is reported anyway.
+Terminal 16 (demo EA; the tester has its own install):
+$($status -join "`n")
+Latest decisions (docs/memory/decisions.jsonl, newest last):
+$recent
 "@
     $argv = @("-p", "--settings", (Join-Path $PSScriptRoot "settings.json"), "--permission-mode", "dontAsk",
         "--permission-prompts", "none", "--max-turns", $cfg.Turns, "--output-format", "stream-json", "--verbose", "--include-partial-messages") + $cfg.Args

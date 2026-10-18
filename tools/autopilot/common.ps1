@@ -56,42 +56,57 @@ function Get-Hold {
     return $h
 }
 
-# True when the tester agent has something to do: a queued job, or a running job whose tester process has ended.
-# With no job left it removes an old autopilot hold on Terminal 16 (from before the tester had its own install).
-function Test-TesterWork {
-    $q = Get-Content (Join-Path $Repo "docs\autopilot\queue.json") -Raw | ConvertFrom-Json
-    $work = @($q.jobs | Where-Object { $_.status -in @("queued", "running") })
-    if (-not $work) {
-        $h = Get-Hold
-        if ($h -and $h.by -eq "autopilot") {
-            Remove-Item $HoldFile -Force
-            Write-Log "keeper" "hold released: no tester job left"
+# True when the tester agent has something to do. Since 2026-10-18 the tester is a script (tools/autopilot/
+# tester_step.py, started by the keeper and the relay): it starts and collects jobs on its own and only asks for the
+# agent when it cannot go on (logs/autopilot/tester-help.json). The agent deletes the file when it has fixed it.
+$TesterHelp = Join-Path $LogDir "tester-help.json"
+$ToJudge    = Join-Path $LogDir "to-judge.json"
+$ScanFlag   = Join-Path $LogDir "scanner-flag.json"
+function Test-TesterWork { return (Test-Path $TesterHelp) }
+
+# Jobs the tester script collected and nobody judged yet (to-judge.json entries: {id, match, at}).
+function Get-ToJudge {
+    if (-not (Test-Path $ToJudge)) { return @() }
+    try {
+        $j = Get-Content $ToJudge -Raw | ConvertFrom-Json
+        return @($j | ForEach-Object { if ($_ -is [string]) { [pscustomobject]@{ id = $_; match = $false } } else { $_ } })
+    } catch { return @() }
+}
+
+# True when the scanner agent has something to do: the scanner script (scanner_step.py) flags a survivor that passed
+# every gate, or a scan it could not run. The agent deletes the flag file when done.
+function Test-ScannerWork {
+    if (-not (Test-Path $ScanFlag)) { return $false }
+    try { return [bool](Get-Content $ScanFlag -Raw | ConvertFrom-Json).work } catch { return $true }
+}
+
+# Ideas in docs/ideas/ the orchestrator has not picked up yet. An idea counts as started when
+# docs/autopilot/ideas_taken.txt lists its file and heading (the orchestrator appends one line per idea it picks,
+# tests or drops) or, as a fallback, when its first title words appear in a candidates.json name. The researcher is
+# skipped while 3 or more wait (owner 2026-10-18: effort goes where the work is).
+$IdeasTaken = Join-Path $Repo "docs\autopilot\ideas_taken.txt"
+function Get-UnstartedIdeas {
+    $names = @()
+    try {
+        $names = @((Get-Content (Join-Path $Repo "docs\candidates.json") -Raw | ConvertFrom-Json).candidates |
+            ForEach-Object { "$($_.name)".ToLower() })
+    } catch { }
+    $taken = @()
+    if (Test-Path $IdeasTaken) { $taken = @(Get-Content $IdeasTaken -Encoding UTF8 | Where-Object { $_ -and -not $_.StartsWith("#") }) }
+    $n = 0
+    Get-ChildItem (Join-Path $Repo "docs\ideas") -Filter *.md -ErrorAction SilentlyContinue | ForEach-Object {
+        $file = $_.Name
+        foreach ($line in (Get-Content $_.FullName -Encoding UTF8)) {
+            if ($line -match '^##\s+(\d+\..+)$') {
+                $title = $Matches[1].Trim()
+                if ($taken | Where-Object { $_ -match [regex]::Escape($file) -and $_.Contains(($title -split '\s+' | Select-Object -First 3) -join ' ') }) { continue }
+                $words = ((($title -replace '[:\(\)].*$','') -split '[,\s]+') | Where-Object { $_.Length -gt 3 } | Select-Object -First 4) -join ' '
+                if ($words -and ($names | Where-Object { $_.Contains($words) })) { continue }
+                $n++
+            }
         }
-        return $false
     }
-    # The tester install needs one login by the owner (config\accounts.dat) before any job can start.
-    $data = Get-ChildItem "$env:APPDATA\MetaQuotes\Terminal" -Directory | Where-Object {
-        $o = Join-Path $_.FullName "origin.txt"
-        (Test-Path $o) -and ("$(Get-Content $o -Raw)".Trim().TrimEnd('\') -eq $Tester)
-    } | Select-Object -First 1
-    if (-not $data -or -not (Test-Path (Join-Path $data.FullName "config\accounts.dat"))) {
-        if (-not @($work | Where-Object { $_.status -eq "running" })) { return $false }
-    }
-    # A running job whose tester process is still alive needs no Claude run yet.
-    $busy = @($work | Where-Object { $_.status -eq "running" } | Where-Object {
-        $f = if ($_.folder_on) { $_.folder_on } else { $_.folder }
-        $jf = if ($f) { Join-Path $Repo "$f\job.json" }
-        $mf = if ($f) { Join-Path $Repo "$f\months.json" }
-        if ($jf -and (Test-Path $jf)) {
-            $j = Get-Content $jf -Raw | ConvertFrom-Json
-            Get-Process -Id $j.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $j.Exe }
-        } elseif ($mf -and (Test-Path $mf)) {
-            # A run-months.ps1 job: busy while its month runner (a powershell process) is alive.
-            $m = Get-Content $mf -Raw | ConvertFrom-Json
-            Get-Process -Id $m.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq "powershell" }
-        }
-    })
-    return (-not $busy)
+    return $n
 }
 
 # Agent runs of a role started today (from its log) (the relay no longer caps runs; kept for reports).

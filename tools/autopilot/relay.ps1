@@ -1,17 +1,24 @@
 # Aurum relay: the agents work as a team. Each agent ends its answer with "HANDOFF: <role> <reason>"; run-agent.ps1
-# writes that to logs\autopilot\relay.json, and this script starts the named agent $GapMinutes (common.ps1) later.
+# writes that to logs\autopilot\relay.json, and this script starts the named agent on its next tick.
 # Started every 5 minutes by the "Aurum Relay" task; a tick that finds an agent busy, or nothing due, exits at once.
 #
 #   powershell -ExecutionPolicy Bypass -File tools\autopilot\relay.ps1 [-DryRun]     (-DryRun: say what would start)
 #
-# The agents run as one chain, a cycle: researcher -> scanner -> orchestrator -> tester -> fidelity, then the next cycle
-# starts with the researcher again (owner 2026-10-18). Inside a cycle the next agent starts the moment the last one ends
-# (this script loops, no gap); between two cycles it waits $CycleBreakMinutes.
+# The mechanical work is scripts, not agents (owner 2026-10-18): tester_step.py starts and collects tester jobs,
+# scanner_step.py runs the scans; the keeper starts both every minute and each has its own lock, so MetaTrader runs
+# never block the agents. This script runs tester_step.py on every tick as well, so a job that ends is collected at
+# once. The tester and scanner agents only run when their script asked for help or a scan passed every gate.
+#
+# The agents run as one chain, a cycle: researcher -> scanner -> orchestrator -> tester -> fidelity, then the next
+# cycle starts with the researcher again. Inside a cycle the next agent starts the moment the last one ends (this
+# script loops, no gap); between two cycles it waits $CycleBreakMinutes.
 # Order on each tick:
 #   1. PAUSE, another agent running, or a usage/rate-limit back-off: nothing.
-#   2. A tester job to start or collect: tester (it goes first, so the tester install is never idle).
-#   3. The next agent at once: the one named in the last HANDOFF line, else the next in the chain.
-#      The tester is skipped when there is no tester work, the fidelity check unless it has not run for a week.
+#   2. tester_step.py; then a tester-help.json: the tester agent. A collected job: the orchestrator judges it
+#      (Sonnet when the script's fixed expect check matched, Opus when it did not).
+#   3. The next agent at once: the one named in the last HANDOFF line, else the next in the chain. Skipped when it
+#      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
+#      has not run for a week, the researcher while 3 or more ideas are untested.
 # No daily caps: usage is bounded by one agent at a time, the hand-over gap and the usage/rate-limit back-off.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
@@ -19,25 +26,26 @@ param([switch]$DryRun)
 $CycleBreakMinutes = 30   # owner 2026-10-18: no gap inside a cycle, a break after it before the next cycle starts
 $Chain = @("researcher", "scanner", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
 
-function Start-Agent([string]$Role, [string]$Why) {
-    if ($DryRun) { Write-Output "would start $Role ($Why)"; return }
-    Write-Log "relay" "start $Role ($Why)"
+function Start-Agent([string]$Role, [string]$Why, [string]$Model = $null) {
+    if ($DryRun) { Write-Output "would start $Role ($Why)$(if ($Model) { " on $Model" })"; return }
+    Write-Log "relay" "start $Role ($Why)$(if ($Model) { " on $Model" })"
     $a = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $PSScriptRoot "run-agent.ps1"), "-Role", $Role)
-    if ($Role -eq "tester") { $a += "-IfWork" }
+    if ($Model) { $a += @("-Model", $Model) }
     & powershell.exe @a
 }
 
-# 3. The next agent in the cycle. A HANDOFF line names it; without one the chain decides. The next agent starts the moment the last ends.
+function Test-Runnable([string]$Role) {
+    switch ($Role) {
+        "tester"     { return (Test-TesterWork) }
+        "scanner"    { return (Test-ScannerWork) }
+        "fidelity"   { return (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) }
+        "researcher" { return ((Get-UnstartedIdeas) -lt 3) }
+        default      { return $true }
+    }
+}
 function Get-LastEnd([string]$Role) {
     $f = Join-Path $LogDir "last-$Role.json"
     if (Test-Path $f) { try { [datetime](Get-Content $f -Raw | ConvertFrom-Json).ended } catch { Get-Date 0 } } else { Get-Date 0 }
-}
-function Test-Runnable([string]$Role) {
-    switch ($Role) {
-        "tester"   { return [bool](Test-TesterWork) }
-        "fidelity" { return (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) }
-        default    { return $true }
-    }
 }
 while ($true) {
     if (Test-Path $Pause) { break }
@@ -49,15 +57,24 @@ while ($true) {
     $now = Get-Date
     if ($r -and $r.backoff_until -and [datetime]$r.backoff_until -gt $now) { break }
 
-    # 2. Tester work in the weekend window.
+    # 2. The tester script: collect a finished job, start the next queued one (fast when idle; its own lock).
+    & python.exe (Join-Path $Repo "tools\autopilot\tester_step.py") 2>&1 | Out-Null
     if (Test-TesterWork) {
-        Start-Agent "tester" "tester job to start or collect"
-        # A collected job is handed to the orchestrator: carry on at once. A job still running: wait for the next tick.
+        Start-Agent "tester" "tester_step.py asked for help"
+        break
+    }
+    $judge = @(Get-ToJudge)
+    if ($judge.Count) {
+        # A collected job is judged at once. The script compared result and expect with a fixed check: a match is
+        # routine (Sonnet confirms and records); anything else is judgment (Opus).
+        $m = if (@($judge | Where-Object { -not $_.match }).Count) { "opus" } else { "sonnet" }
+        Start-Agent "orchestrator" ("judge " + (($judge | ForEach-Object { $_.id }) -join ", ")) $m
         $r2 = try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null }
-        if ($r2 -and $r2.from -eq "tester" -and $r2.next -eq "orchestrator") { continue }
+        if ($r2 -and $r2.from -eq "orchestrator" -and $r2.next -ne "none") { continue }
         break
     }
 
+    # 3. The next agent in the cycle. A HANDOFF line names it; without one the chain decides.
     $next = if ($r -and $r.next -and $r.next -ne "none") { $r.next } else { $null }
     $from = if ($r -and $r.from) { $r.from } else { $null }
     if ($next -and -not (Test-Runnable $next)) {
@@ -67,7 +84,9 @@ while ($true) {
     if (-not $next) {
         # The chain: the agent after the one that ran last, skipping those with nothing to do; past the end, a new cycle.
         $i = [array]::IndexOf($Chain, $from)
-        do { $i++; if ($i -ge $Chain.Count) { $i = 0 } } until (Test-Runnable $Chain[$i])
+        $guard = 0
+        do { $i++; if ($i -ge $Chain.Count) { $i = 0 }; $guard++ } until ((Test-Runnable $Chain[$i]) -or ($guard -gt $Chain.Count))
+        if ($guard -gt $Chain.Count) { break }   # nobody in the chain has anything to do
         $next = $Chain[$i]
     }
     if ($next -eq "researcher") {

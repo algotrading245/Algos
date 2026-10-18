@@ -20,6 +20,27 @@ PAPERS = Path(__file__).resolve().parent.parent / "marketdata" / "papers"
 AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
 
+def _mirrors(url):
+    """Candidate URLs for one paper link: the link itself, then mirrors. arXiv answers from export.arxiv.org when
+    arxiv.org refuses or rate-limits; NBER and SSRN delivery links get a second try with plain browser headers."""
+    urls = [url]
+    if "arxiv.org" in url:
+        urls.append(url.replace("arxiv.org", "export.arxiv.org"))
+        urls.append(re.sub(r"arxiv\.org/(?:abs|pdf)/", "arxiv.org/pdf/", url))
+    return urls
+
+
+def _get(url):
+    req = urllib.request.Request(url, headers={
+        "User-Agent": AGENT,
+        "Accept": "application/pdf,text/html;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": url,
+    })
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return r.read(), r.geturl()
+
+
 def fetch(url):
     if "arxiv.org/abs/" in url:
         url = url.replace("/abs/", "/pdf/")
@@ -27,18 +48,23 @@ def fetch(url):
     path = PAPERS / (name if name.lower().endswith(".pdf") else name + ".pdf")
     if path.exists():
         return path
-    req = urllib.request.Request(url, headers={"User-Agent": AGENT, "Accept": "application/pdf,*/*"})
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            data = r.read()
-    except Exception as e:
-        sys.exit(f"could not fetch {url}: {e}")
-    if not data.startswith(b"%PDF"):
-        sys.exit(f"{url} did not return a PDF ({len(data)} bytes, starts {data[:40]!r}); the paper is not readable here")
-    PAPERS.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(data)
-    print(f"saved {path.relative_to(PAPERS.parent.parent)} ({len(data) // 1024} kB, sha1 {hashlib.sha1(data).hexdigest()[:10]})")
-    return path
+    errors = []
+    for candidate in _mirrors(url):
+        try:
+            data, final = _get(candidate)
+        except Exception as e:
+            errors.append(f"{candidate}: {e}")
+            continue
+        if data.startswith(b"%PDF"):
+            PAPERS.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            print(f"saved {path.relative_to(PAPERS.parent.parent)} ({len(data) // 1024} kB, "
+                  f"sha1 {hashlib.sha1(data).hexdigest()[:10]})"
+                  + (f", via {final}" if final != candidate else ""))
+            return path
+        errors.append(f"{candidate}: not a PDF ({len(data)} bytes, starts {data[:40]!r})")
+    sys.exit("could not fetch " + url + " from any mirror:\n  " + "\n  ".join(errors) +
+             "\nthe paper is not readable here: mark the idea unverified, never guess its content")
 
 
 def pages_text(path):

@@ -1,0 +1,6 @@
+# Ideas the orchestrator has picked up, tested or dropped: one line per idea, "<file> <first words of the ## heading>
+# <date> <outcome>". The relay counts the ideas in docs/ideas/ that are NOT listed here (fallback: their first title
+# words appear in a candidates.json name) and skips the researcher while 3 or more are unstarted. The orchestrator
+# appends a line as soon as it first works on an idea (Edit on docs/ is allowed to it); this file is the record.
+2026-10-17.md 2. Round-number stop 2026-10-18 tested at steps 5-7, rejected (candidate osler_round, new rejected family "Round-number levels")
+2026-10-18.md 1. Volatility window around 2026-10-18 picked up by the orchestrator (in progress; see docs/candidates.json)

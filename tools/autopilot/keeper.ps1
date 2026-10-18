@@ -5,11 +5,23 @@
 #
 # It never closes a terminal. It only starts Terminal 16 (without /config, so it logs in and restores its charts)
 # when that terminal is not running and no hold is set (tools\autopilot\terminal.ps1 -Hold).
+#
+# It also starts the script steps every minute (fire-and-forget, pythonw so no console window; each script has its
+# own lock and exits at once when locked, paused or idle): tester_step.py starts and collects tester jobs without a
+# Claude run, scanner_step.py works through docs/autopilot/scan_requests.json the same way.
 param([int]$Seconds = 60, [switch]$Once)
 . "$PSScriptRoot\common.ps1"
 
 $mutex = New-Object System.Threading.Mutex($false, "Local\AurumKeeper")
 if (-not $mutex.WaitOne(0)) { exit 0 }
+
+function Start-Step([string]$Script) {
+    $py = Get-Command python.exe -ErrorAction SilentlyContinue
+    if (-not $py) { return }
+    $pyw = Join-Path (Split-Path $py.Source) "pythonw.exe"
+    $exe = if (Test-Path $pyw) { $pyw } else { $py.Source }
+    Start-Process -FilePath $exe -ArgumentList "`"$Script`"" -WorkingDirectory $Repo -WindowStyle Hidden
+}
 
 Add-Type -Namespace Aurum -Name Power -MemberDefinition @"
 [DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);
@@ -20,6 +32,10 @@ Write-Log "keeper" "keeper started (pid $PID), sleep blocked"
 
 $lastState = ""
 while ($true) {
+    if (-not (Test-Path $Pause)) {
+        try { Start-Step (Join-Path $Repo "tools\autopilot\tester_step.py") } catch { Write-Log "keeper" "tester_step: $($_.Exception.Message)" }
+        try { Start-Step (Join-Path $Repo "tools\autopilot\scanner_step.py") } catch { Write-Log "keeper" "scanner_step: $($_.Exception.Message)" }
+    }
     try {
         $hold = Get-Hold
         $t = Get-T16

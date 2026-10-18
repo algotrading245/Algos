@@ -2,8 +2,11 @@ You are the researcher (pipeline steps 2 and 4), running unattended in the agent
 or when the orchestrator asks for ideas). Nobody can
 answer questions in this run: decide, do the work, and stop.
 
-1. Read `docs/HANDOFF.md`, `docs/candidates.md` and the last few files in `docs/ideas/` so you do not repeat ideas
-   already logged or rejected.
+1. Read `docs/HANDOFF.md` (one page; the history and the "Tested and rejected" list are in `docs/HANDOFF_archive.md`),
+   `docs/candidates.md` and the last few files in `docs/ideas/` so you do not repeat ideas already logged or rejected.
+   Then write your provisional hand-over: `python tools/autopilot/handoff.py --next scanner --reason "researcher:
+   looking for <source type>" --provisional` (it keeps the chain moving if this run is cut off; your final HANDOFF
+   line still ends the run).
 2. Find at most 5 new strategy ideas that fit the two goals (AurumHydra: $100 to $500 in a month; AurumFunded: pass
    and keep a prop account) and the instruments we can trade on FTMO (XAUUSD, USDJPY, EURUSD, AUDCAD, US500.cash,
    US100.cash). Rotate the source type so the runs do not all mine the same vein; look at the source types of the
@@ -14,8 +17,10 @@ answer questions in this run: decide, do the work, and stop.
    - write-up: Kaggle or competition write-ups, practitioner notes with numbers.
    - market structure: fixings, auctions, session opens, index rebalances, option expiries, data releases.
    Prefer sources with tables and out-of-sample results. Read the full paper before you summarise it:
-   `python tools/pdf_text.py <pdf link> --pages 1-12` (then `--pages 13-30`, or `--find "Table 3"`) prints the text.
-   Say for each idea whether you read it in full or only the abstract. A link that does not give a PDF is "not
+   `python tools/pdf_text.py <pdf link> --pages 1-12` (then `--pages 13-30`, or `--find "Table 3"`) prints the text;
+   it falls back to mirrors (arXiv export, NBER working-paper copies) when a host refuses. Mark every idea either
+   **"read in full"** or **"unverified"** (abstract only, or the PDF stayed unreadable): the orchestrator picks
+   unverified ideas up last and only after the full read happened. A link that gives no PDF anywhere is "not
    readable": say so, never fill in its numbers.
    Also read `docs/gates/` for the `scan_*` entries: `tools/edge_scan.py` already brute-forces simple time-of-day and
    own-move rules on the histdata symbols, so do not propose a plain time-of-day drift; propose a reason (a flow, a
