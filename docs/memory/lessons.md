@@ -31,6 +31,18 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
     2 / 4 / 3 of them were months the model reaches. Tester "ruin 0" hides these stop-outs; judge goal odds against a
     model with margin. Evidence: `research/hydra_goal_202410_compare.py`, `research/hydra_stopout_scan.py`.
     (2026-10-18)
+    - Amended 2026-10-18 (reviewer-checked): a goal model that checks margin must carry the EA's position state. That
+      means held gold lots with the 25% band and the buy-only clip to 50% of free margin, the grid cycle base fixed at
+      its first level from the balance, and the panic exit, with sizes from live equity. Re-sizing size-1 exposures
+      each day hides the build-up. On the 21 months, the re-sized model found 1 / 1 / 2 stop-outs at 3x / 4x / 5x, the
+      position-carrying model 5 / 7 / 7 and the tester 7 / 10 / 9, with 4 / 6 / 6 of them in the same months.
+    - Take margin rates from the broker's symbol specs, not from the account leverage. FTMO's tester charges gold
+      1:50, FX 1:100 and indices 1:50, not 1:500. A fit to all 26 stop-outs lands within 1%, with equity taken after
+      every close at the stop-out second.
+    - That model still reaches the goal far more often than the tester (12 / 10 / 10 against 9 / 4 / 2). It also
+      misses stop-outs where other legs were open (2024.01, 2024.07, 2025.06). Until the other legs' margin and their
+      50% free-margin clip are modelled, do not quote its P(goal) as the EA's odds. Evidence:
+      `research/hydra_goal_margin_model.py` (2026-10-18 run); t5b reports 2024.01 and 2025.06.
 
 ## Strategy and data
 

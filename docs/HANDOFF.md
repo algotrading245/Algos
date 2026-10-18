@@ -284,13 +284,60 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
     in 2 / 4 / 3 of the months the model reaches. Whether the tester would have reached the goal without them is not
     shown. The rest of the gap (for example 2025.07 at 3x, 0.84x against 3.00x, no stop-out) is not explained yet,
     and some months go the other way (2025.02 at 3x: tester 3.00x, model 0.17x). Lesson 19 (reviewer-checked).
-  - **Next (no tester time, nothing tuned on these 21 months):** (1) quant-coder: add margin and stop-out to the goal
-    model. That needs each day's intraday worst point for XAUUSD and AUDCAD (M1/M15 histdata) and the margin per lot
-    from the tester's symbol specs, plus month-start rounds 2010 to 2025.09 at 3x/4x/5x, giving P(goal) and
-    P(stop-out). (2) Then a candidate EA change derived from that history: a margin-aware cap on the goal size or the
-    hold, so that a high-percentile intraday move cannot reach the stop-out level. It goes through the reviewer, and
-    the tester runs the same 21 months as a check only. (3) Fidelity: the tester runs at Leverage=500. Check the
-    demo account's leverage and symbol margin rates against it, without writing down any account detail.
+  - Step (1) of the old "Next" is done: see the next item.
+- **Goal model with margin and stop-out (orchestrator, 2026-10-18 13:45): the margin rates and the hold/grid
+  mechanics pass review. The P(goal) figures do not yet (reviewer REDO on parts 3b/3c): the other legs' margin and
+  their free-margin clip are still missing, so the model is too optimistic.** Script:
+  `research/hydra_goal_margin_model.py` (quant-coder, three rounds). Lesson 19 amended.
+  - Margin rates, fitted on the 26 tester stop-outs (equity = balance at the stop-out second; every open leg's
+    notional): gold 0.0202 of notional (1:49), FX 0.0100 (1:100), other 0.0199 (1:50). Every row fits within 1%,
+    which points to fixed broker constants of about 1:50 on metal and 1:100 on FX, not the account's 1:500 (at 1:500
+    the median level at those stop-outs would be 372%). The FTMO demo's own rates are still unchecked (step 3 below).
+  - The model's state copies the EA: hold lots carry across days with the 25% band and the buy-only 50% free-margin
+    clip; the grid's cycle base is fixed at its first level, from the balance; sizes come from live equity; panic exit
+    at 6 steps; the hourly extreme comes from M1 high/low. A stop-out closes everything at a 50% level. Hours 23 and 0
+    have no bar (lesson 9), so a move in them lands in the next bar. With margin switched off it matches
+    `one_round()` exactly (63 rounds, difference 0).
+  - 21 tester months, preset, edge 1.0, tester / model:
+
+    | goal | goal reached | stop-outs | months where stop-out agrees (both stopped) |
+    |---|---|---|---|
+    | 3x | 9 / 12 | 7 / 5 | 17 (4) of 21 |
+    | 4x | 4 / 10 | 10 / 7 | 16 (6) |
+    | 5x | 2 / 10 | 9 / 7 | 17 (6) |
+
+    The model still misses 2024.01 (the tester stops on 01-08 or 01-17; the model reaches every goal), 2024.10 at 3x,
+    and 2024.07 at 4x. It stops 2025.08 at 4x/5x on 08-11, which the tester does not. In 2024.01, 2024.07 and
+    2025.06 other legs were open at the tester's stop-out (2024.01: an EURUSD leg opened at 13:30, stop-out at 13:31,
+    level about 58% without it). The stop-outs fall in the same months more often than chance would give (reviewer:
+    p ≈ 0.01-0.025).
+  - Month-start rounds 2010-06 to 2025.09 (184 months), preset (23 days, cap 50), edge 1.0, P(goal) without
+    margin → with hold/grid margin, and P(stop-out): 3x 55.4% → 48.4%, 25.0%; 4x 46.7% → 42.9%, 29.3%; 5x 43.5% →
+    40.8%, 30.4%. These are **upper bounds on P(goal) and lower bounds on P(stop-out), not the EA's odds**, for two
+    reasons:
+    - The model books the other legs at full size. The EA clips each of their orders to 50% of free margin
+      (`Legs.mqh:417, 625, 1749, 1932`), and at FX 1:100 that bites below about 250% level, which is about the median
+      day.
+    - Their margin is only a constant 0.001 × equity × size in the stop-out check (EA+OM), which is why EA+OM barely
+      differs from EA-like.
+  - Part 3c (margin room) is not usable yet, so it is not quoted.
+    - Its fixed-size stop-out ladder counts a round that ends in ruin as "not stopped".
+    - Its "share of days below 100%" counts only the days with hold or grid margin open.
+    - Without the other legs, its sizes are upper limits. No size cap may be derived from it.
+  - The month-end boost (InpMonthEndBoost 2.0) and server hours 23 and 0 are not modelled. None of the tester's
+    stop-outs falls in those hours.
+  - **Next (no tester time, nothing tuned on the 21 tester months):**
+    1. quant-coder, round 4 of the same script:
+       - (a) give each other leg its own notional and entry hour from the EA inputs and schedules, clip its order to
+         50% of the free margin at that hour, and carry its margin through its open hours in the stop-out check;
+       - (b) in 3c, count ruin as a hit or report it apart, and word the day share correctly;
+       - (c) split the goal-reach gap month by month: the tester's realised other-leg P&L by symbol/magic against the
+         model's, to separate the margin clip from leg fidelity (lesson 7);
+       - then rerun 3a/3b/3c and get the reviewer's check.
+    2. Only after that, a margin-aware size cap derived from the 2010-2025.09 history: reviewer, new inputs off by
+       default, and the tester on the 21 months as a check only.
+    3. Fidelity: check the FTMO demo's symbol margin for XAUUSD and AUDCAD against the fitted 1:50 / 1:100, without
+       writing down any account detail.
 - **Tester question (2026-10-18 09:53), answered by the orchestrator.**
   - The question: "Re-judge j11b: its 9 of 21 at 3x is a round-field count; the multiples give 3 of 21."
   - The answer is no; the judgement stands. The tester counted a strict `multiple >= 3.0`, which drops j11b's 2.999x
