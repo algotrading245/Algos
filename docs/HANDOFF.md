@@ -215,6 +215,21 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
   too large for 2025-26 gold (22-48% volatility). A smaller goal size, or a hold that does not enter at the round's
   start in high volatility, would be a new idea: it goes through the gates on the Python model from 2010, not a
   setting picked on j8/j9.
+- **j10b judged (orchestrator, 2026-10-18 06:27): 2 of 21 at 5x on 2024.01-2025.09; the 40% yardstick was wrong.**
+  The judgement is in the `Judgement` section of `backtests/2026-10-18_0401_AurumHydra_t5b_months/summary.md`; the
+  evidence is `research/hydra_t5b_months_model.py`.
+  - Today's `tools/target_odds.py` (5x target, scale 2.5) gives P(5x) 17% at edge 0.7 and 25% at edge 1.0.
+    Month-start rounds give 11% / 20%. The 40% in the expect matches P(3x) at the 3x target.
+  - On the same 21 months the model gave 5 (edge 0.7) to 9 (edge 1.0) months at 5x, with 14-24% ruin. The tester
+    gave 2 with no ruin and a lowest month of 0.36x. Log correlation 0.57; the tester keeps 0.60 of the model's log
+    growth, below lesson 4's band.
+  - The tester's spread is narrower than the model's, and the cause is not measured. Candidates are the spread cap,
+    intraday stops and the boost.
+  - 2024 gave 1 of 12, so 2025-26 gold volatility is not the whole cause.
+  - Lesson 7 is revised (reviewer confirmed the numbers). Nothing tuned. The 5x EA stays a research result: about 1
+    month in 10 at 5x and a quarter of months below 0.5x.
+  - Open, no tester time: a daily-equity comparison of tester and model on 2024.10 and 2025.07, the largest misses,
+    to find where the tester's size departs from `GoalSize()`.
 - **Demo note (revised 2026-10-18): AurumFunded has the same `InpGoldMaxSpread = 0.30`** (`AurumFunded.mq5:246`).
   The tester runs on FTMO's ticks with the same cap, so j3's figures already include the days it blocks, and demo and
   tester should agree. No EA change is proposed any more (j9 above). The monitor/fidelity agent should still check

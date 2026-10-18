@@ -27,9 +27,14 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
 
 ## Strategy and data
 
-7. **The 5x goal mode reached 5x in 1 of 21 tester months, against the model's ~40-47%.** The gold hold, sized at the
-   round's start, is too large for 2025-26 gold volatility (22-48%). A fix is a new idea through the gates on data from
-   2010, never a setting picked on tester months. Evidence: j8a-c, j9. (2026-10-18)
+7. **The 5x goal mode reaches 5x in 1-2 of 21 tester months; judge it against 11-25%, not ~40-47%.** j8 gave 1/21
+   (2025.01-2026.09), j10b 2/21 (2024.01-2025.09). `tools/target_odds.py` gives P(5x) 17% at edge 0.7 and 25% at
+   edge 1.0 (5x target, scale 2.5, every weekday a round); month-start rounds give 11% / 20%. The old 40% matched P(3x)
+   at the 3x target and 47% the goal-mode preset. On j10b's own months the model with target_odds' settings gave 5-9
+   of 21 at 5x with 14-24% ruin; the tester gave 2 with no ruin (lowest 0.36x). The cause of that gap is not
+   measured. 2024 also gave only 1 of 12, so 2025-26 gold volatility is not the whole cause, though j9's gold-hold
+   evidence stands. A fix is a new idea through the gates on data from 2010, never a setting picked on tester months.
+   Evidence: j8a-c, j9, j10b, `research/hydra_t5b_months_model.py`. (2026-10-18)
 8. **The gold spread cap (`InpGoldMaxSpread` 0.30) works as an unplanned volatility filter; lifting it made the months
    worse.** Evidence: j9 (0.34x / 0.49x / 0.57x against 1.33x / 0.91x / 0.72x). (2026-10-18)
 9. **Leave the rollover (server 23:00-01:00) out of intraday tests.** Histdata's bid quotes spike and snap back there,
