@@ -21,6 +21,14 @@ Step 2, ideas:
    (it falls back to mirrors when a host refuses); mark every idea "read in full" or "unverified" — the orchestrator
    picks unverified ideas up last and only after the full read. Time-of-day drifts are already brute-forced by
    `tools/edge_scan.py`, so bring a reason, not a time slot.
+   New angles (owner 2026-10-19, after several runs with no idea): when a run finds nothing, do not repeat the same
+   searches. Work one angle per run, in this order, and name it in the ideas file: (a) hedges for the gold legs: a
+   leg that earns when gold falls or ranges (rates, USD, real-yield, ETF-flow and central-bank-buying announcements);
+   (b) event drift on the legs' own days (FOMC, NFP, CPI, auctions, option expiry) with an economic reason;
+   (c) other liquid FTMO symbols not yet tested (silver, oil, DAX/US100 opens, BTC weekends) as a cross-asset copy of
+   an edge already confirmed on gold; (d) volatility and regime filters that cut the Hydra stop-outs, not new legs;
+   (e) practitioner sources: MQL5 CodeBase and forum post-mortems, QuantConnect and Quantpedia write-ups, working
+   papers from BIS, ECB and Fed staff. Say "no new idea" with the angle tried rather than inventing one.
 3. For each idea give: title, authors and year, link, the rule in one paragraph, instruments, holding time, the
    paper's reported Sharpe and costs, and why it might be uncorrelated with the Hydra legs.
 4. At most 5 ideas per request. Write them to `docs/ideas/<yyyy-mm-dd>.md`. The orchestrator picks; you do not.
