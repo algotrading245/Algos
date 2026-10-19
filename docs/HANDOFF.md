@@ -104,7 +104,11 @@ each finished piece of work.
   COT data. Dropped 2026-10-19, the last two unverified ideas: 2026-10-17/3 (S&P futures pinning, Golez and Jackwerth)
   at step 4 after a full read, because the pinning shows only in the SP futures settlement and not in the cash index
   or SPY, sits within ±0.25 of the strike and gives about 8 events a year with no return; and 2026-10-17/1
-  (Krohn-Vala auctions) unreadable (SSRN 403, no copy). **No unstarted idea is left**: the researcher's turn.
+  (Krohn-Vala auctions) unreadable (SSRN 403, no copy). Dropped 2026-10-19 at step 4 after a full read: run 4's
+  2026-10-19/1 (yen intervention days, Chen-Watanabe-Yabu IFD WP73). It measures impact only; the move is done
+  within the intervention hour and then flat for 12 hours (Fig. 4), the hours are imputed (12 of 29 on the Swiss
+  test), and there is no timestamped record and about a dozen days since 2004. **No unstarted idea is left**: the
+  researcher's turn.
   `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
