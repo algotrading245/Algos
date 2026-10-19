@@ -101,10 +101,11 @@ each finished piece of work.
 - **Research pipeline:** simple-rule scans on the histdata symbols are exhausted (all four `edge_scan.py` families
   run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
   into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels and China releases and AUD
-  (`china_release_aud`, net -0.017 R a trade from 2018 at 1.1 bp) rejected at step 7; seven more ideas were dropped
+  (`china_release_aud`, net -0.017 R a trade from 2018 at 1.1 bp) rejected at step 7; eight more ideas were dropped
   at step 4 on 2026-10-19 (paper read in full or unreadable, 0 trials). All of them are in the archive's "Tested and
-  rejected" and "Dropped before any test" lists. **No unstarted idea is left**: the researcher's turn (7 researcher
-  runs on 2026-10-19 found 3 ideas, all dropped). Do not re-propose carry or other slow cross-section FX books.
+  rejected" and "Dropped before any test" lists. **No unstarted idea is left**: the researcher's turn (researcher
+  runs 1-9 on 2026-10-19 found 4 ideas, all dropped; the last, run 9's leveraged-ETF close flow, at 10:06). Do not
+  re-propose carry or other slow cross-section FX books, or close-flow ideas on the index (see archive).
   `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner

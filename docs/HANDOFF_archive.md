@@ -701,7 +701,12 @@ IFD WP73: impact only, the move is done within the intervention hour then flat 1
 (12 of 29 on the Swiss test), no timestamped record, about a dozen days since 2004); FX carry with crash risk
 (2026-10-19 run 6 /1, Brunnermeier, Nagel, Pedersen NBER w14473: descriptive, no costs or swaps, 1986-2006, gross
 Sharpe 0.6-0.8 needs 8 currencies, FTMO allows a k=1 slow book, losses load on VIX like the index legs, no rate data;
-do not re-propose carry or other slow cross-section FX books). Each one's reasons are in `docs/memory/decisions.jsonl`.
+do not re-propose carry or other slow cross-section FX books); leveraged-ETF rebalancing at the US close (2026-10-19
+run 9 /1, Barbon, Beckmeyer, Buraschi, Moerke SFI WP 22-40, 63 pages: single stocks 2012-2019 with date fixed
+effects, so no index-level result; the index's own last half hour lost 1.39%/yr, Sharpe -0.43 (Table 6); the LETF
+long-short is net Sharpe 0.05 at 25% of the spread; impact falls on large flows (Table 5) and fades by 2019 (Fig. 5),
+reversed by 10:00 next day (Table 4); AUM data is paid (ETFGlobal); without it the rule is the rejected big-move
+last-hour family). Each one's reasons are in `docs/memory/decisions.jsonl`.
 
 ## Cloud sessions
 
