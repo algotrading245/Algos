@@ -81,7 +81,8 @@ each finished piece of work.
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
   tester time: j12-vs-j3 deal lists on the three extra day-stop days; j14's floating-stop days to price the 1.7%
   stop; the EA never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
-- **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached.** AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
+- **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
+  line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
   at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
   in the saved charts. The keeper then restarted the terminal plain at 01:24 (it was a stale copy started before the
   attach branch existed), and the terminal has stayed open with no EA. So there are no demo trades, and the clean
@@ -94,31 +95,11 @@ each finished piece of work.
   scan_cal_wed_EURUSD_s25_L2_short rejected 2026-10-18 (gates.py failed 2026-10-17). Judgements live in each `backtests/<folder>/summary.md`.
 - **Research pipeline:** simple-rule scans on the histdata symbols are exhausted (all four `edge_scan.py` families
   run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
-  into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels rejected at steps 5-7 (new rejected
-  family). **China releases and AUD (`china_release_aud`, idea 2026-10-18/1) REJECTED at step 7, 2026-10-19, run 2:**
-  RBA Bulletin Dec 2016 read in full. `research/china_release_aud.py` + `.out.txt` used the researcher's NBS
-  calendar `marketdata/china_calendar_nbs.csv` (GDP, activity, CPI 2015-2025.09; no trade data, no 2010-14), 220
-  events. The paper's extra move replicates for GDP and activity, not CPI. The breakout rule was fixed before the
-  run: 10-min pre-range, stop at the other side, flat at +60. On AUDUSD at 1.1 bp it nets +0.099 / -0.017 R a trade,
-  Sharpe +0.30 / -0.06, and event minus control has 90% CIs that span 0. AUDCAD loses. So the volatility is real, but
-  a breakout earns less than the spread. 2 trials logged. Dropped unstarted
-  2026-10-19: 2026-10-18/2 (S&P rebalance close, ~64 events) and 2026-10-17/4 (expiry-week drift, summary only).
-  Dropped 2026-10-19 at step 4 after reading the paper in full: 2026-10-19/1 (speculative pressure, Fan et al. 2020).
-  Its Table 3 shows no alpha beyond momentum and carry. It is a monthly book of 11-43 contracts per class, against
-  about 6 on FTMO, so it falls in the slow family. The currency premium faded after 2008 (Table 10), and there is no
-  COT data. Dropped 2026-10-19, the last two unverified ideas: 2026-10-17/3 (S&P futures pinning, Golez and Jackwerth)
-  at step 4 after a full read, because the pinning shows only in the SP futures settlement and not in the cash index
-  or SPY, sits within ±0.25 of the strike and gives about 8 events a year with no return; and 2026-10-17/1
-  (Krohn-Vala auctions) unreadable (SSRN 403, no copy). Dropped 2026-10-19 at step 4 after a full read: run 4's
-  2026-10-19/1 (yen intervention days, Chen-Watanabe-Yabu IFD WP73). It measures impact only; the move is done
-  within the intervention hour and then flat for 12 hours (Fig. 4), the hours are imputed (12 of 29 on the Swiss
-  test), and there is no timestamped record and about a dozen days since 2004. Dropped 2026-10-19 at step 4 after a
-  full read: run 6's 2026-10-19/1 (FX carry with crash risk, Brunnermeier-Nagel-Pedersen NBER w14473). The paper
-  describes the effect and does not test a rule: no costs or swaps, and the sample is 1986-2006 only. Its gross
-  Sharpe of 0.6-0.8 (Table 2) needs 8 currencies, and FTMO allows a k=1 weekly or quarterly book (slow family).
-  Carry losses load on VIX moves (Tables 5 and 7), the same risk-off days as the index legs, and the repo has no rate
-  data. **No unstarted idea is left**: the researcher's turn. Do not re-propose carry or other slow cross-section
-  FX books.
+  into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels and China releases and AUD
+  (`china_release_aud`, net -0.017 R a trade from 2018 at 1.1 bp) rejected at step 7; seven more ideas were dropped
+  at step 4 on 2026-10-19 (paper read in full or unreadable, 0 trials). All of them are in the archive's "Tested and
+  rejected" and "Dropped before any test" lists. **No unstarted idea is left**: the researcher's turn (7 researcher
+  runs on 2026-10-19 found 3 ideas, all dropped). Do not re-propose carry or other slow cross-section FX books.
   `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
