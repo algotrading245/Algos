@@ -74,9 +74,10 @@ each finished piece of work.
   (binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0), so no sweep ran and there were 0 new trials. Reviewer
   PASS WITH CHANGES: the result is real. The goal preset fits only through the 50% clip (legs alone 0.128 margin per
   unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
-- **Next pipeline work (no tester time):** researcher: new ideas with a reason (lesson 10); no unstarted idea
-  is left. NSXUSD M1 is now in `marketdata/histdata` (2010-11 to 2025-10, fetched 2026-10-19), so the noise
-  leg's P&L in the goal model can be redone from data (the round-5 REDO item). Fidelity: the demo account's own
+- **Next pipeline work (no tester time):** none is waiting on an agent. Researcher runs 10-16 on 2026-10-19 found
+  no idea (7 in a row), so more researcher runs today are unlikely to help (proposed tools change (5)). The noise
+  path from SPXUSD/NSXUSD M1 is already in the goal model (`research/hydra_leverage_sens.py`, the round-5 REDO
+  item's noise part). Fidelity: the demo account's own
   leverage (and XAUUSD margin rate, about 2). This is now the deciding check for j12-j14: the tester install ran
   them at 1:100 (gold 1:50) and Terminal 16 ran j3 at 1:33 (gold 1:16.5). Also the first demo week from 2026-10-19.
   **Leverage log line (2026-10-19, AurumFunded 1.05 / AurumHydra 1.35, reviewer PASS WITH CHANGES, compile 0/0):**
@@ -119,7 +120,7 @@ each finished piece of work.
   Compile re-checked 0/0 and the decision logged at 14:15 (the 14:25 run's `memory.py decide` was refused; long
   `decide` and `git commit -m` commands are refused even without ";", short ones go through, so keep them short). Prop
   routes and presets: see archive.
-- **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
+- **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51 and 14:55: today's journal has no Experts
   line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
   at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
   in the saved charts. The keeper then restarted the terminal plain at 01:24 (it was a stale copy started before the
@@ -136,8 +137,8 @@ each finished piece of work.
   into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels and China releases and AUD
   (`china_release_aud`, net -0.017 R a trade from 2018 at 1.1 bp) rejected at step 7; eight more ideas were dropped
   at step 4 on 2026-10-19 (paper read in full or unreadable, 0 trials). All of them are in the archive's "Tested and
-  rejected" and "Dropped before any test" lists. **No unstarted idea is left**: the researcher's turn (researcher
-  runs 1-9 on 2026-10-19 found 4 ideas, all dropped; the last, run 9's leveraged-ETF close flow, at 10:06). Do not
+  rejected" and "Dropped before any test" lists. **No unstarted idea is left** (researcher runs 1-16 on 2026-10-19
+  found 4 ideas, all dropped; the last, run 9's leveraged-ETF close flow, at 10:06; runs 10-16 found none). Do not
   re-propose carry or other slow cross-section FX books, or close-flow ideas on the index (see archive).
   `pdf_text.py` retries mirrors before marking a paper unreadable.
 
@@ -163,6 +164,13 @@ each finished piece of work.
   log's "initial deposit X USD, leverage 1:n" line and fail the job if n differs from the job's `leverage`.
   `tester_step.py:300,342` should report the logged leverage, not the requested one. Until that is done, the
   leverage of every run is whatever the terminal has saved: Terminal 16 1:33, tester install 1:100.
+  (5) `relay.ps1` `Test-Runnable` (lines 46-53): the researcher runs whenever fewer than 3 ideas are unstarted, and
+  the orchestrator always runs (`default { $true }`). On 2026-10-19 that gave 16 researcher runs (runs 10-16 in a
+  row found no idea, `docs/ideas/2026-10-19.md`), each followed by an orchestrator run with no pipeline work
+  (`docs/autopilot/runs.md` 10:57-15:00). Proposal: skip the researcher after 3 runs in a row that logged no new
+  idea, until 24 h have passed or the orchestrator hands to it with a named route or data set. Run the orchestrator
+  only when it has work: `to-judge.json`, a new demo ALERT, a new idea, a candidate at steps 5-14, a pending
+  `kind: lesson` or `question` line, or 6 h since its last run.
 
 - Prop-firm facts: FundedNext Stellar Instant consistency rule; Instant Funding PRO account-drawdown % and EA
   policy; FTMO 1-Step maximum loss (details in the archive).
