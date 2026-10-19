@@ -77,9 +77,10 @@ each finished piece of work.
 - **Next pipeline work (no tester time):** none is waiting on an agent. Researcher runs 10-16 on 2026-10-19 found
   no idea (7 in a row), so more researcher runs today are unlikely to help (proposed tools change (5)). The noise
   path from SPXUSD/NSXUSD M1 is already in the goal model (`research/hydra_leverage_sens.py`, the round-5 REDO
-  item's noise part). Fidelity: the demo account's own
-  leverage (and XAUUSD margin rate, about 2). This is now the deciding check for j12-j14: the tester install ran
-  them at 1:100 (gold 1:50) and Terminal 16 ran j3 at 1:33 (gold 1:16.5). Also the first demo week from 2026-10-19.
+  item's noise part). Fidelity: the demo account's own leverage was read on 2026-10-19 at 14:54: 1:100, gold
+  1:50, the tester install's setting, so j12-j14 stand and j3 does not. Next is the first demo week. Orchestrator: make
+  the library count retcode DONE with an order ticket as a fill (the deal-0 test, 7 legs, `Legs.mqh:1630` etc.),
+  with the reviewer and a compile. The demo keeps 1.06 until the owner copies a new build.
   **Leverage log line (2026-10-19, AurumFunded 1.05 / AurumHydra 1.35, reviewer PASS WITH CHANGES, compile 0/0):**
   once a server day each EA prints "account leverage 1:n, margin of 1 lot in <currency>, XAUUSD m at p, ..." (gold,
   USDJPY, EURUSD, grid symbol, stock index; "n/a" for a symbol not in use). Logging only, no trading change. Fidelity
@@ -105,8 +106,8 @@ each finished piece of work.
   2026-10-19** (`research/funded_j12_j3_daystops.py` + `.out.txt`): j12's 3 extra day stops are its XAUUSD bell at
   2-2.9x j3's lots. The cause is the test leverage, not the library: j3 ran on Terminal 16 at 1:33 (gold about
   1:16.5), and j12-j14 (and Hydra t3b-t5b) ran on the tester install at 1:100 (gold about 1:50), though every one
-  of these jobs asked for 33. So the j12-j14 figures hold only if the demo account runs at 1:100; fidelity's
-  leverage check decides that (lesson 19, corrected 2026-10-19). **j14's 1.7% floating stop priced 2026-10-19** (`research/funded_j14_floatstops.py` +
+  of these jobs asked for 33. The FTMO demo account runs at 1:100 with gold at 1:50
+  (EA log 2026-10-19 14:54), so the j12-j14 figures hold for it (lesson 19, corrected 2026-10-19). **j14's 1.7% floating stop priced 2026-10-19** (`research/funded_j14_floatstops.py` +
   `.out.txt`, closed baskets held on histdata to server 00:00): outside rollover (9 of 13 stops) it saved 7.06% and
   8 of 9 held baskets would have crossed the firm's assumed -2%; a 1.8 / 1.9 stop would have avoided 0 / 1 of 9. So
   1.7 stays. The other 4 stops are the XAUUSD 23:00 bell at 0.72-1.22 lots (5-20x the intraday gold legs), stopped
@@ -120,15 +121,17 @@ each finished piece of work.
   Compile re-checked 0/0 and the decision logged at 14:15 (the 14:25 run's `memory.py decide` was refused; long
   `decide` and `git commit -m` commands are refused even without ";", short ones go through, so keep them short). Prop
   routes and presets: see archive.
-- **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51 and 14:55: today's journal has no Experts
-  line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
-  at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
-  in the saved charts. The keeper then restarted the terminal plain at 01:24 (it was a stale copy started before the
-  attach branch existed), and the terminal has stayed open with no EA. So there are no demo trades, and the clean
-  demo test has not started. Details are in `docs/demo_log.md` 2026-10-19. Fidelity has nothing to compare until the
-  owner re-attaches the EA (approvals a4). The monitor reports in `docs/demo_log.md`; fidelity pairs demo fills with
-  a tester run weekly.
-  Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap).
+- **Demo (step 17): running since 2026-10-19 14:54.** The terminal was restarted from `t16_attach.ini`, and AurumFunded
+  1.06 is loaded with `AurumFunded_FTMO_phase1_legs.set` (the morning ALERT, EA not attached since 10-17 04:57, is over).
+  **The demo account is 1:100 with gold at 1:50**, the same as the tester install, so j12-j14 are the demo's
+  reference and j3 (1:33) is not. That settles the fidelity leverage question. The **account currency is EUR**
+  (the tester deposits USD), so compare in %. First fill: a breakout buy of 0.01 USDJPY at 158.365. demo_check's ALERT
+  on it is false: retcode 10009 is DONE, but the EA treats deal 0 as a failure (`Legs.mqh:1630`; FTMO's market
+  execution reports the deal moments later). That fill is also a late-attach entry 22 pips past the range high, a
+  restart artefact. Details are in `docs/demo_log.md` 2026-10-19 15:30. The monitor reports in `docs/demo_log.md`;
+  fidelity pairs demo fills with a tester run weekly.
+  Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap). Any "order
+  failed, retcode 10009" line is a fill, not a failure. Check that no leg sent a repeat order.
 - **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the size cap
   closed without a tester job. Scan candidates scan_slot_EURUSD_s25_L4_short, s21_L8_short and
   scan_cal_wed_EURUSD_s25_L2_short rejected 2026-10-18 (gates.py failed 2026-10-17). Judgements live in each `backtests/<folder>/summary.md`.
@@ -144,7 +147,9 @@ each finished piece of work.
 
 ## Waiting on the owner
 
-- **Urgent (a4): re-attach the demo EA.** On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.06 (the
+- **(a4) Done in effect on 2026-10-19 at 14:54**: the terminal restarted from `t16_attach.ini` with AurumFunded 1.06
+  loaded (`docs/demo_log.md`). The owner may close a4. The instructions below are kept for a later re-attach.
+  Re-attach the demo EA: On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.06 (the
   current build in the repo; copy `AurumFunded.ex5` into the terminal's Experts folder first) with
   `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
   loaded successfully" and that the EA log has its "phase 1 started" line and, on the first tick, the "account
@@ -171,6 +176,9 @@ each finished piece of work.
   idea, until 24 h have passed or the orchestrator hands to it with a named route or data set. Run the orchestrator
   only when it has work: `to-judge.json`, a new demo ALERT, a new idea, a candidate at steps 5-14, a pending
   `kind: lesson` or `question` line, or 6 h since its last run.
+  (6) `demo_check.py`: an "order ... failed, retcode 10009" line is a fill (TRADE_RETCODE_DONE with deal 0 on
+  FTMO's market execution), not a failure. Count it as a fill. Instead, raise an ALERT when one leg sends two orders
+  on the same symbol within a minute (a repeat).
 
 - Prop-firm facts: FundedNext Stellar Instant consistency rule; Instant Funding PRO account-drawdown % and EA
   policy; FTMO 1-Step maximum loss (details in the archive).

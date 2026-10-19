@@ -23,4 +23,32 @@
   keeper.ps1, so it ran the old code. The attach check also runs only while Terminal 16 is closed, so a terminal
   that stays open without the EA is never caught.
 
+## 2026-10-19 (Monday), 15:30 update: demo EA attached; demo_check ALERT is a false alarm
+
+- Found by the orchestrator at 15:30 local. At 14:53:44 Terminal 16 was shut down and restarted at 14:53:59 from
+  `tools/autopilot/t16_attach.ini`. At 14:54:09 the journal says "16 inputs read from ... AurumFunded_FTMO_phase1_legs.set"
+  and "expert AurumFunded (XAUUSD,M15) loaded successfully". The EA log prints the 1.06 firm-day line, so the build
+  is 1.06. The clean demo test runs from 14:54 today.
+- **Leverage and margin (the open fidelity question):** "account leverage 1:100, margin of 1 lot in EUR, XAUUSD
+  7417.67 at 4162.76, USDJPY 890.96 at 158.365, EURUSD 1000.00 at 1.12241, AUDCAD 622.02 at 0.9839, US500.cash
+  137.11 at 7694.45". At EURUSD 1.12241 that is gold 1:50.0, USDJPY 1:100.0, EURUSD 1:100, US500.cash 1:50.0 (at
+  contract size 1). That is the tester install's setting (1:100, gold 1:50), so j12-j14 are the right reference for
+  the demo, and j3 (Terminal 16 tester at 1:33, gold 1:16.5) is not.
+- **Account currency is EUR**, while the tester jobs use a deposit of 10000 USD. The firm's limits are in EUR: "firm day
+  2026.10.19, day start 10000.00, day stop at 9700.00, final stop at 9150.00 (static)". Compare demo and tester in %
+  of the balance, not in currency. The P&L of USD-quoted symbols carries the EURUSD move.
+- **Trades:** 1 order, 1 deal: a breakout market buy of 0.01 USDJPY with sl 157.700, "done in 180.438 ms". The deal
+  filled at 158.365 three ms after the order result. Range 157.700-158.143 (0.73x its 60-day average).
+- **The ALERT is false.** demo_check reported "breakout order on USDJPY failed, retcode 10009 (done at 0.000)".
+  10009 is TRADE_RETCODE_DONE. The EA judges `!ok || g_trade.ResultDeal()==0` (`Legs.mqh:1630`), and FTMO's market
+  execution returns the order with deal 0; the deal comes moments later. So the fill was logged as a failure and
+  its "broke its range, bought" line is missing. No duplicate: on the next tick `HeldLots` (`Legs.mqh:1605`) sees the
+  position. The same deal-0 test is on the grid (915), fix (1156), stock-fall (1258), Tokyo-morning (1375),
+  after-holiday (1513) and noise (1843) legs. Their next-tick guards (HeldLots / TradedSince, the grid's level
+  count) stop a repeat unless a tick arrives before the position shows. The demo has no repeat order so far.
+- **Late-attach entry:** the leg bought on the first tick after the attach, 22 pips above the range high, because
+  the break had happened before 14:54 and nothing limits how late the entry may come. The tester would have bought
+  at the break, nearer 158.143. Fidelity should flag today's breakout fill as a restart artefact, not a model gap.
+  Any mid-session restart by the keeper can cause the same thing.
+
 
