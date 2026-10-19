@@ -81,8 +81,13 @@ each finished piece of work.
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
   tester time: j12-vs-j3 deal lists on the three extra day-stop days; j14's floating-stop days to price the 1.7%
   stop; the EA never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
-- **Demo (step 17):** AurumFunded 1.03 with both legs on, FTMO demo, attached 2026-10-17; first trades when gold
-  opens Monday. The monitor reports in `docs/demo_log.md`; fidelity pairs demo fills with a tester run weekly.
+- **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached.** AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
+  at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
+  in the saved charts. The keeper then restarted the terminal plain at 01:24 (it was a stale copy started before the
+  attach branch existed), and the terminal has stayed open with no EA. So there are no demo trades, and the clean
+  demo test has not started. Details are in `docs/demo_log.md` 2026-10-19. Fidelity has nothing to compare until the
+  owner re-attaches the EA (approvals a4). The monitor reports in `docs/demo_log.md`; fidelity pairs demo fills with
+  a tester run weekly.
   Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap).
 - **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the size cap
   closed without a tester job. Scan candidates scan_slot_EURUSD_s25_L4_short, s21_L8_short and
@@ -112,6 +117,20 @@ each finished piece of work.
   `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
+
+- **Urgent (a4): re-attach the demo EA.** On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.03 with
+  `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
+  loaded successfully" and that the EA log has its "phase 1 started" line. Then save the profile, or close the
+  terminal once so the chart files are written. Agents may not attach an EA.
+- **Proposed tools/ changes (agents may not edit tools/):**
+  (1) `keeper.ps1`: while Terminal 16 is running, look at the journal after its latest start for "expert
+  AurumFunded ... loaded successfully" not followed by "removed". If that line is missing for more than 10 min, log
+  an ALERT, or restart the terminal with `t16_attach.ini`. Today `Test-DemoEA` is checked only while the terminal
+  is closed.
+  (2) The keeper should restart itself when `keeper.ps1` or `common.ps1` is newer than its own start. The copy that
+  ran at 01:24 on 10-18 was the 10-17 process running old code.
+  (3) `demo_check.py`: raise an ALERT when a weekday has 0 EA lines, or when the journal's last Experts line for
+  AurumFunded is "removed". Today it printed "ok" for a day with no EA.
 
 - Prop-firm facts: FundedNext Stellar Instant consistency rule; Instant Funding PRO account-drawdown % and EA
   policy; FTMO 1-Step maximum loss (details in the archive).

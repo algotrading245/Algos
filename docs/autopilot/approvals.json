@@ -23,6 +23,12 @@
       "approved": "2026-10-17",
       "note": "Owner approved in chat on 2026-10-17: turn both legs on in the FTMO demo's AurumFunded. Agents still may not change the terminal's EA; the owner applies the inputs or asks the owner session to. Applied 2026-10-17 by the owner session at the owner's request: preset mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_legs.set (phase1 plus the two inputs) is in Terminal 16's Presets, and the keeper now starts Terminal 16 with tools/autopilot/t16_attach.ini (XAUUSD M15, AurumFunded, that preset) whenever no saved chart has AurumFunded. Found on the way: the EA had been off every chart since 04:57 (the tester hold's close dropped it), so the demo made no entries since then. Takes effect at the terminal's next start after the hold; check the journal for 16 inputs read from ...phase1_legs.set.",
       "applied": "2026-10-17"
+    },
+    {
+      "id": "a4",
+      "what": "Re-attach the FTMO demo EA: on Terminal 16 attach AurumFunded 1.03 with AurumFunded_FTMO_phase1_legs.set to XAUUSD M15 (Algo Trading on), check that the journal shows 'loaded successfully' and the EA log shows 'phase 1 started', and save the profile. Found 2026-10-19 07:36: the EA has been on no chart since 2026-10-17 04:57:06. The tester runs on Terminal 16 left the charts with no EA, and the keeper restarted the terminal plain at 2026-10-18 01:24, so the clean demo test has not started. Agents may not attach an EA. Also open: the keeper and demo_check changes proposed in HANDOFF.md, so this is caught by a script next time.",
+      "status": "pending",
+      "asked": "2026-10-19"
     }
   ]
 }
