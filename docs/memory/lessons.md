@@ -39,6 +39,11 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
     - Take margin rates from the broker's symbol specs, not from the account leverage. FTMO's tester charges gold
       1:50, FX 1:100 and indices 1:50, not 1:500. A fit to all 26 stop-outs lands within 1%, with equity taken after
       every close at the stop-out second.
+    - Amended 2026-10-19: the margin rate belongs to the terminal (server), not to "FTMO". With the same EA, inputs
+      and Leverage=33, Terminal 16's tester charged gold about 1:16.5 (j3: bell entries pile at an implied 16.4-16.5)
+      and the tester install about 1:50 (j12: up to 49.6). The bell was 2-2.9x larger in j12, which caused its 3 extra
+      day stops. Before comparing two tester runs, check `job.json` Exe; read the live demo's own rate before quoting
+      any tester figure as the demo's. Evidence: `research/funded_j12_j3_daystops.out.txt` (last block).
     - That model still reaches the goal far more often than the tester (12 / 10 / 10 against 9 / 4 / 2). It also
       misses stop-outs where other legs were open (2024.01, 2024.07, 2025.06). Until the other legs' margin and their
       50% free-margin clip are modelled, do not quote its P(goal) as the EA's odds. Evidence:

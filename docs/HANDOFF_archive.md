@@ -95,6 +95,12 @@ The relay's agents are stateless runs, so the project keeps one memory that ever
    (2024-05-01, 2024-08-05, 2025-02-28), and on those days j3 lost less or gained (2024-05-01 j3 +0.2% vs j12 -2.7%). So
    half-size legs do not explain them; the shared library takes a different path there. Recorded, not tuned. Open
    follow-up, needs no tester time: compare the j12 and j3 legs-on deal lists for those three days.
+   **Closed 2026-10-19 (`research/funded_j12_j3_daystops.py` + `.out.txt`): the "different path" guess was wrong.**
+   The other legs are equal on those days. The XAUUSD bell carried 1.16 / 0.77 / 1.08 lots in j12 against 0.40 / 0.39
+   / 0.46 in j3 (gold -2.48 / -0.86 / -0.44% against +0.51 / -0.09 / +0.13%). Inputs, Leverage=33 and the sizing code
+   (RiskLots, Progression, SizeMult) are the same in both. j3 ran on Terminal 16, whose tester charges gold about
+   1:16.5: its bell entries pile up at an implied 16.4-16.5 under the 50% free-margin clip. j12 ran on the tester
+   install, about 1:50 (max 49.6). Lesson 19, amended.
    **j13 judged 2026-10-18 03:17** (`research/fnext_tester_expect.py`, the library's legs in the model, j12 used as the
    calibration): FundedNext preset tester +42.4% / 2.39% eq DD / no day stop / +5% on 2024-05-01, against a model of
    +52.6% / 2.19% / 0 / 2024-04-30. The tester keeps 0.84 of the model's log growth (j12 0.79, both inside lesson 4).

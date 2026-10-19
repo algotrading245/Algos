@@ -76,11 +76,16 @@ each finished piece of work.
 - **Next pipeline work (no tester time):** researcher: new ideas with a reason (lesson 10); no unstarted idea
   is left. NSXUSD M1 is now in `marketdata/histdata` (2010-11 to 2025-10, fetched 2026-10-19), so the noise
   leg's P&L in the goal model can be redone from data (the round-5 REDO item). Fidelity: the FTMO demo's symbol
-  margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100, and the first demo week from 2026-10-19.
+  margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100. This is now the deciding check for j12-j14, because
+  Terminal 16's own tester charged gold about 1:16.5 in j3. Also the first demo week from 2026-10-19.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
-  PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
-  tester time: j12-vs-j3 deal lists on the three extra day-stop days; j14's floating-stop days to price the 1.7%
-  stop; the EA never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
+  PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). **j12-vs-j3 closed
+  2026-10-19** (`research/funded_j12_j3_daystops.py` + `.out.txt`): j12's 3 extra day stops are its XAUUSD bell at
+  2-2.9x j3's lots. The cause is the terminal, not the library: j3 ran on Terminal 16, whose tester charges gold
+  about 1:16.5 at Leverage=33, while j12-j14 (and Hydra t3b-t5b) ran on the tester install, about 1:50. So the
+  j12-j14 figures hold only if the demo account gets about 1:50 on gold; fidelity's symbol-margin check now decides
+  that (lesson 19, amended). Still open, no tester time: j14's floating-stop days to price the 1.7% stop; the EA
+  never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
 - **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
   line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
   at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
