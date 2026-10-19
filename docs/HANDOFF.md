@@ -73,8 +73,8 @@ each finished piece of work.
   (binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0), so no sweep ran and there were 0 new trials. Reviewer
   PASS WITH CHANGES: the result is real. The goal preset fits only through the 50% clip (legs alone 0.128 margin per
   unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
-- **Next pipeline work (no tester time):** researcher: new ideas with a reason (lesson 10); only two unverified
-  ideas are left. NSXUSD M1 is now in `marketdata/histdata` (2010-11 to 2025-10, fetched 2026-10-19), so the noise
+- **Next pipeline work (no tester time):** researcher: new ideas with a reason (lesson 10); no unstarted idea
+  is left. NSXUSD M1 is now in `marketdata/histdata` (2010-11 to 2025-10, fetched 2026-10-19), so the noise
   leg's P&L in the goal model can be redone from data (the round-5 REDO item). Fidelity: the FTMO demo's symbol
   margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100, and the first demo week from 2026-10-19.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
@@ -101,8 +101,11 @@ each finished piece of work.
   Dropped 2026-10-19 at step 4 after reading the paper in full: 2026-10-19/1 (speculative pressure, Fan et al. 2020).
   Its Table 3 shows no alpha beyond momentum and carry. It is a monthly book of 11-43 contracts per class, against
   about 6 on FTMO, so it falls in the slow family. The currency premium faded after 2008 (Table 10), and there is no
-  COT data. Still unstarted: 2026-10-17/1 and /3 (**unverified**, abstract only, go last), so the researcher is not
-  skipped. `pdf_text.py` retries mirrors before marking a paper unreadable.
+  COT data. Dropped 2026-10-19, the last two unverified ideas: 2026-10-17/3 (S&P futures pinning, Golez and Jackwerth)
+  at step 4 after a full read, because the pinning shows only in the SP futures settlement and not in the cash index
+  or SPY, sits within ±0.25 of the strike and gives about 8 events a year with no return; and 2026-10-17/1
+  (Krohn-Vala auctions) unreadable (SSRN 403, no copy). **No unstarted idea is left**: the researcher's turn.
+  `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
 
