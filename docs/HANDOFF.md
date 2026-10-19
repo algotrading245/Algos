@@ -98,7 +98,10 @@ each finished piece of work.
   Sharpe +0.30 / -0.06, and event minus control has 90% CIs that span 0. AUDCAD loses. So the volatility is real, but
   a breakout earns less than the spread. 2 trials logged. Dropped unstarted
   2026-10-19: 2026-10-18/2 (S&P rebalance close, ~64 events) and 2026-10-17/4 (expiry-week drift, summary only).
-  Still unstarted: 2026-10-17/1 and /3 (**unverified**, abstract only, go last), so the researcher is no longer
+  Dropped 2026-10-19 at step 4 after reading the paper in full: 2026-10-19/1 (speculative pressure, Fan et al. 2020).
+  Its Table 3 shows no alpha beyond momentum and carry. It is a monthly book of 11-43 contracts per class, against
+  about 6 on FTMO, so it falls in the slow family. The currency premium faded after 2008 (Table 10), and there is no
+  COT data. Still unstarted: 2026-10-17/1 and /3 (**unverified**, abstract only, go last), so the researcher is not
   skipped. `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
