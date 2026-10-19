@@ -73,8 +73,8 @@ each finished piece of work.
   (binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0), so no sweep ran and there were 0 new trials. Reviewer
   PASS WITH CHANGES: the result is real. The goal preset fits only through the 50% clip (legs alone 0.128 margin per
   unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
-- **Next pipeline work (no tester time):** researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a stated
-  proxy), and new ideas with a reason (lesson 10). Fidelity: the FTMO demo's symbol margin for XAUUSD/AUDCAD
+- **Next pipeline work (no tester time):** researcher: the China release calendar for `china_release_aud` (below),
+  NSXUSD M1 (NAS100) from histdata (else SPX as a stated proxy), and new ideas with a reason (lesson 10). Fidelity: the FTMO demo's symbol margin for XAUUSD/AUDCAD
   against the fitted 1:50 / 1:100, and the first demo week from 2026-10-19.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
@@ -89,10 +89,15 @@ each finished piece of work.
 - **Research pipeline:** simple-rule scans on the histdata symbols are exhausted (all four `edge_scan.py` families
   run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
   into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels rejected at steps 5-7 (new rejected
-  family); ideas 1, 3, 4 of `docs/ideas/2026-10-17.md` are **unverified** (abstract only) and go last; the
-  2026-10-18 batch waits for the orchestrator's pick (`ideas_taken.txt` marks its idea 1, the volatility window,
-  "in progress" but no candidate exists for it: open it or clear the mark). `pdf_text.py` retries mirrors before marking a paper
-  unreadable.
+  family). **Candidate `china_release_aud`** (idea 2026-10-18/1, step 4 done 2026-10-19, runs 1): the RBA Bulletin
+  Dec 2016 PDF is now readable and was read in full; Table A1 matches the idea file (extra absolute AUD/USD move,
+  -10..+10 min, 2008-16: GDP 0.06%, activity 0.04%, trade 0.03%, CPI 0.04%; volatility only, no direction or cost).
+  Step 5 is blocked on data: **researcher, fetch the China release dates and times 2010-2025.09** (NBS GDP,
+  activity, CPI; customs trade) from a dated calendar archive, into the repo through `holdout.drop()`. Then a
+  quant-coder prototype on AUDUSD M1 (AUDCAD check), reported against same-time non-event days. Dropped unstarted
+  2026-10-19: 2026-10-18/2 (S&P rebalance close, ~64 events) and 2026-10-17/4 (expiry-week drift, summary only).
+  Still unstarted: 2026-10-17/1 and /3 (**unverified**, abstract only, go last), so the researcher is no longer
+  skipped. `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
 
