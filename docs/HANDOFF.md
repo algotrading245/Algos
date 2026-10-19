@@ -116,8 +116,8 @@ each finished piece of work.
   EA prints "firm day <date>, day start X (balance, equity), day stop at Y, highest day start Z, final stop at F
   (static|trailing|locked)". Fidelity can set F against the firm's own figure on the demo, and any new j13-type
   (trailing) tester run shows its floor. Not printed after a same-day restart (the next firm day prints it).
-  Compile re-checked 0/0 and the decision logged at 14:15 (the 14:25 run's `memory.py decide` was refused; a short
-  form with no ";" or "'" in its arguments goes through, the permission rules match those characters). Prop
+  Compile re-checked 0/0 and the decision logged at 14:15 (the 14:25 run's `memory.py decide` was refused; long
+  `decide` and `git commit -m` commands are refused even without ";", short ones go through, so keep them short). Prop
   routes and presets: see archive.
 - **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
   line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
