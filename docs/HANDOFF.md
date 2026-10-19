@@ -84,8 +84,14 @@ each finished piece of work.
   2-2.9x j3's lots. The cause is the terminal, not the library: j3 ran on Terminal 16, whose tester charges gold
   about 1:16.5 at Leverage=33, while j12-j14 (and Hydra t3b-t5b) ran on the tester install, about 1:50. So the
   j12-j14 figures hold only if the demo account gets about 1:50 on gold; fidelity's symbol-margin check now decides
-  that (lesson 19, amended). Still open, no tester time: j14's floating-stop days to price the 1.7% stop; the EA
-  never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
+  that (lesson 19, amended). **j14's 1.7% floating stop priced 2026-10-19** (`research/funded_j14_floatstops.py` +
+  `.out.txt`, closed baskets held on histdata to server 00:00): outside rollover (9 of 13 stops) it saved 7.06% and
+  8 of 9 held baskets would have crossed the firm's assumed -2%; a 1.8 / 1.9 stop would have avoided 0 / 1 of 9. So
+  1.7 stays. The other 4 stops are the XAUUSD 23:00 bell at 0.72-1.22 lots (5-20x the intraday gold legs), stopped
+  26 s to 3 min after entry by a $1.4-2.4/oz move (checked on histdata: mostly real moves, not spread). On IF PRO the
+  bell at that size can trip the Account Drawdown alone; its size follows the gold margin (1:50 on the tester
+  install), so the fidelity margin check decides this too. Owner question stays: the PRO Account Drawdown figure.
+  Still open: the EA never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
 - **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
   line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
   at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
