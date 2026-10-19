@@ -120,10 +120,12 @@
 //| York + 7 hours, raw spread. The grid has no stop at the broker:  |
 //| its stop-out needs the terminal running.                         |
 //| v1.35: logs the account leverage and 1-lot margins once a day.   |
+//| v1.36: an order answered DONE with deal 0 counts as a fill (FTMO |
+//| reports the deal moments later).                                 |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.35"
+#property version   "1.36"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

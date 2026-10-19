@@ -79,8 +79,14 @@ each finished piece of work.
   path from SPXUSD/NSXUSD M1 is already in the goal model (`research/hydra_leverage_sens.py`, the round-5 REDO
   item's noise part). Fidelity: the demo account's own leverage was read on 2026-10-19 at 14:54: 1:100, gold
   1:50, the tester install's setting, so j12-j14 stand and j3 does not. Next is the first demo week. Orchestrator: make
-  the library count retcode DONE with an order ticket as a fill (the deal-0 test, 7 legs, `Legs.mqh:1630` etc.),
-  with the reviewer and a compile. The demo keeps 1.06 until the owner copies a new build.
+  the library count retcode DONE with an order ticket as a fill -- DONE 15:35, see below. The demo keeps 1.06 until
+  the owner copies a new build.
+  **Deal-0 fix (2026-10-19 15:35, AurumFunded 1.07 / AurumHydra 1.36, reviewer PASS, compile 0/0):** `Filled(ok)`
+  (`Legs.mqh:199`) counts DONE with an order ticket and deal 0 as a fill at all 8 order sites, so the leg sets its
+  done flag at once and logs its normal line, priced with `FillPrice` (the asked bid/ask while the deal price is 0).
+  No change in the tester (deals are reported there at once). Open, pre-existing: the grid could resend level k if a
+  call lands before the deal shows in `GridHeld()` (`Legs.mqh:724-739`); a short resend guard is a later EA change.
+  The owner may copy 1.07 to Terminal 16 (not needed for trading; it fixes the log lines and the repeat-order gap).
   **Leverage log line (2026-10-19, AurumFunded 1.05 / AurumHydra 1.35, reviewer PASS WITH CHANGES, compile 0/0):**
   once a server day each EA prints "account leverage 1:n, margin of 1 lot in <currency>, XAUUSD m at p, ..." (gold,
   USDJPY, EURUSD, grid symbol, stock index; "n/a" for a symbol not in use). Logging only, no trading change. Fidelity

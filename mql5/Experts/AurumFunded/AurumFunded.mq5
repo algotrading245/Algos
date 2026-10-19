@@ -60,6 +60,8 @@
 //| v1.05: logs the account leverage and 1-lot margins once a day.   |
 //| v1.06: logs the day start, day stop and final stop once a firm   |
 //| day (the trailing floor was not visible in any log).             |
+//| v1.07: an order answered DONE with deal 0 counts as a fill (FTMO |
+//| reports the deal moments later).                                 |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -68,7 +70,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.06"
+#property version   "1.07"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

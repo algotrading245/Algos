@@ -194,6 +194,19 @@ void Prepare(string sym,long magic)
    g_trade.SetTypeFillingBySymbol(sym);
   }
 
+// True when the last market order filled. FTMO's market execution answers DONE with an order ticket and deal 0 and
+// reports the deal moments later, so DONE with an order ticket counts as a fill.
+bool Filled(bool ok)
+  {
+   return(ok && (g_trade.ResultDeal()>0 || (g_trade.ResultRetcode()==TRADE_RETCODE_DONE && g_trade.ResultOrder()>0)));
+  }
+
+// Price of the last fill; the price asked for while the broker has not reported the deal (price 0).
+double FillPrice(double asked)
+  {
+   return(g_trade.ResultPrice()>0 ? g_trade.ResultPrice() : asked);
+  }
+
 // Lots held on 'sym' under 'magic'; 'opened' receives the earliest open time.
 double HeldLots(string sym,long magic,datetime &opened)
   {
@@ -689,13 +702,13 @@ void Leg(int leg)
    double sl=NormalizeDouble(q.bid-side*dist,digits);
    Prepare(sym,magic);
    bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" "+name) : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" "+name));
-   if(!ok || g_trade.ResultDeal()==0)
+   if(!Filled(ok))
      {
       PrintFormat(AURUM_NAME+": %s order failed, retcode %d (%s)",name,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
       return;
      }
    PrintFormat(AURUM_NAME+": %s leg %s %.2f %s at %s, stop %s, model weight %.2f, %d s after the start",name,
-               side>0 ? "bought" : "sold",lots,sym,DoubleToString(g_trade.ResultPrice(),digits),DoubleToString(sl,digits),w,
+               side>0 ? "bought" : "sold",lots,sym,DoubleToString(FillPrice(side>0 ? q.ask : q.bid),digits),DoubleToString(sl,digits),w,
                (int)(now-start));
    g_done[leg]=today;
   }
@@ -912,7 +925,7 @@ void Grid()
       Prepare(sym,InpMagic+GRID_MAGIC+k);
       string note=AURUM_NAME+" grid "+IntegerToString(k);
       bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,0.0,0.0,note) : g_trade.Sell(lots,sym,0.0,0.0,0.0,note));
-      if(!ok || g_trade.ResultDeal()==0)
+      if(!Filled(ok))
         {
          PrintFormat(AURUM_NAME+": grid order failed, retcode %d (%s)",g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          return;
@@ -1153,13 +1166,13 @@ void Fix()
          string name=(w==0 ? AURUM_NAME+" fix" : AURUM_NAME+" after fix");
          Prepare(sym,magic);
          bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,name) : g_trade.Sell(lots,sym,0.0,sl,0.0,name));
-         if(!ok || g_trade.ResultDeal()==0)
+         if(!Filled(ok))
            {
             PrintFormat(AURUM_NAME+": fix order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
             continue;
            }
          PrintFormat(AURUM_NAME+": %s the fix %s %.2f %s at %s, stop %s, %d s after the start",w==0 ? "before" : "after",
-                     side>0 ? "bought" : "sold",lots,sym,DoubleToString(g_trade.ResultPrice(),digits),DoubleToString(sl,digits),
+                     side>0 ? "bought" : "sold",lots,sym,DoubleToString(FillPrice(side>0 ? q.ask : q.bid),digits),DoubleToString(sl,digits),
                      (int)(now-start));
          g_fixDone[w][i]=today;
         }
@@ -1255,13 +1268,13 @@ void Fall()
       double sl=NormalizeDouble(q.bid-side*dist,digits);
       Prepare(sym,magic);
       bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" stock fall") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" stock fall"));
-      if(!ok || g_trade.ResultDeal()==0)
+      if(!Filled(ok))
         {
          PrintFormat(AURUM_NAME+": stock-fall fix order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          continue;
         }
       PrintFormat(AURUM_NAME+": stocks %.1f%% in %d days, %s %.2f %s at %s into the fix, stop %s, %d s after the start",100.0*chg,
-                  InpFallDays,side>0 ? "bought" : "sold",lots,sym,DoubleToString(g_trade.ResultPrice(),digits),
+                  InpFallDays,side>0 ? "bought" : "sold",lots,sym,DoubleToString(FillPrice(side>0 ? q.ask : q.bid),digits),
                   DoubleToString(sl,digits),(int)(now-start));
       g_fallDone[i]=today;
      }
@@ -1372,13 +1385,13 @@ void Morning()
       double sl=NormalizeDouble(q.bid-side*dist,digits);
       Prepare(sym,magic);
       bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" morning") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" morning"));
-      if(!ok || g_trade.ResultDeal()==0)
+      if(!Filled(ok))
         {
          PrintFormat(AURUM_NAME+": Tokyo-morning order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          continue;
         }
       PrintFormat(AURUM_NAME+": stocks %+.1f%% in a day, %s %.2f %s at %s for the Tokyo morning, stop %s, %d s after the start",100.0*chg,
-                  side>0 ? "bought" : "sold",lots,sym,DoubleToString(g_trade.ResultPrice(),digits),
+                  side>0 ? "bought" : "sold",lots,sym,DoubleToString(FillPrice(side>0 ? q.ask : q.bid),digits),
                   DoubleToString(sl,digits),(int)(now-start));
       g_mornDone[i]=today;
      }
@@ -1510,13 +1523,13 @@ void After()
       double sl=NormalizeDouble(q.bid-side*dist,digits);
       Prepare(sym,magic);
       bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" after holiday") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" after holiday"));
-      if(!ok || g_trade.ResultDeal()==0)
+      if(!Filled(ok))
         {
          PrintFormat(AURUM_NAME+": after-holiday order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          continue;
         }
       PrintFormat(AURUM_NAME+": day after a US holiday, %s %.2f %s at %s for the London morning, stop %s, %d s after the start",
-                  side>0 ? "bought" : "sold",lots,sym,DoubleToString(g_trade.ResultPrice(),digits),
+                  side>0 ? "bought" : "sold",lots,sym,DoubleToString(FillPrice(side>0 ? q.ask : q.bid),digits),
                   DoubleToString(sl,digits),(int)(now-start));
       g_afterDone[i]=today;
      }
@@ -1627,13 +1640,13 @@ void Breakout()
         }
       Prepare(sym,magic);
       bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" breakout") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" breakout"));
-      if(!ok || g_trade.ResultDeal()==0)
+      if(!Filled(ok))
         {
          PrintFormat(AURUM_NAME+": breakout order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          continue;
         }
       PrintFormat(AURUM_NAME+": USD/JPY broke its range, %s %.2f lots at %s, stop %s",side>0 ? "bought" : "sold",lots,
-                  DoubleToString(g_trade.ResultPrice(),digits),DoubleToString(sl,digits));
+                  DoubleToString(FillPrice(px),digits),DoubleToString(sl,digits));
       g_breakTraded[s]=today;
      }
   }
@@ -1840,11 +1853,11 @@ void Noise()
       double px=(dir>0 ? q.ask : q.bid),sl=NormalizeDouble(px*(1.0-dir*3.0*g_noiseVol[i]),dg);
       Prepare(sym,magic);
       bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" noise") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" noise"));
-      if(!ok || g_trade.ResultDeal()==0)
+      if(!Filled(ok))
          PrintFormat(AURUM_NAME+": noise order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
       else
          PrintFormat(AURUM_NAME+": %s %s %.2f lots at %.2f, bands %.2f / %.2f",sym,dir>0 ? "bought" : "sold",lots,
-                     g_trade.ResultPrice(),ub,lb);
+                     FillPrice(px),ub,lb);
      }
   }
 
