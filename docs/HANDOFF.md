@@ -112,7 +112,13 @@ each finished piece of work.
   26 s to 3 min after entry by a $1.4-2.4/oz move (checked on histdata: mostly real moves, not spread). On IF PRO the
   bell at that size can trip the Account Drawdown alone; its size follows the gold margin (1:50 at the tester
   install's 1:100), so the fidelity leverage check decides this too. Owner question stays: the PRO Account Drawdown figure.
-  Still open: the EA never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
+  **Floor log line (2026-10-19, AurumFunded 1.06, reviewer PASS, compile 0/0, logging only):** once a firm day the
+  EA prints "firm day <date>, day start X (balance, equity), day stop at Y, highest day start Z, final stop at F
+  (static|trailing|locked)". Fidelity can set F against the firm's own figure on the demo, and any new j13-type
+  (trailing) tester run shows its floor. Not printed after a same-day restart (the next firm day prints it).
+  Compile re-checked 0/0 and the decision logged at 14:15 (the 14:25 run's `memory.py decide` was refused; a short
+  form with no ";" or "'" in its arguments goes through, the permission rules match those characters). Prop
+  routes and presets: see archive.
 - **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
   line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
   at 04:33 and was removed at 04:57. The tester runs on that terminal (10-17 to 10-18 01:20) left no `<expert>` block
@@ -137,11 +143,11 @@ each finished piece of work.
 
 ## Waiting on the owner
 
-- **Urgent (a4): re-attach the demo EA.** On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.05 (the
+- **Urgent (a4): re-attach the demo EA.** On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.06 (the
   current build in the repo; copy `AurumFunded.ex5` into the terminal's Experts folder first) with
   `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
   loaded successfully" and that the EA log has its "phase 1 started" line and, on the first tick, the "account
-  leverage 1:n" line. Then save the profile, or close the
+  leverage 1:n" and "firm day" lines. Then save the profile, or close the
   terminal once so the chart files are written. Agents may not attach an EA.
 - **Proposed tools/ changes (agents may not edit tools/):**
   (1) `keeper.ps1`: while Terminal 16 is running, look at the journal after its latest start for "expert

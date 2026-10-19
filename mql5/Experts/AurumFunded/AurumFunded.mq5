@@ -58,6 +58,8 @@
 //| Breakout and noise-area index legs are on at half Hydra's size   |
 //| (InpBreakRiskPct 0.0625, InpNoiseMult 0.1375).                   |
 //| v1.05: logs the account leverage and 1-lot margins once a day.   |
+//| v1.06: logs the day start, day stop and final stop once a firm   |
+//| day (the trailing floor was not visible in any log).             |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -66,7 +68,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.05"
+#property version   "1.06"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
@@ -323,6 +325,10 @@ bool PropGuard()
       GlobalVariableSet(PropKey("daybal"),g_propDayBal);
       GlobalVariableSet(PropKey("peak"),g_propPeak);
       GlobalVariableSet(PropKey("daystop"),0.0);
+      // Once a firm day the levels the guard works with, so a demo or tester log can be set against the firm's own.
+      PrintFormat("AurumFunded: firm day %s, day start %.2f (balance %.2f, equity %.2f), day stop at %.2f, highest day start %.2f, final stop at %.2f (%s)",
+                  TimeToString(day,TIME_DATE),g_propDayBal,bal,eq,g_propDayBal-g_propStart*InpPropDayStopPct/100.0,g_propPeak,PropFloor(),
+                  g_propLocked ? "locked" : (InpPropTrailing ? "trailing" : "static"));
      }
    if(!g_propLocked && InpPropLockPct>0 && eq>=g_propStart*(1.0+InpPropLockPct/100.0))
      {
