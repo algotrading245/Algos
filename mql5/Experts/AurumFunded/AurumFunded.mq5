@@ -57,6 +57,7 @@
 //| v1.04: the legs come from Include/Aurum, shared with AurumHydra. |
 //| Breakout and noise-area index legs are on at half Hydra's size   |
 //| (InpBreakRiskPct 0.0625, InpNoiseMult 0.1375).                   |
+//| v1.05: logs the account leverage and 1-lot margins once a day.   |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -65,7 +66,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.04"
+#property version   "1.05"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

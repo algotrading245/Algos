@@ -2175,8 +2175,39 @@ void OnTimer()
    Run();
   }
 
+// Once a day: the account leverage and the margin of 1 lot on the main symbols, so a demo or live log can be set
+// against a tester run (the tester tests at its own saved leverage, not the job's: lesson 19). Logging only.
+void LogMargin()
+  {
+   static datetime logged=0;
+   datetime day=DayOf(TimeCurrent());
+   if(day==logged)
+      return;
+   string syms[5];
+   syms[0]=InpGold; syms[1]=InpYen; syms[2]=InpEuro; syms[3]=InpGridSymbol; syms[4]=InpStocks;
+   string s="";
+   for(int i=0; i<5; i++)
+     {
+      // Only symbols already in use (selected), so the tester loads no history just for this line.
+      if(i>0 && !SymbolInfoInteger(syms[i],SYMBOL_SELECT))
+        {
+         s+=StringFormat(", %s n/a",syms[i]);
+         continue;
+        }
+      double ask=SymbolInfoDouble(syms[i],SYMBOL_ASK),margin=0;
+      bool ok=(ask>0 && OrderCalcMargin(ORDER_TYPE_BUY,syms[i],1.0,ask,margin) && margin>0);
+      if(!ok && i==0)
+         return;   // gold not priced yet: try again on the next tick
+      s+=(ok ? StringFormat(", %s %.2f at %.6g",syms[i],margin,ask) : StringFormat(", %s n/a",syms[i]));
+     }
+   logged=day;
+   PrintFormat(AURUM_NAME+": account leverage 1:%d, margin of 1 lot in %s%s",(int)AccountInfoInteger(ACCOUNT_LEVERAGE),
+               AccountInfoString(ACCOUNT_CURRENCY),s);
+  }
+
 void OnTick()
   {
+   LogMargin();
    Run();
   }
 

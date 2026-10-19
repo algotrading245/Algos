@@ -119,10 +119,11 @@
 //| Attach to a gold chart on a hedging account, server clock = New  |
 //| York + 7 hours, raw spread. The grid has no stop at the broker:  |
 //| its stop-out needs the terminal running.                         |
+//| v1.35: logs the account leverage and 1-lot margins once a day.   |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.34"
+#property version   "1.35"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

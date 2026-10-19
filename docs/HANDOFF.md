@@ -79,6 +79,11 @@ each finished piece of work.
   leg's P&L in the goal model can be redone from data (the round-5 REDO item). Fidelity: the demo account's own
   leverage (and XAUUSD margin rate, about 2). This is now the deciding check for j12-j14: the tester install ran
   them at 1:100 (gold 1:50) and Terminal 16 ran j3 at 1:33 (gold 1:16.5). Also the first demo week from 2026-10-19.
+  **Leverage log line (2026-10-19, AurumFunded 1.05 / AurumHydra 1.35, reviewer PASS WITH CHANGES, compile 0/0):**
+  once a server day each EA prints "account leverage 1:n, margin of 1 lot in <currency>, XAUUSD m at p, ..." (gold,
+  USDJPY, EURUSD, grid symbol, stock index; "n/a" for a symbol not in use). Logging only, no trading change. Fidelity
+  reads it from the demo's EA log on its first day attached, and from the agent log of any new tester run. Hint: the
+  AurumFunded header's default account is an FTMO Swing account at 1:30, close to j3's 1:33, not j12-j14's 1:100.
   **Tester leverage (2026-10-19, reviewer-checked, lesson 19 corrected):** the job's `leverage` has never been
   applied; each terminal tests at its saved [Tester] leverage. So every Terminal 16 run on 10-15/17/18 (Hydra
   j4-j9, the 10-17 month series and the 10-18 5xEQ runs, asked for 500) ran at 1:33, and every tester-install run
@@ -132,9 +137,11 @@ each finished piece of work.
 
 ## Waiting on the owner
 
-- **Urgent (a4): re-attach the demo EA.** On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.03 with
+- **Urgent (a4): re-attach the demo EA.** On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.05 (the
+  current build in the repo; copy `AurumFunded.ex5` into the terminal's Experts folder first) with
   `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
-  loaded successfully" and that the EA log has its "phase 1 started" line. Then save the profile, or close the
+  loaded successfully" and that the EA log has its "phase 1 started" line and, on the first tick, the "account
+  leverage 1:n" line. Then save the profile, or close the
   terminal once so the chart files are written. Agents may not attach an EA.
 - **Proposed tools/ changes (agents may not edit tools/):**
   (1) `keeper.ps1`: while Terminal 16 is running, look at the journal after its latest start for "expert
