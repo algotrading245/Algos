@@ -54,7 +54,8 @@ each finished piece of work.
   Other EAs are archived in `mql5/Experts/_archive/`.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
   4x in 4 (19%), 5x in 2 (10%), 0 ruin months — but the "0 ruin" hides broker stop-outs (margin level < 50%) in
-  7/10/9 months; that is the 4x/5x shortfall against the model (lesson 19). The goal model
+  7/10/9 months; that is the 4x/5x shortfall against the model (lesson 19). These 21 months ran at 1:100 and j8a-c
+  (5x 1/21) at 1:33, not the 1:500 asked; lesson 7 amended 2026-10-19 to judge each at its logged leverage. The goal model
   (`research/hydra_goal_margin_model.py`, EA+legs round 5: per-order clip, month-end boost ×2) gives P(goal)
   39.7 / 28.8 / 22.3% over 184 months 2010-2025.09 (edge 1.0, preset) — a **loose upper bound only**: reviewer
   REDO, the noise is still round 4's constant ticket (NSXUSD M1 missing), on the 21 tester months the model reaches

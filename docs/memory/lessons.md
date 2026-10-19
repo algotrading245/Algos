@@ -70,6 +70,16 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
    stop-outs account for 3 of its 11 months at 5x (lesson 19); the rest of the gap is not measured. 2024 also gave only 1 of 12, so 2025-26 gold volatility is not the whole cause, though j9's gold-hold
    evidence stands. A fix is a new idea through the gates on data from 2010, never a setting picked on tester months.
    Evidence: j8a-c, j9, j10b, `research/hydra_t5b_months_model.py`. (2026-10-18)
+   - Amended 2026-10-19 (reviewer-checked): neither series ran at the 1:500 its job asked for (lesson 19). j8a-c ran
+     on Terminal 16 at 1:33, j10b on the tester install at 1:100; their presets set the same goal (5x, scale 2.5,
+     `Legs.mqh:2060-2061`). So 1/21 and 2/21 are not two samples of one setting, and j8 against j10b does not
+     separate the 2025-26 months from the leverage (1:33 against 1:100). The "2024 gave 1 of 12" above is j10b
+     (month 2024.12) set against j8, so it carries the same confound. target_odds' 11-25% (no margin) is the
+     yardstick of neither. The margin model (cap 50, 184 month-start rounds, an upper bound per lesson 19) gives
+     P(5x) 24.5 / 12.5% at 1:100, 12.5 / 8.2% at 1:33 (edge 1.0 / 0.7) and 40.2 / 27.7% at 1:500. Judge a 5x tester
+     figure against that model at the leverage in the run's agent log. Evidence: `research/demo_margin_terminals.out.txt`
+     (Terminal 16 2026-10-17 16:26-16:49 and 21:44-22:59 at 1:33; tester install 2026-10-18 04:02-05:02 at 1:100),
+     `research/hydra_leverage_sens.out.txt` lines 96, 99, `docs/autopilot/queue.json` j8a-c, j10b.
 8. **The gold spread cap (`InpGoldMaxSpread` 0.30) works as an unplanned volatility filter; lifting it made the months
    worse.** Evidence: j9 (0.34x / 0.49x / 0.57x against 1.33x / 0.91x / 0.72x). (2026-10-18)
 9. **Leave the rollover (server 23:00-01:00) out of intraday tests.** Histdata's bid quotes spike and snap back there,
