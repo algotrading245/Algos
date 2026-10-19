@@ -75,22 +75,27 @@ each finished piece of work.
   unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
 - **Next pipeline work (no tester time):** researcher: new ideas with a reason (lesson 10); no unstarted idea
   is left. NSXUSD M1 is now in `marketdata/histdata` (2010-11 to 2025-10, fetched 2026-10-19), so the noise
-  leg's P&L in the goal model can be redone from data (the round-5 REDO item). Fidelity: the FTMO demo's symbol
-  margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100. This is now the deciding check for j12-j14, because
-  Terminal 16's own tester charged gold about 1:16.5 in j3. Also the first demo week from 2026-10-19.
+  leg's P&L in the goal model can be redone from data (the round-5 REDO item). Fidelity: the demo account's own
+  leverage (and XAUUSD margin rate, about 2). This is now the deciding check for j12-j14: the tester install ran
+  them at 1:100 (gold 1:50) and Terminal 16 ran j3 at 1:33 (gold 1:16.5). Also the first demo week from 2026-10-19.
+  **Tester leverage (2026-10-19, reviewer-checked, lesson 19 corrected):** the job's `leverage` has never been
+  applied; each terminal tests at its saved [Tester] leverage. So every Terminal 16 run on 10-15/17/18 (Hydra
+  j4-j9, the 10-17 month series and the 10-18 5xEQ runs, asked for 500) ran at 1:33, and every tester-install run
+  on 10-18 (j12-j14, t3b-t5b) ran at 1:100; check the agent log for any other run. Re-read any Hydra conclusion drawn from Terminal 16 runs with that in mind (no re-run
+  yet; holdout rule for j8b/j8c/j9 unchanged). Evidence: `research/demo_margin_terminals.py` + `.out.txt`.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). **j12-vs-j3 closed
   2026-10-19** (`research/funded_j12_j3_daystops.py` + `.out.txt`): j12's 3 extra day stops are its XAUUSD bell at
-  2-2.9x j3's lots. The cause is the terminal, not the library: j3 ran on Terminal 16, whose tester charges gold
-  about 1:16.5 at Leverage=33, while j12-j14 (and Hydra t3b-t5b) ran on the tester install, about 1:50. So the
-  j12-j14 figures hold only if the demo account gets about 1:50 on gold; fidelity's symbol-margin check now decides
-  that (lesson 19, amended). **j14's 1.7% floating stop priced 2026-10-19** (`research/funded_j14_floatstops.py` +
+  2-2.9x j3's lots. The cause is the test leverage, not the library: j3 ran on Terminal 16 at 1:33 (gold about
+  1:16.5), and j12-j14 (and Hydra t3b-t5b) ran on the tester install at 1:100 (gold about 1:50), though every one
+  of these jobs asked for 33. So the j12-j14 figures hold only if the demo account runs at 1:100; fidelity's
+  leverage check decides that (lesson 19, corrected 2026-10-19). **j14's 1.7% floating stop priced 2026-10-19** (`research/funded_j14_floatstops.py` +
   `.out.txt`, closed baskets held on histdata to server 00:00): outside rollover (9 of 13 stops) it saved 7.06% and
   8 of 9 held baskets would have crossed the firm's assumed -2%; a 1.8 / 1.9 stop would have avoided 0 / 1 of 9. So
   1.7 stays. The other 4 stops are the XAUUSD 23:00 bell at 0.72-1.22 lots (5-20x the intraday gold legs), stopped
   26 s to 3 min after entry by a $1.4-2.4/oz move (checked on histdata: mostly real moves, not spread). On IF PRO the
-  bell at that size can trip the Account Drawdown alone; its size follows the gold margin (1:50 on the tester
-  install), so the fidelity margin check decides this too. Owner question stays: the PRO Account Drawdown figure.
+  bell at that size can trip the Account Drawdown alone; its size follows the gold margin (1:50 at the tester
+  install's 1:100), so the fidelity leverage check decides this too. Owner question stays: the PRO Account Drawdown figure.
   Still open: the EA never logs its trailing-stop floor (log line proposed). Prop routes and presets: see archive.
 - **Demo (step 17): ALERT 2026-10-19. The EA is NOT attached** (re-checked 08:51: today's journal has no Experts
   line and the EA log still exists only for 20261017). AurumFunded 1.03 loaded on Terminal 16 on 2026-10-17
@@ -129,6 +134,11 @@ each finished piece of work.
   ran at 01:24 on 10-18 was the 10-17 process running old code.
   (3) `demo_check.py`: raise an ALERT when a weekday has 0 EA lines, or when the journal's last Experts line for
   AurumFunded is "removed". Today it printed "ok" for a day with no EA.
+  (4) `run-tester.ps1:151` writes `Leverage=$Leverage` (e.g. `33`), which the tester does not apply (the deposit
+  is applied). Try `Leverage=1:$Leverage`, the format the tester logs. Then make `tester_step.py` read the agent
+  log's "initial deposit X USD, leverage 1:n" line and fail the job if n differs from the job's `leverage`.
+  `tester_step.py:300,342` should report the logged leverage, not the requested one. Until that is done, the
+  leverage of every run is whatever the terminal has saved: Terminal 16 1:33, tester install 1:100.
 
 - Prop-firm facts: FundedNext Stellar Instant consistency rule; Instant Funding PRO account-drawdown % and EA
   policy; FTMO 1-Step maximum loss (details in the archive).

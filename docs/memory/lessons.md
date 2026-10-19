@@ -36,14 +36,19 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
       its first level from the balance, and the panic exit, with sizes from live equity. Re-sizing size-1 exposures
       each day hides the build-up. On the 21 months, the re-sized model found 1 / 1 / 2 stop-outs at 3x / 4x / 5x, the
       position-carrying model 5 / 7 / 7 and the tester 7 / 10 / 9, with 4 / 6 / 6 of them in the same months.
-    - Take margin rates from the broker's symbol specs, not from the account leverage. FTMO's tester charges gold
-      1:50, FX 1:100 and indices 1:50, not 1:500. A fit to all 26 stop-outs lands within 1%, with equity taken after
-      every close at the stop-out second.
-    - Amended 2026-10-19: the margin rate belongs to the terminal (server), not to "FTMO". With the same EA, inputs
-      and Leverage=33, Terminal 16's tester charged gold about 1:16.5 (j3: bell entries pile at an implied 16.4-16.5)
-      and the tester install about 1:50 (j12: up to 49.6). The bell was 2-2.9x larger in j12, which caused its 3 extra
-      day stops. Before comparing two tester runs, check `job.json` Exe; read the live demo's own rate before quoting
-      any tester figure as the demo's. Evidence: `research/funded_j12_j3_daystops.out.txt` (last block).
+    - Margin = the symbol's margin rate times the test leverage. Those tests ran at 1:100 (see below), which gave
+      gold 1:50, FX 1:100 and indices 1:50, not 1:500. A fit to all 26 stop-outs lands within 1%, with equity taken
+      after every close at the stop-out second.
+    - Corrected 2026-10-19 (reviewer-checked; replaces the same day's "the rate belongs to the terminal"): the
+      tester did not apply the job's `leverage` field, though it did apply the job's deposit. Each terminal tested at
+      the leverage saved in its own `config\terminal.ini` [Tester] section: Terminal 16 1:33 on every run on
+      10-15/17/18, including Hydra jobs that asked for 500, and the tester install 1:100 on every run on 10-18,
+      including j12-j14, which asked for 33. Both terminals use the same FTMO-Demo account. The gold rate is about 2,
+      inferred from these ratios and not read from the specs: 1:16.5 at 1:33 (j3) and 1:50 at 1:100 (j12, up to
+      49.6). That made the bell 2-2.9x larger in j12 and caused its 3 extra day stops. Read the agent log's
+      "leverage 1:n" line before using any tester figure; report files repeat the job's leverage
+      (`tester_step.py:300,342`). Evidence: `research/demo_margin_terminals.out.txt`,
+      `research/funded_j12_j3_daystops.out.txt` (last block).
     - That model still reaches the goal far more often than the tester (12 / 10 / 10 against 9 / 4 / 2). It also
       misses stop-outs where other legs were open (2024.01, 2024.07, 2025.06). Until the other legs' margin and their
       50% free-margin clip are modelled, do not quote its P(goal) as the EA's odds. Evidence:
