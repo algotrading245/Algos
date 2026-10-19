@@ -112,8 +112,13 @@ each finished piece of work.
   (Krohn-Vala auctions) unreadable (SSRN 403, no copy). Dropped 2026-10-19 at step 4 after a full read: run 4's
   2026-10-19/1 (yen intervention days, Chen-Watanabe-Yabu IFD WP73). It measures impact only; the move is done
   within the intervention hour and then flat for 12 hours (Fig. 4), the hours are imputed (12 of 29 on the Swiss
-  test), and there is no timestamped record and about a dozen days since 2004. **No unstarted idea is left**: the
-  researcher's turn.
+  test), and there is no timestamped record and about a dozen days since 2004. Dropped 2026-10-19 at step 4 after a
+  full read: run 6's 2026-10-19/1 (FX carry with crash risk, Brunnermeier-Nagel-Pedersen NBER w14473). The paper
+  describes the effect and does not test a rule: no costs or swaps, and the sample is 1986-2006 only. Its gross
+  Sharpe of 0.6-0.8 (Table 2) needs 8 currencies, and FTMO allows a k=1 weekly or quarterly book (slow family).
+  Carry losses load on VIX moves (Tables 5 and 7), the same risk-off days as the index legs, and the repo has no rate
+  data. **No unstarted idea is left**: the researcher's turn. Do not re-propose carry or other slow cross-section
+  FX books.
   `pdf_text.py` retries mirrors before marking a paper unreadable.
 
 ## Waiting on the owner
