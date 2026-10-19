@@ -99,3 +99,10 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
 
     Evidence: j11b, j15 `months_result.json`; t3b_202502 summary.txt line 351145; t4b_202412 summary.txt lines 1198,
     350303, 699411. (2026-10-18)
+20. **Before testing a margin-level size cap, compute the book's unclipped margin per unit of size and the size it
+    allows.** Add up the hold, the grid and the peak of the legs open together, then take eq / (thr x that). If that size
+    is far below the sizes in use, the preset fits only through the engine's 50% free-margin clip. A cap on a level
+    above 1 is then a tiny static cap: do not run it. Pre-register a degeneracy guard (bind share, median bound cap) so
+    a void arm stops before any sweep. Evidence: `research/hydra_size_cap3.out.txt` lines 143, 171-175 (legs peak 0.128
+    per unit of size, binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0); run 2 `research/hydra_size_cap2.py`
+    (s_dyn <= 2.9). (2026-10-19)

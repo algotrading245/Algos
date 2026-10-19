@@ -59,7 +59,7 @@ each finished piece of work.
   39.7 / 28.8 / 22.3% over 184 months 2010-2025.09 (edge 1.0, preset) — a **loose upper bound only**: reviewer
   REDO, the noise is still round 4's constant ticket (NSXUSD M1 missing), on the 21 tester months the model reaches
   the goal 10/10/9 times against the tester's 9/4/2. Model iteration stopped (run limit); do not quote r5 edge-0.7.
-- **Size cap (candidate `hydra_size_cap`, run 2 of 3, 2026-10-18/19):** `research/hydra_size_cap.py` fixed the
+- **Size cap (candidate `hydra_size_cap`, CLOSED after run 3 of 3, 2026-10-19: keep InpGoalCap 50, no EA change):** `research/hydra_size_cap.py` fixed the
   round-5 REDO items (C1 no-clip branch + unit tests, fix before cross, boost haircut at edge 0.7; noise P&L and
   balance-vs-equity sizing stay stated limits) and swept static InpGoalCap 3-14 against 50. Keep cap 50: every cap
   <=14 loses 19-25 pp of P(goal) for near-zero stop-outs (with the fixes, cap 50 gives 39.7/28.8/22.8%). Reviewer
@@ -68,11 +68,14 @@ each finished piece of work.
   pre-registered rule (3x to 2017: 27.5/31.9/38.5/39.6/42.9/44.0% vs 44.0%; 45 ties 50), so cap 50 stays. The
   dynamic arm was void: it projected margin before the EA's 50% free-margin clip and summed tickets not open
   together, so s_dyn <= 2.9 at every threshold (reviewer PASS WITH CHANGES; lesson logged).
-- **Next pipeline work (no tester time):** size cap run 3, the last: a corrected dynamic cap (margin after the clip
-  in the EA's order, leg margin as the peak of segments open together, thresholds near 1-2, a unit test running
-  ea_day at the cap, a degeneracy guard printed before the sweep). If it cannot be built cleanly, close the idea
-  with cap 50 kept. Researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a stated proxy). Then fidelity: the FTMO
-  demo's symbol margin for XAUUSD/AUDCAD against the fitted 1:50 / 1:100.
+  **Run 3 (2026-10-19, `research/hydra_size_cap3.py` + `.out.txt`):** clip-aware projection in the EA's order, legs
+  as the peak open together, plan fitted to 2017. The pre-registered guard found every threshold 1.1-3 DEGENERATE
+  (binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0), so no sweep ran and there were 0 new trials. Reviewer
+  PASS WITH CHANGES: the result is real. The goal preset fits only through the 50% clip (legs alone 0.128 margin per
+  unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
+- **Next pipeline work (no tester time):** researcher: fetch NSXUSD M1 (NAS100) from histdata (else SPX as a stated
+  proxy), and new ideas with a reason (lesson 10). Fidelity: the FTMO demo's symbol margin for XAUUSD/AUDCAD
+  against the fitted 1:50 / 1:100, and the first demo week from 2026-10-19.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). Open follow-ups needing no
   tester time: j12-vs-j3 deal lists on the three extra day-stop days; j14's floating-stop days to price the 1.7%
@@ -80,8 +83,8 @@ each finished piece of work.
 - **Demo (step 17):** AurumFunded 1.03 with both legs on, FTMO demo, attached 2026-10-17; first trades when gold
   opens Monday. The monitor reports in `docs/demo_log.md`; fidelity pairs demo fills with a tester run weekly.
   Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap).
-- **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the next job comes from
-  the size-cap work above. Scan candidates scan_slot_EURUSD_s25_L4_short, s21_L8_short and
+- **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the size cap
+  closed without a tester job. Scan candidates scan_slot_EURUSD_s25_L4_short, s21_L8_short and
   scan_cal_wed_EURUSD_s25_L2_short rejected 2026-10-18 (gates.py failed 2026-10-17). Judgements live in each `backtests/<folder>/summary.md`.
 - **Research pipeline:** simple-rule scans on the histdata symbols are exhausted (all four `edge_scan.py` families
   run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
