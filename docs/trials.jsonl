@@ -5,3 +5,4 @@
 {"id": "scan_cal_wed_EURUSD_s25_L2_short", "when": "2026-10-17T15:44:57", "verdict": "FAIL at halves"}
 {"id": "osler_round:grid", "when": "2026-10-18T01:05:22", "verdict": "fails: diff +0.86/-0.46 bp, net Sharpe -0.16/-0.69", "count": 512}
 {"id": "hydra_size_cap:run2", "when": "2026-10-19", "verdict": "keep cap 50; static 20-45 no better; dynamic arm degenerate (void)", "count": 36}
+{"id": "china_release_aud:run2", "when": "2026-10-19T05:07:07", "verdict": "FAIL: fails: 2015-2017: net Sharpe >= 0.5; 2018-2025.09: net R/trade > 0; 2018-2025.09: net Sharpe >= 0.5", "count": 2}

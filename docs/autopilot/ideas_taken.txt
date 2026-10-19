@@ -7,3 +7,4 @@
 2026-10-18.md 1. Volatility window around 2026-10-19 step 4 done (RBA PDF read in full, Table A1 matches the idea file); candidate china_release_aud, step 5 waits for the China release calendar (researcher)
 2026-10-18.md 2. S&P 500 quarterly 2026-10-19 dropped unstarted: about 64 events 2010-26 cannot clear the DSR bar, the sources are stock-level (no index-level direction), and it falls on quarterly expiry Fridays (calendar family)
 2026-10-17.md 4. Expiry-week drift before 2026-10-19 dropped unstarted: secondary summary only (no paper to read), the paper's trade is short puts (not offered), and the long-index proxy is a calendar slot of the scanned/rejected turn-of-month family
+2026-10-18.md 1. Volatility window around 2026-10-19 rejected at step 7 (candidate china_release_aud run 2: the extra move replicates for GDP/activity, but the 10-min range breakout nets -0.017 R a trade on AUDUSD from 2018, Sharpe < 0.5 both halves)
