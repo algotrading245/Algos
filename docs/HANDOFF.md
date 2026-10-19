@@ -83,6 +83,16 @@ each finished piece of work.
   j4-j9, the 10-17 month series and the 10-18 5xEQ runs, asked for 500) ran at 1:33, and every tester-install run
   on 10-18 (j12-j14, t3b-t5b) ran at 1:100; check the agent log for any other run. Re-read any Hydra conclusion drawn from Terminal 16 runs with that in mind (no re-run
   yet; holdout rule for j8b/j8c/j9 unchanged). Evidence: `research/demo_margin_terminals.py` + `.out.txt`.
+  **Hydra leverage sensitivity (2026-10-19, `research/hydra_leverage_sens.py` + `.out.txt`, 0 trials):** the
+  goal model (size-cap fixes, now the round-5 noise path from SPXUSD/NSXUSD M1) at cap 50, only the margin rates
+  scaled. Calibration holds: at 1:100 the model's stop-outs on the 21 tester months are 8/8/9 vs the tester's
+  7/10/9 (its goals 10/9/8 vs 9/4/2 still overstate). Over 184 months, edge 1.0, 3x/4x/5x, P(goal) / P(stop-out) /
+  share below 0.5x: 1:100 40.8/32.1/24.5 / 20.1/26.6/33.7 / 31.0/30.4/32.1%; 1:500 53.3/45.1/40.2 / 17.9/20.1/22.8
+  / 41.3/48.4/52.2%; 1:33 25.5/17.4/12.5%. Pre-registered rule B NOT MET (stop-outs fall 24-32%, not half): the
+  tester's stop-outs are not mainly the leverage. Rule C MET (+13/+16 pp at 4x/5x). So a 1:500 account trades
+  more goals for more deep losses (median 5x result 0.89x -> 0.31x), and the 1:100 tester figures (9/4/2 of 21)
+  do not stand for a 1:500 account in either direction. Hydra figures only count at a leverage written into the job
+  and checked in the log, so tools change (4) is now needed for Hydra too. The model's levels stay an upper bound.
 - **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
   PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). **j12-vs-j3 closed
   2026-10-19** (`research/funded_j12_j3_daystops.py` + `.out.txt`): j12's 3 extra day stops are its XAUUSD bell at
