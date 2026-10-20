@@ -51,4 +51,35 @@
   at the break, nearer 158.143. Fidelity should flag today's breakout fill as a restart artefact, not a model gap.
   Any mid-session restart by the keeper can cause the same thing.
 
+## 2026-10-20 (Tuesday): ALERT is the deal-0 false alarm again; one unplanned restart, no harm
+
+Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the repo's 1.07 has the deal-0 fix.
+
+- **The ALERT is false.** The Tokyo leg sold 0.63 USDJPY at 02:55:00, filled at 158.558. That is 1 order and 1 deal,
+  with no repeat. The ALERT is the same 10009/deal-0 read as on 10-19.
+- **Unplanned restart:** the EA was removed at 04:12:58 and the terminal exited cleanly at 04:13:21. The keeper's 10-20
+  log starts at 04:14:22; its 10-19 log ends at 14:54, so the keeper itself was restarted. It relaunched T16 with the
+  attach ini at 04:14:28, and the EA loaded at 04:14:35 and synced 1 position. The cause of the keeper restart is not
+  in the logs (a PC or scheduled-task restart?).
+- **Tokyo exit on time:** the position closed at 04:24:59 at 158.432, the planned 90-min end, so the restart did no
+  harm. The leverage line prints twice (00:05 and 04:14).
+- **Other trades:** each was 1 order with no repeat.
+
+  | Leg | Side and size | Opened | Closed |
+  |---|---|---|---|
+  | breakout | sell 0.02 USDJPY | 158.106 at 09:40 (range 158.106-158.600, 0.81x) | 157.985 at 16:59:59 |
+  | midday | sell 0.44 EURUSD | 1.12121 at 12:30 | 1.12110 at 13:59:59 |
+  | US500.cash | buy 0.70 | 7743.15 at 16:30 | 7717.55 at 17:30 |
+  | US100.cash | buy 0.09 | 29689.08 at 16:30 | 29560.13 at 17:30 |
+
+  The bell leg was skipped (move -0.45 is below 1.5x the average 3.30).
+- **Account:** the firm day started at 9992.46 EUR; the day stop was 9692.46 and the final stop is 9150.00. Neither
+  was hit.
+- **Agent runs:** every relay run on 10-20 ended at once with "weekly limit, resets Oct 23 18:00". So no orchestrator
+  or fidelity run happened between 10-19 15:35 and this run.
+
+## 2026-10-21 (Wednesday)
+
+- demo_check ok; 1 EA line so far.
+
 

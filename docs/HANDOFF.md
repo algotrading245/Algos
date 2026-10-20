@@ -1,6 +1,6 @@
 # Handoff: where the two-EA project stands (one page)
 
-For a session that picks this work up without the earlier conversation. Last updated 2026-10-19 (owner's change 6:
+For a session that picks this work up without the earlier conversation. Last updated 2026-10-21 (owner's change 6:
 this file is the current state only; the full history, all job judgements j1-j15, the **"Tested and rejected"** list,
 the **Scans** record and the EA / prop-route details are in `docs/HANDOFF_archive.md`).
 
@@ -136,6 +136,11 @@ each finished piece of work.
   execution reports the deal moments later). That fill is also a late-attach entry 22 pips past the range high, a
   restart artefact. Details are in `docs/demo_log.md` 2026-10-19 15:30. The monitor reports in `docs/demo_log.md`;
   fidelity pairs demo fills with a tester run weekly.
+  **10-20 (`docs/demo_log.md`):** 5 fills, each 1 order with no repeat: Tokyo USDJPY, breakout USDJPY, midday EURUSD,
+  US500 and US100; the bell leg skipped. No day or final stop was hit. The ALERT is the same deal-0 false alarm (Tokyo
+  fill). One unplanned restart at 04:13: the keeper itself restarted (cause unknown) and relaunched T16 with the attach
+  ini. The open Tokyo position synced and closed on time at 04:24:59. All relay agent runs on 10-20 failed with the
+  weekly usage limit (resets 2026-10-23 18:00).
   Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap). Any "order
   failed, retcode 10009" line is a fill, not a failure. Check that no leg sent a repeat order.
 - **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the size cap
