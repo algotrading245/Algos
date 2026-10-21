@@ -11,7 +11,7 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 - [ ] Meta-label filter: LightGBM on AurumHydra's tester trades (features at entry: ATR, session, trend slope, spread, day of week) predicting win/loss; keep a trade only when p > threshold. Walk-forward, purge/embargo, 3 seeds. Gate the filtered trade stream.
 - [ ] Silver: port the gold legs to XAGUSD (same rules, silver costs). Check XAGUSD data in marketdata/ first; if missing, add a data request.
 - [x] Gold-silver ratio mean reversion: z-score of log(XAU/XAG) on H1 and D1, trade the spread back to the mean, costs on both legs. -> rejected 2026-10-22 (gsr_meanrev: D1 only, 18 configs, best Sharpe 0.07, FAIL halves/costs/DSR; H1 variant not run, same cost wall)
-- [ ] Session and time-of-day scan on our own data: mean return and hit rate by hour and weekday for XAUUSD, USDJPY, EURUSD, US500, US100; Bonferroni over all cells; gate the survivors.
+- [ ] Session and time-of-day scan on our own data: mean return and hit rate by hour and weekday for XAUUSD, USDJPY, EURUSD, US500, US100; Bonferroni over all cells; gate the survivors. -> done 2026-10-22 without US100 (no data): 5 survivors, 3 in the rollover, FAIL at goal (research/tod_weekday_scan.py)
 - [ ] Regime classifier (trend vs range: ADX, Hurst, realised-vol ratio; then a LightGBM version) that switches Hydra legs on and off; compare with all legs always on.
 - [ ] Volatility forecast for sizing: HAR-RV vs GARCH(1,1) vs LightGBM on gold daily realised vol; size legs to a target vol; gate the resized stream against fixed size.
 - [ ] Index legs for AurumFunded: opening-range breakout and overnight drift on US500.cash / US100.cash under FTMO limits (5% daily, 10% total).
