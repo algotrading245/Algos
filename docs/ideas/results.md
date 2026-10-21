@@ -83,3 +83,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:03 | f_ma_cross_gbpjpy | n/a | 4 | GBPJPY ma_cross fast=10 slow=100 L1 both | 0.14 / -1.13 | FAIL at halves | 0.000 (N=26818, luck bar 1.03) |
 | 2026-10-22T01:03 | f_ma_cross_grxeur | n/a | 4 | GRXEUR ma_cross fast=10 slow=100 L1 both | -0.00 / -0.01 | FAIL at halves | 0.000 (N=26822, luck bar 1.03) |
 | 2026-10-22T01:03 | f_ma_cross_nzdcad | n/a | 4 | NZDCAD ma_cross fast=10 slow=50 L1 both | 0.24 / -0.19 | FAIL at halves | 0.000 (N=26826, luck bar 1.03) |
+| 2026-10-22T01:06 | f_ma_cross_jpxjpy | n/a | 4 | JPXJPY ma_cross fast=20 slow=100 L1 both | -0.13 / -0.48 | FAIL at halves | 0.000 (N=26830, luck bar 1.03) |
+| 2026-10-22T01:06 | f_ma_cross_wtiusd | n/a | 4 | WTIUSD ma_cross fast=10 slow=50 L1 both | 0.30 / 0.30 | FAIL at halves | 0.002 (N=26834, luck bar 1.03) |
+| 2026-10-22T01:06 | f_meanrev_audcad | n/a | 4 | AUDCAD meanrev lookback=10 z=2.0 L1 both | 0.36 / -0.17 | FAIL at halves | 0.000 (N=26838, luck bar 3.20) |
+| 2026-10-22T01:06 | f_meanrev_audusd | n/a | 4 | AUDUSD meanrev lookback=10 z=2.0 L1 both | 0.24 / -0.46 | FAIL at halves | 0.000 (N=26842, luck bar 3.18) |
+| 2026-10-22T01:06 | f_meanrev_eurusd | n/a | 4 | EURUSD meanrev lookback=10 z=1.5 L1 both | 0.16 / 0.35 | FAIL at halves | 0.000 (N=26846, luck bar 1.68) |
+| 2026-10-22T01:06 | f_meanrev_gbpusd | n/a | 4 | GBPUSD meanrev lookback=10 z=1.5 L1 both | 0.26 / 0.56 | FAIL at halves | 0.007 (N=26850, luck bar 1.67) |
+| 2026-10-22T01:06 | f_meanrev_spxusd | n/a | 4 | SPXUSD meanrev lookback=10 z=2.0 L1 both | 0.43 / 0.21 | FAIL at halves | 0.002 (N=26854, luck bar 3.24) |
+| 2026-10-22T01:06 | f_meanrev_usdjpy | n/a | 4 | USDJPY meanrev lookback=10 z=2.0 L1 both | 0.34 / 0.06 | FAIL at halves | 0.000 (N=26858, luck bar 3.04) |
+| 2026-10-22T01:06 | f_meanrev_xagusd | n/a | 4 | XAGUSD meanrev lookback=20 z=2.0 L1 both | -0.34 / -0.28 | FAIL at halves | 0.000 (N=26862, luck bar 2.48) |
+| 2026-10-22T01:06 | f_meanrev_xauusd | n/a | 4 | XAUUSD meanrev lookback=20 z=1.5 L1 both | -0.31 / -0.61 | FAIL at halves | 0.000 (N=26866, luck bar 1.68) |
