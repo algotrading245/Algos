@@ -169,6 +169,12 @@ each finished piece of work.
   found 4 ideas, all dropped; the last, run 9's leveraged-ETF close flow, at 10:06; runs 10-16 found none). Do not
   re-propose carry or other slow cross-section FX books, or close-flow ideas on the index (see archive).
   `pdf_text.py` retries mirrors before marking a paper unreadable.
+  **Idea engine (`tools/idea_engine.py`, 2026-10-21):** `china_activity_aud` FAIL at halves (`docs/ideas/results.md`).
+  The four "unread" example specs (pre-FOMC gold/S&P, pre-ISM, post-NFP USDJPY, month-end EURUSD fix) were set to
+  `dropped` by the orchestrator at 18:03: three repeat rejected tests whose papers were read in full
+  (`research/pre_fomc_drift.py`, `pre_announcement_drift.py`, `post_announcement_drift.py`), and the fix spec is the
+  EA's live fix leg (`Legs.mqh:1035-1114`) in a weaker unsigned form. New specs should be checked against the
+  archive's "Tested and rejected" list before they are written.
 
 ## Waiting on the owner
 

@@ -24,5 +24,7 @@
       -1
     ]
   },
-  "status": "unread"
+  "status": "dropped",
+  "note": "Duplicate of a live leg: the EA month-end fix leg (mql5/Include/Aurum/Legs.mqh:1035-1114) already trades the Melvin-Prins hedge flow into the London 4pm fix on the dollar pairs, signed by the stock index month-to-date move (FixTrend); this spec is an unsigned, earlier-entry version of it",
+  "dropped": "2026-10-21 orchestrator"
 }

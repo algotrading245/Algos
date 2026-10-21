@@ -22,5 +22,7 @@
   "when": {
     "event": "nfp"
   },
-  "status": "unread"
+  "status": "dropped",
+  "note": "Repeat: drift after payrolls in the dollar pairs was tested (research/post_announcement_drift.py) and rejected (docs/HANDOFF_archive.md line 686)",
+  "dropped": "2026-10-21 orchestrator"
 }

@@ -21,5 +21,7 @@
   "when": {
     "event": "fomc"
   },
-  "status": "unread"
+  "status": "dropped",
+  "note": "Repeat: pre-FOMC drift was tested with Lucca-Moench and Kurov et al. read in full (research/pre_fomc_drift.py) and rejected (docs/HANDOFF_archive.md line 678); gold before FOMC is covered by research/post_announcement_drift.py and fomc_cycle.py",
+  "dropped": "2026-10-21 orchestrator"
 }
