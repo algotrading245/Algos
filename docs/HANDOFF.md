@@ -43,15 +43,17 @@ each finished piece of work.
 - **Shared memory** in `docs/memory/` (mission, lessons, decisions.jsonl) goes into every prompt; agents search it
   before deciding and log every decision. Orchestrator run limit per idea: 3 (`runs` in `docs/candidates.json`),
   then drop, move on, or ask the owner.
-- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.03, XAUUSD M15,
-  `AurumFunded_FTMO_phase1_legs.set`, legs on since a3); the tester is its own install `C:\MetaTrader 5 - Tester`
+- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.06 since 2026-10-19 14:54,
+  XAUUSD M15, `AurumFunded_FTMO_phase1_legs.set`, legs on since a3; the repo build is 1.09, which only the owner can
+  copy over); the tester is its own install `C:\MetaTrader 5 - Tester`
   (owner login done 2026-10-18). Live page: `python tools/live_server.py` (127.0.0.1:8765).
 
 ## Current state
 
-- **Both EAs share one leg library** (`mql5/Include/Aurum/`; Hydra 1.33, Funded 1.03 are thin wrappers). Breakout
-  and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275, Funded half that.
-  Other EAs are archived in `mql5/Experts/_archive/`.
+- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.38 and Funded 1.09 in
+  the repo). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
+  Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
+  (AurumBreakout, AurumNoise, AurumFix and others); they are not used.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
   4x in 4 (19%), 5x in 2 (10%), 0 ruin months — but the "0 ruin" hides broker stop-outs (margin level < 50%) in
   7/10/9 months; that is the 4x/5x shortfall against the model (lesson 19). These 21 months ran at 1:100 and j8a-c
@@ -74,13 +76,14 @@ each finished piece of work.
   (binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0), so no sweep ran and there were 0 new trials. Reviewer
   PASS WITH CHANGES: the result is real. The goal preset fits only through the 50% clip (legs alone 0.128 margin per
   unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
-- **Next pipeline work (no tester time):** none is waiting on an agent. Researcher runs 10-16 on 2026-10-19 found
-  no idea (7 in a row), so more researcher runs today are unlikely to help (proposed tools change (5)). The noise
-  path from SPXUSD/NSXUSD M1 is already in the goal model (`research/hydra_leverage_sens.py`, the round-5 REDO
-  item's noise part). Fidelity: the demo account's own leverage was read on 2026-10-19 at 14:54: 1:100, gold
-  1:50, the tester install's setting, so j12-j14 stand and j3 does not. Next is the first demo week. Orchestrator: make
-  the library count retcode DONE with an order ticket as a fill -- DONE 15:35, see below. The demo keeps 1.06 until
-  the owner copies a new build.
+- **Next pipeline work (no tester time):** none is waiting on an agent (checked 2026-10-21 03:45: no to-judge job,
+  no candidate at steps 5-14, no unstarted idea, no pending lesson or question line). Researcher runs 10-22 on
+  10-19 and 10-21 found no idea, so more researcher runs are unlikely to help until new data or a new route comes in
+  (proposed tools change (5)). The noise path from SPXUSD/NSXUSD M1 is already in the goal model
+  (`research/hydra_leverage_sens.py`). Fidelity is next, after the first demo week (Friday 2026-10-23). It runs
+  against j12-j14, because the demo account is at 1:100 with gold at 1:50. The demo keeps 1.06 until the owner
+  copies a new build, so its logs still show the deal-0 "failed" lines and can show a late breakout entry after a
+  restart. Both are fixed in 1.07-1.09 (below).
   **Grid resend guard (2026-10-21 03:07, AurumFunded 1.09 / AurumHydra 1.38, reviewer approve, compile 0/0):**
   `Grid()` sends no new level until the last one sent shows in `GridHeld()` or `GRID_WAIT` (10 s) pass; closes and
   stop-outs are not held. No tester change (deals show at once); the demo preset has the grid off, so it matters for
@@ -171,6 +174,9 @@ each finished piece of work.
 
 - **(a4) Done in effect on 2026-10-19 at 14:54**: the terminal restarted from `t16_attach.ini` with AurumFunded 1.06
   loaded (`docs/demo_log.md`). The owner may close a4. The instructions below are kept for a later re-attach.
+  **Optional: copy build 1.09 to Terminal 16** the same way (it has the deal-0 fill fix, the late-breakout guard and
+  the grid resend guard; trading changes only after a late start or on a deal-0 fill, so the clean test from 10-19 carries on). Not needed
+  before the first fidelity week.
   Re-attach the demo EA: On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.06 (the
   current build in the repo; copy `AurumFunded.ex5` into the terminal's Experts folder first) with
   `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
