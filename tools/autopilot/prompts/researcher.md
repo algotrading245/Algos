@@ -21,13 +21,10 @@ answer questions in this run: decide, do the work, and stop.
    Ideas the spec format cannot express (a new data set, a multi-leg rule, an intraday trigger) go to the markdown
    file of step 3 as before, at most 5. Find them so that they fit the two goals (AurumHydra: $100 to $500 in a month; AurumFunded: pass
    and keep a prop account) and the instruments we can trade on FTMO (XAUUSD, USDJPY, EURUSD, AUDCAD, US500.cash,
-   US100.cash). Rotate the source type so the runs do not all mine the same vein; look at the source types of the
-   last two files in `docs/ideas/` and lead with one they did not use:
-   - paper: journals, NBER, central-bank staff reports (NY Fed, BIS, ECB), arXiv q-fin. SSRN refuses downloads (403);
-     look for the same paper on the authors' pages or a working-paper series.
-   - open code: open-source rules on GitHub or the MQL5 CodeBase with a stated logic (not black-box EAs).
-   - write-up: Kaggle or competition write-ups, practitioner notes with numbers.
-   - market structure: fixings, auctions, session opens, index rebalances, option expiries, data releases.
+   US100.cash). Your vein is market structure and events: fixings, auctions, session opens, index rebalances,
+   option expiries, data releases, flows, cross-asset moves on event days. Papers and pre-built strategies (GitHub,
+   MQL5 CodeBase, Quantpedia, QuantConnect, Kaggle) are the miner's (owner 2026-10-21): use a paper only to back
+   a market-structure idea, and do not mine strategy libraries. Rotate the event and the instrument between runs.
    Prefer sources with tables and out-of-sample results. Read the full paper before you summarise it:
    `python tools/pdf_text.py <pdf link> --pages 1-12` (then `--pages 13-30`, or `--find "Table 3"`) prints the text;
    it falls back to mirrors (arXiv export, NBER working-paper copies) when a host refuses. Mark every idea either
@@ -46,4 +43,4 @@ answer questions in this run: decide, do the work, and stop.
 Do not build or test anything; the orchestrator picks ideas up. Never look at our own results after 2025-10-12:
 those days are the owner's holdout (`tools/holdout.py`). Finish with one line listing the spec ids and idea titles,
 then the hand-over as the very last line: `HANDOFF: scanner <n> new specs, <m> new ideas` (or
-`HANDOFF: scanner no new specs` when you found nothing new); the cycle goes researcher, scanner, orchestrator, tester, fidelity.
+`HANDOFF: scanner no new specs` when you found nothing new); the cycle goes researcher, miner, scanner, orchestrator, tester, fidelity.

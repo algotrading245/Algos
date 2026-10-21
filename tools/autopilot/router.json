@@ -47,6 +47,13 @@
       "claude_agent": "researcher",
       "agent_file": ".claude/agents/researcher.md"
     },
+    "miner": {
+      "tier": "routine",
+      "turns": 40,
+      "minutes": 60,
+      "claude_agent": "miner",
+      "agent_file": ".claude/agents/miner.md"
+    },
     "scanner": {
       "tier": "routine",
       "turns": 25,

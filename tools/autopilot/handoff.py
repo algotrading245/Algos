@@ -26,7 +26,7 @@ RELAY = LOGDIR / "relay.json"
 TO_JUDGE = LOGDIR / "to-judge.json"
 SCAN_FLAG = LOGDIR / "scanner-flag.json"
 TESTER_HELP = LOGDIR / "tester-help.json"
-ROLES = ("orchestrator", "researcher", "tester", "scanner", "fidelity", "none")
+ROLES = ("orchestrator", "researcher", "miner", "tester", "scanner", "fidelity", "none")
 
 
 def main():

@@ -333,17 +333,173 @@ def test_spec(G, spec):
     return best, tried, ""
 
 
+# ---------- rule specs: daily strategies from papers and open code ----------
+# A spec with "rule" holds a daily position from the server-day close (data through yesterday only) and earns the
+# next day's close-to-close return. Cost: half the round-trip cost per unit of position change, plus SWAP_BP per day
+# held (FTMO charges both sides overnight; 0.5 bp a night is the figure research/grid_crosses.py uses).
+
+SWAP_BP = 0.5
+RULES = ("tsmom", "donchian", "meanrev", "ma_cross", "rsi", "reversal", "xsmom")
+RULE_PARAMS = {                          # defaults when the spec leaves a parameter out
+    "tsmom": {"lookback": [20, 60, 120]},
+    "donchian": {"lookback": [20, 55]},
+    "meanrev": {"lookback": [10, 20], "z": [1.5, 2.0]},
+    "ma_cross": {"fast": [10, 20], "slow": [50, 100]},
+    "rsi": {"period": [2, 14], "level": [10, 30]},
+    "reversal": {"lookback": [1, 5]},
+    "xsmom": {"lookback": [20, 60, 120], "top": [1]},
+}
+
+
+def daily_close(G, s):
+    cache = G.__dict__.setdefault("_dc", {})
+    if s not in cache:
+        cache[s] = np.log(np.asarray(close(G.P[s]), dtype=np.float64))
+    return cache[s]
+
+
+def rule_signal(kind, c, p):
+    """-1/0/+1 per day from log closes c, known at the close of the day before (shifted by one)."""
+    x = pd.Series(c)
+    if kind == "tsmom":
+        s = np.sign(x - x.shift(p["lookback"]))
+    elif kind == "reversal":
+        s = -np.sign(x - x.shift(p["lookback"]))
+    elif kind == "donchian":                 # flip on a close above the prior N-day high / below the low, hold until the opposite
+        n = p["lookback"]
+        up = x > x.shift(1).rolling(n).max()
+        dn = x < x.shift(1).rolling(n).min()
+        s = pd.Series(np.where(up, 1.0, np.where(dn, -1.0, np.nan))).ffill()
+    elif kind == "meanrev":                  # fade a close more than z standard deviations from its N-day mean
+        n = p["lookback"]
+        z = (x - x.rolling(n).mean()) / x.rolling(n).std()
+        s = pd.Series(np.where(z > p["z"], -1.0, np.where(z < -p["z"], 1.0, 0.0)))
+    elif kind == "ma_cross":
+        if p["fast"] >= p["slow"]:
+            return None
+        s = np.sign(x.rolling(p["fast"]).mean() - x.rolling(p["slow"]).mean())
+    elif kind == "rsi":                      # Wilder RSI; long below level, short above 100 - level
+        d = x.diff()
+        a = 1 / p["period"]
+        up = d.clip(lower=0).ewm(alpha=a, adjust=False).mean()
+        dn = (-d.clip(upper=0)).ewm(alpha=a, adjust=False).mean()
+        r = 100 - 100 / (1 + up / dn.replace(0, np.nan))
+        s = pd.Series(np.where(r < p["level"], 1.0, np.where(r > 100 - p["level"], -1.0, 0.0)))
+    else:
+        raise ValueError(f"rule must be one of {', '.join(RULES)}, not '{kind}'")
+    return pd.Series(s).shift(1).fillna(0.0).to_numpy()
+
+
+def hold_for(sig, k):
+    """Keep each nonzero signal for k days (k = 1 leaves it as it is)."""
+    if k <= 1:
+        return sig
+    s = pd.Series(np.where(sig != 0, sig, np.nan))
+    return s.ffill(limit=k - 1).fillna(0.0).to_numpy()
+
+
+def rule_variants(spec):
+    kind = spec["rule"]
+    grid = {**RULE_PARAMS.get(kind, {}), **(spec.get("params") or {})}
+    grid.setdefault("hold", [1])
+    grid.setdefault("flip", [False])
+    keys = sorted(grid)
+    vals = [v if isinstance(v, list) else [v] for v in (grid[k] for k in keys)]
+    sides = spec.get("side", "both")
+    sides = sides if isinstance(sides, list) else [sides]
+    syms = [tuple(spec["symbols"])] if kind == "xsmom" else spec["symbols"]
+    return [(s, dict(zip(keys, v)), side) for s in syms for v in itertools.product(*vals) for side in sides]
+
+
+def cost_of(sym):
+    return (COST.get(sym) or INDEX_COST.get(sym, 1.5)) * 1e-4
+
+
+def test_rule(G, spec):
+    """Daily position rules. Returns (best variant dict or None, number of variants, note)."""
+    kind = spec["rule"]
+    if kind not in RULES:
+        return None, 0, f"rule must be one of {', '.join(RULES)}"
+    when = dict(spec.get("when") or {})
+    if set(when) - {"weekday", "month_day", "vol", "trend"}:
+        return None, 0, "rule specs take only weekday, month_day, vol and trend in 'when'"
+    V = rule_variants(spec)
+    if len(V) > MAX_VARIANTS:
+        return None, 0, f"{len(V)} variants, more than {MAX_VARIANTS}: narrow the spec"
+    for s in spec["symbols"]:
+        if s not in G.P:
+            return None, 0, f"no data for {s} (have {', '.join(sorted(G.P))})"
+    best, tried = None, 0
+    for sym, p, side in V:
+        legs = list(sym) if kind == "xsmom" else [sym]
+        C = {s: daily_close(G, s) for s in legs}
+        R = {s: np.nan_to_num(np.diff(C[s], prepend=np.nan)) for s in legs}
+        W = {}
+        if kind == "xsmom":                  # rank the lookback returns known yesterday; long the top, short the bottom
+            if len(legs) < 2 * p["top"]:
+                return None, 0, f"xsmom needs at least {2 * p['top']} symbols"
+            M = pd.DataFrame({s: pd.Series(C[s]) - pd.Series(C[s]).shift(p["lookback"]) for s in legs})
+            rk = M.shift(1).rank(axis=1, ascending=False)
+            ok = M.shift(1).notna().all(axis=1).to_numpy()
+            for s in legs:
+                w = np.where(rk[s] <= p["top"], 1.0, np.where(rk[s] > len(legs) - p["top"], -1.0, 0.0)) / p["top"]
+                W[s] = np.where(ok, w, 0.0)
+        else:
+            sig = rule_signal(kind, C[sym], p)
+            if sig is None:
+                continue
+            W[sym] = sig
+        tried += 1
+        gross, costs, held = np.zeros(G.n), np.zeros(G.n), np.zeros(G.n, bool)
+        for s in legs:
+            w = hold_for(W[s], p["hold"]) * (-1.0 if p["flip"] else 1.0)
+            if side == "long":
+                w = np.clip(w, 0, None)
+            elif side == "short":
+                w = np.clip(w, None, 0)
+            if when:
+                mask, _ = day_filter(G, s, when)
+                w = w * mask
+            gross += w * R[s]
+            costs += np.abs(np.diff(w, prepend=0.0)) * cost_of(s) / 2 + np.abs(w) * SWAP_BP * 1e-4
+            held |= w != 0
+        if (held & G.pre).sum() < MIN_TRADES or (held & ~G.pre).sum() < MIN_TRADES:
+            continue
+        net = gross - costs
+        s_pre = sharpe(net[G.pre])
+        if best is None or s_pre > best["sharpe_pre"]:
+            label = "+".join(legs) if kind == "xsmom" else sym
+            best = {"symbol": label, "entry": kind + " " + " ".join(f"{k}={v}" for k, v in p.items()
+                                                                 if k not in ("hold", "flip")) + (" flip" if p["flip"] else ""),
+                    "hold": p["hold"], "side": side, "event_offset": 0,
+                    "sharpe_pre": s_pre, "sharpe_post": sharpe(net[~G.pre]),
+                    "trades_pre": int((held & G.pre).sum()), "trades_post": int((held & ~G.pre).sum()),
+                    "bp_per_trade": float(1e4 * net[held].mean()), "gross": gross, "costs": costs}
+    if best is None:
+        return None, tried, f"no variant in position {MIN_TRADES}+ days before 2018 and from 2018"
+    return best, tried, ""
+
+
+def spec_key(spec):
+    """The testable content of a spec, for skipping repeats under another id."""
+    keep = ("rule", "params", "symbols", "entry", "hold", "side", "when")
+    return json.dumps({k: spec.get(k) for k in keep}, sort_keys=True)
+
+
 def write_candidate(cid, G, best, folder):
-    g, on = best["g"], ~np.isnan(best["g"])
+    g, on = best.get("g"), None if best.get("g") is None else ~np.isnan(best["g"])
     for suffix, k in (("", 1.0), ("_stress", 1.5)):
-        r = np.where(on, np.nan_to_num(g) - k * best["cost"], 0.0)
+        if "gross" in best:                  # rule specs: the cost is already a daily series
+            r = best["gross"] - k * best["costs"]
+        else:
+            r = np.where(on, np.nan_to_num(g) - k * best["cost"], 0.0)
         pd.DataFrame({"day": G.days.strftime("%Y-%m-%d"), "r": r}).to_csv(folder / f"{cid}{suffix}.csv", index=False)
 
 
 def run_spec(G, path, spec):
     sid = spec.get("id") or path.stem
     cid = f"idea_{sid}"
-    best, tried, note = test_spec(G, spec)
+    best, tried, note = (test_rule if "rule" in spec else test_spec)(G, spec)
     row = {"id": sid, "title": spec.get("title", ""), "read": spec.get("read", "unverified"),
            "when": now().isoformat(timespec="seconds"), "variants": tried}
     if best is None:
@@ -358,7 +514,7 @@ def run_spec(G, path, spec):
         res = gates.judge(cid, n_extra=tried)
     finally:
         gates.CANDIDATES = old
-    row.update(verdict=res["verdict"], best={k: v for k, v in best.items() if k not in ("g", "cost")},
+    row.update(verdict=res["verdict"], best={k: v for k, v in best.items() if k not in ("g", "cost", "gross", "costs")},
                gates={x["gate"]: x["figure"] for x in res["gates"]})
     if res["verdict"] != "PASS" and not DRY:
         for suffix in ("", "_stress"):
@@ -409,12 +565,26 @@ def main():
         save_json(STATE, {"last": now().isoformat(timespec="seconds")})
         G = Grid()
         touched, passed = [], []
+        seen = {}                                 # testable content -> id of the spec already tested with it
+        for p in sorted(SPECS.glob("*.json")):
+            s = read_json(p)
+            if isinstance(s, dict) and s.get("status") == "done" and not str(s.get("verdict", "")).startswith("DUP"):
+                seen.setdefault(spec_key(s), s.get("id") or p.stem)
         for path, spec in todo:
+            dup = seen.get(spec_key(spec))
+            if dup:                               # same test under another name: no new trial, no new row
+                log(f"{path.name}: same test as {dup}, marked a duplicate")
+                if not DRY:
+                    spec.update(status="done", verdict=f"DUPLICATE of {dup}", tested=now().isoformat(timespec="seconds"))
+                    save_json(path, spec)
+                    touched.append(str(path.relative_to(ROOT)))
+                continue
+            seen[spec_key(spec)] = spec.get("id") or path.stem
             try:
                 row, res = run_spec(G, path, spec)
             except Exception as e:
                 row, res = {"id": spec.get("id") or path.stem, "title": spec.get("title", ""),
-                            "when": now().isoformat(timespec="seconds"), "variants": 0,
+                            "read": spec.get("read", "unverified"), "when": now().isoformat(timespec="seconds"), "variants": 0,
                             "verdict": "ERROR", "note": f"{type(e).__name__}: {e}"}, None
             b = row.get("best") or {}
             line = (f"| {row['when'][:16]} | {row['id']} | {row.get('read', '')} | {row['variants']} | "

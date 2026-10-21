@@ -39,7 +39,7 @@ Register "Aurum Monitor" (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday, T
 
 $every5 = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 5)
 Register "Aurum Relay" $every5 (Action "relay.ps1" "") `
-    "Agent relay: the chain researcher, scanner, orchestrator, tester, fidelity hands over to itself; provider and models come from tools\autopilot\router.json (tools\autopilot\relay.ps1)."
+    "Agent relay: the chain researcher, miner, scanner, orchestrator, tester, fidelity hands over to itself; provider and models come from tools\autopilot\router.json (tools\autopilot\relay.ps1)."
 
 foreach ($old in "Aurum Orchestrator", "Aurum Tester", "Aurum Researcher") {
     if (Get-ScheduledTask -TaskPath $folder -TaskName $old -ErrorAction SilentlyContinue) {

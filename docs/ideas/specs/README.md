@@ -53,6 +53,34 @@ A PASS goes into `docs/candidates.json` and wakes the orchestrator. The holdout 
 | `vol` | `high` / `low`: 20-day volatility in the top / bottom third of its last year |
 | `trend` | `up` / `down` (20-day return as of yesterday), or `sign` for follow/fade |
 
+## Rule specs (daily strategies from papers and open code)
+
+A spec with `"rule"` instead of `"entry"` is a daily strategy: the position is set from closes up to yesterday
+and earns today's close-to-close return. Cost: half the round-trip cost per unit of position change, plus 0.5 bp
+swap per day held.
+
+```json
+{"id": "tsmom_jpy_gold", "title": "...", "source": "Moskowitz, Ooi, Pedersen 2012", "link": "...",
+ "read": "in full", "why": "...", "rule": "tsmom", "symbols": ["XAUUSD", "USDJPY"],
+ "params": {"lookback": [60, 120], "hold": [1]}, "side": "both", "when": {"vol": "high"}, "status": "pending"}
+```
+
+| rule | params (defaults when left out) | position |
+|---|---|---|
+| `tsmom` | `lookback` [20, 60, 120] | sign of the lookback return |
+| `reversal` | `lookback` [1, 5] | minus the sign of the lookback return |
+| `donchian` | `lookback` [20, 55] | long after a close above the prior N-day high, short below the low, held until the opposite |
+| `meanrev` | `lookback` [10, 20], `z` [1.5, 2.0] | short above mean + z std, long below mean - z std, flat between |
+| `ma_cross` | `fast` [10, 20], `slow` [50, 100] | sign of fast MA minus slow MA |
+| `rsi` | `period` [2, 14], `level` [10, 30] | long when Wilder RSI < level, short when > 100 - level |
+| `xsmom` | `lookback` [20, 60, 120], `top` [1] | across the listed symbols: long the top `top`, short the bottom `top` (one basket) |
+
+Every rule also takes `hold` (keep a signal that many days, default [1]) and `flip` ([true] inverts it). `side` is
+`both`, `long`, `short` or a list. `when` takes only `weekday`, `month_day`, `vol` and `trend`. Name the paper's
+own parameters; leave a parameter out only when the source gives none (each default value is another variant).
+A spec whose rule, symbols, params, side and `when` match a spec already tested is marked `DUPLICATE of <id>` and
+not tested again.
+
 ## Timing
 
 The grid holds the bid at the end of every half-hour of the server day (New York 17:00 to 17:00). `"08:30"` is the price

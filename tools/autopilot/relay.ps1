@@ -9,7 +9,7 @@
 # never block the agents. This script runs tester_step.py on every tick as well, so a job that ends is collected at
 # once. The tester and scanner agents only run when their script asked for help or a scan passed every gate.
 #
-# The agents run as one chain, a cycle: researcher -> scanner -> orchestrator -> tester -> fidelity, then the next
+# The agents run as one chain, a cycle: researcher -> miner -> scanner -> orchestrator -> tester -> fidelity, then the next
 # cycle starts with the researcher again. Inside a cycle the next agent starts the moment the last one ends (this
 # script loops, no gap); between two cycles it waits $CycleBreakMinutes.
 # Order on each tick:
@@ -25,10 +25,11 @@
 #   3. The next agent at once: the one named in the last HANDOFF line, else the next in the chain. Skipped when it
 #      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
 #      has not run for a week, the researcher while 10 or more idea specs wait for tools/idea_engine.py, after 8 runs
-#      that day, or after 3 runs in a row without a new spec (then once a day), the orchestrator without work (Get-OrchestratorWhy: a demo event, a flag, a job,
+#      that day, or after 3 runs in a row without a new spec (then once a day), the miner (papers and open-source
+#      strategies) the same with 15 waiting specs as its limit, the orchestrator without work (Get-OrchestratorWhy: a demo event, a flag, a job,
 #      new ideas, a follow-up after a run that did work, or the daily heartbeat). A hand-over from another agent to
 #      the orchestrator always runs.
-# No daily caps but the researcher's: usage is bounded by one agent at a time and the cycle break. A usage/rate limit backs off only the
+# No daily caps but the researcher's and the miner's: usage is bounded by one agent at a time and the cycle break. A usage/rate limit backs off only the
 # provider that hit it (run-agent.ps1 -> router.py backoff); the next provider in router.json's fallback order takes
 # the runs, and with none left the relay runs code-only (step 2) until one is back.
 # Which CLI and model a role runs on is the router's (tools/autopilot/router.json): switch the whole system between
@@ -38,7 +39,7 @@ param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
 $CycleBreakMinutes = 30   # owner 2026-10-18: no gap inside a cycle, a break after it before the next cycle starts
-$Chain = @("researcher", "scanner", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
+$Chain = @("researcher", "miner", "scanner", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
 
 function Start-Agent([string]$Role, [string]$Why, [string]$Tier = $null) {
     if ($DryRun) { Write-Output "would start $Role ($Why)$(if ($Tier) { " at the $Tier tier" })"; return }
@@ -61,6 +62,15 @@ function Test-Runnable([string]$Role) {
             $today = if ($l -and $l.runs_day -eq $now.ToString("yyyy-MM-dd")) { [int]$l.runs_today } else { 0 }
             return (((Get-PendingSpecs) -lt 10) -and ($today -lt 8) -and
                     (($streak -lt 3) -or ((Get-LastEnd "researcher").Date -lt $now.Date)))
+        }
+        "miner"        {
+            # Owner 2026-10-21: papers and open-source strategies as rule specs, 80-100+ tested a day. Same gates as the
+            # researcher with a deeper queue: while fewer than 15 specs wait, at most 8 runs a day, the empty streak.
+            $l = Get-Last "miner"
+            $streak = if ($l -and $l.empty_streak) { [int]$l.empty_streak } else { 0 }
+            $today = if ($l -and $l.runs_day -eq $now.ToString("yyyy-MM-dd")) { [int]$l.runs_today } else { 0 }
+            return (((Get-PendingSpecs) -lt 15) -and ($today -lt 8) -and
+                    (($streak -lt 3) -or ((Get-LastEnd "miner").Date -lt $now.Date)))
         }
         "orchestrator" { return [bool](Get-OrchestratorWhy) }
         default        { return $true }

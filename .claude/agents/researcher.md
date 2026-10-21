@@ -16,9 +16,10 @@ Step 2, ideas:
 1. Read `docs/memory/rejected_index.json` (every rejected idea by name; the details are in `docs/HANDOFF_archive.md`
    or the file it names) and every entry in `docs/candidates.json` first.
    Do not propose anything already there, or a variant of it, unless you name the specific difference.
-2. Search papers (journals, NBER, central-bank staff reports, arXiv; SSRN refuses downloads), open-source rules
-   (GitHub, MQL5 CodeBase), competition write-ups and market-structure facts (fixings, auctions, session opens,
-   flows), rotating the source type between runs. Read the full paper with `python tools/pdf_text.py <pdf link>`
+2. Search market-structure facts (fixings, auctions, session opens, flows, event days), using papers (journals,
+   NBER, central-bank staff reports, arXiv; SSRN refuses downloads) only to back them. Papers mined for their own
+   rule and pre-built strategies (GitHub, MQL5 CodeBase, Quantpedia, QuantConnect, Kaggle) belong to the miner
+   agent (owner 2026-10-21). Read the full paper with `python tools/pdf_text.py <pdf link>`
    (it falls back to mirrors when a host refuses); mark every idea "read in full" or "unverified" — the orchestrator
    picks unverified ideas up last and only after the full read. Time-of-day drifts are already brute-forced by
    `tools/edge_scan.py`, so bring a reason, not a time slot.
@@ -28,8 +29,8 @@ Step 2, ideas:
    (b) event drift on the legs' own days (FOMC, NFP, CPI, auctions, option expiry) with an economic reason;
    (c) other liquid FTMO symbols not yet tested (silver, oil, DAX/US100 opens, BTC weekends) as a cross-asset copy of
    an edge already confirmed on gold; (d) volatility and regime filters that cut the Hydra stop-outs, not new legs;
-   (e) practitioner sources: MQL5 CodeBase and forum post-mortems, QuantConnect and Quantpedia write-ups, working
-   papers from BIS, ECB and Fed staff. Say "no new idea" with the angle tried rather than inventing one.
+   (e) practitioner post-mortems on forums about event and session behaviour (strategy libraries are the miner's).
+   Say "no new idea" with the angle tried rather than inventing one.
 3. For each idea give: title, authors and year, link, the rule in one paragraph, instruments, holding time, the
    paper's reported Sharpe and costs, and why it might be uncorrelated with the Hydra legs.
 4. Most ideas go out as specs: 10 to 20 JSON files per request in `docs/ideas/specs/` (format in its README.md;
