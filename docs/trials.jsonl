@@ -66,3 +66,13 @@
 {"id": "idea:f_donchian_wtiusd", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_ma_cross_usdjpy", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_xauusd", "when": "2026-10-22T00:57:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audcad", "when": "2026-10-22T01:00:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audusd", "when": "2026-10-22T01:00:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurjpy", "when": "2026-10-22T01:00:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurusd", "when": "2026-10-22T01:00:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpusd", "when": "2026-10-22T01:00:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_nzdusd", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_spxusd", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdcad", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdchf", "when": "2026-10-22T01:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_xagusd", "when": "2026-10-22T01:00:57", "verdict": "FAIL at halves", "count": 4}

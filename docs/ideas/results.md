@@ -63,3 +63,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T00:57 | f_donchian_wtiusd | n/a | 2 | WTIUSD donchian lookback=55 L1 both | 0.11 / -0.02 | FAIL at halves | 0.000 (N=26738, luck bar 1.03) |
 | 2026-10-22T00:57 | f_ma_cross_usdjpy | n/a | 4 | USDJPY ma_cross fast=20 slow=100 L1 both | 0.04 / 0.01 | FAIL at halves | 0.000 (N=26742, luck bar 1.03) |
 | 2026-10-22T00:57 | f_ma_cross_xauusd | n/a | 4 | XAUUSD ma_cross fast=20 slow=50 L1 both | 0.20 / 0.23 | FAIL at halves | 0.000 (N=26746, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_audcad | n/a | 4 | AUDCAD ma_cross fast=10 slow=50 L1 both | -0.25 / -0.24 | FAIL at halves | 0.000 (N=26750, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_audusd | n/a | 4 | AUDUSD ma_cross fast=20 slow=50 L1 both | 0.17 / -0.80 | FAIL at halves | 0.000 (N=26754, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_eurjpy | n/a | 4 | EURJPY ma_cross fast=10 slow=100 L1 both | 0.44 / -0.37 | FAIL at halves | 0.000 (N=26758, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_eurusd | n/a | 4 | EURUSD ma_cross fast=10 slow=50 L1 both | 0.15 / -0.03 | FAIL at halves | 0.000 (N=26762, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_gbpusd | n/a | 4 | GBPUSD ma_cross fast=10 slow=100 L1 both | 0.04 / 0.09 | FAIL at halves | 0.000 (N=26766, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_nzdusd | n/a | 4 | NZDUSD ma_cross fast=10 slow=50 L1 both | -0.37 / -0.30 | FAIL at halves | 0.000 (N=26770, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_spxusd | n/a | 4 | SPXUSD ma_cross fast=20 slow=100 L1 both | -0.06 / -0.02 | FAIL at halves | 0.000 (N=26774, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_usdcad | n/a | 4 | USDCAD ma_cross fast=20 slow=50 L1 both | -0.08 / -0.52 | FAIL at halves | 0.000 (N=26778, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_usdchf | n/a | 4 | USDCHF ma_cross fast=20 slow=100 L1 both | -0.28 / -0.34 | FAIL at halves | 0.000 (N=26782, luck bar 1.03) |
+| 2026-10-22T01:00 | f_ma_cross_xagusd | n/a | 4 | XAGUSD ma_cross fast=10 slow=50 L1 both | -0.07 / -0.02 | FAIL at halves | 0.000 (N=26786, luck bar 1.03) |
