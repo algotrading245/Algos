@@ -73,3 +73,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:00 | f_ma_cross_usdcad | n/a | 4 | USDCAD ma_cross fast=20 slow=50 L1 both | -0.08 / -0.52 | FAIL at halves | 0.000 (N=26778, luck bar 1.03) |
 | 2026-10-22T01:00 | f_ma_cross_usdchf | n/a | 4 | USDCHF ma_cross fast=20 slow=100 L1 both | -0.28 / -0.34 | FAIL at halves | 0.000 (N=26782, luck bar 1.03) |
 | 2026-10-22T01:00 | f_ma_cross_xagusd | n/a | 4 | XAGUSD ma_cross fast=10 slow=50 L1 both | -0.07 / -0.02 | FAIL at halves | 0.000 (N=26786, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_audjpy | n/a | 4 | AUDJPY ma_cross fast=10 slow=100 L1 both | -0.44 / 0.01 | FAIL at halves | 0.000 (N=26790, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_audnzd | n/a | 4 | AUDNZD ma_cross fast=10 slow=100 L1 both | -0.01 / -0.56 | FAIL at halves | 0.000 (N=26794, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_cadjpy | n/a | 4 | CADJPY ma_cross fast=20 slow=100 L1 both | -0.02 / -0.32 | FAIL at halves | 0.000 (N=26798, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_euraud | n/a | 4 | EURAUD ma_cross fast=20 slow=50 L1 both | 0.01 / -0.81 | FAIL at halves | 0.000 (N=26802, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_eurchf | n/a | 4 | EURCHF ma_cross fast=10 slow=50 L1 both | 0.11 / -0.72 | FAIL at halves | 0.000 (N=26806, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_eurgbp | n/a | 4 | EURGBP ma_cross fast=20 slow=50 L1 both | -0.13 / -0.87 | FAIL at halves | 0.000 (N=26810, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_gbpchf | n/a | 4 | GBPCHF ma_cross fast=20 slow=50 L1 both | -0.55 / -0.92 | FAIL at halves | 0.000 (N=26814, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_gbpjpy | n/a | 4 | GBPJPY ma_cross fast=10 slow=100 L1 both | 0.14 / -1.13 | FAIL at halves | 0.000 (N=26818, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_grxeur | n/a | 4 | GRXEUR ma_cross fast=10 slow=100 L1 both | -0.00 / -0.01 | FAIL at halves | 0.000 (N=26822, luck bar 1.03) |
+| 2026-10-22T01:03 | f_ma_cross_nzdcad | n/a | 4 | NZDCAD ma_cross fast=10 slow=50 L1 both | 0.24 / -0.19 | FAIL at halves | 0.000 (N=26826, luck bar 1.03) |

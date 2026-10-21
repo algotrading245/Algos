@@ -76,3 +76,13 @@
 {"id": "idea:f_ma_cross_usdcad", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_usdchf", "when": "2026-10-22T01:00:57", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_xagusd", "when": "2026-10-22T01:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audjpy", "when": "2026-10-22T01:03:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audnzd", "when": "2026-10-22T01:03:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_cadjpy", "when": "2026-10-22T01:03:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_euraud", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurchf", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurgbp", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpchf", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpjpy", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_grxeur", "when": "2026-10-22T01:03:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_nzdcad", "when": "2026-10-22T01:03:56", "verdict": "FAIL at halves", "count": 4}
