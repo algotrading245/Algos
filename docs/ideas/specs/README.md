@@ -3,8 +3,14 @@
 The miner writes one JSON file per idea in this folder. `tools/spec_factory.py` adds the rest with no LLM: when fewer
 than 10 specs are pending it writes the next 10 from a fixed grid (each standard rule family × every symbol × no filter,
 high/low vol, up/down trend, at the engine's default parameters; ids `f_<rule>_<symbol>[_vh|_vl|_tu|_td]`,
-`"made_by": "spec_factory"`), at most 120 a day, 732 in all. `tools/idea_engine.py` (started by the keeper every
-minute, one run per 3 minutes at most) tests every spec whose `status` is `pending`. While a Claude agent runs it still
+`"made_by": "spec_factory"`), 732 in all. A second grid of 1,216 follows (ids `f2_...`): the papers' own parameters
+(tsmom 252, MA 50/200 and 1/200, RSI-2 at 5, reversal 21, xsmom 252) × no filter / turn of the month (`month_day`
+[-1, 1, 2, 3]) / high / low vol, the default rules at turn of the month, and session opens (Asia 19:00, London 03:00,
+NY 08:00, US cash 09:30 New York; held 1, 2 or 4 hours, both sides) on every day and per weekday. About 4,400
+variants, so about 4,400 more DSR trials. Pacing: at most (hour + 1) × 5 specs by the end of each hour, 120 a day.
+When both grids are used up the factory logs it once a day in the idea engine's log. `tools/idea_engine.py`
+(started by the keeper every minute) tests every pending spec back to back, asking the factory for more as the queue
+empties, for up to 50 s a run. While a Claude agent runs it still
 tests, but a PASS waits (stays pending) and nothing is committed until the agent ends. No LLM is
 involved. For each spec the engine:
 
