@@ -6,8 +6,27 @@
   "read": "in full",
   "why": "The paper's first rule: long when the 5-day average is above the 20-day average, short when below, held until the signal changes (futures settlements, +1/-1 signal). Its Exhibit 1 shows the portfolio earned 10.26% a year in 1975-1994 and -2.40% in 1995-1999 and -0.59% in 2000-2006, so the rule is tested here on the majors it names, with our daily closes and the engine's real costs. The paper's own conclusion is that the edge is gone in the majors, so a fail is the expected result; the spec exists to test it on our symbols, not to assume it. Gold and the yen crosses are not in the paper's universe and are left out.",
   "rule": "ma_cross",
-  "symbols": ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "USDCHF", "USDCAD"],
-  "params": {"fast": [5], "slow": [20], "hold": [1]},
+  "symbols": [
+    "USDJPY",
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD",
+    "USDCHF",
+    "USDCAD"
+  ],
+  "params": {
+    "fast": [
+      5
+    ],
+    "slow": [
+      20
+    ],
+    "hold": [
+      1
+    ]
+  },
   "side": "both",
-  "status": "pending"
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T20:21:16"
 }

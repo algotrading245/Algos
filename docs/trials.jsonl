@@ -7,3 +7,7 @@
 {"id": "hydra_size_cap:run2", "when": "2026-10-19", "verdict": "keep cap 50; static 20-45 no better; dynamic arm degenerate (void)", "count": 36}
 {"id": "china_release_aud:run2", "when": "2026-10-19T05:07:07", "verdict": "FAIL: fails: 2015-2017: net Sharpe >= 0.5; 2018-2025.09: net R/trade > 0; 2018-2025.09: net Sharpe >= 0.5", "count": 2}
 {"id": "idea:china_activity_aud", "when": "2026-10-21T17:10:55", "verdict": "FAIL at halves", "count": 12}
+{"id": "idea:ma_cross_fx_majors_1_5", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
+{"id": "idea:ma_cross_fx_majors_20_200", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
+{"id": "idea:ma_cross_fx_majors_5_20", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
+{"id": "idea:ma_cross_nzdusd_5_20", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 1}

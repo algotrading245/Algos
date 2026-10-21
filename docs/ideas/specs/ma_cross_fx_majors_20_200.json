@@ -6,8 +6,27 @@
   "read": "in full",
   "why": "The paper's third rule: the 20-day average against the 200-day average, meant to catch long swings in exchange rates. Same signal convention as the other two rules (long when the short average is above the long one, held until it changes). Exhibit 1 gives the majors' portfolio -2.40% a year in 1995-1999 and -0.59% in 2000-2006. This is the slowest of the three rules; it is kept apart because the engine's daily bars make a 200-day window a different horizon from the 5/20 pair.",
   "rule": "ma_cross",
-  "symbols": ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "USDCHF", "USDCAD"],
-  "params": {"fast": [20], "slow": [200], "hold": [1]},
+  "symbols": [
+    "USDJPY",
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD",
+    "USDCHF",
+    "USDCAD"
+  ],
+  "params": {
+    "fast": [
+      20
+    ],
+    "slow": [
+      200
+    ],
+    "hold": [
+      1
+    ]
+  },
   "side": "both",
-  "status": "pending"
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T20:21:16"
 }
