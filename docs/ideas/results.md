@@ -123,3 +123,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:16 | f_rsi_usdcad | n/a | 4 | USDCAD rsi level=30 period=2 L1 both | 0.44 / 0.70 | FAIL at halves | 0.024 (N=26978, luck bar 1.03) |
 | 2026-10-22T01:16 | f_rsi_usdchf | n/a | 4 | USDCHF rsi level=30 period=14 L1 both | 0.51 / -0.36 | FAIL at halves | 0.000 (N=26982, luck bar 2.96) |
 | 2026-10-22T01:16 | f_rsi_xagusd | n/a | 4 | XAGUSD rsi level=30 period=2 L1 both | -0.20 / -0.15 | FAIL at halves | 0.000 (N=26986, luck bar 1.03) |
+| 2026-10-22T01:18 | f_rsi_audnzd | n/a | 4 | AUDNZD rsi level=30 period=14 L1 both | 0.67 / 0.05 | FAIL at halves | 0.004 (N=26990, luck bar 2.84) |
+| 2026-10-22T01:18 | f_rsi_cadjpy | n/a | 4 | CADJPY rsi level=30 period=2 L1 both | -0.16 / -0.03 | FAIL at halves | 0.000 (N=26994, luck bar 1.03) |
+| 2026-10-22T01:18 | f_rsi_euraud | n/a | 4 | EURAUD rsi level=30 period=14 L1 both | 0.13 / -0.10 | FAIL at halves | 0.000 (N=26998, luck bar 3.09) |
+| 2026-10-22T01:18 | f_rsi_eurchf | n/a | 4 | EURCHF rsi level=10 period=2 L1 both | 0.39 / -0.21 | FAIL at halves | 0.000 (N=27002, luck bar 1.72) |
+| 2026-10-22T01:18 | f_rsi_eurgbp | n/a | 4 | EURGBP rsi level=30 period=14 L1 both | 0.24 / 0.51 | FAIL at halves | 0.007 (N=27006, luck bar 3.58) |
+| 2026-10-22T01:19 | f_rsi_gbpchf | n/a | 4 | GBPCHF rsi level=30 period=14 L1 both | 0.65 / -0.28 | FAIL at halves | 0.001 (N=27010, luck bar 3.24) |
+| 2026-10-22T01:19 | f_rsi_grxeur | n/a | 4 | GRXEUR rsi level=30 period=14 L1 both | 0.02 / -0.40 | FAIL at halves | 0.000 (N=27014, luck bar 2.58) |
+| 2026-10-22T01:19 | f_rsi_jpxjpy | n/a | 4 | JPXJPY rsi level=30 period=2 L1 both | 0.16 / -0.13 | FAIL at halves | 0.000 (N=27018, luck bar 1.03) |
+| 2026-10-22T01:19 | f_rsi_nzdcad | n/a | 4 | NZDCAD rsi level=30 period=14 L1 both | 0.64 / 0.23 | FAIL at halves | 0.009 (N=27022, luck bar 3.03) |
+| 2026-10-22T01:19 | f_rsi_wtiusd | n/a | 4 | WTIUSD rsi level=10 period=2 L1 both | 0.21 / 0.16 | FAIL at halves | 0.001 (N=27026, luck bar 1.76) |

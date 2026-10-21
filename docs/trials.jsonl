@@ -126,3 +126,13 @@
 {"id": "idea:f_rsi_usdcad", "when": "2026-10-22T01:16:01", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_usdchf", "when": "2026-10-22T01:16:01", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_xagusd", "when": "2026-10-22T01:16:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audnzd", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_cadjpy", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_euraud", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurchf", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurgbp", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpchf", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_grxeur", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_jpxjpy", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_nzdcad", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_wtiusd", "when": "2026-10-22T01:19:01", "verdict": "FAIL at halves", "count": 4}
