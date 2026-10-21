@@ -1601,6 +1601,32 @@ void Breakout()
       int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
       PrintFormat(AURUM_NAME+": USD/JPY range %s-%s, %.2fx its %d-day average%s",DoubleToString(g_breakLo,dg),
                   DoubleToString(g_breakHi,dg),ratio,n,g_breakOk ? "" : ", no breakout today");
+      // Started 5 min or more after InpBreakStartHHMM (attach or restart): a side whose level the closed M1 bars
+      // already passed would have been traded at the break, so a later entry is a different trade; skip it today.
+      // A running EA reads the range in the start minute; only a data gap or a blocked Run (live clock check) brings
+      // it here later, where skipping is also right. Missing M1 history since the start skips both sides.
+      datetime bar=now-now%60-60;
+      double bh[],bl[];
+      int want=(int)((bar-start)/60)+1;
+      int m=(g_breakOk && now>=start+300 ? CopyHigh(sym,PERIOD_M1,start,bar,bh) : -2);
+      if(m!=-2 && (m<=0 || m<want*9/10 || CopyLow(sym,PERIOD_M1,start,bar,bl)!=m))
+        {
+         g_breakTraded[0]=today;
+         g_breakTraded[1]=today;
+         PrintFormat(AURUM_NAME+": USD/JPY M1 history since the start is incomplete (%d of %d bars), no late breakout today",
+                     MathMax(m,0),want);
+        }
+      else if(m>0)
+         for(int s=0; s<2; s++)
+           {
+            long magic=InpMagic+BREAK_MAGIC+s;
+            if((s==0 ? bh[ArrayMaximum(bh)]<g_breakHi : bl[ArrayMinimum(bl)]>g_breakLo) ||
+               HeldLots(sym,magic,opened)>0 || TradedSince(sym,magic,start))
+               continue;
+            g_breakTraded[s]=today;
+            PrintFormat(AURUM_NAME+": USD/JPY passed its range %s before this start, no late %s today",
+                        s==0 ? "high" : "low",s==0 ? "buy" : "sell");
+           }
      }
    if(!g_breakOk)
       return;

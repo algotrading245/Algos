@@ -81,6 +81,12 @@ each finished piece of work.
   1:50, the tester install's setting, so j12-j14 stand and j3 does not. Next is the first demo week. Orchestrator: make
   the library count retcode DONE with an order ticket as a fill -- DONE 15:35, see below. The demo keeps 1.06 until
   the owner copies a new build.
+  **Late-breakout guard (2026-10-21 02:22, AurumFunded 1.08 / AurumHydra 1.37, reviewer PASS, compile 0/0):** when
+  `Breakout()` reads the USD/JPY range 5 min or more after the start (attach, keeper restart, data gap, a blocked
+  live Run), a side whose level the closed M1 bars since the start already passed is skipped that day (no repeat of
+  the 10-19 buy 22 pips past the high); with under 90% of the M1 bars since the start, both sides are skipped. Held
+  trades still exit. No tester change (a running EA reads the range in the start minute). The owner may copy 1.08 to
+  Terminal 16; agents do not attach an EA.
   **Deal-0 fix (2026-10-19 15:35, AurumFunded 1.07 / AurumHydra 1.36, reviewer PASS, compile 0/0):** `Filled(ok)`
   (`Legs.mqh:199`) counts DONE with an order ticket and deal 0 as a fill at all 8 order sites, so the leg sets its
   done flag at once and logs its normal line, priced with `FillPrice` (the asked bid/ask while the deal price is 0).

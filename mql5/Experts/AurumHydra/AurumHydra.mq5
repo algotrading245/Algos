@@ -122,10 +122,12 @@
 //| v1.35: logs the account leverage and 1-lot margins once a day.   |
 //| v1.36: an order answered DONE with deal 0 counts as a fill (FTMO |
 //| reports the deal moments later).                                 |
+//| v1.37: no late breakout after an attach or restart: a side whose |
+//| level was passed before the EA started is skipped that day.      |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.36"
+#property version   "1.37"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>
