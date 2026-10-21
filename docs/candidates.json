@@ -441,6 +441,55 @@
    },
    "reason": "Gold-silver log-ratio z-score mean reversion, D1, 18 configs: best net Sharpe 0.07 (halves 0.16/-0.05, 1.5x cost 0.02). Gate FAIL at halves, costs, DSR.",
    "evidence": "research/gsr_meanrev.py"
+  },
+  {
+   "id": "near_miss_basket",
+   "name": "near_miss_basket",
+   "status": "rejected",
+   "step": 9,
+   "reason": "Six near-miss rule streams (USDJPY tsmom/donchian, NZDCAD meanrev, AUDCAD/SPXUSD/USDCAD rsi) vol-scaled to 10% and equal-weighted: halves 1.06/1.02, 1.5x cost 0.81, corr and goal pass, but DSR 0.525 < 0.9 at N=27027 (luck bar Sharpe 1.03; basket Sharpe about 1.04). Diversification lifts Sharpe, not enough over the trial count. Evidence: research/near_miss_basket.py, docs/gates/near_miss_basket.json",
+   "gates": {
+    "id": "near_miss_basket",
+    "when": "2026-10-22T01:27:28",
+    "verdict": "FAIL at dsr",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "1.06 / 1.02",
+      "rule": ">= 0.5 to 2017 and from 2018"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.81",
+      "rule": ">= 0.3 at 1.5x cost"
+     },
+     {
+      "gate": "dsr",
+      "pass": false,
+      "figure": "0.525 (N=27027, luck bar 1.03)",
+      "rule": ">= 0.9"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book +0.12, max leg grid +0.18",
+      "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "goal",
+      "pass": true,
+      "figure": "Hydra 2018+ 3.45 -> 3.57 at weight 0.946; P(5x) 56.2% -> 57.4%",
+      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+     }
+    ],
+    "weight": 0.9458763568218541,
+    "p5x": [
+     0.5618464571293371,
+     0.5744182939832989
+    ]
+   }
   }
  ],
  "rejected": [

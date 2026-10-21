@@ -6,7 +6,7 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 
 ## Items
 
-- [ ] Near-miss basket: take every spec in docs/ideas/near_miss.jsonl (failed a gate, both halves Sharpe > 0.3), rebuild each best variant's daily stream at real costs, scale each to the same target vol (past-only 60-day realised vol), equal-weight them into one basket and gate the basket (tools/gates.py). Count the basket and every weighting tried as trials; no picking members on the late half.
+- [x] Near-miss basket: take every spec in docs/ideas/near_miss.jsonl (failed a gate, both halves Sharpe > 0.3), rebuild each best variant's daily stream at real costs, scale each to the same target vol (past-only 60-day realised vol), equal-weight them into one basket and gate the basket (tools/gates.py). Count the basket and every weighting tried as trials; no picking members on the late half. -> rejected 2026-10-22 (6 members, halves 1.06/1.02, 1.5x cost 0.81, corr+goal pass, DSR 0.525 < 0.9 at N=27027; research/near_miss_basket.py)
 - [ ] Gold-silver ratio on H1: rerun gsr_meanrev on H1 bars (the 2026-10-22 run was D1 only), z-score of log(XAU/XAG), costs on both legs at the silver spread from the data request below (until it lands, the 4 bp round trip the scanners assume, and say so). Every lookback/threshold a trial.
 - [ ] Meta-label filter: LightGBM on AurumHydra's tester trades (features at entry: ATR, session, trend slope, spread, day of week) predicting win/loss; keep a trade only when p > threshold. Walk-forward, purge/embargo, 3 seeds. Gate the filtered trade stream.
 - [ ] Silver: port the gold legs to XAGUSD (same rules, silver costs). Check XAGUSD data in marketdata/ first; if missing, add a data request.
