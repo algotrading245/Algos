@@ -1,6 +1,6 @@
 # Runs one unattended agent session for a pipeline role, started by the relay (relay.ps1) or the monitor task.
 #
-#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher|miner|scanner|fidelity [-Tier routine|code|judge] [-Model <name>] [-IfWork]
+#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher|miner|scanner|fidelity|worker [-Tier routine|code|judge] [-Model <name>] [-IfWork]
 #
 # - Which CLI and which model run the role comes from the router (tools/autopilot/router.json, read through
 #   router.py): one switch picks the provider for every role (claude or qwen), each role maps to a tier, and each
@@ -21,7 +21,7 @@
 #   the next provider in router.json's fallback order (-NoRetry marks that second run). When the router finds no
 #   provider at all it answers "none" and this script exits at once: the relay then runs code-only (relay.ps1).
 param(
-    [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher", "miner", "scanner", "fidelity")][string]$Role,
+    [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher", "miner", "scanner", "fidelity", "worker")][string]$Role,
     [ValidateSet("routine", "code", "judge")][string]$Tier,
     [string]$Model,
     [switch]$IfWork,
@@ -276,7 +276,7 @@ $recent
     Write-Log $log $endNote
     # Hand-over for the relay (relay.ps1): the agent's last "HANDOFF: <role> <reason>" line names the next agent.
     $next = "none"; $reason = "no HANDOFF line"
-    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(orchestrator|researcher|miner|tester|scanner|fidelity|none)\b[ \t:-]*(.*)$')
+    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(orchestrator|researcher|miner|tester|scanner|fidelity|worker|none)\b[ \t:-]*(.*)$')
     if ($m.Count) { $next = $m[$m.Count - 1].Groups[1].Value; $reason = $m[$m.Count - 1].Groups[2].Value.Trim(" `t`r*_:-".ToCharArray()) }
 
     # The relay's gating reads these (owner 2026-10-21): "idle" (an orchestrator run that found nothing to do, so it

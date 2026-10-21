@@ -9,7 +9,7 @@
 # never block the agents. This script runs tester_step.py on every tick as well, so a job that ends is collected at
 # once. The tester and scanner agents only run when their script asked for help or a scan passed every gate.
 #
-# The agents run as one chain, a cycle: researcher -> miner -> scanner -> orchestrator -> tester -> fidelity, then the next
+# The agents run as one chain, a cycle: researcher -> miner -> scanner -> worker -> orchestrator -> tester -> fidelity, then the next
 # cycle starts with the researcher again. Inside a cycle the next agent starts the moment the last one ends (this
 # script loops, no gap); between two cycles it waits $CycleBreakMinutes.
 # Order on each tick:
@@ -26,8 +26,9 @@
 #      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
 #      has not run for a week, the researcher while 10 or more idea specs wait for tools/idea_engine.py, after 8 runs
 #      that day, or after 3 runs in a row without a new spec (then once a day), the miner (papers and open-source
-#      strategies) the same with 15 waiting specs as its limit, the orchestrator without work (Get-OrchestratorWhy: a demo event, a flag, a job,
-#      new ideas, a follow-up after a run that did work, or the daily heartbeat). A hand-over from another agent to
+#      strategies) the same with 15 waiting specs as its limit, the worker with an empty backlog (Get-WorkerBacklog:
+#      gated candidates to build, unstarted ideas, open worker_queue.md items), the orchestrator without work
+#      (Get-OrchestratorWhy: a demo event, a flag, a job, a follow-up after a run that did work, or the daily heartbeat). A hand-over from another agent to
 #      the orchestrator always runs.
 # No daily caps but the researcher's and the miner's: usage is bounded by one agent at a time and the cycle break. A usage/rate limit backs off only the
 # provider that hit it (run-agent.ps1 -> router.py backoff); the next provider in router.json's fallback order takes
@@ -39,7 +40,7 @@ param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
 $CycleBreakMinutes = 30   # owner 2026-10-18: no gap inside a cycle, a break after it before the next cycle starts
-$Chain = @("researcher", "miner", "scanner", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
+$Chain = @("researcher", "miner", "scanner", "worker", "orchestrator", "tester", "fidelity")   # one cycle; after the last, a new cycle
 
 function Start-Agent([string]$Role, [string]$Why, [string]$Tier = $null) {
     if ($DryRun) { Write-Output "would start $Role ($Why)$(if ($Tier) { " at the $Tier tier" })"; return }
@@ -73,7 +74,10 @@ function Test-Runnable([string]$Role) {
                     (($streak -lt 3) -or ((Get-LastEnd "miner").Date -lt $now.Date)))
         }
         "orchestrator" { return [bool](Get-OrchestratorWhy) }
-        default        { return $true }
+        # Owner 2026-10-22: the Sonnet worker takes one backlog item end to end (prototype, gates, leg, compile,
+        # tester job); it runs whenever an item waits (Get-WorkerBacklog in common.ps1).
+        "worker"       { return ((Get-WorkerBacklog) -gt 0) }
+        default       { return $true }
     }
 }
 # Why the orchestrator should run (owner 2026-10-21: no idle runs), or $null. Work first: a demo event it has not
@@ -86,9 +90,7 @@ function Get-OrchestratorWhy {
     if ($ev) { return "demo $($ev.kind)" }
     if (Test-ScannerWork) { return "scanner flag" }
     if (@(Get-ToJudge).Count) { return "jobs to judge" }
-    $idea = Get-ChildItem (Join-Path $Repo "docs\ideas") -Filter "*.md" -ErrorAction SilentlyContinue |
-        Sort-Object LastWriteTime | Select-Object -Last 1
-    if ($idea -and $idea.LastWriteTime -gt $end -and (Get-UnstartedIdeas) -gt 0) { return "new ideas in $($idea.Name)" }
+    # New ideas are the worker's since 2026-10-22 (Sonnet builds, Opus only judges and reviews).
     if ($l -and ($l.idle -eq $false) -and ($l.failed -ne $true)) { return "follow-up: $($l.reason)" }
     if ($end.Date -lt $now.Date) { return "daily heartbeat" }
     return $null

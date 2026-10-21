@@ -119,6 +119,23 @@ function Get-UnstartedIdeas {
     return $n
 }
 
+# The worker's backlog (owner 2026-10-22: one edge finished, the next started at once): candidates that passed the
+# gates and wait for a build ("testing" in docs/candidates.json), unstarted ideas in docs/ideas/*.md, and open items
+# ("- [ ]") in docs/autopilot/worker_queue.md (ML models, data scans, new markets). The relay skips the worker at 0.
+$WorkerQueue = Join-Path $Repo "docs\autopilot\worker_queue.md"
+function Get-WorkerBacklog {
+    $n = 0
+    try {
+        $n += @((Get-Content (Join-Path $Repo "docs\candidates.json") -Raw | ConvertFrom-Json).candidates |
+            Where-Object { $_.status -eq "testing" }).Count
+    } catch { }
+    $n += (Get-UnstartedIdeas)
+    if (Test-Path $WorkerQueue) {
+        $n += @(Get-Content $WorkerQueue -Encoding UTF8 | Where-Object { $_ -match '^\s*-\s*\[ \]' }).Count
+    }
+    return $n
+}
+
 # Agent runs of a role started today (from its log) (the relay no longer caps runs; kept for reports).
 function Get-RunsToday([string]$Role) {
     $f = Join-Path $LogDir "$(Get-Date -Format yyyy-MM-dd)_agent-$Role.log"

@@ -22,22 +22,17 @@ Then pick the single most useful next task and do it, in this order of priority:
    5 points above the expected one. If any named job failed or is not close, leave the job on hold, write the numbers
    and the reason into its `note` and into `docs/HANDOFF.md`, and do not change its settings to make it fit.
    When the judgement is recorded, clear the job: `python tools/autopilot/handoff.py --judged <id>`.
-3. A candidate between steps 5 and 14: do its next step. Use the quant-coder subagent for code and tests and the
-   reviewer subagent for every gate (8-11) and every EA change; follow the gate files in `docs/gates/`. EA changes:
-   new legs off by default, compile with the Bash tool (the PowerShell tool refuses it):
-   `powershell -ExecutionPolicy Bypass -File tools/autopilot/compile.ps1 -Expert <EA>`, to 0 errors and 0 warnings.
-   Run limit (owner 2026-10-18): every run you spend on one idea counts — add 1 to the candidate's `runs` field in
-   `docs/candidates.json` (create it at 1). At 3 runs the idea must leave your desk in that run: drop it (status
-   "rejected", the reason in its entry), move it on (queue its tester job, or hand it to the researcher/scanner),
-   or — only when you truly cannot decide — add a pending item to `docs/autopilot/approvals.json` and write the
-   question into `docs/HANDOFF.md`. No idea gets a 4th orchestrator run without the owner's approval.
-4. A new idea in `docs/ideas/` worth starting: steps 3-7 (full paper first, data, prototype at real costs). Take
-   ideas marked "read in full" before ideas marked "unverified" (abstract only); an unverified idea is only worth
-   starting once the full read happened (`python tools/pdf_text.py <pdf link>`), and if the paper stays unreadable
-   after your try, drop the idea or say why it carries without the paper. The first time you work on an idea (pick
-   it up, test it or drop it), append one line to `docs/autopilot/ideas_taken.txt`
-   (`<file> <first words of its ## heading> <date> <outcome>`): the relay skips the researcher while 3 or more ideas
-   there are unstarted, and that file is how an idea counts as started.
+3. Review what the worker built (owner 2026-10-22: the Sonnet worker prototypes, gates and builds every candidate,
+   idea and `docs/autopilot/worker_queue.md` item; you judge and review, you do not build). For a candidate the worker
+   moved to "tester" with an EA change: run the reviewer subagent on the diff and on gates 8-11 (`docs/gates/`). A
+   finding goes back as a "- [ ]" item at the top of `docs/autopilot/worker_queue.md` and the job goes on "hold";
+   a clean review leaves the job queued. A leg is switched ON only after its tester job passed and you judged it.
+   Steer the worker by adding, reordering or striking items in `worker_queue.md` (ML models, data scans, new markets
+   such as silver and indices). Run limit (owner 2026-10-18): a candidate gets at most 3 of your runs (its `runs`
+   field in `docs/candidates.json`); at 3, drop it, move it on, or add a pending item to
+   `docs/autopilot/approvals.json`.
+4. A new idea in `docs/ideas/` is the worker's (it reads the paper in full, prototypes and logs it in
+   `docs/autopilot/ideas_taken.txt`). You only drop an idea that is plainly a repeat of a rejected one, logging it there.
    Scan survivors: `tools/edge_scan.py` writes candidates `scan_*` and logs its whole search as trials, so the DSR
    bar is honest. A scan candidate that passes `python tools/gates.py <id>` still needs a reason (a flow or a paper)
    before it goes into an EA; write the reason, or why none was found, into its ledger entry.
@@ -93,4 +88,6 @@ local and say so. Second-last line of your answer: what you did and what is next
 - `scanner`: only when `logs/autopilot/scanner-flag.json` exists — a scan request goes into
   `docs/autopilot/scan_requests.json` and the script runs it without an agent;
 - `fidelity`: the demo has new entries, or a fidelity job you queued is done, and fills need comparing (Sonnet);
+- `worker`: a candidate, idea or worker_queue item needs prototyping or building, or a review finding needs fixing
+  (Sonnet);
 - `none`: nothing useful is left right now (the relay starts the next agent in the chain).

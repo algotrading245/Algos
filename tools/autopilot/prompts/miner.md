@@ -41,4 +41,4 @@ strategies. You find published rules; `tools/idea_engine.py` tests them on its o
 Do not build or test anything. Never look at our own results after 2025-10-12: those days are the owner's holdout
 (`tools/holdout.py`). Finish with one line listing the spec ids, then the hand-over as the very last line:
 `HANDOFF: scanner <n> new specs` (or `HANDOFF: scanner no new specs` when you found nothing new); the cycle goes
-researcher, miner, scanner, orchestrator, tester, fidelity.
+researcher, miner, scanner, worker, orchestrator, tester, fidelity.

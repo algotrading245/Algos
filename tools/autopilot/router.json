@@ -75,6 +75,13 @@
       "claude_agent": "fidelity",
       "agent_file": ".claude/agents/fidelity.md"
     },
+    "worker": {
+      "tier": "code",
+      "turns": 80,
+      "minutes": 90,
+      "claude_agent": "worker",
+      "agent_file": ".claude/agents/worker.md"
+    },
     "orchestrator": {
       "tier": "judge",
       "turns": 80,

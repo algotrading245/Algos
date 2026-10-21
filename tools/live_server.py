@@ -1,6 +1,12 @@
-"""Live view of the autopilot agents on this PC: http://127.0.0.1:8765
+"""Aurum Research Control and the live view of the autopilot agents on this PC: http://127.0.0.1:8765
 
     python tools/live_server.py [--port 8765]
+
+Pages: / is the Research Control dashboard (tools/research_page.html), /live the original agent feed
+(tools/live_page.html).  Read-only data for the dashboard comes from tools/research_api.py: GET /api/research
+(everything the dashboard shows), /api/job?id=j3 (one tester job with its equity curve) and /api/doc?path=docs/...
+(one file under docs/ or a backtest's summary.md / result.json, redacted).  These GETs answer only with Host
+127.0.0.1/localhost, so another site cannot read them through DNS rebinding.
 
 Tails logs/autopilot/events/*.jsonl (written by tools/autopilot/run-agent.ps1 from `claude -p --output-format
 stream-json`) and pushes each event to the browser over Server-Sent Events within ~30 ms of it being written.
@@ -20,13 +26,17 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
+
+import research_api
 
 ROOT = Path(__file__).resolve().parent.parent
 LOGS = ROOT / "logs" / "autopilot"
 EVENTS = LOGS / "events"
 PAGE = Path(__file__).resolve().parent / "live_page.html"
+RESEARCH_PAGE = Path(__file__).resolve().parent / "research_page.html"
 MAX_TEXT = 6000
-ROLES = ["orchestrator", "tester", "monitor", "researcher", "scanner", "fidelity"]
+ROLES = ["orchestrator", "tester", "monitor", "researcher", "miner", "scanner", "fidelity", "worker"]
 QUEUE = ROOT / "docs" / "autopilot" / "queue.json"
 AUTOPILOT = ROOT / "tools" / "autopilot"
 PRIVATE = re.compile(r"(?i)(login|account|password|passwd|api[_-]?key|token)\W{0,3}\s*[:=]?\s*\S+")
@@ -213,9 +223,32 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def local_host(self):
+        port = self.server.server_address[1]
+        return self.headers.get("Host", "") in (f"127.0.0.1:{port}", f"localhost:{port}")
+
     def do_GET(self):
-        if self.path == "/":
+        url = urlsplit(self.path)
+        qs = parse_qs(url.query)
+        if url.path in ("/", "/index.html"):
+            self.send(200, "text/html; charset=utf-8", RESEARCH_PAGE.read_bytes())
+        elif url.path == "/live":
             self.send(200, "text/html; charset=utf-8", PAGE.read_bytes())
+        elif url.path in ("/api/research", "/api/job", "/api/doc"):
+            if not self.local_host():
+                return self.send(403, "text/plain", b"refused")
+            try:
+                if url.path == "/api/research":
+                    body = research_api.research()
+                elif url.path == "/api/job":
+                    body = research_api.job_detail((qs.get("id") or [""])[0])
+                else:
+                    body = research_api.doc((qs.get("path") or [""])[0])
+            except Exception as e:  # a malformed file must not take the server down
+                return self.send(500, "application/json", json.dumps({"error": type(e).__name__}).encode())
+            if body is None:
+                return self.send(404, "application/json", b'{"error": "not found or not allowed"}')
+            self.send(200, "application/json", json.dumps(body, ensure_ascii=False).encode("utf-8"))
         elif self.path.startswith("/api/state"):
             self.send(200, "application/json", json.dumps(state()).encode())
         elif self.path.startswith("/stream"):
@@ -313,7 +346,8 @@ def main():
     a = ap.parse_args()
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     srv.daemon_threads = True
-    print(f"live view: http://127.0.0.1:{a.port}  (events: {EVENTS})")
+    print(f"Aurum Research Control: http://127.0.0.1:{a.port}   agent feed: http://127.0.0.1:{a.port}/live")
+    print(f"(events: {EVENTS})")
     srv.serve_forever()
 
 
