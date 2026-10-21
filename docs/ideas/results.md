@@ -113,3 +113,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:12 | f_rsi_eurusd | n/a | 4 | EURUSD rsi level=10 period=2 L1 both | 0.29 / 0.30 | FAIL at halves | 0.002 (N=26938, luck bar 1.64) |
 | 2026-10-22T01:12 | f_rsi_usdjpy | n/a | 4 | USDJPY rsi level=10 period=2 L1 both | -0.21 / 0.17 | FAIL at halves | 0.000 (N=26942, luck bar 1.59) |
 | 2026-10-22T01:12 | f_rsi_xauusd | n/a | 4 | XAUUSD rsi level=10 period=2 L1 both | -0.22 / 0.23 | FAIL at halves | 0.000 (N=26946, luck bar 1.61) |
+| 2026-10-22T01:15 | f_rsi_audjpy | n/a | 4 | AUDJPY rsi level=30 period=14 L1 both | -0.18 / 0.25 | FAIL at halves | 0.000 (N=26950, luck bar 2.86) |
+| 2026-10-22T01:15 | f_rsi_audusd | n/a | 4 | AUDUSD rsi level=30 period=14 L1 both | 0.23 / 0.39 | FAIL at halves | 0.004 (N=26954, luck bar 3.12) |
+| 2026-10-22T01:15 | f_rsi_eurjpy | n/a | 4 | EURJPY rsi level=30 period=14 L1 both | -0.04 / 0.28 | FAIL at halves | 0.000 (N=26958, luck bar 2.89) |
+| 2026-10-22T01:16 | f_rsi_gbpjpy | n/a | 4 | GBPJPY rsi level=10 period=2 L1 both | -0.09 / -0.31 | FAIL at halves | 0.000 (N=26962, luck bar 1.58) |
+| 2026-10-22T01:16 | f_rsi_gbpusd | n/a | 4 | GBPUSD rsi level=10 period=2 L1 both | 0.28 / 0.41 | FAIL at halves | 0.003 (N=26966, luck bar 1.61) |
+| 2026-10-22T01:16 | f_rsi_nzdusd | n/a | 4 | NZDUSD rsi level=30 period=14 L1 both | 0.96 / 0.11 | FAIL at halves | 0.007 (N=26970, luck bar 2.99) |
+| 2026-10-22T01:16 | f_rsi_spxusd | n/a | 4 | SPXUSD rsi level=10 period=2 L1 both | 0.51 / 0.56 | FAIL at dsr | 0.023 (N=26974, luck bar 1.60) |
+| 2026-10-22T01:16 | f_rsi_usdcad | n/a | 4 | USDCAD rsi level=30 period=2 L1 both | 0.44 / 0.70 | FAIL at halves | 0.024 (N=26978, luck bar 1.03) |
+| 2026-10-22T01:16 | f_rsi_usdchf | n/a | 4 | USDCHF rsi level=30 period=14 L1 both | 0.51 / -0.36 | FAIL at halves | 0.000 (N=26982, luck bar 2.96) |
+| 2026-10-22T01:16 | f_rsi_xagusd | n/a | 4 | XAGUSD rsi level=30 period=2 L1 both | -0.20 / -0.15 | FAIL at halves | 0.000 (N=26986, luck bar 1.03) |
