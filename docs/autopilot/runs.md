@@ -110,3 +110,4 @@ committed).
 | 2026-10-21 11:26 | orchestrator | idle check | nothing to do: demo ok (2 EA lines, no orders), no ALERT, no job, no flag, researcher run 35 no idea |
 | 2026-10-21 12:01 | orchestrator | idle check | nothing to do: demo ok (2 EA lines, no orders), no ALERT, no job, no flag, researcher run 36 no idea |
 | 2026-10-21 12:36 | orchestrator | demo check: first 10-21 order | no ALERT: midday sold 0.42 EURUSD at 1.12258 (1 order), breakout armed (range 0.59x, filter 0.25); logged in demo_log. Next: none; fidelity after the first demo week (10-23) |
+| 2026-10-21 13:16 | orchestrator | demo check: breakout fill | no ALERT: breakout sold 0.03 USDJPY at 158.025, stop 158.388 (1 order); logged in demo_log. Next: none; fidelity after the first demo week (10-23) |

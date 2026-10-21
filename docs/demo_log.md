@@ -89,5 +89,7 @@ Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the 
   filter (`InpBreakMinRange` 0.25, `Legs.mqh:1618`), so the breakout leg is armed and waiting for a break. At
   12:29:59 the midday leg sold 0.42 EURUSD at 1.12258, with the stop at 1.12458 and model weight 1.19. That is
   1 order with no repeat. Fills are compared with the tester after the first demo week (10-23).
+- 13:16 local: no ALERT. At 12:56:54 the breakout leg sold 0.03 USDJPY at 158.025, the range low, with the stop at
+  158.388, the range high. That is 1 order with no repeat.
 
 
