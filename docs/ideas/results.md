@@ -43,3 +43,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T00:51 | f_tsmom_jpxjpy | n/a | 3 | JPXJPY tsmom lookback=120 L1 both | 0.40 / -0.54 | FAIL at halves | 0.000 (N=26696, luck bar 1.03) |
 | 2026-10-22T00:51 | f_tsmom_nzdcad | n/a | 3 | NZDCAD tsmom lookback=60 L1 both | -0.05 / -0.94 | FAIL at halves | 0.000 (N=26699, luck bar 1.03) |
 | 2026-10-22T00:51 | f_tsmom_wtiusd | n/a | 3 | WTIUSD tsmom lookback=60 L1 both | 0.33 / -0.15 | FAIL at halves | 0.000 (N=26702, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_audjpy | n/a | 2 | AUDJPY donchian lookback=55 L1 both | -0.32 / -0.17 | FAIL at halves | 0.000 (N=26704, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_audusd | n/a | 2 | AUDUSD donchian lookback=20 L1 both | -0.12 / -0.15 | FAIL at halves | 0.000 (N=26706, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_cadjpy | n/a | 2 | CADJPY donchian lookback=55 L1 both | -0.20 / -0.24 | FAIL at halves | 0.000 (N=26708, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_eurgbp | n/a | 2 | EURGBP donchian lookback=55 L1 both | -0.47 / -0.64 | FAIL at halves | 0.000 (N=26710, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_eurjpy | n/a | 2 | EURJPY donchian lookback=55 L1 both | 0.40 / -0.39 | FAIL at halves | 0.000 (N=26712, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_gbpjpy | n/a | 2 | GBPJPY donchian lookback=55 L1 both | 0.09 / -0.42 | FAIL at halves | 0.000 (N=26714, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_nzdusd | n/a | 2 | NZDUSD donchian lookback=20 L1 both | -0.21 / -0.26 | FAIL at halves | 0.000 (N=26716, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_usdcad | n/a | 2 | USDCAD donchian lookback=55 L1 both | -0.55 / -0.51 | FAIL at halves | 0.000 (N=26718, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_usdchf | n/a | 2 | USDCHF donchian lookback=55 L1 both | -0.09 / -0.44 | FAIL at halves | 0.000 (N=26720, luck bar 1.03) |
+| 2026-10-22T00:54 | f_donchian_xagusd | n/a | 2 | XAGUSD donchian lookback=20 L1 both | 0.28 / -0.47 | FAIL at halves | 0.000 (N=26722, luck bar 1.03) |

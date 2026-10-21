@@ -46,3 +46,13 @@
 {"id": "idea:f_tsmom_jpxjpy", "when": "2026-10-22T00:51:50", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_nzdcad", "when": "2026-10-22T00:51:51", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_wtiusd", "when": "2026-10-22T00:51:51", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_audjpy", "when": "2026-10-22T00:54:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audusd", "when": "2026-10-22T00:54:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_cadjpy", "when": "2026-10-22T00:54:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurgbp", "when": "2026-10-22T00:54:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurjpy", "when": "2026-10-22T00:54:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpjpy", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdusd", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdcad", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdchf", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xagusd", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
