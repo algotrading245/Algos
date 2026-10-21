@@ -16,6 +16,11 @@ strategies. You find published rules; `tools/idea_engine.py` tests them on its o
    - code: GitHub repos and MQL5 CodeBase entries with a readable rule (open the source file, not the README alone;
      no black-box EAs).
    - write-up: Quantpedia strategy pages, QuantConnect strategy library, Kaggle and competition write-ups with numbers.
+   - structure (the researcher's vein until 2026-10-22, now yours): fixings, auctions, session opens, index
+     rebalances, option expiries, data releases, flows, cross-asset moves on event days, backed by a paper or an
+     exchange/central-bank document. No plain time-of-day drift: tools/edge_scan.py already brute-forces those.
+   A rule that needs data we do not have goes as one line under "## Data requests" in
+   `docs/autopilot/worker_queue.md` (`- [ ] <symbol/series>, <source>, for <spec id>`): the researcher fetches it.
    Read papers in full: `python tools/pdf_text.py <pdf link> --pages 1-12`, then `--pages 13-30` or
    `--find "Table 3"`. One source may give several specs (one per instrument group or rule it states), but
    one mechanism per spec.

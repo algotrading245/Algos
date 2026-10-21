@@ -225,6 +225,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   <section data-tab="agents">
     <h2>Agents and models</h2>
     <p class="lead">One Opus orchestrator hands each step to a role agent. Gates are code, so no agent can wave a candidate through.</p>
+    <div class="card" id="budget" style="margin-bottom:16px"></div>
     <div class="grid g3" id="agentCards"></div>
   </section>
 </main>
@@ -517,6 +518,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
 
   // ---------- agents ----------
   function agents() {
+    var B = D.budget;
+    if (!B) { $("#budget").innerHTML = '<h3>Token budget</h3><div class="empty">No usage yet: run python tools/autopilot/budget.py backfill</div>'; }
+    else {
+      var f = Math.min(1, B.fraction || 0), col = B.skip ? "var(--bad)" : f > 0.5 ? "var(--warn)" : "var(--ok)";
+      var roles = Object.keys(B.today || {}).sort(function (a, b) { return B.today[b].cost_usd - B.today[a].cost_usd; });
+      $("#budget").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Token budget this week</h3>' +
+        '<span class="chip ' + (B.skip ? "bad" : "ok") + '">' + (B.skip ? "over " + pct(B.skip_above, 0) + ": researcher and Opus follow-ups wait" : "all roles run") + "</span></div>" +
+        '<div class="sub" style="margin:6px 0">$' + fmt(B.week_usd) + " of $" + fmt(B.weekly_usd, 0) + " (" + pct(B.fraction, 0) + "), " + B.week_runs + " runs since " + esc(B.week_start.replace("T", " ")) + "</div>" +
+        '<div style="height:10px;border-radius:5px;background:var(--grid);overflow:hidden"><div style="height:100%;width:' + (f * 100).toFixed(1) + "%;background:" + col + '"></div></div>' +
+        (roles.length ? '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Today</th><th>Runs</th><th>Cost</th><th>Tokens</th></tr>' +
+          roles.map(function (r) { var x = B.today[r]; return "<tr><td>" + esc(r) + "</td><td>" + x.runs + "</td><td>$" + fmt(x.cost_usd) + "</td><td>" + Number(x.tokens).toLocaleString() + "</td></tr>"; }).join("") + "</table></div>"
+          : '<div class="sub" style="margin-top:10px">No agent runs today.</div>');
+    }
     $("#agentCards").innerHTML = D.agents.map(function (a) {
       var col = AGENT_COL[a.name] || "#888";
       return '<div class="card" style="border-top:3px solid ' + col + '"><div class="row" style="justify-content:space-between"><h3 style="margin:0">' + esc(a.name) + '</h3><span class="chip gold">' + esc(a.model) + "</span></div>" +

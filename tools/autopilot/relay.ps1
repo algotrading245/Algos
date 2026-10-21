@@ -11,7 +11,10 @@
 #
 # The agents run as one chain, a cycle: researcher -> miner -> scanner -> worker -> orchestrator -> tester -> fidelity, then the next
 # cycle starts with the researcher again. Inside a cycle the next agent starts the moment the last one ends (this
-# script loops, no gap); between two cycles it waits $CycleBreakMinutes.
+# script loops, no gap); between two cycles it waits $CycleBreakMinutes, but only when no work role (miner, scanner,
+# worker, tester) has work waiting (owner 2026-10-22: one piece of research ends, the next starts). A work role whose run did work (2+ minutes, no failure) may run again in the same tick.
+# Token budget: budget.py status, once a tick. When the week's use passes skip_above (budget.json) the researcher and
+# the orchestrator's follow-ups and daily heartbeat wait until the weekly reset.
 # Order on each tick:
 #   1. PAUSE or another agent running: nothing.
 #   2. tester_step.py (always, AI or not). Then, when no AI provider can take a run (router.py available: every
@@ -24,8 +27,8 @@
 #      every minute and which wakes this script at once): the orchestrator, at the judge tier for an ALERT.
 #   3. The next agent at once: the one named in the last HANDOFF line, else the next in the chain. Skipped when it
 #      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
-#      has not run for a week, the researcher while 10 or more idea specs wait for tools/idea_engine.py, after 8 runs
-#      that day, or after 3 runs in a row without a new spec (then once a day), the miner (papers and open-source
+#      has not run for a week, the researcher (data only since 2026-10-22) without an open "## Data requests" item in
+#      worker_queue.md, after 8 runs that day or over budget, the miner (papers and open-source
 #      strategies) the same with 15 waiting specs as its limit, the worker with an empty backlog (Get-WorkerBacklog:
 #      gated candidates to build, unstarted ideas, open worker_queue.md items), the orchestrator without work
 #      (Get-OrchestratorWhy: a demo event, a flag, a job, a follow-up after a run that did work, or the daily heartbeat). A hand-over from another agent to
@@ -56,13 +59,12 @@ function Test-Runnable([string]$Role) {
         "scanner"      { return (Test-ScannerWork) }
         "fidelity"     { return (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) }
         "researcher"   {
-            # Owner 2026-10-21: 50-100+ ideas tested a day. The researcher writes specs for tools/idea_engine.py; it runs
-            # while fewer than 10 wait, at most 8 times a day, and after 3 runs in a row with no new spec once a day.
+            # Owner 2026-10-22: idea specs are the miner's; the researcher only fetches data, and runs while an open
+            # item waits under "## Data requests" in worker_queue.md, at most 8 times a day, never over the budget.
+            if ($overBudget) { return $false }
             $l = Get-Last "researcher"
-            $streak = if ($l -and $l.empty_streak) { [int]$l.empty_streak } else { 0 }
             $today = if ($l -and $l.runs_day -eq $now.ToString("yyyy-MM-dd")) { [int]$l.runs_today } else { 0 }
-            return (((Get-PendingSpecs) -lt 10) -and ($today -lt 8) -and
-                    (($streak -lt 3) -or ((Get-LastEnd "researcher").Date -lt $now.Date)))
+            return (((Get-QueueOpen -Only @("Data requests")) -gt 0) -and ($today -lt 8))
         }
         "miner"        {
             # Owner 2026-10-21: papers and open-source strategies as rule specs, 80-100+ tested a day. Same gates as the
@@ -91,6 +93,9 @@ function Get-OrchestratorWhy {
     if (Test-ScannerWork) { return "scanner flag" }
     if (@(Get-ToJudge).Count) { return "jobs to judge" }
     # New ideas are the worker's since 2026-10-22 (Sonnet builds, Opus only judges and reviews).
+    # Over the week's budget (budget.py status: skip) the Opus runs that are nice to have, the follow-up and the
+    # heartbeat, wait; the orchestrator was about 97% of the spend in October.
+    if ($overBudget) { return $null }
     if ($l -and ($l.idle -eq $false) -and ($l.failed -ne $true)) { return "follow-up: $($l.reason)" }
     if ($end.Date -lt $now.Date) { return "daily heartbeat" }
     return $null
@@ -117,6 +122,14 @@ function Get-DemoEvent {
 # Roles this tick already started. Without it the chain can wrap round to a role that has just run and, if that run
 # ends at once (a usage limit, a configuration fault), start it again and again inside one tick.
 $startedHere = @()
+# The week's token budget (budget.py, owner 2026-10-22), read once a tick. Over it ("skip"): no researcher and no
+# orchestrator follow-up or heartbeat, and the cycle break stays.
+$bst = try { (& python.exe (Join-Path $PSScriptRoot "budget.py") status 2>$null | Select-Object -Last 1) | ConvertFrom-Json } catch { $null }
+$overBudget = [bool]($bst -and $bst.skip)
+if ($DryRun -and $bst) { Write-Output "budget: `$$($bst.week_usd) of `$$($bst.weekly_usd) this week ($([math]::Round(100 * $bst.fraction))%), skip=$overBudget" }
+# Roles that may run again in the same tick once a run of theirs did real work (owner 2026-10-22: when one piece of
+# research ends, the next starts at once). Each costs a script or Haiku/Sonnet, never Opus.
+$Repeatable = @("miner", "scanner", "worker", "tester")
 while ($true) {
     if (Test-Path $Pause) { break }
     $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
@@ -201,9 +214,14 @@ while ($true) {
         $next = $Chain[$i]
     }
     if ($startedHere -contains $next) { Write-Log "relay" "$next already ran in this tick: waiting for the next one"; break }
-    if ($next -eq "researcher" -or $wrapped) {
-        # A new cycle: take the break first. Also when the chain wrapped past its end to a later role (the researcher
-        # skipped with 3+ untested ideas), or the orchestrator would follow itself on every tick with no break.
+    # Work waiting for a work role: the next cycle starts at once (owner 2026-10-22). Over budget too: the budget holds
+    # back the costly runs (researcher, Opus follow-ups), not the cheap work roles.
+    $waitingRoles = @($Repeatable | Where-Object { Test-Runnable $_ })
+    $waiting = $waitingRoles.Count -gt 0
+    if ($DryRun) { Write-Output "work waiting: $(if ($waiting) { $waitingRoles -join ', ' } else { 'none' })" }
+    if (($next -eq "researcher" -or $wrapped) -and -not $waiting) {
+        # A new cycle with nothing waiting: take the break first. Also when the chain wrapped past its end to a later
+        # role, or the orchestrator would follow itself on every tick with no break.
         $ends = @(Get-ChildItem $LogDir -Filter "last-*.json" | ForEach-Object {
             try { [datetime](Get-Content $_.FullName -Raw | ConvertFrom-Json).ended } catch { }
         })
@@ -219,7 +237,14 @@ while ($true) {
             ConvertTo-Json | Set-Content $Relay -Encoding UTF8
     }
     $startedHere += $next
+    $t0 = Get-Date
     Start-Agent $next $(if ($from) { "cycle: after $from" } else { "cycle start" })
 
     if ($DryRun) { break }
+    # A work role whose run lasted 2+ minutes and did not fail may run again in this tick; one that ended at once
+    # (a limit, a fault) may not, so it cannot spin.
+    $lr = Get-Last $next
+    if (($Repeatable -contains $next) -and $lr -and ($lr.failed -ne $true) -and (((Get-Date) - $t0).TotalMinutes -ge 2)) {
+        $startedHere = @($startedHere | Where-Object { $_ -ne $next })
+    }
 }

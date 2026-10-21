@@ -55,6 +55,16 @@ def runs(ledger):
     return out
 
 
+def budget_status():
+    """This week's agent spend (tools/autopilot/budget.py), or None when there is no usage log yet."""
+    try:
+        sys.path.insert(0, str(ROOT / "tools" / "autopilot"))
+        import budget
+        return budget.status()
+    except Exception:
+        return None
+
+
 def agents():
     out = [{"name": "orchestrator", "model": "opus", "tools": "all", "steps": "1, 3, 18 and every hand-off",
             "description": "The main Claude Code session: picks ideas, hands each step to a role agent, reads the "
@@ -138,6 +148,7 @@ def main():
         "props": load_json(DOCS / "prop_routes.json"),
         "runs": runs(ledger),
         "agents": agents(),
+        "budget": budget_status(),
         "book": book(ledger),
         "demo": demo(),
     }

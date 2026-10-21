@@ -15,7 +15,7 @@
 #   Qwen gets the project's .qwen\settings.json deny list with --approval-mode yolo, so nothing waits for a prompt
 #   either. Each run is killed after its time limit (Qwen also has its own --max-wall-time).
 # - Output: logs\autopilot\<date>_agent-<role>.log; the last run's outcome (with its provider and model):
-#   logs\autopilot\last-<role>.json.
+#   logs\autopilot\last-<role>.json; its cost and tokens: a line in logs\autopilot\usage.jsonl (budget.py record).
 # - Limits (owner 2026-10-18): a run that hits a usage, rate, quota or auth limit backs only that provider off
 #   (router.py backoff, until the reset time the CLI names), keeps the hand-over on this role, and runs once more on
 #   the next provider in router.json's fallback order (-NoRetry marks that second run). When the router finds no
@@ -299,6 +299,10 @@ $recent
        next = $next; reason = $reason; idle = [bool]($idle -and -not $failed); failed = [bool]$failed
        empty_streak = $streak; runs_day = $day; runs_today = $runs } |
         ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
+    # Token budget (owner 2026-10-22): one line per run in logs\autopilot\usage.jsonl (budget.py reads the cost and
+    # token counts from the events file); the relay skips the nice-to-have runs when the week's use is high.
+    $bu = & python.exe (Join-Path $PSScriptRoot "budget.py") record --role $Role --provider "$($route.provider)" --model "$($route.model)" --events $evFile 2>&1
+    Write-Log $log "$($bu | Select-Object -Last 1)"
     $old = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $state = [ordered]@{ from = $Role; next = $next; due = (Get-Date).AddMinutes($GapMinutes).ToString("s"); reason = $reason }
     # A run without a HANDOFF line (the nightly monitor, a cut-off run) keeps a hand-over that has not started yet,

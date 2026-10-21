@@ -130,8 +130,20 @@ function Get-WorkerBacklog {
             Where-Object { $_.status -eq "testing" }).Count
     } catch { }
     $n += (Get-UnstartedIdeas)
-    if (Test-Path $WorkerQueue) {
-        $n += @(Get-Content $WorkerQueue -Encoding UTF8 | Where-Object { $_ -match '^\s*-\s*\[ \]' }).Count
+    $n += (Get-QueueOpen -Exclude @("Data requests", "For the owner"))
+    return $n
+}
+# Open items ("- [ ]") in worker_queue.md, by "## " section: -Only counts those sections, -Exclude skips them.
+# "## Data requests" is the researcher's (owner 2026-10-22), "## For the owner" is the owner's.
+function Get-QueueOpen([string[]]$Only = @(), [string[]]$Exclude = @()) {
+    if (-not (Test-Path $WorkerQueue)) { return 0 }
+    $n = 0; $sec = ""
+    foreach ($line in (Get-Content $WorkerQueue -Encoding UTF8)) {
+        if ($line -match '^##\s+(.+?)\s*$') { $sec = $Matches[1]; continue }
+        if ($line -notmatch '^\s*-\s*\[ \]') { continue }
+        if ($Only.Count -and ($Only -notcontains $sec)) { continue }
+        if ($Exclude -contains $sec) { continue }
+        $n++
     }
     return $n
 }
