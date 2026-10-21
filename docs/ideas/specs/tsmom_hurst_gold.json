@@ -6,8 +6,21 @@
   "read": "in full",
   "why": "Same rule as tsmom_hurst_fx applied to XAUUSD, which the paper's commodity set includes. Overlaps the rejected 20-futures TSMOM test (research/futures_tsmom.py) on the gold leg; this is a single-symbol sign rule with the paper's monthly hold, not the volatility-sized basket",
   "rule": "tsmom",
-  "symbols": ["XAUUSD"],
-  "params": {"lookback": [21, 63, 252], "hold": [21]},
+  "symbols": [
+    "XAUUSD"
+  ],
+  "params": {
+    "lookback": [
+      21,
+      63,
+      252
+    ],
+    "hold": [
+      21
+    ]
+  },
   "side": "both",
-  "status": "pending"
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T21:51:44"
 }

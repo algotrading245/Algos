@@ -11,3 +11,5 @@
 {"id": "idea:ma_cross_fx_majors_20_200", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
 {"id": "idea:ma_cross_fx_majors_5_20", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
 {"id": "idea:ma_cross_nzdusd_5_20", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 1}
+{"id": "idea:tsmom_hurst_fx", "when": "2026-10-21T21:51:43", "verdict": "FAIL at halves", "count": 21}
+{"id": "idea:tsmom_hurst_gold", "when": "2026-10-21T21:51:44", "verdict": "FAIL at halves", "count": 3}
