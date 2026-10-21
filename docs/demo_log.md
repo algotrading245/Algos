@@ -104,4 +104,19 @@ Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the 
   same and charges the cost of each close (`research/noise_area_index.py:106-117`), so this churn is in the
   expectation. The deal history at the 10-23 fill comparison shows which checks closed the positions.
 
+## 2026-10-21 (Wednesday), 23:15 check (monitor): no ALERT
 
+Checked by the monitor role. `tools/demo_check.py` reports 8 EA lines, orders midday 1 and other 4, 0 journal trade
+lines. The Terminal 16 experts log has 9 AurumFunded lines, all listed below.
+
+- **Trades:** 5 orders today, each 1 order with no repeat. Midday 1 (sell 0.42 EURUSD at 12:29:59, 1.12258). Breakout 1
+  (sell 0.03 USDJPY at 12:56:54, 158.025). Noise 3 (buy 0.09 US100.cash at 17:59:59, 18:59:59 and 20:29:59). The noise
+  buys match the 19:00 and 20:31 notes above and add nothing new.
+- **New since 20:31:** one skip line at 21:59:59, "bell move +1.25 is below 1.5 x average 3.25, no trade today".
+  It is a skip, not an order.
+- **Account:** the firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at 9150.00 (static).
+  Neither was hit. No margin error was logged.
+- **Clock check and errors:** no clock-check skips and no errors in the log.
+- **P/L of the day:** not logged (the EA log has no close lines for today).
+- **Slippage:** not logged; the fill comparison with the tester waits for the first demo week (10-23).
+- **Trades without a broker stop:** none logged; each open line shows a stop (1.12458, 158.388, and the noise bands).
