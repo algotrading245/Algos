@@ -81,6 +81,12 @@ each finished piece of work.
   1:50, the tester install's setting, so j12-j14 stand and j3 does not. Next is the first demo week. Orchestrator: make
   the library count retcode DONE with an order ticket as a fill -- DONE 15:35, see below. The demo keeps 1.06 until
   the owner copies a new build.
+  **Grid resend guard (2026-10-21 03:07, AurumFunded 1.09 / AurumHydra 1.38, reviewer approve, compile 0/0):**
+  `Grid()` sends no new level until the last one sent shows in `GridHeld()` or `GRID_WAIT` (10 s) pass; closes and
+  stop-outs are not held. No tester change (deals show at once); the demo preset has the grid off, so it matters for
+  Hydra's grid at goal sizes. Reviewer's later options: check the order in the history before a timeout resend; keep
+  the pending level in a GlobalVariable across restarts; size later levels of one call without trusting
+  `ACCOUNT_MARGIN_FREE` before earlier deals show (`Legs.mqh:931`). The owner may copy 1.09 to Terminal 16.
   **Late-breakout guard (2026-10-21 02:22, AurumFunded 1.08 / AurumHydra 1.37, reviewer PASS, compile 0/0):** when
   `Breakout()` reads the USD/JPY range 5 min or more after the start (attach, keeper restart, data gap, a blocked
   live Run), a side whose level the closed M1 bars since the start already passed is skipped that day (no repeat of
@@ -90,8 +96,7 @@ each finished piece of work.
   **Deal-0 fix (2026-10-19 15:35, AurumFunded 1.07 / AurumHydra 1.36, reviewer PASS, compile 0/0):** `Filled(ok)`
   (`Legs.mqh:199`) counts DONE with an order ticket and deal 0 as a fill at all 8 order sites, so the leg sets its
   done flag at once and logs its normal line, priced with `FillPrice` (the asked bid/ask while the deal price is 0).
-  No change in the tester (deals are reported there at once). Open, pre-existing: the grid could resend level k if a
-  call lands before the deal shows in `GridHeld()` (`Legs.mqh:724-739`); a short resend guard is a later EA change.
+  No change in the tester (deals are reported there at once). The grid resend this left open is fixed in 1.09/1.38.
   The owner may copy 1.07 to Terminal 16 (not needed for trading; it fixes the log lines and the repeat-order gap).
   **Leverage log line (2026-10-19, AurumFunded 1.05 / AurumHydra 1.35, reviewer PASS WITH CHANGES, compile 0/0):**
   once a server day each EA prints "account leverage 1:n, margin of 1 lot in <currency>, XAUUSD m at p, ..." (gold,

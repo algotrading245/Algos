@@ -19,6 +19,7 @@ bool   AurumInputsBad();                                            // true: the
 #define HOLD_MAGIC 6       // the gold hold position has magic InpMagic+6
 #define GRID_MAGIC 10      // level k of the grid has magic InpMagic+10+k
 #define GRID_MAX 8
+#define GRID_WAIT 10       // seconds to wait for a sent grid level to show among the positions
 #define FIX_MAGIC 20       // the fix trades have magic InpMagic+20 before the fix and InpMagic+21 after it
 #define FALL_MAGIC 22      // the stock-fall fix trades have magic InpMagic+22
 #define MORN_MAGIC 23      // the Tokyo-morning trades have magic InpMagic+23
@@ -48,6 +49,8 @@ int      g_gridTarget=0;   // levels the grid should hold, + long, - short
 double   g_gridMa=0.0;     // average of the log price at the last hourly close
 double   g_gridStep=0.0;   // one step at the last hourly close, in log price
 datetime g_gridNote=0;     // day on which the grid last reported a problem
+int      g_gridSent=0;     // highest level sent and not yet seen among the positions, + long, - short
+datetime g_gridSentAt=0;   // when that level was sent
 datetime g_holdDay=0;      // day whose gold hold check is done
 bool     g_fixOn=false;    // the stock index is there and the fix leg has a size
 string   g_fixSym[FIX_ALL];          // the pairs of the fix leg, then the yen crosses, "" for one that is missing
@@ -818,6 +821,8 @@ void Grid()
       return;
    string sym=InpGridSymbol;
    int q=GridHeld(),L=InpGridLevels;
+   if(g_gridSent!=0 && q*g_gridSent>0 && MathAbs(q)>=MathAbs(g_gridSent))
+      g_gridSent=0;
    bool dead=(GlobalVariableCheck(GridKey("dead")) && GlobalVariableGet(GridKey("dead"))>0);
    datetime now=TimeCurrent();
    datetime bar=iTime(sym,PERIOD_H1,0),done=iTime(sym,PERIOD_H1,1);
@@ -879,6 +884,8 @@ void Grid()
         }
      }
    int t=g_gridTarget;
+   if(q==0 && t==0)
+      g_gridSent=0;            // a level that never showed is not waited for once nothing is wanted
    if(!g_gridSet || q==t)
       return;
    if(q!=0 && (t==0 || (q>0)!=(t>0)))
@@ -891,6 +898,15 @@ void Grid()
       for(int k=MathAbs(q); k>MathAbs(t); k--)
          CloseAll(sym,InpMagic+GRID_MAGIC+k);
       return;
+     }
+   // FTMO answers DONE with deal 0 and shows the position moments later: no new level until the last one shows or GRID_WAIT s pass
+   if(g_gridSent!=0)
+     {
+      if(now-g_gridSentAt<GRID_WAIT)
+         return;
+      PrintFormat(AURUM_NAME+": grid level %d sent %d s ago is not among the positions, it may be sent again",
+                  MathAbs(g_gridSent),(int)(now-g_gridSentAt));
+      g_gridSent=0;
      }
    if(tick.ask-tick.bid>InpGridMaxSpread*SymbolInfoDouble(sym,SYMBOL_POINT))
       return;
@@ -930,6 +946,8 @@ void Grid()
          PrintFormat(AURUM_NAME+": grid order failed, retcode %d (%s)",g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          return;
         }
+      g_gridSent=side*k;
+      g_gridSentAt=now;
       PrintFormat(AURUM_NAME+": grid level %d %s %.2f %s",k,side>0 ? "bought" : "sold",lots,sym);
      }
   }

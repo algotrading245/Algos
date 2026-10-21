@@ -64,6 +64,9 @@
 //| reports the deal moments later).                                 |
 //| v1.08: no late breakout after an attach or restart: a side whose |
 //| level was passed before the EA started is skipped that day.      |
+//| v1.09: the grid sends no new level until the last one shows among|
+//| the positions or 10 seconds pass (FTMO reports the deal moments  |
+//| later).                                                          |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -72,7 +75,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.08"
+#property version   "1.09"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

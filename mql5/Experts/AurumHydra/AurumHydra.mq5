@@ -124,10 +124,13 @@
 //| reports the deal moments later).                                 |
 //| v1.37: no late breakout after an attach or restart: a side whose |
 //| level was passed before the EA started is skipped that day.      |
+//| v1.38: the grid sends no new level until the last one shows among|
+//| the positions or 10 seconds pass (FTMO reports the deal moments  |
+//| later).                                                          |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.37"
+#property version   "1.38"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>
