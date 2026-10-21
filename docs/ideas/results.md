@@ -103,3 +103,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:09 | f_meanrev_nzdusd | n/a | 4 | NZDUSD meanrev lookback=10 z=1.5 L1 both | 0.47 / -0.07 | FAIL at halves | 0.000 (N=26898, luck bar 1.67) |
 | 2026-10-22T01:09 | f_meanrev_usdcad | n/a | 4 | USDCAD meanrev lookback=10 z=1.5 L1 both | 0.25 / 0.14 | FAIL at halves | 0.000 (N=26902, luck bar 1.71) |
 | 2026-10-22T01:09 | f_meanrev_usdchf | n/a | 4 | USDCHF meanrev lookback=20 z=2.0 L1 both | 0.49 / -0.14 | FAIL at halves | 0.001 (N=26906, luck bar 2.62) |
+| 2026-10-22T01:12 | f_meanrev_audnzd | n/a | 4 | AUDNZD meanrev lookback=20 z=2.0 L1 both | 0.54 / 0.07 | FAIL at halves | 0.002 (N=26910, luck bar 2.62) |
+| 2026-10-22T01:12 | f_meanrev_gbpchf | n/a | 4 | GBPCHF meanrev lookback=10 z=1.5 L1 both | 0.62 / -0.25 | FAIL at halves | 0.000 (N=26914, luck bar 1.70) |
+| 2026-10-22T01:12 | f_meanrev_grxeur | n/a | 4 | GRXEUR meanrev lookback=20 z=1.5 L1 both | -0.06 / -0.07 | FAIL at halves | 0.000 (N=26918, luck bar 1.70) |
+| 2026-10-22T01:12 | f_meanrev_jpxjpy | n/a | 4 | JPXJPY meanrev lookback=20 z=1.5 L1 both | -0.03 / 0.00 | FAIL at halves | 0.000 (N=26922, luck bar 1.72) |
+| 2026-10-22T01:12 | f_meanrev_nzdcad | n/a | 4 | NZDCAD meanrev lookback=10 z=1.5 L1 both | 0.87 / 0.52 | FAIL at dsr | 0.149 (N=26926, luck bar 1.67) |
+| 2026-10-22T01:12 | f_meanrev_wtiusd | n/a | 4 | WTIUSD meanrev lookback=20 z=2.0 L1 both | 0.11 / 0.19 | FAIL at halves | 0.000 (N=26930, luck bar 2.81) |
+| 2026-10-22T01:12 | f_rsi_audcad | n/a | 4 | AUDCAD rsi level=30 period=14 L1 both | 0.46 / 0.90 | FAIL at halves | 0.075 (N=26934, luck bar 3.62) |
+| 2026-10-22T01:12 | f_rsi_eurusd | n/a | 4 | EURUSD rsi level=10 period=2 L1 both | 0.29 / 0.30 | FAIL at halves | 0.002 (N=26938, luck bar 1.64) |
+| 2026-10-22T01:12 | f_rsi_usdjpy | n/a | 4 | USDJPY rsi level=10 period=2 L1 both | -0.21 / 0.17 | FAIL at halves | 0.000 (N=26942, luck bar 1.59) |
+| 2026-10-22T01:12 | f_rsi_xauusd | n/a | 4 | XAUUSD rsi level=10 period=2 L1 both | -0.22 / 0.23 | FAIL at halves | 0.000 (N=26946, luck bar 1.61) |

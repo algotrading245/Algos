@@ -106,3 +106,13 @@
 {"id": "idea:f_meanrev_nzdusd", "when": "2026-10-22T01:09:58", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_usdcad", "when": "2026-10-22T01:09:59", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_usdchf", "when": "2026-10-22T01:09:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audnzd", "when": "2026-10-22T01:12:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpchf", "when": "2026-10-22T01:12:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_grxeur", "when": "2026-10-22T01:12:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_jpxjpy", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_nzdcad", "when": "2026-10-22T01:12:58", "verdict": "FAIL at dsr", "count": 4}
+{"id": "idea:f_meanrev_wtiusd", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audcad", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurusd", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdjpy", "when": "2026-10-22T01:12:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xauusd", "when": "2026-10-22T01:12:59", "verdict": "FAIL at halves", "count": 4}
