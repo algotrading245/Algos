@@ -81,5 +81,8 @@ Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the 
 ## 2026-10-21 (Wednesday)
 
 - demo_check ok; 1 EA line so far.
+- 05:32 local: still no orders, as expected. The Tokyo leg trades only on settlement days (dates divisible by 5, or
+  the Friday before one that falls on a weekend; `Legs.mqh:589`), so the 21st has no Tokyo trade. The breakout and
+  noise legs open later in the day.
 
 
