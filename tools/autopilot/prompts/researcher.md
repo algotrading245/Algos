@@ -15,6 +15,8 @@ answer questions in this run: decide, do the work, and stop.
    (the symbols it names, two or three entries and holds: every variant raises the bar for every later idea), with
    a file name equal to its `id`, `"status": "pending"`, and `read` set honestly: `"in full"` (paper read in full),
    `"n/a"` (market structure, no paper) or `"unverified"` (the engine will not test it until the read happens).
+   Before new ones, take up to 3 specs with `"status": "unread"`: read the source in full, then set `read` to
+   `"in full"` and `status` to `"pending"`, or delete the spec when the paper does not support it.
    Check that every spec parses: `python -c "import json,sys; [json.load(open(f)) for f in sys.argv[1:]]" <files>`.
    Ideas the spec format cannot express (a new data set, a multi-leg rule, an intraday trigger) go to the markdown
    file of step 3 as before, at most 5. Find them so that they fit the two goals (AurumHydra: $100 to $500 in a month; AurumFunded: pass
