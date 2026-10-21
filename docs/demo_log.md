@@ -84,5 +84,10 @@ Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the 
 - 05:32 local: still no orders, as expected. The Tokyo leg trades only on settlement days (dates divisible by 5, or
   the Friday before one that falls on a weekend; `Legs.mqh:589`), so the 21st has no Tokyo trade. The breakout and
   noise legs open later in the day.
+- 12:36 local: no ALERT. The firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at
+  9150.00 (static). At 09:00 the USDJPY range was 158.025-158.388, 0.59x its 60-day average. That is inside the
+  filter (`InpBreakMinRange` 0.25, `Legs.mqh:1618`), so the breakout leg is armed and waiting for a break. At
+  12:29:59 the midday leg sold 0.42 EURUSD at 1.12258, with the stop at 1.12458 and model weight 1.19. That is
+  1 order with no repeat. Fills are compared with the tester after the first demo week (10-23).
 
 

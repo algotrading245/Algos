@@ -109,3 +109,4 @@ committed).
 | 2026-10-21 10:51 | orchestrator | idle check | nothing to do: demo ok (2 EA lines, no orders), no ALERT, no job, no flag, researcher run 34 no idea |
 | 2026-10-21 11:26 | orchestrator | idle check | nothing to do: demo ok (2 EA lines, no orders), no ALERT, no job, no flag, researcher run 35 no idea |
 | 2026-10-21 12:01 | orchestrator | idle check | nothing to do: demo ok (2 EA lines, no orders), no ALERT, no job, no flag, researcher run 36 no idea |
+| 2026-10-21 12:36 | orchestrator | demo check: first 10-21 order | no ALERT: midday sold 0.42 EURUSD at 1.12258 (1 order), breakout armed (range 0.59x, filter 0.25); logged in demo_log. Next: none; fidelity after the first demo week (10-23) |
