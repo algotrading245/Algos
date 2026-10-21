@@ -1,0 +1,26 @@
+{
+  "id": "nfp_usdjpy_release",
+  "title": "USDJPY after the NFP release continues for a few hours",
+  "source": "Andersen, Bollerslev, Diebold & Vega (2003), Micro Effects of Macro Announcements, AER 93(1)",
+  "link": "https://doi.org/10.1257/000282803321455151",
+  "read": "unverified",
+  "why": "FX reacts to surprises within minutes; drift after the first half-hour would follow the first move",
+  "symbols": [
+    "USDJPY",
+    "EURUSD"
+  ],
+  "entry": [
+    "event+1",
+    "event+2"
+  ],
+  "hold": [
+    2,
+    4,
+    8
+  ],
+  "side": "both",
+  "when": {
+    "event": "nfp"
+  },
+  "status": "unread"
+}

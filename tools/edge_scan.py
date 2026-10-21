@@ -34,6 +34,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "research"))
 from atlas_scan import COST, close, half  # noqa: E402  (the shared half-hour grid and cost table)
+sys.path.insert(0, str(ROOT / "tools"))
+from holdout import START as HOLDOUT_START  # noqa: E402
 
 CANDIDATES = ROOT / "marketdata" / "candidates"
 TRIALS = ROOT / "docs" / "trials.jsonl"
@@ -90,6 +92,7 @@ def vol_regime(P, s):
 def scan(families):
     P, days = half()
     tr = days.to_numpy() < CUT
+    seen = days.to_numpy() < np.datetime64(HOLDOUT_START)   # the owner's holdout is never looked at
     cal = calendar(days) if "cal" in families else {}
     found, tried = [], 0
     for y in sorted(set(P) - SKIP):
@@ -113,7 +116,7 @@ def scan(families):
                 for a in np.flatnonzero(np.abs(np.nan_to_num(t1)) >= T_TRAIN):
                     side = float(np.sign(t1[a]))
                     g = side * X[:, a]
-                    test = g[~tr]
+                    test = g[~tr & seen]
                     t2 = np.nanmean(test) / np.nanstd(test) * np.sqrt((~np.isnan(test)).sum())
                     net, stress = np.nanmean(test) - c, np.nanmean(test) - 1.5 * c
                     if t2 < T_TEST or stress <= 0 or (~np.isnan(test)).sum() < MIN_TRADES:
@@ -130,12 +133,13 @@ def scan(families):
 def write(c, days):
     """Daily return at 1x notional on the days the rule trades (0 otherwise), at the real and at 1.5x the cost."""
     CANDIDATES.mkdir(parents=True, exist_ok=True)
-    g = c["series"]
+    keep = days < HOLDOUT_START
+    g = c["series"][keep]
     on = ~np.isnan(g)
     for suffix, k in (("", 1.0), ("_stress", 1.5)):
         r = np.where(on, np.nan_to_num(g) - k * c["cost"], 0.0)
-        pd.DataFrame({"day": days.strftime("%Y-%m-%d"), "r": r}).to_csv(CANDIDATES / f"{c['id']}{suffix}.csv",
-                                                                         index=False)
+        pd.DataFrame({"day": days[keep].strftime("%Y-%m-%d"), "r": r}).to_csv(
+            CANDIDATES / f"{c['id']}{suffix}.csv", index=False)
 
 
 def main():

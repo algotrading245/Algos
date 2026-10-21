@@ -85,6 +85,16 @@ function Test-ScannerWork {
 # tests or drops) or, as a fallback, when its first title words appear in a candidates.json name. The researcher is
 # skipped while 3 or more wait (owner 2026-10-18: effort goes where the work is).
 $IdeasTaken = Join-Path $Repo "docs\autopilot\ideas_taken.txt"
+
+# Idea specs (docs/ideas/specs/*.json) that tools/idea_engine.py has not tested yet. The researcher is skipped while
+# 10 or more wait (owner 2026-10-21: 50-100+ ideas tested a day; the engine, not an LLM, does the testing).
+function Get-PendingSpecs {
+    $n = 0
+    Get-ChildItem (Join-Path $Repo "docs\ideas\specs") -Filter *.json -ErrorAction SilentlyContinue | ForEach-Object {
+        try { if ((Get-Content $_.FullName -Raw | ConvertFrom-Json).status -eq "pending") { $n++ } } catch { }
+    }
+    return $n
+}
 function Get-UnstartedIdeas {
     $names = @()
     try {

@@ -36,6 +36,7 @@ while ($true) {
     if (-not (Test-Path $Pause)) {
         try { Start-Step (Join-Path $Repo "tools\autopilot\tester_step.py") } catch { Write-Log "keeper" "tester_step: $($_.Exception.Message)" }
         try { Start-Step (Join-Path $Repo "tools\autopilot\scanner_step.py") } catch { Write-Log "keeper" "scanner_step: $($_.Exception.Message)" }
+        try { Start-Step (Join-Path $Repo "tools\idea_engine.py") } catch { Write-Log "keeper" "idea_engine: $($_.Exception.Message)" }
         try { Start-Step (Join-Path $Repo "tools\autopilot\dispatch.py") } catch { Write-Log "keeper" "dispatch: $($_.Exception.Message)" }
     }
     try {

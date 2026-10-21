@@ -1,0 +1,25 @@
+{
+  "id": "fomc_xau_preannounce",
+  "title": "Gold and the S&P drift before the FOMC statement",
+  "source": "Lucca & Moench (2015), The Pre-FOMC Announcement Drift, Journal of Finance 70(1)",
+  "link": "https://doi.org/10.1111/jofi.12196",
+  "read": "unverified",
+  "why": "Equities rise in the hours before scheduled FOMC statements; gold may share the risk premium",
+  "symbols": [
+    "XAUUSD",
+    "SPXUSD"
+  ],
+  "entry": [
+    "event-8",
+    "event-4"
+  ],
+  "hold": [
+    4,
+    8
+  ],
+  "side": "both",
+  "when": {
+    "event": "fomc"
+  },
+  "status": "unread"
+}

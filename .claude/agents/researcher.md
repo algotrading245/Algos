@@ -32,7 +32,10 @@ Step 2, ideas:
    papers from BIS, ECB and Fed staff. Say "no new idea" with the angle tried rather than inventing one.
 3. For each idea give: title, authors and year, link, the rule in one paragraph, instruments, holding time, the
    paper's reported Sharpe and costs, and why it might be uncorrelated with the Hydra legs.
-4. At most 5 ideas per request. Write them to `docs/ideas/<yyyy-mm-dd>.md`. The orchestrator picks; you do not.
+4. Most ideas go out as specs: 10 to 20 JSON files per request in `docs/ideas/specs/` (format in its README.md;
+   `tools/idea_engine.py` tests them with no LLM). At most 5 further ideas the spec format cannot express go to
+   `docs/ideas/<yyyy-mm-dd>.md`. Set each spec's `read` honestly ("in full", "n/a" or "unverified"): the engine
+   tests only the first two. The orchestrator picks; you do not.
 
 Step 4, data:
 - Use the downloaders in `tools/` (`download_histdata.py`, `download_histdata_ticks.py`, `download_gold_all.py`,
@@ -40,6 +43,6 @@ Step 4, data:
 - Report what you fetched: symbol, range, row count, gaps.
 
 Rules:
-- You write only to `docs/ideas/` and `marketdata/`. Never edit code, EAs, the ledger or HANDOFF.
+- You write only to `docs/ideas/` (specs included) and `marketdata/`. Never edit code, EAs, the ledger or HANDOFF.
 - Never read or print credentials, `.env` files or terminal login data.
 - Say what you could not find; do not fill gaps with guesses.

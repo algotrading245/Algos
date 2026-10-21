@@ -288,11 +288,14 @@ $recent
     $idle = ($next -eq "none") -and ($reason -match '(?i)^\W*(idle|nothing|no alert)') -and
             ($reason -notmatch '(?i)\b(logged|done|fixed|built|added|wrote|queued|started)\b')
     $streak = if ($prev -and $prev.empty_streak) { [int]$prev.empty_streak } else { 0 }
-    if (-not $failed) { $streak = if ($text -match '(?i)\b(no|0) new ideas?\b') { $streak + 1 } else { 0 } }
+    if (-not $failed) { $streak = if ($text -match '(?i)\b(no|0) new (ideas?|specs?)\b') { $streak + 1 } else { 0 } }
+    # Runs today, failed ones included (the relay caps the researcher at 8 a day).
+    $day = (Get-Date).ToString("yyyy-MM-dd")
+    $runs = if ($prev -and $prev.runs_day -eq $day) { [int]$prev.runs_today + 1 } else { 1 }
     @{ role = $Role; provider = $route.provider; model = $route.model; tier = $route.tier
        started = $started.ToString("s"); ended = (Get-Date).ToString("s"); exit = $code; timed_out = $timedOut
        next = $next; reason = $reason; idle = [bool]($idle -and -not $failed); failed = [bool]$failed
-       empty_streak = $streak } |
+       empty_streak = $streak; runs_day = $day; runs_today = $runs } |
         ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
     $old = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $state = [ordered]@{ from = $Role; next = $next; due = (Get-Date).AddMinutes($GapMinutes).ToString("s"); reason = $reason }

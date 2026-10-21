@@ -32,6 +32,9 @@ import pandas as pd
 from scipy.stats import kurtosis, norm, skew
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+from holdout import START as HOLDOUT_START  # noqa: E402
+
 HYDRA = ROOT / "marketdata" / "hydra_legs_daily.csv.gz"
 CACHED = ROOT / "marketdata" / "candidate_legs_daily.csv.gz"
 CANDIDATES = ROOT / "marketdata" / "candidates"
@@ -93,8 +96,12 @@ def load(cid):
 
 def judge(cid, weight=None, stress_sharpe=None, n_extra=1):
     r, stress = load(cid)
+    # The owner's holdout (tools/holdout.py) is never judged on: candidate, stress and Hydra legs all end before it.
+    r = r[r.index < HOLDOUT_START]
+    if stress is not None:
+        stress = stress[stress.index < HOLDOUT_START]
     legs = pd.read_csv(HYDRA, index_col=0, parse_dates=True)
-    legs = legs[legs.index.dayofweek < 5]
+    legs = legs[(legs.index.dayofweek < 5) & (legs.index < HOLDOUT_START)]
     book = legs.sum(axis=1)
     r = r[r.index.dayofweek < 5].reindex(book.index.union(r.index)).fillna(0.0)
     r = r[r.index >= book.index[0]]

@@ -24,11 +24,11 @@
 #      every minute and which wakes this script at once): the orchestrator, at the judge tier for an ALERT.
 #   3. The next agent at once: the one named in the last HANDOFF line, else the next in the chain. Skipped when it
 #      has nothing to do: the tester without a help file, the scanner without its flag, the fidelity check unless it
-#      has not run for a week, the researcher while 3 or more ideas are untested or after 3 runs in a row without a
-#      new idea (then once a day), the orchestrator without work (Get-OrchestratorWhy: a demo event, a flag, a job,
+#      has not run for a week, the researcher while 10 or more idea specs wait for tools/idea_engine.py, after 8 runs
+#      that day, or after 3 runs in a row without a new spec (then once a day), the orchestrator without work (Get-OrchestratorWhy: a demo event, a flag, a job,
 #      new ideas, a follow-up after a run that did work, or the daily heartbeat). A hand-over from another agent to
 #      the orchestrator always runs.
-# No daily caps: usage is bounded by one agent at a time and the cycle break. A usage/rate limit backs off only the
+# No daily caps but the researcher's: usage is bounded by one agent at a time and the cycle break. A usage/rate limit backs off only the
 # provider that hit it (run-agent.ps1 -> router.py backoff); the next provider in router.json's fallback order takes
 # the runs, and with none left the relay runs code-only (step 2) until one is back.
 # Which CLI and model a role runs on is the router's (tools/autopilot/router.json): switch the whole system between
@@ -54,10 +54,13 @@ function Test-Runnable([string]$Role) {
         "scanner"      { return (Test-ScannerWork) }
         "fidelity"     { return (($now - (Get-LastEnd "fidelity")).TotalDays -ge 7) }
         "researcher"   {
-            # Bursts (owner 2026-10-21): after 3 runs in a row with no new idea, once a day until one finds something.
+            # Owner 2026-10-21: 50-100+ ideas tested a day. The researcher writes specs for tools/idea_engine.py; it runs
+            # while fewer than 10 wait, at most 8 times a day, and after 3 runs in a row with no new spec once a day.
             $l = Get-Last "researcher"
             $streak = if ($l -and $l.empty_streak) { [int]$l.empty_streak } else { 0 }
-            return (((Get-UnstartedIdeas) -lt 3) -and (($streak -lt 3) -or ((Get-LastEnd "researcher").Date -lt $now.Date)))
+            $today = if ($l -and $l.runs_day -eq $now.ToString("yyyy-MM-dd")) { [int]$l.runs_today } else { 0 }
+            return (((Get-PendingSpecs) -lt 10) -and ($today -lt 8) -and
+                    (($streak -lt 3) -or ((Get-LastEnd "researcher").Date -lt $now.Date)))
         }
         "orchestrator" { return [bool](Get-OrchestratorWhy) }
         default        { return $true }
