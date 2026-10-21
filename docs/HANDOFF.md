@@ -208,6 +208,10 @@ each finished piece of work.
   FTMO's market execution), not a failure. Count it as a fill. Instead, raise an ALERT when one leg sends two orders
   on the same symbol within a minute (a repeat).
 
+- **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
+  idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set
+  (a paid data feed, a paper you can supply as PDF, an instrument outside the FTMO list above) should the next search
+  use? Until one is named, proposed tools change (5) would stop the empty researcher/orchestrator cycles.
 - Prop-firm facts: FundedNext Stellar Instant consistency rule; Instant Funding PRO account-drawdown % and EA
   policy; FTMO 1-Step maximum loss (details in the archive).
 - Commit 031f5b6 carried 18 staged renames into `mql5/Experts/_archive/` (.ex5 rule broken): keep or revert.
