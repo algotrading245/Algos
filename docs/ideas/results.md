@@ -11,3 +11,35 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-21T20:21 | ma_cross_nzdusd_5_20 | in full | 1 | NZDUSD ma_cross fast=5 slow=20 L1 both | -0.49 / -0.10 | FAIL at halves | 0.000 (N=26591, luck bar 1.03) |
 | 2026-10-21T21:51 | tsmom_hurst_fx | in full | 21 | USDJPY tsmom lookback=252 L21 both | 0.46 / 0.09 | FAIL at halves | 0.002 (N=26612, luck bar 1.03) |
 | 2026-10-21T21:51 | tsmom_hurst_gold | in full | 3 | XAUUSD tsmom lookback=252 L21 both | 0.15 / 0.53 | FAIL at halves | 0.003 (N=26615, luck bar 1.03) |
+| 2026-10-22T00:44 | f_tsmom_audcad | n/a | 3 | AUDCAD tsmom lookback=20 L1 both | -0.07 / -0.58 | FAIL at halves | 0.000 (N=26618, luck bar 1.03) |
+| 2026-10-22T00:44 | f_tsmom_audusd | n/a | 3 | AUDUSD tsmom lookback=20 L1 both | -0.13 / -0.27 | FAIL at halves | 0.000 (N=26621, luck bar 1.03) |
+| 2026-10-22T00:44 | f_tsmom_eurusd | n/a | 3 | EURUSD tsmom lookback=60 L1 both | 0.07 / -0.14 | FAIL at halves | 0.000 (N=26624, luck bar 1.03) |
+| 2026-10-22T00:44 | f_tsmom_gbpusd | n/a | 3 | GBPUSD tsmom lookback=120 L1 both | -0.04 / -0.50 | FAIL at halves | 0.000 (N=26627, luck bar 1.03) |
+| 2026-10-22T00:44 | f_tsmom_spxusd | n/a | 3 | SPXUSD tsmom lookback=120 L1 both | 0.38 / -0.08 | FAIL at halves | 0.000 (N=26630, luck bar 1.03) |
+| 2026-10-22T00:44 | f_tsmom_usdcad | n/a | 3 | USDCAD tsmom lookback=120 L1 both | -0.33 / -0.58 | FAIL at halves | 0.000 (N=26633, luck bar 1.03) |
+| 2026-10-22T00:45 | f_tsmom_usdchf | n/a | 3 | USDCHF tsmom lookback=60 L1 both | -0.25 / -0.54 | FAIL at halves | 0.000 (N=26636, luck bar 1.03) |
+| 2026-10-22T00:45 | f_tsmom_usdjpy | n/a | 3 | USDJPY tsmom lookback=60 L1 both | 0.49 / 0.34 | FAIL at halves | 0.013 (N=26639, luck bar 1.03) |
+| 2026-10-22T00:45 | f_tsmom_xagusd | n/a | 3 | XAGUSD tsmom lookback=20 L1 both | 0.51 / -0.04 | FAIL at halves | 0.003 (N=26642, luck bar 1.03) |
+| 2026-10-22T00:45 | f_tsmom_xauusd | n/a | 3 | XAUUSD tsmom lookback=120 L1 both | 0.13 / 0.61 | FAIL at halves | 0.003 (N=26645, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_audjpy | n/a | 3 | AUDJPY tsmom lookback=120 L1 both | -0.23 / -0.18 | FAIL at halves | 0.000 (N=26648, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_audnzd | n/a | 3 | AUDNZD tsmom lookback=60 L1 both | 0.05 / -0.43 | FAIL at halves | 0.000 (N=26651, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_cadjpy | n/a | 3 | CADJPY tsmom lookback=60 L1 both | -0.06 / -0.10 | FAIL at halves | 0.000 (N=26654, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_euraud | n/a | 3 | EURAUD tsmom lookback=120 L1 both | 0.02 / -0.22 | FAIL at halves | 0.000 (N=26657, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_eurchf | n/a | 3 | EURCHF tsmom lookback=120 L1 both | 0.13 / -0.52 | FAIL at halves | 0.000 (N=26660, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_eurgbp | n/a | 3 | EURGBP tsmom lookback=120 L1 both | 0.26 / -0.78 | FAIL at halves | 0.000 (N=26663, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_eurjpy | n/a | 3 | EURJPY tsmom lookback=60 L1 both | 0.52 / -0.25 | FAIL at halves | 0.000 (N=26666, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_gbpchf | n/a | 3 | GBPCHF tsmom lookback=120 L1 both | -0.35 / -0.37 | FAIL at halves | 0.000 (N=26669, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_gbpjpy | n/a | 3 | GBPJPY tsmom lookback=120 L1 both | 0.30 / -0.49 | FAIL at halves | 0.000 (N=26672, luck bar 1.03) |
+| 2026-10-22T00:47 | f_tsmom_nzdusd | n/a | 3 | NZDUSD tsmom lookback=60 L1 both | -0.18 / -0.47 | FAIL at halves | 0.000 (N=26675, luck bar 1.03) |
+| 2026-10-22T00:47 | xsmom_fx_majors_12m | in full | 1 | EURUSD+GBPUSD+USDJPY+AUDUSD+USDCAD+USDCHF+NZDUSD xsmom lookback=252 top=1 L21 both | -0.28 / -0.46 | FAIL at halves | 0.000 (N=26676, luck bar 1.03) |
+| 2026-10-22T00:48 | xsmom_xau_xag_wti_spx_12m | in full | 1 | XAUUSD+XAGUSD+WTIUSD+SPXUSD xsmom lookback=252 top=1 L21 both | 0.15 / 0.20 | FAIL at halves | 0.000 (N=26677, luck bar 1.03) |
+| 2026-10-22T00:51 | f_donchian_audcad | n/a | 2 | AUDCAD donchian lookback=20 L1 both | 0.02 / -0.31 | FAIL at halves | 0.000 (N=26680, luck bar 1.03) |
+| 2026-10-22T00:51 | f_donchian_eurusd | n/a | 2 | EURUSD donchian lookback=20 L1 both | 0.07 / -0.25 | FAIL at halves | 0.000 (N=26682, luck bar 1.03) |
+| 2026-10-22T00:51 | f_donchian_gbpusd | n/a | 2 | GBPUSD donchian lookback=55 L1 both | -0.20 / 0.21 | FAIL at halves | 0.000 (N=26684, luck bar 1.03) |
+| 2026-10-22T00:51 | f_donchian_spxusd | n/a | 2 | SPXUSD donchian lookback=55 L1 both | -0.08 / 0.19 | FAIL at halves | 0.000 (N=26686, luck bar 1.03) |
+| 2026-10-22T00:51 | f_donchian_usdjpy | n/a | 2 | USDJPY donchian lookback=55 L1 both | 0.31 / 0.48 | FAIL at halves | 0.016 (N=26688, luck bar 1.03) |
+| 2026-10-22T00:51 | f_donchian_xauusd | n/a | 2 | XAUUSD donchian lookback=20 L1 both | 0.09 / 0.03 | FAIL at halves | 0.000 (N=26690, luck bar 1.03) |
+| 2026-10-22T00:51 | f_tsmom_grxeur | n/a | 3 | GRXEUR tsmom lookback=120 L1 both | -0.05 / 0.50 | FAIL at halves | 0.000 (N=26693, luck bar 1.03) |
+| 2026-10-22T00:51 | f_tsmom_jpxjpy | n/a | 3 | JPXJPY tsmom lookback=120 L1 both | 0.40 / -0.54 | FAIL at halves | 0.000 (N=26696, luck bar 1.03) |
+| 2026-10-22T00:51 | f_tsmom_nzdcad | n/a | 3 | NZDCAD tsmom lookback=60 L1 both | -0.05 / -0.94 | FAIL at halves | 0.000 (N=26699, luck bar 1.03) |
+| 2026-10-22T00:51 | f_tsmom_wtiusd | n/a | 3 | WTIUSD tsmom lookback=60 L1 both | 0.33 / -0.15 | FAIL at halves | 0.000 (N=26702, luck bar 1.03) |
