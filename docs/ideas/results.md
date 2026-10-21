@@ -93,3 +93,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:06 | f_meanrev_usdjpy | n/a | 4 | USDJPY meanrev lookback=10 z=2.0 L1 both | 0.34 / 0.06 | FAIL at halves | 0.000 (N=26858, luck bar 3.04) |
 | 2026-10-22T01:06 | f_meanrev_xagusd | n/a | 4 | XAGUSD meanrev lookback=20 z=2.0 L1 both | -0.34 / -0.28 | FAIL at halves | 0.000 (N=26862, luck bar 2.48) |
 | 2026-10-22T01:06 | f_meanrev_xauusd | n/a | 4 | XAUUSD meanrev lookback=20 z=1.5 L1 both | -0.31 / -0.61 | FAIL at halves | 0.000 (N=26866, luck bar 1.68) |
+| 2026-10-22T01:09 | f_meanrev_audjpy | n/a | 4 | AUDJPY meanrev lookback=10 z=2.0 L1 both | -0.04 / -0.01 | FAIL at halves | 0.000 (N=26870, luck bar 3.13) |
+| 2026-10-22T01:09 | f_meanrev_cadjpy | n/a | 4 | CADJPY meanrev lookback=20 z=1.5 L1 both | 0.08 / -0.04 | FAIL at halves | 0.000 (N=26874, luck bar 1.65) |
+| 2026-10-22T01:09 | f_meanrev_euraud | n/a | 4 | EURAUD meanrev lookback=20 z=1.5 L1 both | -0.20 / 0.08 | FAIL at halves | 0.000 (N=26878, luck bar 1.65) |
+| 2026-10-22T01:09 | f_meanrev_eurchf | n/a | 4 | EURCHF meanrev lookback=10 z=1.5 L1 both | 0.59 / -0.36 | FAIL at halves | 0.000 (N=26882, luck bar 1.74) |
+| 2026-10-22T01:09 | f_meanrev_eurgbp | n/a | 4 | EURGBP meanrev lookback=20 z=1.5 L1 both | 0.06 / 0.30 | FAIL at halves | 0.000 (N=26886, luck bar 1.68) |
+| 2026-10-22T01:09 | f_meanrev_eurjpy | n/a | 4 | EURJPY meanrev lookback=20 z=2.0 L1 both | -0.00 / -0.07 | FAIL at halves | 0.000 (N=26890, luck bar 2.52) |
+| 2026-10-22T01:09 | f_meanrev_gbpjpy | n/a | 4 | GBPJPY meanrev lookback=10 z=2.0 L1 both | -0.19 / -0.18 | FAIL at halves | 0.000 (N=26894, luck bar 3.10) |
+| 2026-10-22T01:09 | f_meanrev_nzdusd | n/a | 4 | NZDUSD meanrev lookback=10 z=1.5 L1 both | 0.47 / -0.07 | FAIL at halves | 0.000 (N=26898, luck bar 1.67) |
+| 2026-10-22T01:09 | f_meanrev_usdcad | n/a | 4 | USDCAD meanrev lookback=10 z=1.5 L1 both | 0.25 / 0.14 | FAIL at halves | 0.000 (N=26902, luck bar 1.71) |
+| 2026-10-22T01:09 | f_meanrev_usdchf | n/a | 4 | USDCHF meanrev lookback=20 z=2.0 L1 both | 0.49 / -0.14 | FAIL at halves | 0.001 (N=26906, luck bar 2.62) |
