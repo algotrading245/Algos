@@ -97,5 +97,11 @@ Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the 
   below max(upper band, day average). So the second buy follows an exit at the 18:30 or 19:00 check. The EA does not
   log noise exits, so the demo log cannot show which check closed it. The fill comparison (10-23) will show it from
   the deal history.
+- 20:31 local: no ALERT. At 20:29:59 the noise leg bought 0.09 US100.cash at 29896.58 (bands 29864.07 / 29324.90),
+  its third buy today with the same size. It again follows an exit of the held position: the leg cannot add while it
+  holds one (`Legs.mqh:1864-1880`). The exit can fall in the same check as the re-entry. When the day average lies
+  above the bid and the bid above the upper band, the leg closes and buys again at once. The Python model does the
+  same and charges the cost of each close (`research/noise_area_index.py:106-117`), so this churn is in the
+  expectation. The deal history at the 10-23 fill comparison shows which checks closed the positions.
 
 

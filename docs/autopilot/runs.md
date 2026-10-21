@@ -120,3 +120,4 @@ committed).
 | 2026-10-21 18:35 | orchestrator | idle check | nothing to do: demo unchanged since 17:59 (midday 1, breakout 1, US100 noise 1), no ALERT, no job, no flag, all idea specs done or dropped |
 | 2026-10-21 19:00 | orchestrator | demo check | no ALERT; 2nd US100 noise buy 18:59 is the leg's exit-and-re-entry (Legs.mqh:1864-1880), not a repeat; no job, no flag, no open idea |
 | 2026-10-21 19:41 | orchestrator | idle check | nothing to do: demo unchanged since 18:59 (midday 1, breakout 1, US100 noise 2), no ALERT, no job, no flag, all idea specs done or dropped, miner 0 specs |
+| 2026-10-21 20:31 | orchestrator | demo check | no ALERT; 3rd US100 noise buy 20:29 is a designed exit-and-re-entry, as in the Python model (noise_area_index.py:106-117); miner's 4 ma_cross specs failed the halves in the idea engine; no job, no flag |
