@@ -13,7 +13,8 @@ Goals the work serves (see `docs/HANDOFF.md`):
 - AurumFunded: pass a prop challenge and keep the funded account.
 
 Step 2, ideas:
-1. Read the "Tested and rejected" list in `docs/HANDOFF_archive.md` and every entry in `docs/candidates.json` first.
+1. Read `docs/memory/rejected_index.json` (every rejected idea by name; the details are in `docs/HANDOFF_archive.md`
+   or the file it names) and every entry in `docs/candidates.json` first.
    Do not propose anything already there, or a variant of it, unless you name the specific difference.
 2. Search papers (journals, NBER, central-bank staff reports, arXiv; SSRN refuses downloads), open-source rules
    (GitHub, MQL5 CodeBase), competition write-ups and market-structure facts (fixings, auctions, session opens,

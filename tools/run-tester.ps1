@@ -15,7 +15,7 @@
 #
 # Default install: C:\MetaTrader 5 - Tester, used only for the tester and logged in to the FTMO demo, so the symbols,
 # their history and the server clock are FTMO's. Terminal 16 keeps running the demo EA. MT5 ignores /config while an
-# install is open, so one tester run at a time. Nothing here places live trades: the tester runs on history only.
+# install is open, so one run per install at a time (tester_step.py runs up to two installs side by side). Nothing here places live trades: the tester runs on history only.
 param(
     [string]$Expert = "",
     [string]$Symbol = "",
@@ -28,6 +28,7 @@ param(
     [int]$Deposit = 10000,
     [int]$Leverage = 100,
     [string]$Period = "M1",
+    [int]$Model = 4,          # 4 = every tick based on real ticks; 1 = 1-minute OHLC (a fast screen, owner 2026-10-21)
     [string]$Tag = "",
     [switch]$Detach,
     [string]$Collect = ""
@@ -95,7 +96,9 @@ if ($running) { throw "$exe is open. Close it (File > Exit) and run again; MT5 i
 & (Join-Path $PSScriptRoot "link-terminal.ps1") -DataFolder $DataFolder -Project Aurum
 
 $src = Join-Path $DataFolder "MQL5\Experts\$Expert\$Expert.mq5"
-$log = Join-Path $env:TEMP "${Expert}_compile.log"
+# Per install: two tester installs may compile the same EA at the same time.
+$inst = [Math]::Abs($Terminal.ToLower().GetHashCode()) % 100000
+$log = Join-Path $env:TEMP "${Expert}_${inst}_compile.log"
 Remove-Item $log -ErrorAction SilentlyContinue
 Start-Process (Join-Path $Terminal "metaeditor64.exe") -ArgumentList "/compile:`"$src`"", "/log:`"$log`"" -Wait
 $text = Get-Content $log -Raw
@@ -144,11 +147,11 @@ $ini = @"
 Expert=$Expert\$Expert.ex5
 Symbol=$Symbol
 Period=$Period
-Model=4
+Model=$Model
 ExecutionMode=0
 Deposit=$Deposit
 Currency=USD
-Leverage=$Leverage
+Leverage=1:$Leverage
 ForwardMode=0
 ReplaceReport=1
 ShutdownTerminal=1
@@ -163,14 +166,14 @@ $($inputs -join "`r`n")
 "@
 $out = Join-Path $repo ("backtests\{0}_{1}" -f (Get-Date -Format "yyyy-MM-dd_HHmm"), $name)
 New-Item -ItemType Directory -Force -Path $out | Out-Null
-$tmp = Join-Path $env:TEMP "${name}_run.ini"
+$tmp = Join-Path $env:TEMP "${name}_${inst}_run.ini"
 Set-Content -Path $tmp -Value $ini -Encoding Unicode
 Copy-Item $tmp (Join-Path $out "tester.ini")
 
-Write-Host "running $Expert on $Symbol from $From to $To (real ticks)..."
+Write-Host "running $Expert on $Symbol from $From to $To ($(if ($Model -eq 4) { "real ticks" } else { "model $Model" }), $Terminal)..."
 $job = [ordered]@{
     Expert = $Expert; Symbol = $Symbol; Preset = $Preset; Set = ($Set -join ","); From = $From; To = $To
-    Deposit = $Deposit; Leverage = $Leverage; Period = $Period; Name = $name; Exe = $exe; DataFolder = $DataFolder
+    Deposit = $Deposit; Leverage = $Leverage; Period = $Period; Model = $Model; Terminal = $Terminal; Name = $name; Exe = $exe; DataFolder = $DataFolder
     Started = (Get-Date).ToString("o"); Pid = 0
 }
 if ($Detach) {

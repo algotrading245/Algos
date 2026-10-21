@@ -4,7 +4,13 @@
 #
 #   python tools/autopilot/tester_step.py [--dry-run]
 #
-# - Its own lock (mutex Local\AurumTester), so the agents (Local\AurumAgent) work while MT5 runs.
+# - Its own lock (mutex Local\AurumTester), so the agents (Local\AurumAgent) work while MT5 runs. It no longer
+#   waits for a free agent (owner 2026-10-21): queue.json is merged by job id on save, and a commit retries while
+#   git's index.lock is held.
+# - Up to two tester installs run side by side (TESTERS); one only counts once the owner logged it in once
+#   (config\accounts.dat). A job runs on the install recorded in job["terminal"].
+# - A job's "model" picks the tick model: 4 (default) real ticks, 1 = 1-minute OHLC, a fast screen before a real-tick
+#   run (owner 2026-10-21).
 # - A collected job's id goes to logs/autopilot/to-judge.json; the relay then starts the orchestrator to judge it.
 # - Never commits .htm, .png, summary.txt, job.json or .ex5; never touches a terminal except through
 #   tools/run-tester.ps1 and tools/run-months.ps1, which refuse the holdout (AURUM_AGENT=1 is set for them).
@@ -15,6 +21,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -26,6 +33,7 @@ TO_JUDGE = LOGDIR / "to-judge.json"
 HELP = LOGDIR / "tester-help.json"
 PAUSE = LOGDIR / "PAUSE"
 TESTER = r"C:\MetaTrader 5 - Tester"
+TESTERS = [TESTER, r"C:\MetaTrader 5 - Tester 2"]   # the second one counts only once it has a login
 DRY = "--dry-run" in sys.argv
 PROBLEMS = re.compile(r"not found|cannot|failed|not enough money|no money|margin|invalid|error", re.I)
 SECRET = re.compile(r"login|account|password|authoriz", re.I)
@@ -38,10 +46,9 @@ AGENT_MUTEX = "Local\\AurumAgent"
 
 
 def agent_free():
-    """True when no Claude agent run holds Local\\AurumAgent (run-agent.ps1 holds it for the whole run). The step
-    scripts write queue.json, runs.md and commits, so they skip a step while an agent is busy rather than race its
-    writes; the keeper calls again every minute, so a job is collected within a minute of the agent run ending.
-    An abandoned mutex (WAIT_ABANDONED, a killed run-agent) counts as free."""
+    """True when no Claude agent run holds Local\\AurumAgent (run-agent.ps1 holds it for the whole run). Used by
+    code_judge.py. tester_step itself no longer waits on it (owner 2026-10-21): it merges queue.json by job id and
+    retries commits on index.lock instead. An abandoned mutex (WAIT_ABANDONED, a killed run-agent) counts as free."""
     h = k32.CreateMutexW(None, False, AGENT_MUTEX)
     if not h:
         return True
@@ -71,12 +78,34 @@ def read_json(p, default=None):
         return default
 
 
+LOADED = {}   # job id -> the job as read from queue.json, to merge our changes with an agent's on save
+
+
+def load_queue():
+    q = read_json(QUEUE)
+    LOADED.clear()
+    for j in (q or {}).get("jobs") or []:
+        if j.get("id"):
+            LOADED[j["id"]] = json.loads(json.dumps(j))
+    return q
+
+
 def save_queue(q):
-    # Same layout as the file the agents edit: 2-space indent, UTF-8, CRLF.
+    """Writes only the jobs this script changed into the file as it is now, so an agent that edited queue.json in
+    the meantime (a new job, a changed note) keeps its edit. Same layout as the agents' file: 2-space, UTF-8, CRLF."""
     if DRY:
         return
-    text = json.dumps(q, indent=2, ensure_ascii=False).replace("\n", "\r\n") + "\r\n"
+    disk = read_json(QUEUE) or q
+    mine = {j["id"]: j for j in q["jobs"] if j.get("id") and j != LOADED.get(j["id"])}
+    jobs = disk.get("jobs") or []
+    for i, j in enumerate(jobs):
+        if j.get("id") in mine:
+            jobs[i] = mine[j["id"]]
+    disk["jobs"] = jobs
+    text = json.dumps(disk, indent=2, ensure_ascii=False).replace("\n", "\r\n") + "\r\n"
     QUEUE.write_bytes(text.encode("utf-8"))
+    for jid, j in mine.items():
+        LOADED[jid] = json.loads(json.dumps(j))
 
 
 def exe_alive(pid, exe=None, name=None):
@@ -129,8 +158,12 @@ def commit(paths, message):
     paths = [p for p in dict.fromkeys(paths) if (REPO / p).exists()]
     if not paths:
         return
-    a = git("add", "--", *paths)
-    c = git("commit", "-m", message + "\n\nCommitted by tools/autopilot/tester_step.py", "--", *paths)
+    for _ in range(5):  # an agent's git command may hold index.lock for a moment
+        a = git("add", "--", *paths)
+        c = git("commit", "-m", message + "\n\nCommitted by tools/autopilot/tester_step.py", "--", *paths)
+        if not (a.returncode or c.returncode) or "index.lock" not in (a.stderr + c.stderr):
+            break
+        time.sleep(3)
     if a.returncode or c.returncode:
         log(f"commit failed: {(a.stderr + c.stderr + c.stdout).strip()[:300]}")
         return
@@ -442,7 +475,8 @@ def collect(q, job):
 
     if job.get("compare_set") and not job.get("folder_on"):
         # The off run is in: start the on run (set + compare_set) in the same job.
-        started = start_run(job, list(job.get("set") or []) + list(job["compare_set"]), f"{job.get('tag')}_on")
+        started = start_run(job, list(job.get("set") or []) + list(job["compare_set"]), f"{job.get('tag')}_on",
+                            job.get("terminal") or TESTER)
         if started:
             job["folder_on"] = started
             note_add(job, f"Off run collected, on run started by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}.")
@@ -471,11 +505,12 @@ def collect(q, job):
 
 # ---------------------------------------------------------------- start
 
-def start_run(job, sets, tag):
+def start_run(job, sets, tag, terminal=TESTER):
     """Starts one detached run; returns its folder (relative) or None (the job is set failed or help is asked)."""
     args = ["-Expert", job["expert"], "-Symbol", job["symbol"], "-Preset", job["preset"],
             "-Period", str(job.get("period") or "M15"), "-Deposit", str(job.get("deposit") or 10000),
-            "-Leverage", str(job.get("leverage") or 100), "-Tag", tag]
+            "-Leverage", str(job.get("leverage") or 100), "-Tag", tag,
+            "-Terminal", terminal, "-Model", str(int(job.get("model") or 4))]
     if sets:
         args += ["-Set", ",".join(sets)]
     if job.get("months"):
@@ -509,36 +544,47 @@ def approved(item_id):
     return any(i.get("id") == item_id and i.get("status") in ("approved", "applied") for i in a.get("items") or [])
 
 
-def tester_ready():
-    # The tester install needs one login by the owner (config\accounts.dat) before a job can start.
+def tester_ready(terminal=TESTER):
+    # A tester install needs one login by the owner (config\accounts.dat) before a job can start.
+    if not (Path(terminal) / "terminal64.exe").exists():
+        return False
+    want = terminal.rstrip("\\").lower()
     base = Path(os.environ.get("APPDATA", "")) / "MetaQuotes" / "Terminal"
     for d in base.glob("*") if base.exists() else []:
         o = d / "origin.txt"
         try:
-            if o.exists() and o.read_text(encoding="utf-16", errors="ignore").strip().rstrip("\\").lower() == TESTER.lower():
+            if o.exists() and o.read_text(encoding="utf-16", errors="ignore").strip().rstrip("\\").lower() == want:
                 return (d / "config" / "accounts.dat").exists()
-            if o.exists() and o.read_text(encoding="utf-8", errors="ignore").strip().strip("\ufeff").rstrip("\\").lower() == TESTER.lower():
+            if o.exists() and o.read_text(encoding="utf-8", errors="ignore").strip().strip("\ufeff").rstrip("\\").lower() == want:
                 return (d / "config" / "accounts.dat").exists()
         except Exception:
             continue
     return False
 
 
-def start_next(q):
+def free_installs(q):
+    """Ready tester installs that no running job uses, in TESTERS order."""
+    used = {(j.get("terminal") or TESTER).lower() for j in q["jobs"] if j.get("status") == "running"}
+    return [t for t in TESTERS if t.lower() not in used and tester_ready(t)]
+
+
+def start_next(q, terminal=TESTER):
     for job in q["jobs"]:
         if job.get("status") != "queued":
             continue
         if job.get("needs") and not approved(job["needs"]):
             continue
-        if not tester_ready():
-            log("queued job waits: the tester install has no login (config\\accounts.dat)")
+        if not tester_ready(terminal):
+            log(f"queued job waits: {terminal} has no login (config\\accounts.dat)")
             return False
         tag = f"{job.get('tag')}_off" if job.get("compare_set") else (job.get("tag") or job["id"])
-        folder = start_run(job, list(job.get("set") or []), tag)
+        folder = start_run(job, list(job.get("set") or []), tag, terminal)
         if folder:
             job["status"] = "running"
             job["folder"] = folder
-            note_add(job, f"Started by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}.")
+            job["terminal"] = terminal
+            screen = " (1-minute OHLC screen)" if int(job.get("model") or 4) == 1 else ""
+            note_add(job, f"Started by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M} on {Path(terminal).name}{screen}.")
             add_run(f"Started {job['id']} ({job['expert']} {tag}{', months' if job.get('months') else ''})",
                     f"{job['id']} running in {Path(folder).name}")
         elif job.get("status") == "failed":
@@ -557,23 +603,23 @@ def main():
         return
     if HELP.exists():
         return  # the tester agent has to look first; it deletes the file when done
-    if not agent_free():
-        log("skipped: an agent run is busy (Local\\AurumAgent); the next call tries again")
-        return
     h = k32.CreateMutexW(None, False, "Local\\AurumTester")
     if not h or k32.WaitForSingleObject(ctypes.c_void_p(h), 0) not in (0, 0x80):
         return
     try:
-        q = read_json(QUEUE)
+        q = load_queue()
         if not q:
             ask_help(None, "docs/autopilot/queue.json is unreadable")
             return
         for job in q["jobs"]:
             if job.get("status") == "running":
                 collect(q, job)
-                if job.get("status") == "running":
-                    return  # one MT5 run at a time
-        start_next(q)
+        if HELP.exists():
+            return
+        # One MT5 run per install, up to len(TESTERS) side by side.
+        for terminal in free_installs(q):
+            if not start_next(q, terminal):
+                break
     except Exception as e:  # anything unexpected goes to the tester agent
         ask_help(None, f"{type(e).__name__}: {e}")
     finally:

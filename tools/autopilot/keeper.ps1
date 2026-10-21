@@ -8,7 +8,8 @@
 #
 # It also starts the script steps every minute (fire-and-forget, pythonw so no console window; each script has its
 # own lock and exits at once when locked, paused or idle): tester_step.py starts and collects tester jobs without a
-# Claude run, scanner_step.py works through docs/autopilot/scan_requests.json the same way.
+# Claude run, scanner_step.py works through docs/autopilot/scan_requests.json the same way, and dispatch.py wakes the
+# relay within a minute of a new demo order/ALERT or a new work file (owner 2026-10-21).
 param([int]$Seconds = 60, [switch]$Once)
 . "$PSScriptRoot\common.ps1"
 
@@ -35,6 +36,7 @@ while ($true) {
     if (-not (Test-Path $Pause)) {
         try { Start-Step (Join-Path $Repo "tools\autopilot\tester_step.py") } catch { Write-Log "keeper" "tester_step: $($_.Exception.Message)" }
         try { Start-Step (Join-Path $Repo "tools\autopilot\scanner_step.py") } catch { Write-Log "keeper" "scanner_step: $($_.Exception.Message)" }
+        try { Start-Step (Join-Path $Repo "tools\autopilot\dispatch.py") } catch { Write-Log "keeper" "dispatch: $($_.Exception.Message)" }
     }
     try {
         $hold = Get-Hold

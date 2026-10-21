@@ -25,6 +25,8 @@ param(
     [string]$FromMonth = "2024.01",
     [string]$ToMonth = (Get-Date).AddMonths(-1).ToString("yyyy.MM"),
     [double]$Goal = 5.0,
+    [string]$Terminal = "C:\MetaTrader 5 - Tester",
+    [int]$Model = 4,
     [switch]$Detach,
     [string]$Out = "",
     [string]$Collect = ""
@@ -60,12 +62,12 @@ New-Item -ItemType Directory -Force -Path $dir | Out-Null
 $stateFile = Join-Path $dir "months.json"
 $state = if (Test-Path $stateFile) { Get-Content $stateFile -Raw | ConvertFrom-Json } else {
     [pscustomobject]@{ Expert = $Expert; Symbol = $Symbol; Preset = $Preset; Set = ($Set -join ","); Period = $Period
-        Deposit = $Deposit; Leverage = $Leverage; Tag = $Tag; Goal = $Goal; Months = $months; Done = @(); Pid = $PID
+        Deposit = $Deposit; Leverage = $Leverage; Tag = $Tag; Goal = $Goal; Terminal = $Terminal; Model = $Model; Months = $months; Done = @(); Pid = $PID
         Started = (Get-Date).ToString("o") }
 }
 
 $common = @("-Expert", $Expert, "-Symbol", $Symbol, "-Period", $Period, "-Deposit", $Deposit, "-Leverage", $Leverage,
-    "-Tag", $Tag, "-FromMonth", $FromMonth, "-ToMonth", $ToMonth, "-Goal", $Goal)
+    "-Tag", $Tag, "-FromMonth", $FromMonth, "-ToMonth", $ToMonth, "-Goal", $Goal, "-Terminal", $Terminal, "-Model", $Model)
 if ($Preset) { $common += @("-Preset", $Preset) }
 if ($Set) { $common += @("-Set", ($Set -join ",")) }
 
@@ -92,7 +94,7 @@ foreach ($ym in $months) {
     $before = Get-Date
     # A hashtable: an array splatted into a script binds "-Name" strings by position, not as parameter names.
     $runArgs = @{ Expert = $Expert; Symbol = $Symbol; Period = $Period; Deposit = $Deposit; Leverage = $Leverage
-        Tag = $monthTag; From = $first.ToString("yyyy.MM.dd"); To = $to.ToString("yyyy.MM.dd") }
+        Tag = $monthTag; Terminal = $Terminal; Model = $Model; From = $first.ToString("yyyy.MM.dd"); To = $to.ToString("yyyy.MM.dd") }
     if ($Preset) { $runArgs.Preset = $Preset }
     if ($Set) { $runArgs.Set = @($Set -join ",") }
     $status = "done"

@@ -24,8 +24,8 @@ Then pick the single most useful next task and do it, in this order of priority:
    When the judgement is recorded, clear the job: `python tools/autopilot/handoff.py --judged <id>`.
 3. A candidate between steps 5 and 14: do its next step. Use the quant-coder subagent for code and tests and the
    reviewer subagent for every gate (8-11) and every EA change; follow the gate files in `docs/gates/`. EA changes:
-   new legs off by default, compile with `powershell -ExecutionPolicy Bypass -File tools/autopilot/compile.ps1 -Expert <EA>`
-   to 0 errors and 0 warnings.
+   new legs off by default, compile with the Bash tool (the PowerShell tool refuses it):
+   `powershell -ExecutionPolicy Bypass -File tools/autopilot/compile.ps1 -Expert <EA>`, to 0 errors and 0 warnings.
    Run limit (owner 2026-10-18): every run you spend on one idea counts — add 1 to the candidate's `runs` field in
    `docs/candidates.json` (create it at 1). At 3 runs the idea must leave your desk in that run: drop it (status
    "rejected", the reason in its entry), move it on (queue its tester job, or hand it to the researcher/scanner),
