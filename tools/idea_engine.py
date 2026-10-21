@@ -7,9 +7,8 @@ most MAX_VARIANTS), picks the best variant on the days before 2018 only, and han
 docs/ideas/results.jsonl and docs/ideas/results.md; the spec is marked done. A PASS is recorded in
 docs/candidates.json like any gated candidate and raises the scanner flag, so the orchestrator wakes to judge it.
 
-    python tools/idea_engine.py              # the keeper's call (every minute; throttled to one run per MIN_MINUTES)
+    python tools/idea_engine.py              # the keeper's call (every minute; no gap while specs wait)
     python tools/idea_engine.py --dry-run    # test every pending spec, print, write nothing, log no trial
-    python tools/idea_engine.py --force      # ignore the throttle
 
 Data: the half-hour bid grid of research/atlas_scan.py. Its value at half-hour k is the last price of that half-hour,
 i.e. the price at New York 17:00 + 30(k+1) min (checked: the 08:30 NFP jump lands in k = 31). An entry "HH:MM" New
@@ -49,12 +48,13 @@ FLAG = LOGDIR / "scanner-flag.json"
 PAUSE = LOGDIR / "PAUSE"
 STATE = LOGDIR / "idea-engine-state.json"
 CUT = pd.Timestamp("2018-01-01")
-MIN_MINUTES = 3
+NEAR_MISS = ROOT / "docs" / "ideas" / "near_miss.jsonl"
+NEAR_SHARPE = 0.3          # a failed spec with both halves above this goes to the near-miss pool (owner 2026-10-22)
+RUN_SECONDS = 50          # one run keeps testing new batches this long; the keeper calls again each minute
 MAX_VARIANTS = 200
 MIN_TRADES = 20            # trades needed both before 2018 and from 2018 (to the holdout)
 INDEX_COST = {"SPXUSD": 1.0, "GRXEUR": 1.5, "JPXJPY": 2.0, "WTIUSD": 3.0}
 DRY = "--dry-run" in sys.argv
-FORCE = "--force" in sys.argv
 NY = ZoneInfo("America/New_York")
 WEEKDAYS = ("mon", "tue", "wed", "thu", "fri")
 
@@ -550,30 +550,43 @@ def pending():
     return out
 
 
+def refill():
+    if DRY:
+        return
+    try:
+        import spec_factory               # owner 2026-10-22: rule tests with no LLM, so the queue never runs dry
+        made = spec_factory.top_up()
+        if made:
+            log(f"spec factory wrote {len(made)} specs: {', '.join(made)}")
+    except Exception as e:
+        log(f"spec factory failed: {type(e).__name__}: {e}")
+
+
+def stream(todo):
+    """The pending specs, then each new batch the factory writes, for up to RUN_SECONDS (owner 2026-10-22: one test
+    ends, the next starts). A spec is given once per run, so one left pending (a PASS while an agent runs) cannot loop."""
+    t0, given = now(), set()
+    while todo:
+        for path, spec in todo:
+            given.add(path)
+            yield path, spec
+        if DRY or (now() - t0).total_seconds() > RUN_SECONDS:
+            return
+        refill()
+        todo = [(p, s) for p, s in pending() if p not in given]
+
+
 def main():
     if PAUSE.exists() and not DRY:
         return
-    if not DRY:
-        try:
-            import spec_factory           # owner 2026-10-22: rule tests with no LLM, so the queue never runs dry
-            made = spec_factory.top_up()
-            if made:
-                log(f"spec factory wrote {len(made)} specs: {', '.join(made)}")
-        except Exception as e:
-            log(f"spec factory failed: {type(e).__name__}: {e}")
+    refill()
     busy = not DRY and not agent_free()
     todo = pending()
     if not todo:
         if not busy:
             commit(dirty(), "Idea engine: results kept while an agent ran")
         return
-    st = read_json(STATE, {}) or {}
-    try:
-        last = dt.datetime.fromisoformat(st.get("last", ""))
-    except ValueError:
-        last = None
-    if not (FORCE or DRY) and last and (now() - last).total_seconds() < MIN_MINUTES * 60:
-        return
+    # No gap while specs wait (owner 2026-10-22): the keeper's next call, a minute on, tests what came in since.
     # While an agent runs the engine still tests, but leaves candidates.json, the scanner flag and git alone (the
     # agent may be writing them): a PASS waits as pending until the agent ends, and the commit goes with the next run.
     h = k32.CreateMutexW(None, False, "Local\\AurumIdeas")
@@ -588,7 +601,7 @@ def main():
             s = read_json(p)
             if isinstance(s, dict) and s.get("status") == "done" and not str(s.get("verdict", "")).startswith("DUP"):
                 seen.setdefault(spec_key(s), s.get("id") or p.stem)
-        for path, spec in todo:
+        for path, spec in stream(todo):
             dup = seen.get(spec_key(spec))
             if dup:                               # same test under another name: no new trial, no new row
                 log(f"{path.name}: same test as {dup}, marked a duplicate")
@@ -628,6 +641,9 @@ def main():
                                             "verdict": row["verdict"], "count": extra}) + "\n")
             with RESULTS.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
+            if row["verdict"] != "PASS" and min(b.get("sharpe_pre", 0), b.get("sharpe_post", 0)) > NEAR_SHARPE:
+                with NEAR_MISS.open("a", encoding="utf-8") as f:   # both halves fair, gate failed: basket material
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
             if not RESULTS_MD.exists():
                 RESULTS_MD.write_text("# Idea specs tested by tools/idea_engine.py\n\nBest variant picked on the "
                                       "days before 2018; Sharpe at the real cost before 2018 / from 2018 to the "
@@ -642,6 +658,8 @@ def main():
         if DRY or busy:
             return
         paths = dirty() + touched + ["docs/ideas/results.jsonl", "docs/ideas/results.md", "docs/trials.jsonl"]
+        if NEAR_MISS.exists():
+            paths.append(str(NEAR_MISS.relative_to(ROOT)))
         if not touched and not dirty():
             return
         if passed:

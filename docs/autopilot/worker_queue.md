@@ -6,6 +6,8 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 
 ## Items
 
+- [ ] Near-miss basket: take every spec in docs/ideas/near_miss.jsonl (failed a gate, both halves Sharpe > 0.3), rebuild each best variant's daily stream at real costs, scale each to the same target vol (past-only 60-day realised vol), equal-weight them into one basket and gate the basket (tools/gates.py). Count the basket and every weighting tried as trials; no picking members on the late half.
+- [ ] Gold-silver ratio on H1: rerun gsr_meanrev on H1 bars (the 2026-10-22 run was D1 only), z-score of log(XAU/XAG), costs on both legs at the silver spread from the data request below (until it lands, the 4 bp round trip the scanners assume, and say so). Every lookback/threshold a trial.
 - [ ] Meta-label filter: LightGBM on AurumHydra's tester trades (features at entry: ATR, session, trend slope, spread, day of week) predicting win/loss; keep a trade only when p > threshold. Walk-forward, purge/embargo, 3 seeds. Gate the filtered trade stream.
 - [ ] Silver: port the gold legs to XAGUSD (same rules, silver costs). Check XAGUSD data in marketdata/ first; if missing, add a data request.
 - [x] Gold-silver ratio mean reversion: z-score of log(XAU/XAG) on H1 and D1, trade the spread back to the mean, costs on both legs. -> rejected 2026-10-22 (gsr_meanrev: D1 only, 18 configs, best Sharpe 0.07, FAIL halves/costs/DSR; H1 variant not run, same cost wall)
@@ -17,5 +19,7 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 - [ ] RL position sizing (PPO, stable-baselines3) on the Hydra leg mix: the agent picks each leg's size from 0 to 1 per day from past-only state (recent leg returns, drawdown, realised vol); reward is net return minus a drawdown penalty, costs charged on size changes. Walk-forward folds, 3+ seeds, every config a trial. Must beat equal fixed size and vol-targeted size, else reject.
 
 ## Data requests
+
+- [ ] Silver spread: XAGUSD prices are in marketdata/histdata (M1 mid, 2009 on) but there is no spread. Get the XAGUSD spread and commission for FTMO (the tester install's symbol spec, or tick bid/ask exported from C:\MetaTrader 5 - Tester) and write it to docs/data/xagusd_costs.md with source and date, as bp per round trip. The scanners now assume 4 bp (research/atlas_scan.py COST, tools/backtest_legion.py 5.0); if the measured figure differs, say so there for the worker to update.
 
 ## For the owner
