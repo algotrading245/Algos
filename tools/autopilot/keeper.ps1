@@ -17,11 +17,19 @@ $mutex = New-Object System.Threading.Mutex($false, "Local\AurumKeeper")
 if (-not $mutex.WaitOne(0)) { exit 0 }
 
 function Start-Step([string]$Script) {
+    # Returns the started process id, or "no python".
     $py = Get-Command python.exe -ErrorAction SilentlyContinue
-    if (-not $py) { return }
+    if (-not $py) { return "no python" }
     $pyw = Join-Path (Split-Path $py.Source) "pythonw.exe"
     $exe = if (Test-Path $pyw) { $pyw } else { $py.Source }
-    Start-Process -FilePath $exe -ArgumentList "`"$Script`"" -WorkingDirectory $Repo -WindowStyle Hidden
+    $p = Start-Process -FilePath $exe -ArgumentList "`"$Script`"" -WorkingDirectory $Repo -WindowStyle Hidden -PassThru
+    return "pid $($p.Id)"
+}
+$Steps = [ordered]@{
+    "tester_step" = "tools\autopilot\tester_step.py"
+    "scanner_step" = "tools\autopilot\scanner_step.py"
+    "idea_engine" = "tools\idea_engine.py"
+    "dispatch" = "tools\autopilot\dispatch.py"
 }
 
 Add-Type -Namespace Aurum -Name Power -MemberDefinition @"
@@ -32,13 +40,17 @@ Add-Type -Namespace Aurum -Name Power -MemberDefinition @"
 Write-Log "keeper" "keeper started (pid $PID), sleep blocked"
 
 $lastState = ""
+$lastPause = $false
 while ($true) {
     if (-not (Test-Path $Pause)) {
-        try { Start-Step (Join-Path $Repo "tools\autopilot\tester_step.py") } catch { Write-Log "keeper" "tester_step: $($_.Exception.Message)" }
-        try { Start-Step (Join-Path $Repo "tools\autopilot\scanner_step.py") } catch { Write-Log "keeper" "scanner_step: $($_.Exception.Message)" }
-        try { Start-Step (Join-Path $Repo "tools\idea_engine.py") } catch { Write-Log "keeper" "idea_engine: $($_.Exception.Message)" }
-        try { Start-Step (Join-Path $Repo "tools\autopilot\dispatch.py") } catch { Write-Log "keeper" "dispatch: $($_.Exception.Message)" }
-    }
+        # One line per step each minute (owner 2026-10-22), in logs\autopilot\<date>_keeper-steps.log, so a step that
+        # stops starting shows up. Each step's own log says what it did; a locked step exits at once.
+        foreach ($name in $Steps.Keys) {
+            try { $r = Start-Step (Join-Path $Repo $Steps[$name]) } catch { $r = "error: $($_.Exception.Message)" }
+            Write-Log "keeper-steps" "$name started ($r)"
+        }
+    } elseif ($lastPause -ne $true) { Write-Log "keeper-steps" "paused: no steps started" }
+    $lastPause = Test-Path $Pause
     try {
         $hold = Get-Hold
         $t = Get-T16
