@@ -1,7 +1,11 @@
 # Idea specs
 
-The researcher writes one JSON file per idea in this folder. `tools/idea_engine.py` (started by the keeper every minute,
-one run per 3 minutes at most, never while a Claude agent runs) tests every spec whose `status` is `pending`. No LLM is
+The miner writes one JSON file per idea in this folder. `tools/spec_factory.py` adds the rest with no LLM: when fewer
+than 10 specs are pending it writes the next 10 from a fixed grid (each standard rule family × every symbol × no filter,
+high/low vol, up/down trend, at the engine's default parameters; ids `f_<rule>_<symbol>[_vh|_vl|_tu|_td]`,
+`"made_by": "spec_factory"`), at most 120 a day, 732 in all. `tools/idea_engine.py` (started by the keeper every
+minute, one run per 3 minutes at most) tests every spec whose `status` is `pending`. While a Claude agent runs it still
+tests, but a PASS waits (stays pending) and nothing is committed until the agent ends. No LLM is
 involved. For each spec the engine:
 
 1. builds every variant: symbols × entries × holds × sides × event offsets, at most 200;

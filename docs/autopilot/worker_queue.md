@@ -14,9 +14,8 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 - [ ] Volatility forecast for sizing: HAR-RV vs GARCH(1,1) vs LightGBM on gold daily realised vol; size legs to a target vol; gate the resized stream against fixed size.
 - [ ] Index legs for AurumFunded: opening-range breakout and overnight drift on US500.cash / US100.cash under FTMO limits (5% daily, 10% total).
 - [ ] Small neural net (1D CNN or LSTM, torch, CPU) on gold M15 returns for next-hour direction; must beat LightGBM and the baselines after costs, else reject.
+- [ ] RL position sizing (PPO, stable-baselines3) on the Hydra leg mix: the agent picks each leg's size from 0 to 1 per day from past-only state (recent leg returns, drawdown, realised vol); reward is net return minus a drawdown penalty, costs charged on size changes. Walk-forward folds, 3+ seeds, every config a trial. Must beat equal fixed size and vol-targeted size, else reject.
 
 ## Data requests
 
 ## For the owner
-
-- RL position sizing (PPO) on the Hydra leg mix needs gymnasium and stable-baselines3 (`pip install gymnasium stable-baselines3`). Once installed, move it up as a "- [ ]" item.

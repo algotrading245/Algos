@@ -23,8 +23,12 @@ firm's challenge fast and keep the funded account inside its loss limits).
      tools/holdout.py (holdout.drop()). Tester jobs end by 2025-09-30.
    - ML/DL (sklearn, lightgbm, xgboost, torch, optuna; CPU only): walk-forward with purge and embargo, at least 3
      seeds, every config tried counted as a trial, and beat the baselines (buy-and-hold, plain momentum, "tomorrow =
-     today"). A model that goes into an EA must export to ONNX. RL needs gymnasium/stable-baselines3, which are not
-     installed: skip RL items and note why.
+     today"). A model that goes into an EA must export to ONNX.
+   - RL (gymnasium 1.4, stable-baselines3 2.9, torch CPU; installed 2026-10-22): the environment charges the real
+     costs and swap on every position change; train on past folds only and score on the next fold (walk-forward); at
+     least 3 seeds, and report the worst seed too; every training config and seed counts as a trial
+     (tools/gates.py n_extra); beat the same baselines and a fixed-size rule. A policy for an EA exports to ONNX
+     (torch.onnx.export of the policy net).
    - Missing data: you cannot download (the run refuses it). Add a line to docs/autopilot/worker_queue.md under
      "Data requests" and move to another item; the researcher fetches data.
 

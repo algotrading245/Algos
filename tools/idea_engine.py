@@ -120,6 +120,13 @@ def commit(paths, message):
         log(f"push failed (left for the next push): {p.stderr.strip()[:200]}")
 
 
+def dirty():
+    """Engine-owned files changed but not committed (left by runs made while an agent held git)."""
+    r = git("status", "--porcelain", "--untracked-files=all", "--", "docs/ideas/specs", "docs/ideas/results.jsonl",
+            "docs/ideas/results.md", "docs/trials.jsonl")
+    return [ln[3:].strip().strip('"') for ln in r.stdout.splitlines() if len(ln) > 3 and not ln.startswith("D")]
+
+
 # ---------- event calendars ----------
 
 def _table(module, name):
@@ -546,8 +553,19 @@ def pending():
 def main():
     if PAUSE.exists() and not DRY:
         return
+    if not DRY:
+        try:
+            import spec_factory           # owner 2026-10-22: rule tests with no LLM, so the queue never runs dry
+            made = spec_factory.top_up()
+            if made:
+                log(f"spec factory wrote {len(made)} specs: {', '.join(made)}")
+        except Exception as e:
+            log(f"spec factory failed: {type(e).__name__}: {e}")
+    busy = not DRY and not agent_free()
     todo = pending()
     if not todo:
+        if not busy:
+            commit(dirty(), "Idea engine: results kept while an agent ran")
         return
     st = read_json(STATE, {}) or {}
     try:
@@ -556,8 +574,8 @@ def main():
         last = None
     if not (FORCE or DRY) and last and (now() - last).total_seconds() < MIN_MINUTES * 60:
         return
-    if not DRY and not agent_free():
-        return                            # shares trials.jsonl, candidates.json and git with the agents
+    # While an agent runs the engine still tests, but leaves candidates.json, the scanner flag and git alone (the
+    # agent may be writing them): a PASS waits as pending until the agent ends, and the commit goes with the next run.
     h = k32.CreateMutexW(None, False, "Local\\AurumIdeas")
     if not h or k32.WaitForSingleObject(ctypes.c_void_p(h), 0) not in (0, 0x80):
         return
@@ -594,6 +612,9 @@ def main():
             log(line)
             if DRY:
                 continue
+            if res is not None and res["verdict"] == "PASS" and busy:
+                log(f"{row['id']}: passed while an agent runs; recorded when it ends")
+                continue
             if res is not None:
                 if res["verdict"] == "PASS":
                     gates.record(res)            # ledger + docs/gates; logs one trial
@@ -618,9 +639,11 @@ def main():
             spec.update(status="done", verdict=row["verdict"], tested=row["when"])
             save_json(path, spec)
             touched.append(str(path.relative_to(ROOT)))
-        if DRY or not touched:
+        if DRY or busy:
             return
-        paths = touched + ["docs/ideas/results.jsonl", "docs/ideas/results.md", "docs/trials.jsonl"]
+        paths = dirty() + touched + ["docs/ideas/results.jsonl", "docs/ideas/results.md", "docs/trials.jsonl"]
+        if not touched and not dirty():
+            return
         if passed:
             paths += ["docs/candidates.json"] + [f"docs/gates/{c}.json" for c in passed]
             paths += [f"marketdata/candidates/{c}{s}.csv" for c in passed for s in ("", "_stress")]
