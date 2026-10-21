@@ -137,3 +137,4 @@
 {"id": "idea:f_rsi_nzdcad", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_wtiusd", "when": "2026-10-22T01:19:01", "verdict": "FAIL at halves", "count": 4}
 {"id": "near_miss_basket", "when": "2026-10-22T01:27:28", "verdict": "FAIL at dsr"}
+{"id": "gsr_meanrev_h1", "when": "2026-10-22T01:32:55", "verdict": "FAIL at halves"}
