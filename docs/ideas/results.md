@@ -53,3 +53,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T00:54 | f_donchian_usdcad | n/a | 2 | USDCAD donchian lookback=55 L1 both | -0.55 / -0.51 | FAIL at halves | 0.000 (N=26718, luck bar 1.03) |
 | 2026-10-22T00:54 | f_donchian_usdchf | n/a | 2 | USDCHF donchian lookback=55 L1 both | -0.09 / -0.44 | FAIL at halves | 0.000 (N=26720, luck bar 1.03) |
 | 2026-10-22T00:54 | f_donchian_xagusd | n/a | 2 | XAGUSD donchian lookback=20 L1 both | 0.28 / -0.47 | FAIL at halves | 0.000 (N=26722, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_audnzd | n/a | 2 | AUDNZD donchian lookback=55 L1 both | 0.03 / -0.84 | FAIL at halves | 0.000 (N=26724, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_euraud | n/a | 2 | EURAUD donchian lookback=20 L1 both | -0.10 / -0.15 | FAIL at halves | 0.000 (N=26726, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_eurchf | n/a | 2 | EURCHF donchian lookback=55 L1 both | 0.14 / -0.57 | FAIL at halves | 0.000 (N=26728, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_gbpchf | n/a | 2 | GBPCHF donchian lookback=20 L1 both | -0.54 / -0.57 | FAIL at halves | 0.000 (N=26730, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_grxeur | n/a | 2 | GRXEUR donchian lookback=20 L1 both | -0.06 / -0.07 | FAIL at halves | 0.000 (N=26732, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_jpxjpy | n/a | 2 | JPXJPY donchian lookback=20 L1 both | 0.11 / -0.35 | FAIL at halves | 0.000 (N=26734, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_nzdcad | n/a | 2 | NZDCAD donchian lookback=20 L1 both | 0.03 / -0.56 | FAIL at halves | 0.000 (N=26736, luck bar 1.03) |
+| 2026-10-22T00:57 | f_donchian_wtiusd | n/a | 2 | WTIUSD donchian lookback=55 L1 both | 0.11 / -0.02 | FAIL at halves | 0.000 (N=26738, luck bar 1.03) |
+| 2026-10-22T00:57 | f_ma_cross_usdjpy | n/a | 4 | USDJPY ma_cross fast=20 slow=100 L1 both | 0.04 / 0.01 | FAIL at halves | 0.000 (N=26742, luck bar 1.03) |
+| 2026-10-22T00:57 | f_ma_cross_xauusd | n/a | 4 | XAUUSD ma_cross fast=20 slow=50 L1 both | 0.20 / 0.23 | FAIL at halves | 0.000 (N=26746, luck bar 1.03) |
