@@ -34,8 +34,8 @@ firm's challenge fast and keep the funded account inside its loss limits).
 
 5. Gate it: write marketdata/candidates/<id>.csv (`day,r`, one row per trading day, daily return after costs) and
    marketdata/candidates/<id>_stress.csv (same at 1.5x cost), then run `python tools/gates.py <id>`.
-   - FAIL: set the candidate's status to "rejected" with the step and the reason in docs/candidates.json (create the
-     entry if it has none), record it with `python tools/memory.py decide --role worker --kind lesson --decision "<id> rejected"
+   - FAIL: gates.py has already set the entry for <id> in docs/candidates.json to "rejected"; edit that one entry
+     (write your reason and evidence into it), never append a second entry for the same id. Record it with `python tools/memory.py decide --role worker --kind lesson --decision "<id> rejected"
      --why "<reason>" --evidence "<file or numbers>"`, and stop the item. Most ideas fail;
      that is normal.
    - PASS: go to 6.
@@ -56,7 +56,8 @@ firm's challenge fast and keep the funded account inside its loss limits).
    - a queue item: change its "- [ ]" to "- [x]" and add " -> <outcome>" at the end of the line;
    - a candidate: its status in candidates.json is the log.
 
-8. Commit only the files you changed, by name, with plain git, one command per Bash call (no &&, ; or pipes, never
+8. Write and edit files only with the Write and Edit tools: never heredocs, `>` redirects, `cat >` or `mkdir && ...`
+   in Bash (the run refuses them). Commit only the files you changed, by name, with plain git, one command per Bash call (no &&, ; or pipes, never
    `git -C`): `git add <files>`, `git commit -m "Worker: <item> <outcome>"`, `git push origin HEAD`. If the push
    fails, leave the commit local. Never commit .ex5 files, never `git add -A`.
 

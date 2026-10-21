@@ -150,6 +150,9 @@ def record(res):
     if entry is None:
         entry = {"id": res["id"], "name": res["id"], "status": "testing", "step": 9}
         ledger["candidates"].append(entry)
+    if res["verdict"].startswith("FAIL") and entry.get("status") == "testing":
+        # a FAIL never leaves a "testing" entry behind (it used to, and the worker then added a second one)
+        entry.update(status="rejected", step=9, reason=entry.get("reason") or f"gates: {res['verdict']}")
     entry["gates"] = res
     LEDGER.write_text(json.dumps(ledger, indent=1) + "\n")
     (ROOT / "docs" / "gates").mkdir(exist_ok=True)

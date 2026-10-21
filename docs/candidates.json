@@ -395,8 +395,8 @@
   {
    "id": "gsr_meanrev",
    "name": "gsr_meanrev",
-   "status": "testing",
-   "step": 9,
+   "status": "rejected",
+   "step": 8,
    "gates": {
     "id": "gsr_meanrev",
     "when": "2026-10-22T00:48:32",
@@ -438,12 +438,7 @@
      0.5618464571293371,
      0.5617212864369671
     ]
-   }
-  },
-  {
-   "id": "gsr_meanrev",
-   "status": "rejected",
-   "step": 8,
+   },
    "reason": "Gold-silver log-ratio z-score mean reversion, D1, 18 configs: best net Sharpe 0.07 (halves 0.16/-0.05, 1.5x cost 0.02). Gate FAIL at halves, costs, DSR.",
    "evidence": "research/gsr_meanrev.py"
   }

@@ -192,16 +192,33 @@ def unavailable(r, provider):
 
 RESET_AT = re.compile(r"resets?\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", re.I)
 RESET_EPOCH = re.compile(r"limit reached\|(\d{10})")
+RESET_DAY = re.compile(r"resets?\s+(?:on\s+)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?"
+                       r"(?:\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?)?", re.I)
+PROBE_HOURS = 3     # a dated (weekly) reset is retried this often: on 2026-10-21 access came back two days early
 
 
 def reset_time(text, minutes):
-    """When a limit ends: the time the CLI names ("resets 3pm", "...limit reached|<epoch>"), else now + minutes.
+    """When a limit ends: the time the CLI names ("resets 3pm", "resets Oct 23, 6pm", "...limit reached|<epoch>"),
+    else now + minutes. A dated reset is capped at PROBE_HOURS so an early lift is noticed.
     Never more than 7 days and never less than 5 minutes away."""
     now = datetime.now()
     until = now + timedelta(minutes=minutes)
     m = RESET_EPOCH.search(text or "")
+    d = RESET_DAY.search(text or "")
     if m:
         until = datetime.fromtimestamp(int(m.group(1)))
+    elif d:
+        mon = "jan feb mar apr may jun jul aug sep oct nov dec".split().index(d.group(1).lower()) + 1
+        h, mi, ap = int(d.group(3) or 0), int(d.group(4) or 0), (d.group(5) or "").lower()
+        h += 12 if ap == "pm" and h < 12 else 0
+        h = 0 if ap == "am" and h == 12 else h
+        try:
+            until = datetime(now.year, mon, int(d.group(2)), min(h, 23), min(mi, 59))
+            if until < now - timedelta(days=1):                      # "resets Jan 2" seen in late December
+                until = until.replace(year=now.year + 1)
+        except ValueError:
+            pass
+        until = min(until, now + timedelta(hours=PROBE_HOURS))
     else:
         m = RESET_AT.search(text or "")
         if m:
