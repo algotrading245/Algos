@@ -91,5 +91,11 @@ Checked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the 
   1 order with no repeat. Fills are compared with the tester after the first demo week (10-23).
 - 13:16 local: no ALERT. At 12:56:54 the breakout leg sold 0.03 USDJPY at 158.025, the range low, with the stop at
   158.388, the range high. That is 1 order with no repeat.
+- 19:00 local: no ALERT. The noise leg bought 0.09 US100.cash twice: at 17:59:59 at 29856.58 (bands 29832.19 /
+  29356.58) and at 18:59:59 at 29884.08 (bands 29838.62 / 29350.19). The leg never adds to a held position. It skips
+  a new entry while it holds one (`Legs.mqh:1864-1880`). Before it buys again, it closes the position once the bid is
+  below max(upper band, day average). So the second buy follows an exit at the 18:30 or 19:00 check. The EA does not
+  log noise exits, so the demo log cannot show which check closed it. The fill comparison (10-23) will show it from
+  the deal history.
 
 

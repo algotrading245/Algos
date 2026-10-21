@@ -118,3 +118,4 @@ committed).
 | 2026-10-21 16:12 | orchestrator | idle check | nothing to do: demo unchanged since 12:56 (midday 1, breakout 1 order), no ALERT, no job, no flag, researcher run 43 no idea |
 | 2026-10-21 18:00 | orchestrator | unread idea specs | 4 specs dropped as repeats (pre-FOMC, pre-ISM, post-NFP rejected before) or a duplicate of the live fix leg; demo: US100 noise buy 17:59, no ALERT, no job |
 | 2026-10-21 18:35 | orchestrator | idle check | nothing to do: demo unchanged since 17:59 (midday 1, breakout 1, US100 noise 1), no ALERT, no job, no flag, all idea specs done or dropped |
+| 2026-10-21 19:00 | orchestrator | demo check | no ALERT; 2nd US100 noise buy 18:59 is the leg's exit-and-re-entry (Legs.mqh:1864-1880), not a repeat; no job, no flag, no open idea |
