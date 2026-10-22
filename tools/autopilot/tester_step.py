@@ -11,7 +11,7 @@
 #   (config\accounts.dat). A job runs on the install recorded in job["terminal"].
 # - A job's "model" picks the tick model: 4 (default) real ticks, 1 = 1-minute OHLC, a fast screen before a real-tick
 #   run (owner 2026-10-21).
-# - A collected job's id goes to logs/autopilot/to-judge.json; the relay then starts the orchestrator to judge it.
+# - A collected job's id goes to logs/autopilot/to-judge.json; the relay then starts the judge to judge it.
 # - Never commits .htm, .png, summary.txt, job.json or .ex5; never touches a terminal except through
 #   tools/run-tester.ps1 and tools/run-months.ps1, which refuse the holdout (AURUM_AGENT=1 is set for them).
 import ctypes
@@ -188,7 +188,7 @@ def ask_help(job, error):
 
 
 def to_judge(job_id, match=None):
-    """Queues a collected job for the orchestrator. match: True/False from the fixed expect check below, None when
+    """Queues a collected job for the judge. match: True/False from the fixed expect check below, None when
     the expect text has no figures to check; the relay judges matches on Sonnet, everything else on Opus."""
     if DRY:
         return
@@ -240,7 +240,7 @@ def expect_nums(expect):
 
 
 def expect_check(job, figs):
-    """The owner's fixed tolerance (the orchestrator's hold-release rule): return within 15 percentage points of the
+    """The owner's fixed tolerance (the judge's hold-release rule): return within 15 percentage points of the
     expected one, drawdown no more than 5 points above it. Every %-figure in the expect text must be matched by the
     result's return (or a month series' goal share) within +-15, or by its equity drawdown within +5/-15. True when
     every figure matches; False when one does not; None when there is nothing to check (then the relay routes the
@@ -278,7 +278,7 @@ def goal_of(job):
     return 5.0
 
 
-# ---------------------------------------------------------------- summaries (figures only; the orchestrator judges)
+# ---------------------------------------------------------------- summaries (figures only; the judge judges)
 
 def log_problems(folder):
     f = REPO / folder / "summary.txt"
@@ -329,7 +329,7 @@ def problems_section(folders):
 def write_run_summary(job, folders):
     """folders: [folder] or [off, on] for a compare_set job."""
     out = [f"# {job['id']}: {job['expert']} {job.get('tag', '')} on {job['symbol']} {job.get('period', '')}", "",
-           f"Written by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}: figures only, the orchestrator judges.",
+           f"Written by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}: figures only, the judge judges.",
            f"Preset `{job.get('preset')}`, deposit {job.get('deposit')}, leverage 1:{job.get('leverage')}, "
            f"{job.get('from')} to {job.get('to') or 'the start day'}, set {job.get('set') or 'none'}"
            + (f", compare_set {job['compare_set']}" if job.get("compare_set") else "") + ".", ""]
@@ -370,7 +370,7 @@ def write_months_summary(job, folder):
 
     out = [f"# {job['id']}: {job['expert']} {job.get('tag', '')}, {n} fresh-deposit months "
            f"({(job.get('months') or {}).get('from')}-{(job.get('months') or {}).get('to')})", "",
-           f"Written by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}: figures only, the orchestrator judges.",
+           f"Written by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}: figures only, the judge judges.",
            f"Preset `{job.get('preset')}`, {job['symbol']} {job.get('period')}, deposit {job.get('deposit')}, "
            f"leverage 1:{job.get('leverage')}, set {job.get('set') or 'none'}, goal {goal:g}x.", "",
            "## Result (counted from the month multiples, 2 decimals)", "", "| Measure | Value |", "|---|---|"]

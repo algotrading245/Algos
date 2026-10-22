@@ -5,7 +5,8 @@ This script turns every pending spec into its variants (symbols x entry times x 
 most MAX_VARIANTS), picks the best variant on the days before 2018 only, and hands that one to the fixed gates
 (tools/gates.py) with the DSR trial count raised by every variant it looked at. The result goes to
 docs/ideas/results.jsonl and docs/ideas/results.md; the spec is marked done. A PASS is recorded in
-docs/candidates.json like any gated candidate and raises the scanner flag, so the orchestrator wakes to judge it.
+docs/candidates.json like any gated candidate and added to docs/ideas/queue.jsonl (status "testing"), so the builder
+builds its EA leg next.
 
     python tools/idea_engine.py              # the keeper's call (every minute; no gap while specs wait)
     python tools/idea_engine.py --dry-run    # test every pending spec, print, write nothing, log no trial
@@ -44,7 +45,7 @@ RESULTS_MD = ROOT / "docs" / "ideas" / "results.md"
 TRIALS = ROOT / "docs" / "trials.jsonl"
 CANDIDATES = ROOT / "marketdata" / "candidates"
 LOGDIR = ROOT / "logs" / "autopilot"
-FLAG = LOGDIR / "scanner-flag.json"
+QUEUE = ROOT / "docs" / "ideas" / "queue.jsonl"   # the builder's queue (owner 2026-10-22)
 PAUSE = LOGDIR / "PAUSE"
 STATE = LOGDIR / "idea-engine-state.json"
 CUT = pd.Timestamp("2018-01-01")
@@ -62,7 +63,7 @@ k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 k32.CreateMutexW.restype = ctypes.c_void_p
 
 
-# ---------- helpers (same as tools/autopilot/scanner_step.py) ----------
+# ---------- helpers ----------
 
 def now():
     return dt.datetime.now()
@@ -587,7 +588,7 @@ def main():
             commit(dirty(), "Idea engine: results kept while an agent ran")
         return
     # No gap while specs wait (owner 2026-10-22): the keeper's next call, a minute on, tests what came in since.
-    # While an agent runs the engine still tests, but leaves candidates.json, the scanner flag and git alone (the
+    # While an agent runs the engine still tests, but leaves candidates.json and git alone (the
     # agent may be writing them): a PASS waits as pending until the agent ends, and the commit goes with the next run.
     h = k32.CreateMutexW(None, False, "Local\\AurumIdeas")
     if not h or k32.WaitForSingleObject(ctypes.c_void_p(h), 0) not in (0, 0x80):
@@ -665,9 +666,13 @@ def main():
         if passed:
             paths += ["docs/candidates.json"] + [f"docs/gates/{c}.json" for c in passed]
             paths += [f"marketdata/candidates/{c}{s}.csv" for c in passed for s in ("", "_stress")]
-            LOGDIR.mkdir(parents=True, exist_ok=True)
-            save_json(FLAG, {"work": True, "reason": f"idea engine: {', '.join(passed)} passed every gate",
-                             "request": None, "passed": passed, "at": now().isoformat(timespec="seconds")})
+            with QUEUE.open("a", encoding="utf-8") as f:     # gated already: the builder builds the leg next
+                for c in passed:
+                    f.write(json.dumps({"id": c, "source": "spec", "title": f"{c}: passed every gate in the idea "
+                                        "engine", "link": f"docs/gates/{c}.json", "why": "build the EA leg (off), "
+                                        "compile, queue the tester job", "status": "testing",
+                                        "added": now().isoformat(timespec="seconds")}) + "\n")
+            paths.append("docs/ideas/queue.jsonl")
         commit(paths, f"Idea engine: {len(touched)} specs tested, {len(passed)} passed")
     finally:
         k32.ReleaseMutex(ctypes.c_void_p(h))

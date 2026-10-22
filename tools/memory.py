@@ -6,7 +6,7 @@
     python tools/memory.py commands [--role R] [--last N]
     python tools/memory.py check
 
-decisions.jsonl is append-only; lessons.md is curated by the orchestrator; mission.md belongs to the owner.
+decisions.jsonl is append-only; lessons.md is curated by the judge; mission.md belongs to the owner.
 """
 import argparse
 import glob

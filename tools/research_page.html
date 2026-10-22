@@ -587,16 +587,16 @@ async function openDoc(path,title){
    decision / lesson / approval, a route belonging to AurumFunded).
    ===================================================================================================================== */
 const STAGES=[
-  {id:"research",label:"Research",desc:"ideas · papers · data",steps:[2,3,4],icon:"doc",tone:"purple",color:"#8B5CF6",wf:[0,0]},
-  {id:"scanner",label:"Scanner",desc:"edge scans · trial count",steps:[],icon:"search",tone:"cyan",color:"#16A6C7",wf:[300,-170]},
-  {id:"prototype",label:"Python Prototype",desc:"model · real costs",steps:[5,6,7],icon:"code",tone:"blue",color:"#3978F6",wf:[300,0]},
-  {id:"gates",label:"Validation Gates",desc:"halves · DSR · corr · goal",steps:[8,9,10,11],icon:"shieldok",tone:"teal",color:"#0EAA91",wf:[600,0]},
-  {id:"ea",label:"EA Library",desc:"shared legs · off by default",steps:[12,13,14],icon:"box",tone:"gold",color:"#D9A441",wf:[900,0]},
-  {id:"tester",label:"Strategy Tester",desc:"FTMO data · jobs",steps:[15],icon:"beaker",tone:"blue",color:"#3978F6",wf:[900,260]},
-  {id:"fidelity",label:"Fidelity",desc:"leg on vs off · model vs tester",steps:[16],icon:"db",tone:"indigo",color:"#5B63E6",wf:[600,260]},
-  {id:"demo",label:"Demo Monitoring",desc:"FTMO demo · firm rules",steps:[17,18],icon:"activity",tone:"teal",color:"#0EAA91",wf:[300,260]},
-  {id:"approval",label:"Owner Approval",desc:"a2 · owner only",steps:[19],icon:"user",tone:"gold",color:"#D9A441",wf:[0,260]},
-  {id:"live",label:"Live",desc:"locked · owner only",steps:[20],icon:"lock",tone:"neutral",color:"#718096",wf:[-280,260]},
+  {id:"research",label:"Find",desc:"prebuilt · papers · ML · DRL",steps:[1],icon:"doc",tone:"purple",color:"#8B5CF6",wf:[0,0]},
+  {id:"scanner",label:"Idea Engine",desc:"rule specs · trial count",steps:[],icon:"search",tone:"cyan",color:"#16A6C7",wf:[300,-170]},
+  {id:"prototype",label:"Python Prototype",desc:"model · 1x/1.5x/2x costs",steps:[],icon:"code",tone:"blue",color:"#3978F6",wf:[300,0]},
+  {id:"gates",label:"Validation Gates",desc:"halves · DSR · corr · goal",steps:[2],icon:"shieldok",tone:"teal",color:"#0EAA91",wf:[600,0]},
+  {id:"ea",label:"EA Library",desc:"Hydra / Funded · off by default",steps:[4],icon:"box",tone:"gold",color:"#D9A441",wf:[900,0]},
+  {id:"tester",label:"Strategy Tester",desc:"FTMO data · to 2025-09-30",steps:[3],icon:"beaker",tone:"blue",color:"#3978F6",wf:[900,260]},
+  {id:"fidelity",label:"Judge & Review",desc:"tester vs Python · reviewer",steps:[5],icon:"db",tone:"indigo",color:"#5B63E6",wf:[600,260]},
+  {id:"demo",label:"Demo Monitoring",desc:"FTMO demo · firm rules",steps:[],icon:"activity",tone:"teal",color:"#0EAA91",wf:[300,260]},
+  {id:"approval",label:"Owner Approval",desc:"a2 · owner only",steps:[],icon:"user",tone:"gold",color:"#D9A441",wf:[0,260]},
+  {id:"live",label:"Live",desc:"locked · owner only",steps:[],icon:"lock",tone:"neutral",color:"#718096",wf:[-280,260]},
 ];
 const FLOW=[["research","scanner"],["scanner","gates"],["research","prototype"],["prototype","gates"],["gates","ea"],["ea","tester"],
   ["tester","fidelity"],["fidelity","demo"],["demo","approval"],["approval","live"]];
@@ -703,7 +703,7 @@ function buildModel(d){
     const id="agent:"+r;if(!nodes.has(id))continue;
     for(const n of set){const st=stageOfStep(n);if(st)link(id,"stage:"+st.id)}
   }
-  link("agent:scanner","stage:scanner");link("agent:fidelity","stage:fidelity");
+  link("agent:finder","stage:scanner");link("agent:judge","stage:fidelity");
   // candidates and gates
   for(const c of cands){
     const st=candStatus(c),n=stepNum(c.step),sg=stageOfStep(n);
@@ -737,13 +737,13 @@ function buildModel(d){
     add({id,type:"decision",label:clip(x.decision,30),full:x.decision,sub:`${x.role} · ${x.kind}`,dec:x,updated:x.when,status:x.kind==="question"?"awaiting":"idle",
       stText:x.kind,r:x.kind==="question"?8:5,color:x.kind==="question"?"#D99016":TYPES.decision.color,icon:x.kind==="question"?"q":"log",tone:"neutral",hist:false});
     const role=String(x.role||"").toLowerCase();
-    link(nodes.has("agent:"+role)?"agent:"+role:"agent:orchestrator",id);
+    link(nodes.has("agent:"+role)?"agent:"+role:"agent:judge",id);
     for(const r of jobRefs(x.decision+" "+x.why+" "+x.evidence))link(id,"job:"+r);
   });
   for(const l of (d.lessons&&d.lessons.items)||[]){
     const id="lesson:"+l.n;
     add({id,type:"lesson",label:"L"+l.n+" · "+clip(l.title,26),full:l.title,sub:l.section,les:l,updated:l.date,status:"idle",r:5,color:TYPES.lesson.color,icon:"lesson",tone:"gold"});
-    link("agent:orchestrator",id);for(const r of jobRefs(l.body))link(id,"job:"+r);
+    link("agent:judge",id);for(const r of jobRefs(l.body))link(id,"job:"+r);
   }
   for(const a of d.approvals||[]){
     const id="approval:"+a.id;
@@ -802,7 +802,7 @@ function layoutGraph(reset){
   const fresh=vis.filter(n=>!P[n.id]);
   if(!fresh.length)return;
   // seed: anchors for primaries, ring around the parent for the rest
-  const agentSlots={orchestrator:[-300,-260],researcher:[-160,-300],scanner:[440,-520],reviewer:[870,-300],tester:[1560,560],fidelity:[870,640],worker:[440,-300],monitor:[440,640],owner:[-140,640]};
+  const agentSlots={judge:[870,640],finder:[-160,-300],builder:[440,-300],reviewer:[870,-300],tester:[1560,560],monitor:[440,640],owner:[-140,640]};
   for(const n of vis){
     if(P[n.id])continue;
     const a=anchorOf(n);
@@ -1333,7 +1333,7 @@ function relayPanel(){
   return `<div class="card-h">${icon("graph")}<h2>Agent relay</h2><span class="sp"></span>${stChip(status[0],status[1])}</div>
     <div>${agents.map(a=>{const lv=liveA[a.role],isNext=rel.next===a.role;
       const st=lv&&lv.live?["running","Running"]:isNext?["queued","Next"]:a.relay?["idle","Idle"]:["idle","On call"];
-      return `<div class="agent-row" data-go="agent:${esc(a.role)}" style="cursor:pointer"><div class="av tone-${a.role==="orchestrator"?"gold":a.role==="tester"?"blue":a.role==="reviewer"?"purple":"neutral"}">${icon(a.role==="tester"?"beaker":a.role==="researcher"?"doc":a.role==="scanner"?"search":a.role==="fidelity"?"db":a.role==="monitor"?"activity":a.role==="reviewer"?"shieldok":"bot","sm")}</div>
+      return `<div class="agent-row" data-go="agent:${esc(a.role)}" style="cursor:pointer"><div class="av tone-${a.role==="judge"?"gold":a.role==="tester"?"blue":a.role==="reviewer"?"purple":"neutral"}">${icon(a.role==="tester"?"beaker":a.role==="finder"?"search":a.role==="builder"?"code":a.role==="judge"?"shieldok":a.role==="monitor"?"activity":a.role==="reviewer"?"shieldok":"bot","sm")}</div>
         <div style="min-width:0"><div class="nm">${esc(a.label)}</div><div class="md">${esc(cap(a.model||"model not set"))} · ${esc(a.relay?"relay run":"subagent")}</div></div>
         <div class="r">${stChip(st[0],st[1])}<div style="margin-top:3px">${a.last&&a.last.ended?"ended "+esc(ago(a.last.ended)):"no run yet"}</div></div></div>`}).join("")}</div>
     <div class="card-b" style="display:flex;flex-direction:column;gap:10px">
@@ -1403,7 +1403,7 @@ function pageAgents(){
       <section class="card"><div class="card-h">${icon("gear")}<h2>Owner controls</h2><span class="sp"></span><span class="faint" style="font-size:12px">local server only · each asks first</span></div>
         <div class="card-b" style="display:flex;flex-direction:column;gap:12px">
           <div class="actions"><button class="btn" id="cpause"></button><button class="btn" id="crelease">${icon("reset","sm")}Release Terminal 16 hold</button></div>
-          <div class="actions"><select class="f" id="crole" aria-label="Role to start">${["orchestrator","tester","researcher","miner","monitor","scanner","fidelity"].map(r=>`<option>${r}</option>`).join("")}</select><button class="btn" id="cstart">${icon("play","sm")}Start now</button></div>
+          <div class="actions"><select class="f" id="crole" aria-label="Role to start">${["finder","builder","judge","tester","monitor"].map(r=>`<option>${r}</option>`).join("")}</select><button class="btn" id="cstart">${icon("play","sm")}Start now</button></div>
           <details><summary style="cursor:pointer;font-weight:500;font-size:13px">Queue a tester job</summary>
             <form class="qf" id="cqf" style="margin-top:10px">
               <label>EA<select class="f" name="expert"><option>AurumHydra</option><option>AurumFunded</option></select></label>
@@ -1465,11 +1465,11 @@ function pagePipeline(){
   return `<div class="page"><div class="page-h"><div><h1>Strategy Pipeline</h1><p>Candidates from docs/candidates.json in the phase of the step they reached (docs/pipeline.json). Nothing here promotes a candidate; going live stays with the owner.</p></div><span class="sp"></span>
       <div class="toolbar"><input class="f" id="pbq" type="search" placeholder="Filter by name, instrument, family…" value="${esc(PB.q)}" aria-label="Filter candidates" style="width:250px">
       <select class="f" id="pbs" aria-label="Status">${[["all","All"],["active","Active"],["stopped","Stopped / rejected"]].map(([v,l])=>`<option value="${v}"${PB.status===v?" selected":""}>${l}</option>`).join("")}</select></div></div>
-    <section class="card"><div class="card-h">${icon("pipe")}<h2>The 20 steps</h2><span class="sp"></span><span class="faint" style="font-size:12px">count = active candidates at that step</span></div>
+    <section class="card"><div class="card-h">${icon("pipe")}<h2>The 5 steps</h2><span class="sp"></span><span class="faint" style="font-size:12px">count = active candidates at that step</span></div>
       <div class="card-b" style="display:flex;gap:6px;flex-wrap:wrap">${pipe.steps.map(s=>{const n=cands.filter(c=>stepNum(c.step)===s.n&&!candStatus(c).stopped).length;const sg=stageOfStep(s.n);
         return `<button class="chip" title="${esc(s.detail)}" data-go="stage:${sg?sg.id:"research"}" style="${n?`border-color:${sg?sg.color:"#3978F6"};color:var(--text)`:""}"><b class="num">${s.n}</b> ${esc(clip(s.name,26))}${n?` <span class="tagx" style="background:${sg?sg.color:"#3978F6"};color:#fff">${n}</span>`:""}${s.n===19?" "+icon("lock","sm"):""}</button>`}).join("")}</div></section>
     <div class="board">${cols}</div>
-    <section class="card"><div class="card-h">${icon("alert")}<h2>Rejected families</h2><span class="sp"></span><span class="faint" style="font-size:12px">checked by the researcher before any new idea</span></div>
+    <section class="card"><div class="card-h">${icon("alert")}<h2>Rejected families</h2><span class="sp"></span><span class="faint" style="font-size:12px">checked by the finder before any new idea</span></div>
       <div class="tbl-wrap"><table class="t"><thead><tr><th>Family</th><th>Examples</th><th>Why</th></tr></thead><tbody>${(d.rejected_families||[]).map(r=>`<tr style="cursor:default"><td><b style="font-weight:500">${esc(r.family)}</b></td><td class="muted">${esc(r.examples)}</td><td>${esc(r.why)}</td></tr>`).join("")||`<tr><td colspan="3" class="faint">None recorded.</td></tr>`}</tbody></table></div></section></div>`;
 }
 function candCard(c){

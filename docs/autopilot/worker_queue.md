@@ -1,8 +1,8 @@
-# Worker queue
+# Worker queue (retired 2026-10-22)
 
-Open items ("- [ ]") for the worker (tools/autopilot/prompts/worker.md), top first. The worker takes one per run when
-no candidate waits for a build and no idea in docs/ideas is unstarted, ticks it "- [x]" and adds " -> <outcome>".
-The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 on.
+Retired: the one queue is now docs/ideas/queue.jsonl (finder -> builder -> tester -> judge). This file is kept as the
+record of the items done before that; add nothing here. The open silver data request moved to the queue as
+data_xagusd_costs.
 
 ## Items
 
@@ -20,6 +20,6 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 
 ## Data requests
 
-- [ ] Silver spread: XAGUSD prices are in marketdata/histdata (M1 mid, 2009 on) but there is no spread. Get the XAGUSD spread and commission for FTMO (the tester install's symbol spec, or tick bid/ask exported from C:\MetaTrader 5 - Tester) and write it to docs/data/xagusd_costs.md with source and date, as bp per round trip. The scanners now assume 4 bp (research/atlas_scan.py COST, tools/backtest_legion.py 5.0); if the measured figure differs, say so there for the worker to update.
+- [x] (moved to docs/ideas/queue.jsonl as data_xagusd_costs) Silver spread: XAGUSD prices are in marketdata/histdata (M1 mid, 2009 on) but there is no spread. Get the XAGUSD spread and commission for FTMO (the tester install's symbol spec, or tick bid/ask exported from C:\MetaTrader 5 - Tester) and write it to docs/data/xagusd_costs.md with source and date, as bp per round trip. The scanners now assume 4 bp (research/atlas_scan.py COST, tools/backtest_legion.py 5.0); if the measured figure differs, say so there for the worker to update.
 
 ## For the owner

@@ -7,7 +7,7 @@ work, and stop. Use the Bash tool for every command, one command per call, in ex
 The script's request is `logs/autopilot/tester-help.json` (`{"job", "error", "at"}`). Read it first, plus the tail
 of today's `logs/autopilot/*_tester-step.log` and the job's entry in `docs/autopilot/queue.json`. Then, right away,
 write your provisional hand-over:
-`python tools/autopilot/handoff.py --next orchestrator --reason "tester help: <the problem>" --provisional`
+`python tools/autopilot/handoff.py --next judge --reason "tester help: <the problem>" --provisional`
 (it keeps the chain moving if this run is cut off; your final HANDOFF line still ends the run).
 
 Then fix the problem so the script can go on:
@@ -38,5 +38,5 @@ Finish: append one line to `docs/autopilot/runs.md` (`| date time | tester | wha
 files you changed by name (`git add docs/autopilot/queue.json docs/autopilot/runs.md docs/memory/decisions.jsonl`
 plus any backtest files you wrote), `git commit -m "Tester: <job id> <what happened>"`, `git push origin HEAD`
 (if the push fails, leave it). Last line of your answer, the hand-over:
-`HANDOFF: orchestrator <what you fixed>` when the queue can run again, or `HANDOFF: none <what the owner must do>`
+`HANDOFF: judge <what you fixed>` when the queue can run again, or `HANDOFF: none <what the owner must do>`
 when the fix needs the owner.

@@ -1,14 +1,14 @@
 # The judge's mechanical half without an AI (owner 2026-10-18): when no AI provider can take a run (router.py
 # available says none: every provider limited, keyless or missing), the relay calls this each tick instead of the
-# orchestrator, so collected jobs do not pile up and jobs waiting on them start.
+# judge, so collected jobs do not pile up and jobs waiting on them start.
 #
 #   python tools/autopilot/code_judge.py [--dry-run]
 #
 # - Takes only to-judge.json entries whose fixed expect check matched (match true): notes the confirmation on the job,
-#   releases every "hold" job whose needs are all done and confirmed (the orchestrator's rule: return within 15 pp,
+#   releases every "hold" job whose needs are all done and confirmed (the judge's rule: return within 15 pp,
 #   drawdown no more than 5 above expect - which is exactly what match true means), records a memory decision, adds a
 #   runs.md row, clears the entries (handoff.py --judged) and commits by path.
-# - A mismatch or an unchecked result (match false/null) stays in to-judge.json for the orchestrator: judging why a
+# - A mismatch or an unchecked result (match false/null) stays in to-judge.json for the judge: judging why a
 #   result missed is research, not arithmetic. Candidates, settings and HANDOFF.md are never touched here.
 # - Quiet when there is nothing to do; skips while an agent holds Local\AurumAgent.
 import subprocess
@@ -64,7 +64,7 @@ def main():
     subprocess.run([py, str(ts.REPO / "tools" / "memory.py"), "decide", "--role", "code-judge",
                     "--decision", what,
                     "--why", "No AI provider available; the fixed expect check matched, so the confirmation and the "
-                             "hold release follow the orchestrator's rule mechanically.",
+                             "hold release follow the judge's rule mechanically.",
                     "--evidence", "logs/autopilot/to-judge.json match true; summary.md of each job"],
                    cwd=ts.REPO, capture_output=True)
     subprocess.run([py, str(ts.REPO / "tools" / "autopilot" / "handoff.py"), "--judged", *ids],

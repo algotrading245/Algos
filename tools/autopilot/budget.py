@@ -1,12 +1,12 @@
 """Token budget for the autopilot: what each agent run costs, and whether the week's use leaves room for the runs that
-are nice to have (the researcher and the orchestrator's daily heartbeat).
+are nice to have (the finder's runs when the queue is empty).
 
-    python tools/autopilot/budget.py record --role worker --provider claude --model sonnet --events <events.jsonl>
+    python tools/autopilot/budget.py record --role builder --provider claude --model sonnet --events <events.jsonl>
     python tools/autopilot/budget.py backfill      # rebuild logs/autopilot/usage.jsonl from every events file
     python tools/autopilot/budget.py status        # JSON: this week's use, fraction of the budget, skip, today by role
 
 run-agent.ps1 calls `record` after every run; relay.ps1 calls `status` and, when "skip" is true, does not start the
-researcher or the orchestrator's daily heartbeat.  The figures come from the "result" line Claude writes at the end of
+finder (unless a data item waits).  The figures come from the "result" line Claude writes at the end of
 a stream-json run (total_cost_usd and the token counts); a run with no result line (killed, other provider) counts as
 one run at zero cost.  tools/autopilot/budget.json holds the weekly budget (in the same notional dollars Claude
 reports), the week's reset (the weekday and hour the plan's weekly limit resets) and the skip threshold.

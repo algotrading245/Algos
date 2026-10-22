@@ -5,9 +5,9 @@
 #
 # What counts as new:
 # - A demo ORDER or ALERT line of AurumFunded in Terminal 16's MQL5 log (MQL5/Logs/YYYYMMDD.log). It is written to
-#   logs/autopilot/demo-event.json ({at, kind, line}); relay.ps1 starts the orchestrator for it (at the judge tier
-#   for an ALERT) when the orchestrator has not started since.
-# - A work file the scripts wrote or rewrote: logs/autopilot/to-judge.json, tester-help.json, scanner-flag.json.
+#   logs/autopilot/demo-event.json ({at, kind, line}); relay.ps1 starts the judge for it (at the judge tier
+#   for an ALERT) when the judge has not started since.
+# - A work file the scripts wrote or rewrote: logs/autopilot/to-judge.json, tester-help.json.
 # Then, when PAUSE is absent and no agent holds Local\AurumAgent, it starts relay.ps1 hidden; the relay decides who
 # runs. The first run only notes where the log stands, so old lines never fire.
 import ctypes
@@ -24,7 +24,7 @@ LOGDIR = REPO / "logs" / "autopilot"
 STATE = LOGDIR / "dispatch-state.json"
 EVENT = LOGDIR / "demo-event.json"
 PAUSE = LOGDIR / "PAUSE"
-WORK = ("to-judge.json", "tester-help.json", "scanner-flag.json")
+WORK = ("to-judge.json", "tester-help.json")
 MQL_LOGS = Path(os.environ.get("APPDATA", "")) / "MetaQuotes" / "Terminal" / "66FB7F5B174F9C3B2A690C49FF012FEB" / "MQL5" / "Logs"
 ORDER = re.compile(r"\b(sold|bought|broke its range)\b")
 ALERT = re.compile(r"closing everything until|at the final stop|halting|failed|retcode|no money|invalid stops", re.I)
@@ -124,9 +124,9 @@ def main():
         kind = "ALERT" if any(k == "ALERT" for _, k, _ in events) else "order"
         at, _, text = [e for e in events if e[1] == kind][-1]
         prev = load(EVENT, {})
-        started = str(load(LOGDIR / "last-orchestrator.json", {}).get("started", ""))
-        # An ALERT the orchestrator has not seen yet is not overwritten by a later order (the time moves on, so the
-        # orchestrator still wakes for both).
+        started = str(load(LOGDIR / "last-judge.json", {}).get("started", ""))
+        # An ALERT the judge has not seen yet is not overwritten by a later order (the time moves on, so the
+        # judge still wakes for both).
         if prev.get("kind") == "ALERT" and kind == "order" and prev.get("at", "") > started:
             kind, text = "ALERT", prev["line"]
         log(f"demo {kind}: {text}")
@@ -134,7 +134,7 @@ def main():
             EVENT.write_text(json.dumps({"at": at.isoformat(timespec="seconds"), "kind": kind, "line": text,
                                          "count": len(events)}, indent=1), encoding="utf-8")
     pending = load(EVENT, {}) if EVENT.exists() else {}
-    last = load(LOGDIR / "last-orchestrator.json", {})
+    last = load(LOGDIR / "last-judge.json", {})
     unhandled = bool(pending) and pending.get("at", "") > str(last.get("started", ""))
     # An event the relay could not act on yet (code-only mode, a limit) is retried every 5 minutes, not every minute.
     woke = state.get("woke", "")

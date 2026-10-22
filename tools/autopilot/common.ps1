@@ -8,7 +8,7 @@ $LogDir   = Join-Path $Repo "logs\autopilot"
 $HoldFile = Join-Path $LogDir "hold-terminal"
 $Pause    = Join-Path $LogDir "PAUSE"
 $Relay    = Join-Path $LogDir "relay.json"
-$GapMinutes = 0     # relay: no gap inside a cycle (owner 2026-10-18); the break between cycles is relay.ps1's $CycleBreakMinutes
+$GapMinutes = 0     # relay: no gap between agents (owner 2026-10-22: one idea done, the next starts at once)
 $T16      = "C:\Program Files\MetaTrader 5 - 16"
 $T16Exe   = Join-Path $T16 "terminal64.exe"
 $Tester   = "C:\MetaTrader 5 - Tester"
@@ -56,12 +56,11 @@ function Get-Hold {
     return $h
 }
 
-# True when the tester agent has something to do. Since 2026-10-18 the tester is a script (tools/autopilot/
-# tester_step.py, started by the keeper and the relay): it starts and collects jobs on its own and only asks for the
-# agent when it cannot go on (logs/autopilot/tester-help.json). The agent deletes the file when it has fixed it.
+# True when the tester agent has something to do. The tester is a script (tools/autopilot/tester_step.py, started by
+# the keeper and the relay): it starts and collects jobs on its own and only asks for the agent when it cannot go on
+# (logs/autopilot/tester-help.json). The agent deletes the file when it has fixed it.
 $TesterHelp = Join-Path $LogDir "tester-help.json"
 $ToJudge    = Join-Path $LogDir "to-judge.json"
-$ScanFlag   = Join-Path $LogDir "scanner-flag.json"
 function Test-TesterWork { return (Test-Path $TesterHelp) }
 
 # Jobs the tester script collected and nobody judged yet (to-judge.json entries: {id, match, at}).
@@ -73,79 +72,22 @@ function Get-ToJudge {
     } catch { return @() }
 }
 
-# True when the scanner agent has something to do: the scanner script (scanner_step.py) flags a survivor that passed
-# every gate, or a scan it could not run. The agent deletes the flag file when done.
-function Test-ScannerWork {
-    if (-not (Test-Path $ScanFlag)) { return $false }
-    try { return [bool](Get-Content $ScanFlag -Raw | ConvertFrom-Json).work } catch { return $true }
+# The one idea queue (owner 2026-10-22): docs/ideas/queue.jsonl, one JSON line per idea. The finder adds items
+# ("new"), the builder takes one ("testing") to the gates and a tester job ("tester"), the judge ends it ("hydra",
+# "funded", "both" or "rejected"). Items with source "data" are the finder's (it fetches data), all others the builder's.
+$IdeaQueue = Join-Path $Repo "docs\ideas\queue.jsonl"
+function Get-QueueItems {
+    if (-not (Test-Path $IdeaQueue)) { return @() }
+    return @(Get-Content $IdeaQueue -Encoding UTF8 | Where-Object { $_.Trim() } | ForEach-Object {
+        try { $_ | ConvertFrom-Json } catch { $null } } | Where-Object { $_ })
 }
-
-# Ideas in docs/ideas/ the orchestrator has not picked up yet. An idea counts as started when
-# docs/autopilot/ideas_taken.txt lists its file and heading (the orchestrator appends one line per idea it picks,
-# tests or drops) or, as a fallback, when its first title words appear in a candidates.json name. The researcher is
-# skipped while 3 or more wait (owner 2026-10-18: effort goes where the work is).
-$IdeasTaken = Join-Path $Repo "docs\autopilot\ideas_taken.txt"
-
-# Idea specs (docs/ideas/specs/*.json) that tools/idea_engine.py has not tested yet. The researcher is skipped while
-# 10 or more wait (owner 2026-10-21: 50-100+ ideas tested a day; the engine, not an LLM, does the testing).
-function Get-PendingSpecs {
-    $n = 0
-    Get-ChildItem (Join-Path $Repo "docs\ideas\specs") -Filter *.json -ErrorAction SilentlyContinue | ForEach-Object {
-        try { if ((Get-Content $_.FullName -Raw | ConvertFrom-Json).status -eq "pending") { $n++ } } catch { }
-    }
-    return $n
+# Items waiting for the builder: "testing" (one it started) or "new", data items excepted.
+function Get-QueueWaiting {
+    return @(Get-QueueItems | Where-Object { ($_.status -eq "testing" -or $_.status -eq "new") -and $_.source -ne "data" }).Count
 }
-function Get-UnstartedIdeas {
-    $names = @()
-    try {
-        $names = @((Get-Content (Join-Path $Repo "docs\candidates.json") -Raw | ConvertFrom-Json).candidates |
-            ForEach-Object { "$($_.name)".ToLower() })
-    } catch { }
-    $taken = @()
-    if (Test-Path $IdeasTaken) { $taken = @(Get-Content $IdeasTaken -Encoding UTF8 | Where-Object { $_ -and -not $_.StartsWith("#") }) }
-    $n = 0
-    Get-ChildItem (Join-Path $Repo "docs\ideas") -Filter *.md -ErrorAction SilentlyContinue | ForEach-Object {
-        $file = $_.Name
-        foreach ($line in (Get-Content $_.FullName -Encoding UTF8)) {
-            if ($line -match '^##\s+(\d+\..+)$') {
-                $title = $Matches[1].Trim()
-                if ($taken | Where-Object { $_ -match [regex]::Escape($file) -and $_.Contains(($title -split '\s+' | Select-Object -First 3) -join ' ') }) { continue }
-                $words = ((($title -replace '[:\(\)].*$','') -split '[,\s]+') | Where-Object { $_.Length -gt 3 } | Select-Object -First 4) -join ' '
-                if ($words -and ($names | Where-Object { $_.Contains($words) })) { continue }
-                $n++
-            }
-        }
-    }
-    return $n
-}
-
-# The worker's backlog (owner 2026-10-22: one edge finished, the next started at once): candidates that passed the
-# gates and wait for a build ("testing" in docs/candidates.json), unstarted ideas in docs/ideas/*.md, and open items
-# ("- [ ]") in docs/autopilot/worker_queue.md (ML models, data scans, new markets). The relay skips the worker at 0.
-$WorkerQueue = Join-Path $Repo "docs\autopilot\worker_queue.md"
-function Get-WorkerBacklog {
-    $n = 0
-    try {
-        $n += @((Get-Content (Join-Path $Repo "docs\candidates.json") -Raw | ConvertFrom-Json).candidates |
-            Where-Object { $_.status -eq "testing" }).Count
-    } catch { }
-    $n += (Get-UnstartedIdeas)
-    $n += (Get-QueueOpen -Exclude @("Data requests", "For the owner"))
-    return $n
-}
-# Open items ("- [ ]") in worker_queue.md, by "## " section: -Only counts those sections, -Exclude skips them.
-# "## Data requests" is the researcher's (owner 2026-10-22), "## For the owner" is the owner's.
-function Get-QueueOpen([string[]]$Only = @(), [string[]]$Exclude = @()) {
-    if (-not (Test-Path $WorkerQueue)) { return 0 }
-    $n = 0; $sec = ""
-    foreach ($line in (Get-Content $WorkerQueue -Encoding UTF8)) {
-        if ($line -match '^##\s+(.+?)\s*$') { $sec = $Matches[1]; continue }
-        if ($line -notmatch '^\s*-\s*\[ \]') { continue }
-        if ($Only.Count -and ($Only -notcontains $sec)) { continue }
-        if ($Exclude -contains $sec) { continue }
-        $n++
-    }
-    return $n
+# Data items waiting for the finder.
+function Get-DataWaiting {
+    return @(Get-QueueItems | Where-Object { $_.status -eq "new" -and $_.source -eq "data" }).Count
 }
 
 # Agent runs of a role started today (from its log) (the relay no longer caps runs; kept for reports).

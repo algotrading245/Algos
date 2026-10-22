@@ -12,4 +12,4 @@ questions in this run: decide, do the work, and stop.
 
 Never place, change or close trades, never change EA inputs, never record an account number, login or credential.
 Finish with one line: what you logged, ALERT or not. Then the hand-over as the very last line:
-`HANDOFF: orchestrator ALERT <what>` when you wrote an ALERT, otherwise `HANDOFF: none no alert`.
+`HANDOFF: judge ALERT <what>` when you wrote an ALERT, otherwise `HANDOFF: none no alert`.

@@ -2,7 +2,7 @@
 # Mirrored from .claude/agents/reviewer.md by tools/autopilot/mirror_agents.py: edit the Claude file, then rerun
 # that script. model and tools are rewritten for Qwen Code.
 name: reviewer
-description: Independent read-only review of a candidate at gates 8-11 and of every EA change before it is merged. Use with a fresh context; it must not be the agent that built the work.
+description: Independent read-only review of a candidate and of every EA change before it is merged, called by the judge at Step 5. Use with a fresh context; it must not be the agent that built the work.
 model: inherit
 ---
 You are the reviewer of the Aurum pipeline. You did not build what you review, and you approve nothing you cannot

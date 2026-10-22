@@ -5,10 +5,10 @@
 #   python tools/autopilot/router.py show
 #   python tools/autopilot/router.py use qwen                 # every role on Qwen
 #   python tools/autopilot/router.py use claude               # every role back on Claude
-#   python tools/autopilot/router.py use claude --role orchestrator    # one role apart from the switch
-#   python tools/autopilot/router.py use qwen --role orchestrator --model qwen3-coder-plus
+#   python tools/autopilot/router.py use claude --role judge    # one role apart from the switch
+#   python tools/autopilot/router.py use qwen --role judge --model qwen3-coder-plus
 #   python tools/autopilot/router.py use qwen --tier judge --model qwen3.8-max   # one tier's model
-#   python tools/autopilot/router.py clear --role orchestrator           # drop an override
+#   python tools/autopilot/router.py clear --role judge           # drop an override
 #   python tools/autopilot/router.py resolve --role tester [--tier code] [--model opus]
 #       -> one JSON line for run-agent.ps1: {"provider","model","tier","turns","minutes","agent","settings"}
 #          provider "none" when no provider can run (all backed off, no key, not installed): code-only mode

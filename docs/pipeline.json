@@ -1,29 +1,57 @@
 {
- "about": "The 20 steps every idea goes through, in order; an idea stops at the first failed gate. 'agent' is the role file in .claude/agents/, 'orchestrator' is the main Opus session. The dashboard (python tools/dashboard.py) reads this file.",
+ "about": "The 5 steps every idea goes through, one idea after another (owner 2026-10-22); an idea stops at the first failed gate and the next starts at once. The one queue is docs/ideas/queue.jsonl (new -> testing -> tester -> hydra/funded/both, or rejected). 'agent' is the role file in .claude/agents/ or the prompt in tools/autopilot/prompts/. The dashboard (python tools/dashboard.py) reads this file.",
  "phases": {
-  "A": "Measure", "B": "Ideas and data", "C": "Prototype", "D": "Proof", "E": "Fit with the book",
-  "F": "Build", "G": "Live test", "H": "Go live"
+  "A": "Find",
+  "B": "Test",
+  "C": "Verify",
+  "D": "Integrate",
+  "E": "Judge"
  },
  "steps": [
-  {"n": 1, "phase": "A", "name": "Set the measure", "detail": "P(5x in a month) = N(N^-1(0.2) + Sharpe sqrt(1/12)) for Hydra; first-payout time and failure rate for Funded", "model": "opus", "agent": "orchestrator", "gate": null},
-  {"n": 2, "phase": "B", "name": "Find ideas", "detail": "Papers and concepts, checked against the rejected list in docs/HANDOFF.md and docs/candidates.json; up to 5 a week", "model": "haiku searches, opus picks", "agent": "researcher", "gate": null},
-  {"n": 3, "phase": "B", "name": "Read the full paper", "detail": "Definitions, tables, costs, sample; no testing from an abstract", "model": "opus", "agent": "orchestrator", "gate": null},
-  {"n": 4, "phase": "B", "name": "Get the data", "detail": "tools/ downloaders into marketdata/", "model": "haiku", "agent": "researcher", "gate": null},
-  {"n": 5, "phase": "C", "name": "Check the data", "detail": "Time zone, 23:00-01:00 rollover quotes, gaps, duplicates", "model": "sonnet", "agent": "quant-coder", "gate": null},
-  {"n": 6, "phase": "C", "name": "Prototype", "detail": "research/<idea>.py; for ML: replicate the paper, purge and embargo, several seeds, simple baselines", "model": "sonnet", "agent": "quant-coder", "gate": null},
-  {"n": 7, "phase": "C", "name": "Real costs, then 1.5-2x", "detail": "Measured spreads and fills; writes marketdata/candidates/<id>.csv and <id>_stress.csv", "model": "sonnet", "agent": "quant-coder", "gate": "costs"},
-  {"n": 8, "phase": "D", "name": "Out of sample", "detail": "Settings fitted to 2017, judged from 2018; shifted windows, every year, random-entry baseline", "model": "opus", "agent": "reviewer", "gate": "halves"},
-  {"n": 9, "phase": "D", "name": "Deflated Sharpe", "detail": "Every trial counted (docs/trials.jsonl + 47 before the log)", "model": "opus", "agent": "reviewer", "gate": "dsr"},
-  {"n": 10, "phase": "E", "name": "Correlation and book Sharpe", "detail": "Against the Hydra book and each leg; weight fitted to 2017", "model": "opus", "agent": "reviewer", "gate": "corr"},
-  {"n": 11, "phase": "E", "name": "Goal simulation", "detail": "Hydra's P(5x) and the prop simulators (tools/backtest_prop.py, prop_candidates.py)", "model": "sonnet runs, opus judges", "agent": "quant-coder", "gate": "goal"},
-  {"n": 12, "phase": "F", "name": "Standalone MQL5 EA", "detail": "Broker stops, unique magic, state that survives a restart, server-clock check", "model": "sonnet", "agent": "quant-coder", "gate": null},
-  {"n": 13, "phase": "F", "name": "Compile 0/0", "detail": "metaeditor64 /compile: 0 errors, 0 warnings", "model": "sonnet", "agent": "quant-coder", "gate": null},
-  {"n": 14, "phase": "F", "name": "Merge into Hydra and Funded", "detail": "Off by default, through SizeMult() and the prop guards", "model": "sonnet, opus reviews", "agent": "quant-coder", "gate": null},
-  {"n": 15, "phase": "G", "name": "Strategy Tester", "detail": "Real ticks from 2024-01 on FTMO's data; must match the Python figures", "model": "sonnet runs, opus judges gaps", "agent": "tester-operator", "gate": null},
-  {"n": 16, "phase": "G", "name": "Leg on vs off in the main EA", "detail": "Return per drawdown must rise; no day stop in Funded", "model": "sonnet runs, opus decides", "agent": "tester-operator", "gate": null},
-  {"n": 17, "phase": "G", "name": "Demo forward test 2-4 weeks", "detail": "FTMO demo terminal; daily check-ins in docs/demo_log.md, weekly review", "model": "haiku daily, opus weekly", "agent": "monitor", "gate": null},
-  {"n": 18, "phase": "H", "name": "Recheck firm rules, pick preset", "detail": "The firm's own pages on the day", "model": "opus", "agent": "orchestrator", "gate": null},
-  {"n": 19, "phase": "H", "name": "Buy or go live", "detail": "The owner only", "model": "owner", "agent": "owner", "gate": null},
-  {"n": 20, "phase": "H", "name": "Monitor, handoff, push", "detail": "Daily check-ins; docs/HANDOFF.md; commit and push", "model": "haiku monitors, sonnet writes", "agent": "monitor", "gate": null}
+  {
+   "n": 1,
+   "phase": "A",
+   "name": "Find the next idea",
+   "detail": "Rotates four sources: prebuilt edges (GitHub, MQL5 CodeBase, Quantpedia, QuantConnect) to improve, research papers read in full, ML models and DRL models. Checks each against the rejected families and queues it in docs/ideas/queue.jsonl; simple rules go to docs/ideas/specs/ for idea_engine.py. Also fetches data the queue asks for.",
+   "model": "haiku",
+   "agent": "finder",
+   "gate": null
+  },
+  {
+   "n": 2,
+   "phase": "B",
+   "name": "Build and test in Python with the gates",
+   "detail": "Builds the idea (or the improved prebuilt edge) in research/ on all the data before the holdout (2025-10-13), at 1x, 1.5x and 2x costs, and runs tools/gates.py: Sharpe >= 0.5 in both halves, >= 0.3 at 1.5x costs, DSR >= 0.90, correlation <= 0.20 with the book and <= 0.30 with each leg, book Sharpe +0.03 and P(5x) up. A FAIL is logged and the next idea starts; a PASS gets a standalone MQL5 EA compiled to 0/0 and a queued tester job.",
+   "model": "sonnet",
+   "agent": "builder",
+   "gate": "halves, costs, dsr, corr, goal"
+  },
+  {
+   "n": 3,
+   "phase": "C",
+   "name": "Strategy Tester to 2025-09-30",
+   "detail": "tools/autopilot/tester_step.py runs the queued job in C:\\MetaTrader 5 - Tester on FTMO's real ticks and compares it with the Python figures; the tester agent only starts when the script asks for help.",
+   "model": "script, haiku when asked",
+   "agent": "tester",
+   "gate": "tester"
+  },
+  {
+   "n": 4,
+   "phase": "D",
+   "name": "Integrate switched off",
+   "detail": "The leg goes into the EA it suits best, AurumHydra (5x goal), AurumFunded (prop rules) or both, as an input that is off by default, compiled to 0/0; a leg on vs off tester run shows what it adds.",
+   "model": "sonnet",
+   "agent": "builder",
+   "gate": null
+  },
+  {
+   "n": 5,
+   "phase": "E",
+   "name": "Judge and review",
+   "detail": "The judge reads the tester results against the Python figures, has the reviewer check the EA change with a fresh context, and records the verdict on the queue item (hydra, funded, both or rejected). It also handles demo orders and ALERTs; the monitor checks the FTMO demo nightly. Nothing goes live without the owner.",
+   "model": "opus",
+   "agent": "judge",
+   "gate": "review"
+  }
  ]
 }

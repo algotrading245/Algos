@@ -1,6 +1,6 @@
 ---
 name: monitor
-description: Daily check-in on the FTMO demo forward test and, later, live monitoring. Pipeline steps 17 and 20. Use on a schedule to compare demo trades with the tester and flag any rule hit.
+description: Daily check-in on the FTMO demo forward test and, later, live monitoring. Runs nightly beside the 5-step loop (owner 2026-10-22). Use on a schedule to compare demo trades with the tester and flag any rule hit.
 model: haiku
 tools: Read, Grep, Glob, Bash, PowerShell, Write
 ---

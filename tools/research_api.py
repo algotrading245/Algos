@@ -128,16 +128,13 @@ def tail_done(path, n=20000):
         return False
 
 
-ROSTER = [  # role, label, agent file, what it writes (from the project brief)
-    ("orchestrator", "Orchestrator", None, "queue.json, candidates.json, HANDOFF.md, lessons.md"),
+ROSTER = [  # role, label, agent file, what it writes (the 5-step loop, owner 2026-10-22)
+    ("finder", "Finder", "finder", "docs/ideas/queue.jsonl, docs/ideas/specs, docs/ideas/sources.jsonl"),
+    ("builder", "Builder", "builder", "research/, mql5/, docs/gates, queue.jsonl, queue.json"),
     ("tester", "Tester", "tester-operator", "backtests/<job>, queue.json, runs.md"),
-    ("researcher", "Researcher", "researcher", "docs/ideas"),
-    ("miner", "Miner", "miner", "docs/ideas/specs, docs/ideas/sources.jsonl"),
-    ("scanner", "Scanner", "scanner", "docs/gates"),
-    ("fidelity", "Fidelity", "fidelity", "docs/fidelity"),
-    ("worker", "Worker", "worker", "research/, mql5/, marketdata/candidates, worker_queue.md, queue.json"),
+    ("judge", "Judge", None, "queue.jsonl verdicts, candidates.json, HANDOFF.md, lessons.md"),
     ("monitor", "Monitor", "monitor", "docs/demo_log.md"),
-    ("reviewer", "Reviewer", "reviewer", "its verdict, recorded by the orchestrator"),
+    ("reviewer", "Reviewer", "reviewer", "its verdict, recorded by the judge"),
 ]
 
 

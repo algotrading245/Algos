@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Independent read-only review of a candidate at gates 8-11 and of every EA change before it is merged. Use with a fresh context; it must not be the agent that built the work.
+description: Independent read-only review of a candidate and of every EA change before it is merged, called by the judge at Step 5. Use with a fresh context; it must not be the agent that built the work.
 model: opus
 tools: Read, Grep, Glob, Bash
 ---

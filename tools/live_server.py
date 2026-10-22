@@ -36,7 +36,7 @@ EVENTS = LOGS / "events"
 PAGE = Path(__file__).resolve().parent / "live_page.html"
 RESEARCH_PAGE = Path(__file__).resolve().parent / "research_page.html"
 MAX_TEXT = 6000
-ROLES = ["orchestrator", "tester", "monitor", "researcher", "miner", "scanner", "fidelity", "worker"]
+ROLES = ["finder", "builder", "judge", "tester", "monitor"]
 QUEUE = ROOT / "docs" / "autopilot" / "queue.json"
 AUTOPILOT = ROOT / "tools" / "autopilot"
 PRIVATE = re.compile(r"(?i)(login|account|password|passwd|api[_-]?key|token)\W{0,3}\s*[:=]?\s*\S+")

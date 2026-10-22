@@ -4,7 +4,7 @@ Generated from `docs/candidates.json` by `python tools/dashboard.py`; edit the J
 
 ## USD/JPY London breakout (`breakout`)
 
-Status **tester**, pipeline step 17 of 20. Source: retail London-breakout concept, own test; research/london_breakout.py, research/breakout_ticks.py.
+Status **tester**, pipeline step 5 of 5. Source: retail London-breakout concept, own test; research/london_breakout.py, research/breakout_ticks.py.
 
 Range 01:00-09:00 server, each side once a day on a break 10:00-18:00, stop at the far side, flat at 18:00. Sharpe 1.18 to 2017 / 0.83 from 2018 at the measured 1.2 bp, 0.59 at 1.5 bp; |corr| with Hydra <= 0.03.
 
@@ -28,7 +28,7 @@ Notes: The gates' own 2017-fitted weight (k=0.5 of Hydra's volatility) adds noth
 
 ## Noise-area intraday momentum, S&P 500 and Nasdaq (`noise`)
 
-Status **tester**, pipeline step 17 of 20. Source: Zarattini, Aziz, Barbon 2025 (read in full); research/noise_area_index.py.
+Status **tester**, pipeline step 5 of 5. Source: Zarattini, Aziz, Barbon 2025 (read in full); research/noise_area_index.py.
 
 Bands of the average move from the 9:30 open, checked each half hour from 10:00 New York, trailing stop, flat at 16:00, 2% daily vol. Sharpe 0.88 at 0.75 bp (0.61 / 1.08), 0.57 at 1.5 bp; corr with Hydra -0.02.
 
@@ -54,7 +54,7 @@ Notes: Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2
 
 ## scan_slot_EURUSD_s25_L4_short (`scan_slot_EURUSD_s25_L4_short`)
 
-Status **rejected**, pipeline step 9 of 20. Source: -.
+Status **rejected**, pipeline step 2 of 5. Source: -.
 
 
 
@@ -72,7 +72,7 @@ Notes: Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 fail
 
 ## scan_slot_EURUSD_s21_L8_short (`scan_slot_EURUSD_s21_L8_short`)
 
-Status **rejected**, pipeline step 9 of 20. Source: -.
+Status **rejected**, pipeline step 2 of 5. Source: -.
 
 
 
@@ -90,7 +90,7 @@ Notes: Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 fail
 
 ## scan_cal_wed_EURUSD_s25_L2_short (`scan_cal_wed_EURUSD_s25_L2_short`)
 
-Status **rejected**, pipeline step 9 of 20. Source: -.
+Status **rejected**, pipeline step 2 of 5. Source: -.
 
 
 
@@ -108,7 +108,7 @@ Notes: Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 fail
 
 ## Round-number stop cascades (Osler) (`osler_round`)
 
-Status **rejected**, pipeline step 7 of 20. Source: Osler, NY Fed Staff Reports 150 (2002, 'Stop-loss orders and price cascades') and 125 (2001, 'Currency orders and exchange-rate dynamics'), both read in full 2026-10-18; PDFs in marketdata/papers/.
+Status **rejected**, pipeline step 2 of 5. Source: Osler, NY Fed Staff Reports 150 (2002, 'Stop-loss orders and price cascades') and 125 (2001, 'Currency orders and exchange-rate dynamics'), both read in full 2026-10-18; PDFs in marketdata/papers/.
 
 After price crosses a 00 or 50 level (last two quoted digits) it keeps going for 1-2 hours, because stop-loss buys sit just above round numbers (01-10, 51-60) and stop-loss sells just below (90-99, 40-49), while take-profits sit exactly on 00. Touches without a cross reverse more often than at arbitrary levels. Test: enter in the cross's direction once price is k pips past the level, hold 15-120 minutes.
 
@@ -116,19 +116,179 @@ Notes: Paper facts. SR150 (Reuters minute quotes, USD/DEM, USD/JPY, GBP/USD, New
 
 ## AurumHydra margin-aware goal size cap (`hydra_size_cap`)
 
-Status **rejected**, pipeline step 5 of 20. Source: Decision 47 (2026-10-18): the round-5 margin model research/hydra_goal_margin_model.py and the tester's broker stop-outs in 7/10/9 of 21 months at 3x/4x/5x.
+Status **rejected**, pipeline step 2 of 5. Source: Decision 47 (2026-10-18): the round-5 margin model research/hydra_goal_margin_model.py and the tester's broker stop-outs in 7/10/9 of 21 months at 3x/4x/5x.
 
 Choose InpGoalCap (now 50 in the target presets) so the goal sizing stops asking for sizes that end in a broker stop-out (margin level < 50%). Candidate caps are fixed sizes below the round-5 hit size (min 15, p5 20). The hit size is a ceiling and is never used as the cap value. Chosen on 2010-06..2017 month-start rounds, confirmed on 2018..2025-09, and the 21 tester months 2024.01-2025.09 are a check only. The cap is an existing input, so it is a preset value and needs no new EA code.
 
-Notes: Run 1 2026-10-18: research/hydra_size_cap.py (quant-coder), reusing the round-5 engine with the round-5 REDO fixes: C1 explicit no-clip branch returning 1.0 plus a five-parts unit test, fix parts clipped before cross parts in the same bar (Legs.mqh:1093-1098), boost extra haircut at edge 0.7, stated limits for noise P&L (round 4's constant ticket, NSXUSD M1 missing) and balance-vs-equity sizing. Result: all checks pass (copy check diff 0, round-5 replication 39.7/28.8/22.3, C1 PASS, unit tests PASS); with fixes 3+4 cap 50 gives 39.7/28.8/22.8% over 184 months. The rule picked cap 50 (the preset) at every goal: every static cap 3-14 loses 19-25 pp of P(goal) on 'to 2017' (3x all months: cap 14 20.7% vs 50 39.7%) for near-zero stop-outs. Cap 50 binds in 55/66/76% of rounds, and the median day-1 size asked is 36/43/47. Reviewer PASS WITH CHANGES: the conclusion covers caps <=14 only, not a static cap in general. Caps 15-49 were not tested (the hit size is a fixed-size stop-out level, not a bound on a capped schedule), so a static 20-45 test is a new pre-registered trial. The identity check is true by construction. The margin rates were fitted on the tester months' stop-outs (a broker measurement). Run 2 (next): a dynamic margin-aware cap that limits size so the margin level projected after the day's orders stays above a threshold fixed before the run; it must beat static caps 20-45 as well as 50. EA input off by default, judged in the tester on 2024.01-2025.09; model figures are an upper bound only. Run 2 2026-10-19: research/hydra_size_cap2.py (+ .out.txt, quant-coder), 12 variants pre-registered (static caps 20/25/30/35/40/45/50; dynamic min(50, s_dyn) at margin-level thresholds 1.5/2/3/4/6, OM_MAX = p95 of daily ticket margin to 2017 = 0.2337), chosen to 2017, confirmed 2018-2025.09. Checks 1-5 PASS (dyn off == cap 50 on 1104 rounds, s_dyn unit test, run-1 replication 39.7/28.8/22.8, holdout). Pick cap 50 at 3x/4x/5x: no variant better than the preset. Static: caps 20-40 trade P(goal) for fewer stop-outs steadily (3x to 2017: 27.5/31.9/38.5/39.6/42.9% vs 50 44.0%); cap 45 ties 50 at 3x (44.0/15.4) and misses the edge-0.7 floor at 4x by one month. Reviewer PASS WITH CHANGES: the static result stands, but the dynamic arm was degenerate by construction and is NOT a test of a margin-aware cap: it projected margin before the EA's 50% free-margin clip and summed all the day's tickets whether open together or not, so s_dyn <= 2.9 at every threshold (binds 100% of days, ~0% goal). 36 trials (63 with run 1, 60 unique). Run 3 (the last): a corrected dynamic cap — projected margin after the clip in the EA's order (hold, grid, tickets by open_ratio), leg margin as the peak of segments open together (legs_margin basis), thresholds near 1-2, a unit test running ea_day at s_dyn with no clip checking min open margin level >= thr on to-2017 days, and a degeneracy guard printed before the sweep (stop with no verdict if s_dyn binds on >90% or <5% of to-2017 days or its median is below 15). If it cannot be built cleanly, close the idea with cap 50 kept. Run 3 2026-10-19 (the last): research/hydra_size_cap3.py (+ .out.txt, quant-coder): clip-aware projection in the EA order (hold, grid, tickets via open_ratio; peak of open-together legs_margin; per-leg plan fitted to 2017, no look-ahead), thresholds 1.1/1.25/1.5/2/3 and degeneracy guard pre-registered. Checks 1-5 PASS (cap 50 reproduces 39.7/28.8/22.8; U2 engine agreement 276908 order-instant levels, 0 below thr). Guard: ALL DEGENERATE (bind 97.8-99.2% of 4281 to-2017 days, median bound s_dyn 3.0/2.0/1.2/0.1/0.0), no sweep, 0 new trials. Reviewer PASS WITH CHANGES: the degeneracy is real, not an artefact: the legs alone cap s_dyn(1.1) at about 0.909/0.128 = 7, and the projection differs from the engine only conservatively (grid before tickets, a full fresh grid, every leg every day), which would need a 6-8x smaller book to reach 15; the carried grid drives thr >= 2. The goal preset fits only through the 50% free-margin clip, so any margin-level cap above 1 is a static cap of about 0-3, which run 1 rejected. CLOSED: keep InpGoalCap 50, no tester job, no EA change. A sizing rule on another quantity would be a new candidate (reviewer does not recommend one).
+Notes: Run 1 2026-10-18: research/hydra_size_cap.py (quant-coder), reusing the round-5 engine with the round-5 REDO fixes: C1 explicit no-clip branch returning 1.0 plus a five-parts unit test, fix parts clipped before cross parts in the same bar (Legs.mqh:1093-1098), boost extra haircut at edge 0.7, stated limits for noise P&L (round 4's constant ticket, NSXUSD M1 missing) and balance-vs-equity sizing. Result: all checks pass (copy check diff 0, round-5 replication 39.7/28.8/22.3, C1 PASS, unit tests PASS); with fixes 3+4 cap 50 gives 39.7/28.8/22.8% over 184 months. The rule picked cap 50 (the preset) at every goal: every static cap 3-14 loses 19-25 pp of P(goal) on 'to 2017' (3x all months: cap 14 20.7% vs 50 39.7%) for near-zero stop-outs. Cap 50 binds in 55/66/76% of rounds, and the median day-1 size asked is 36/43/47. Reviewer PASS WITH CHANGES: the conclusion covers caps <=14 only, not a static cap in general. Caps 15-49 were not tested (the hit size is a fixed-size stop-out level, not a bound on a capped schedule), so a static 20-45 test is a new pre-registered trial. The identity check is true by construction. The margin rates were fitted on the tester months' stop-outs (a broker measurement). Run 2 (next): a dynamic margin-aware cap that limits size so the margin level projected after the day's orders stays above a threshold fixed before the run; it must beat static caps 20-45 as well as 50. EA input off by default, judged in the tester on 2024.01-2025.09; model figures are an upper bound only. Run 2 2026-10-19: research/hydra_size_cap2.py (+ .out.txt, quant-coder), 12 variants pre-registered (static caps 20/25/30/35/40/45/50; dynamic min(50, s_dyn) at margin-level thresholds 1.5/2/3/4/6, OM_MAX = p95 of daily ticket margin to 2017 = 0.2337), chosen to 2017, confirmed 2018-2025.09. Checks 1-5 PASS (dyn off == cap 50 on 1104 rounds, s_dyn unit test, run-1 replication 39.7/28.8/22.8, holdout). Pick cap 50 at 3x/4x/5x: no variant better than the preset. Static: caps 20-40 trade P(goal) for fewer stop-outs steadily (3x to 2017: 27.5/31.9/38.5/39.6/42.9% vs 50 44.0%); cap 45 ties 50 at 3x (44.0/15.4) and misses the edge-0.7 floor at 4x by one month. Reviewer PASS WITH CHANGES: the static result stands, but the dynamic arm was degenerate by construction and is NOT a test of a margin-aware cap: it projected margin before the EA's 50% free-margin clip and summed all the day's tickets whether open together or not, so s_dyn <= 2.9 at every threshold (binds 100% of days, ~0% goal). 36 trials (63 with run 1, 60 unique). Run 3 (the last): a corrected dynamic cap â€” projected margin after the clip in the EA's order (hold, grid, tickets by open_ratio), leg margin as the peak of segments open together (legs_margin basis), thresholds near 1-2, a unit test running ea_day at s_dyn with no clip checking min open margin level >= thr on to-2017 days, and a degeneracy guard printed before the sweep (stop with no verdict if s_dyn binds on >90% or <5% of to-2017 days or its median is below 15). If it cannot be built cleanly, close the idea with cap 50 kept. Run 3 2026-10-19 (the last): research/hydra_size_cap3.py (+ .out.txt, quant-coder): clip-aware projection in the EA order (hold, grid, tickets via open_ratio; peak of open-together legs_margin; per-leg plan fitted to 2017, no look-ahead), thresholds 1.1/1.25/1.5/2/3 and degeneracy guard pre-registered. Checks 1-5 PASS (cap 50 reproduces 39.7/28.8/22.8; U2 engine agreement 276908 order-instant levels, 0 below thr). Guard: ALL DEGENERATE (bind 97.8-99.2% of 4281 to-2017 days, median bound s_dyn 3.0/2.0/1.2/0.1/0.0), no sweep, 0 new trials. Reviewer PASS WITH CHANGES: the degeneracy is real, not an artefact: the legs alone cap s_dyn(1.1) at about 0.909/0.128 = 7, and the projection differs from the engine only conservatively (grid before tickets, a full fresh grid, every leg every day), which would need a 6-8x smaller book to reach 15; the carried grid drives thr >= 2. The goal preset fits only through the 50% free-margin clip, so any margin-level cap above 1 is a static cap of about 0-3, which run 1 rejected. CLOSED: keep InpGoalCap 50, no tester job, no EA change. A sizing rule on another quantity would be a new candidate (reviewer does not recommend one).
 
 ## AUD/USD break after Chinese macro releases (RBA 2016) (`china_release_aud`)
 
-Status **rejected**, pipeline step 7 of 20. Source: T. Mathews, The Effect of Chinese Macroeconomic News on Australian Financial Markets, RBA Bulletin Dec 2016, read in full 2026-10-19 (tools/pdf_text.py; PDF in marketdata/papers/).
+Status **rejected**, pipeline step 2 of 5. Source: T. Mathews, The Effect of Chinese Macroeconomic News on Australian Financial Markets, RBA Bulletin Dec 2016, read in full 2026-10-19 (tools/pdf_text.py; PDF in marketdata/papers/).
 
 On scheduled China releases (GDP, activity, trade, CPI) take the 10-minute pre-release AUDUSD range; from the release to +60 min enter once per side on a break of it, stop at the other side, flat at +60 min or 06:00 server. AUDCAD as a second check. The direction is ours: the paper measures volatility only.
 
 Notes: Paper facts (Table A1, AUD/USD, extra absolute move in a 20-min window, -10 to +10 min, Thomson Reuters intraday, Jan 2000-Nov 2016, bootstrapped SEs): China GDP 0.01 / 0.06*** / 0.05*** % (2000-07 / 2008-16 / full); activity -0.01 / 0.04*** / 0.02**; trade 0.01* / 0.03***; CPI 0.03*** / 0.04*** / 0.01 (full n.s.); US labour force 0.16 / 0.20 / 0.18 for comparison. Rolling 5-year regressions: activity-day volatility about double the same-time normal by 2016; GDP, CPI, trade similar late in the sample. No surprise measure (no consensus series), no direction, no cost, no trading rule; GDP release times start 2003; the text warns of pre-release leaks (Orlik 2011), so the window starts 10 min early. Figures in docs/ideas/2026-10-18.md idea 1 match the PDF. Prior low-medium: 3-6 bp extra absolute move against about 1 bp round trip, but a breakout needs continuation after the first move, which the paper does not test; the rejected post-payroll/FOMC drift and channel breakout are the nearest families, so the test must report event days against same-time non-event days. Step 5 blocked on data: China release dates and times 2010-2025.09 (NBS GDP/activity/CPI, customs trade) are not in the repo; researcher to fetch (e.g. a dated economic-calendar archive with CNY events), then holdout.drop(). AUDUSD/AUDCAD M1 are in marketdata/histdata. Runs: 1 (2026-10-19, full read). Run 2 (2026-10-19, research/china_release_aud.py + .out.txt; researcher's NBS calendar marketdata/china_calendar_nbs.csv, 2015-2025.09 only, no trade, 220 events 57/163 by half): step 5 replicates the volatility for GDP and activity, not CPI (extra |move| -10..+10 min GDP 0.059/0.029 %, activity 0.044/0.027 %, CPI -0.012/-0.006 %; minute-profile peak at minute 0 in both halves, so the clock is right). Step 6-7 rule fixed before the run (10-min pre-range break, stop at the other side, flat at +60, 1.1 bp): AUDUSD net +0.099 / -0.017 R a trade (+0.23 / -0.24 bp), net Sharpe +0.30 / -0.06, event minus control +0.19 / +0.13 R per event with 90% CIs spanning 0; at 2.2 bp -0.06 / -0.19 R; AUDCAD -0.30 / -0.37 R. REJECTED at step 7: fails net R from 2018 and Sharpe >= 0.5 in both halves. The extra move is real but a breakout earns less than the spread. Per-series and narrow-range splits looked better but are diagnostics, not selected (narrow tercile 2018-on Sharpe 0.30 anyway). Control days gross +0.08-0.15 R before cost (bid-only fill-at-level bias, if any, favours the rule, so the rejection is not a bias artefact). 2 trials (docs/trials.jsonl china_release_aud:run2).
+
+## gsr_meanrev (`gsr_meanrev`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.16 / -0.05 | >= 0.5 to 2017 and from 2018 |
+| costs | FAIL | 0.02 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.000 (N=26678, luck bar 1.74) | >= 0.9 |
+| corr | pass | book -0.04, max leg grid +0.03 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0.393; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## near_miss_basket (`near_miss_basket`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at dsr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.06 / 1.02 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 0.81 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.525 (N=27027, luck bar 1.03) | >= 0.9 |
+| corr | pass | book +0.12, max leg grid +0.18 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | pass | Hydra 2018+ 3.45 -> 3.57 at weight 0.946; P(5x) 56.2% -> 57.4% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## gsr_meanrev_h1 (`gsr_meanrev_h1`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.33 / -0.12 | >= 0.5 to 2017 and from 2018 |
+| costs | FAIL | -0.21 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.000 (N=27028, luck bar 2.08) | >= 0.9 |
+| corr | pass | book -0.09, max leg grid +0.02 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## tod_weekday_scan (`tod_weekday_scan`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at goal**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 2.23 / 0.71 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 0.99 | >= 0.3 at 1.5x cost |
+| dsr | pass | 0.969 (N=27062, luck bar 1.03) | >= 0.9 |
+| corr | pass | book +0.02, max leg quartet +0.06 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.09 at weight 54.3; P(5x) 56.2% -> 52.1% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## volforecast_sizing (`volforecast_sizing`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.04 / 0.96 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 0.61 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.035 (N=27063, luck bar 1.03) | >= 0.9 |
+| corr | pass | book -0.01, max leg fix +0.01 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | pass | Hydra 2018+ 3.45 -> 3.51 at weight 0.0985; P(5x) 56.2% -> 56.8% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## silver_legs_port (`silver_legs_port`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.49 / -1.02 | >= 0.5 to 2017 and from 2018 |
+| costs | FAIL | -1.79 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.000 (N=27064, luck bar 1.03) | >= 0.9 |
+| corr | pass | book -0.00, max leg quartet +0.08 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## index_legs_funded (`index_legs_funded`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.73 / 0.48 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 0.43 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.033 (N=27065, luck bar 1.03) | >= 0.9 |
+| corr | pass | book -0.06, max leg morning +0.11 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.25 at weight 1.34; P(5x) 56.2% -> 53.8% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## nn_gold_m15 (`nn_gold_m15`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -2.14 / -2.53 | >= 0.5 to 2017 and from 2018 |
+| costs | FAIL | -3.68 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.000 (N=27066, luck bar 1.03) | >= 0.9 |
+| corr | pass | book -0.03, max leg morning +0.01 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## rl_leg_sizing (`rl_leg_sizing`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.74 / 1.67 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 0.84 | >= 0.3 at 1.5x cost |
+| dsr | pass | 0.920 (N=27067, luck bar 1.03) | >= 0.9 |
+| corr | FAIL | book +0.42, max leg fix +0.56 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## meta_label_hydra (`meta_label_hydra`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.00 / 1.55 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 4.19 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.694 (N=27068, luck bar 4.14) | >= 0.9 |
+| corr | pass | book +0.18, max leg after +0.13 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
 
 ## Rejected families
 

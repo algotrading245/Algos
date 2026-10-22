@@ -1,6 +1,6 @@
 # Runs one unattended agent session for a pipeline role, started by the relay (relay.ps1) or the monitor task.
 #
-#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role monitor|tester|orchestrator|researcher|miner|scanner|fidelity|worker [-Tier routine|code|judge] [-Model <name>] [-IfWork]
+#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role finder|builder|judge|tester|monitor [-Tier routine|code|judge] [-Model <name>] [-IfWork]
 #
 # - Which CLI and which model run the role comes from the router (tools/autopilot/router.json, read through
 #   router.py): one switch picks the provider for every role (claude or qwen), each role maps to a tier, and each
@@ -21,7 +21,7 @@
 #   the next provider in router.json's fallback order (-NoRetry marks that second run). When the router finds no
 #   provider at all it answers "none" and this script exits at once: the relay then runs code-only (relay.ps1).
 param(
-    [Parameter(Mandatory = $true)][ValidateSet("monitor", "tester", "orchestrator", "researcher", "miner", "scanner", "fidelity", "worker")][string]$Role,
+    [Parameter(Mandatory = $true)][ValidateSet("finder", "builder", "judge", "tester", "monitor")][string]$Role,
     [ValidateSet("routine", "code", "judge")][string]$Tier,
     [string]$Model,
     [switch]$IfWork,
@@ -140,7 +140,7 @@ python tools/memory.py search <words> (add --events to search the commands earli
 you make (a job judged, an idea taken up or dropped, a setting kept, a plan changed) once, with
 python tools/memory.py decide --role $Role --decision "<what>" --why "<why>" --evidence "<file, job or commit>".
 Something the project learned that should change how we work: the same command with --kind lesson, for the
-orchestrator to review. A disagreement with the mission: --kind question. Commit docs/memory/decisions.jsonl
+judge to review. A disagreement with the mission: --kind question. Commit docs/memory/decisions.jsonl
 together with your other files. Never write an account number, login or key into it.
 
 Provisional hand-over: near the start of the run (after your first reads), write what you expect to hand over to
@@ -276,11 +276,11 @@ $recent
     Write-Log $log $endNote
     # Hand-over for the relay (relay.ps1): the agent's last "HANDOFF: <role> <reason>" line names the next agent.
     $next = "none"; $reason = "no HANDOFF line"
-    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(orchestrator|researcher|miner|tester|scanner|fidelity|worker|none)\b[ \t:-]*(.*)$')
+    $m = [regex]::Matches($text,'(?m)^\W*HANDOFF:\W*(judge|finder|builder|tester|monitor|none)\b[ \t:-]*(.*)$')
     if ($m.Count) { $next = $m[$m.Count - 1].Groups[1].Value; $reason = $m[$m.Count - 1].Groups[2].Value.Trim(" `t`r*_:-".ToCharArray()) }
 
-    # The relay's gating reads these (owner 2026-10-21): "idle" (an orchestrator run that found nothing to do, so it
-    # gets no follow-up) and "empty_streak" (researcher runs in a row with no new idea; after 3 it runs once a day).
+    # The relay's gating reads these (owner 2026-10-21): "idle" (a run that found nothing to do) and "empty_streak"
+    # (finder runs in a row that queued no new idea; after 3 the finder runs once a day until one finds something).
     # A failed run (limit, crash) changes neither.
     $lastFile = Join-Path $LogDir "last-$Role.json"
     $prev = if (Test-Path $lastFile) { try { Get-Content $lastFile -Raw | ConvertFrom-Json } catch { $null } }
@@ -289,9 +289,9 @@ $recent
             ($reason -notmatch '(?i)\b(logged|done|fixed|built|added|wrote|queued|started)\b')
     $streak = if ($prev -and $prev.empty_streak) { [int]$prev.empty_streak } else { 0 }
     # Empty only with no positive count anywhere ("5 new specs, 0 new ideas" is not empty).
-    $empty = ($text -match '(?i)\b(no|0) new (ideas?|specs?)\b') -and ($text -notmatch '(?i)\b[1-9]\d* new (ideas?|specs?)\b')
+    $empty = ($text -match '(?i)\b(no|0) new (ideas?|specs?)\b|nothing new found|\b0 ideas queued') -and ($text -notmatch '(?i)\b[1-9]\d* new (ideas?|specs?)\b')
     if (-not $failed) { $streak = if ($empty) { $streak + 1 } else { 0 } }
-    # Runs today, failed ones included (the relay caps the researcher at 8 a day).
+    # Runs today, failed ones included (kept for reports).
     $day = (Get-Date).ToString("yyyy-MM-dd")
     $runs = if ($prev -and $prev.runs_day -eq $day) { [int]$prev.runs_today + 1 } else { 1 }
     @{ role = $Role; provider = $route.provider; model = $route.model; tier = $route.tier

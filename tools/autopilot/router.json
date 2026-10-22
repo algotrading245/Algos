@@ -2,7 +2,7 @@
   "about": "The model router (owner 2026-10-18). One switch picks the provider for every agent run; each role maps to a tier, and each provider names a model per tier, so a role can be moved between providers or models without touching a script. Switch it with: python tools/autopilot/router.py use qwen|claude [--role R --model M] [--tier T --model M]; read it with: python tools/autopilot/router.py show. No secrets here (the Qwen key lives in ~/.qwen/settings.json, outside the repo).",
   "provider": "claude",
   "fallback": {
-    "about": "Limit resilience (owner 2026-10-18): when a run hits a usage, rate, quota or auth limit, run-agent.ps1 backs that provider off (logs/autopilot/provider-backoff.json, until the reset time the CLI names, else backoff_minutes) and the router sends the next runs down this list, skipping any provider that is backed off, has no key or is not installed. When none is left the relay runs code-only: the scripts (tester_step, scanner_step, code_judge) keep the pipeline going and the agents resume when a provider comes back. A provider other than claude/qwen can be added: give it \"cli\": \"qwen\" (Qwen Code drives any OpenAI-compatible API), \"key_env\": [\"<ENV VAR holding its key>\"], \"base_url\" and \"tiers\", then add its name here. Check with: python tools/autopilot/router.py available",
+    "about": "Limit resilience (owner 2026-10-18): when a run hits a usage, rate, quota or auth limit, run-agent.ps1 backs that provider off (logs/autopilot/provider-backoff.json, until the reset time the CLI names, else backoff_minutes) and the router sends the next runs down this list, skipping any provider that is backed off, has no key or is not installed. When none is left the relay runs code-only: the scripts (tester_step, code_judge) keep the pipeline going and the agents resume when a provider comes back. A provider other than claude/qwen can be added: give it \"cli\": \"qwen\" (Qwen Code drives any OpenAI-compatible API), \"key_env\": [\"<ENV VAR holding its key>\"], \"base_url\" and \"tiers\", then add its name here. Check with: python tools/autopilot/router.py available",
     "order": [
       "claude",
       "qwen"
@@ -19,7 +19,7 @@
       }
     },
     "qwen": {
-      "about": "Qwen Code CLI (node on @qwen-code/qwen-code/cli-entry.js). No --agent flag: run-agent.ps1 inlines .claude/agents/<role>.md into the prompt, and the two subagents the orchestrator delegates to are mirrored into .qwen/agents/ (python tools/autopilot/mirror_agents.py). Permissions from .qwen/settings.json (project, committed: the deny list, which is the only gate because runs use --approval-mode yolo) and ~/.qwen/settings.json (user, holds the API key under \"env\": DASHSCOPE_API_KEY, or BAILIAN_TOKEN_PLAN_API_KEY for a token-plan key - then use the qwen3.8-max-tp model route). Limits are the CLI's own: --max-session-turns (exit 53) and --max-wall-time (exit 55).",
+      "about": "Qwen Code CLI (node on @qwen-code/qwen-code/cli-entry.js). No --agent flag: run-agent.ps1 inlines .claude/agents/<role>.md into the prompt, and the subagents the judge delegates to are mirrored into .qwen/agents/ (python tools/autopilot/mirror_agents.py). Permissions from .qwen/settings.json (project, committed: the deny list, which is the only gate because runs use --approval-mode yolo) and ~/.qwen/settings.json (user, holds the API key under \"env\": DASHSCOPE_API_KEY, or BAILIAN_TOKEN_PLAN_API_KEY for a token-plan key - then use the qwen3.8-max-tp model route). Limits are the CLI's own: --max-session-turns (exit 53) and --max-wall-time (exit 55).",
       "args": [
         "--auth-type",
         "openai"
@@ -33,33 +33,26 @@
   },
   "roles": {
     "about": "One entry per relay role. tier picks the model from the active provider's tier table; turns/minutes bound the run. claude_agent is the .claude/agents definition Claude runs the role with (--agent); null means Claude runs it on the tier model alone. agent_file is that definition's path, which Qwen has no flag for, so run-agent.ps1 inlines it into the prompt instead.",
-    "monitor": {
-      "tier": "routine",
-      "turns": 25,
-      "minutes": 20,
-      "claude_agent": "monitor",
-      "agent_file": ".claude/agents/monitor.md"
-    },
-    "researcher": {
+    "finder": {
       "tier": "routine",
       "turns": 40,
       "minutes": 60,
-      "claude_agent": "researcher",
-      "agent_file": ".claude/agents/researcher.md"
+      "claude_agent": "finder",
+      "agent_file": ".claude/agents/finder.md"
     },
-    "miner": {
-      "tier": "routine",
-      "turns": 40,
-      "minutes": 60,
-      "claude_agent": "miner",
-      "agent_file": ".claude/agents/miner.md"
+    "builder": {
+      "tier": "code",
+      "turns": 80,
+      "minutes": 90,
+      "claude_agent": "builder",
+      "agent_file": ".claude/agents/builder.md"
     },
-    "scanner": {
-      "tier": "routine",
-      "turns": 25,
-      "minutes": 30,
-      "claude_agent": "scanner",
-      "agent_file": ".claude/agents/scanner.md"
+    "judge": {
+      "tier": "judge",
+      "turns": 80,
+      "minutes": 120,
+      "claude_agent": null,
+      "agent_file": null
     },
     "tester": {
       "tier": "routine",
@@ -68,26 +61,12 @@
       "claude_agent": null,
       "agent_file": ".claude/agents/tester-operator.md"
     },
-    "fidelity": {
-      "tier": "code",
-      "turns": 30,
-      "minutes": 40,
-      "claude_agent": "fidelity",
-      "agent_file": ".claude/agents/fidelity.md"
-    },
-    "worker": {
-      "tier": "code",
-      "turns": 80,
-      "minutes": 90,
-      "claude_agent": "worker",
-      "agent_file": ".claude/agents/worker.md"
-    },
-    "orchestrator": {
-      "tier": "judge",
-      "turns": 80,
-      "minutes": 120,
-      "claude_agent": null,
-      "agent_file": null
+    "monitor": {
+      "tier": "routine",
+      "turns": 25,
+      "minutes": 20,
+      "claude_agent": "monitor",
+      "agent_file": ".claude/agents/monitor.md"
     }
   },
   "overrides": {

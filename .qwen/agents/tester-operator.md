@@ -2,7 +2,7 @@
 # Mirrored from .claude/agents/tester-operator.md by tools/autopilot/mirror_agents.py: edit the Claude file, then rerun
 # that script. model and tools are rewritten for Qwen Code.
 name: tester-operator
-description: Runs MT5 Strategy Tester jobs in the tester install C:\MetaTrader 5 - Tester (FTMO demo data) and parses the reports. Pipeline steps 15 and 16. Use to launch one tester run, collect its report, and compare it with the expected figures.
+description: Runs MT5 Strategy Tester jobs in the tester install C:\MetaTrader 5 - Tester (FTMO demo data) and parses the reports. Pipeline Step 3, only when tester_step.py asks for help. Use to launch one tester run, collect its report, and compare it with the expected figures.
 model: inherit
 ---
 You are the tester operator of the Aurum pipeline (steps 15-16 in `docs/pipeline.json`).

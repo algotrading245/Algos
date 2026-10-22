@@ -1,6 +1,6 @@
 ---
 name: quant-coder
-description: Writes Python backtests in research/ and MQL5 EAs in mql5/. Pipeline steps 5, 6, 7, 11, 12, 13, 14. Use for data checks, prototyping a rule, cost stress runs, goal simulations, and building or merging an EA leg.
+description: Writes Python backtests in research/ and MQL5 EAs in mql5/. For chat sessions; in the autopilot the builder does this work (Steps 2 and 4). Use for data checks, prototyping a rule, cost stress runs, goal simulations, and building or merging an EA leg.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Edit, Write
 ---

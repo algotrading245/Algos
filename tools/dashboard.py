@@ -5,7 +5,7 @@ script every minute; the page reloads both.
 
     python tools/dashboard.py
 
-Reads docs/pipeline.json, docs/candidates.json, docs/gates/*.json, docs/prop_routes.json, docs/demo_log.md,
+Reads docs/pipeline.json, docs/ideas/queue.jsonl (the funnel), docs/candidates.json, docs/gates/*.json, docs/prop_routes.json, docs/demo_log.md,
 .claude/agents/*.md, backtests/*/ (result.json, summary.md, job.json) and, when the market data is there, the Hydra
 legs for the book's Sharpe with the candidate legs added.  Nothing private is copied: job.json gives only the test
 settings (no paths), and demo_check drops any line that could hold a login or account number.
@@ -69,9 +69,10 @@ def budget_status():
 
 
 def agents():
-    out = [{"name": "orchestrator", "model": "opus", "tools": "all", "steps": "1, 3, 18 and every hand-off",
-            "description": "The main Claude Code session: picks ideas, hands each step to a role agent, reads the "
-                           "gates' verdicts and keeps the ledger. Asks the owner before anything live."}]
+    out = [{"name": "judge", "model": "opus", "tools": "all", "steps": "5",
+            "description": "Judges each Strategy Tester result against the Python figures, has the reviewer check the "
+                           "EA change and records the verdict on the queue item; handles demo orders and ALERTs. "
+                           "Prompt: tools/autopilot/prompts/judge.md. Asks the owner before anything live."}]
     for f in sorted((ROOT / ".claude" / "agents").glob("*.md")):
         m = re.match(r"---\s*\n(.*?)\n---", f.read_text(encoding="utf-8"), re.S)
         if not m:
@@ -81,6 +82,24 @@ def agents():
         out.append({"name": meta.get("name", f.stem), "model": meta.get("model", "?"), "tools": meta.get("tools", ""),
                     "description": meta.get("description", ""), "steps": steps.group(1).strip(" ,.") if steps else ""})
     return out
+
+
+def funnel():
+    """The one idea queue (docs/ideas/queue.jsonl): how many ideas at each status and from each source, newest first."""
+    items = []
+    f = DOCS / "ideas" / "queue.jsonl"
+    if f.exists():
+        for ln in f.read_text(encoding="utf-8").splitlines():
+            try:
+                items.append(json.loads(ln))
+            except ValueError:
+                pass
+    by_status, by_source = {}, {}
+    for x in items:
+        by_status[x.get("status", "?")] = by_status.get(x.get("status", "?"), 0) + 1
+        by_source[x.get("source", "?")] = by_source.get(x.get("source", "?"), 0) + 1
+    recent = [{k: x.get(k) for k in ("id", "source", "title", "status", "added", "verdict")} for x in items[::-1][:30]]
+    return {"total": len(items), "by_status": by_status, "by_source": by_source, "recent": recent}
 
 
 def book(ledger):
@@ -119,7 +138,7 @@ def candidates_md(ledger):
              "JSON, not this file.", ""]
     for c in ledger["candidates"]:
         lines += [f"## {c['name']} (`{c['id']}`)", "",
-                  f"Status **{c['status']}**, pipeline step {c['step']} of 20. Source: {c.get('source', '-')}.", "",
+                  f"Status **{c['status']}**, pipeline step {c['step']} of 5. Source: {c.get('source', '-')}.", "",
                   c.get("summary", ""), ""]
         g = c.get("gates")
         if g:
@@ -154,6 +173,7 @@ def main():
         "budget": budget_status(),
         "book": book(ledger),
         "demo": demo(),
+        "funnel": funnel(),
     }
     OUT.mkdir(exist_ok=True)
     tmp = OUT / "data.js.tmp"                                       # whole file or nothing: the live page reloads it
