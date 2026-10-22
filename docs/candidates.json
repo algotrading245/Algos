@@ -784,6 +784,55 @@
      0.5618464571293371
     ]
    }
+  },
+  {
+   "id": "rl_leg_sizing",
+   "name": "rl_leg_sizing",
+   "status": "rejected",
+   "step": 9,
+   "reason": "PPO leg sizing (3 seeds, 13 yearly folds, 36 trials) collapses to mean size ~0.11 and cuts Sharpe below fixed size 1 and vol-target in both halves (2014-17 1.03 vs 1.95; 2018+ 1.67 vs 2.57, worst seed 1.13); gates: FAIL at corr (resized copy of the book) and goal (no gain). Evidence research/rl_leg_sizing.py",
+   "gates": {
+    "id": "rl_leg_sizing",
+    "when": "2026-10-22T03:29:15",
+    "verdict": "FAIL at corr",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "0.74 / 1.67",
+      "rule": ">= 0.5 to 2017 and from 2018"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.84",
+      "rule": ">= 0.3 at 1.5x cost"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "0.920 (N=27067, luck bar 1.03)",
+      "rule": ">= 0.9"
+     },
+     {
+      "gate": "corr",
+      "pass": false,
+      "figure": "book +0.42, max leg fix +0.56",
+      "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "goal",
+      "pass": false,
+      "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+     }
+    ],
+    "weight": 0.0,
+    "p5x": [
+     0.5618464571293371,
+     0.5618464571293371
+    ]
+   }
   }
  ],
  "rejected": [
