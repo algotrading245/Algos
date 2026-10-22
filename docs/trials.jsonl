@@ -147,3 +147,4 @@
 {"id": "nn_gold_m15", "when": "2026-10-22T02:26:20", "verdict": "FAIL at halves"}
 {"id": "rl_leg_sizing", "when": "2026-10-22T03:29:15", "verdict": "FAIL at corr"}
 {"id": "meta_label_hydra", "when": "2026-10-22T03:38:21", "verdict": "FAIL at halves"}
+{"id": "carver_breakout", "when": "2026-10-22T15:00:14", "verdict": "FAIL at halves"}
