@@ -132,3 +132,14 @@ failure or clock line.
 - Noise sold 0.68 US500.cash at 7657.45 (bands 7783.22 / 7662.51) and 0.09 US100.cash at 29172.68 (bands 29922.10 /
   29227.01). Both bids were below the lower band, the designed short entry (`Legs.mqh:1880-1887`); one order each, no
   repeat. The checker counts them as "other" (proposed tools change (7) in `docs/HANDOFF.md`).
+
+## 2026-10-22 (Thursday), 23:15 check (monitor): no ALERT
+
+Checked by the monitor role. `tools/demo_check.py` reports ok, 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, and one skip (breakout). The Terminal 16 experts log has 6 AurumFunded lines, the last at 16:29:59. Nothing new was logged after the 16:30 judge check.
+
+- **Trades per leg:** midday 1 (sell 0.23 EURUSD at 12:29:59, 1.12225, stop 1.12422, model weight 1.00). Breakout 0 (skipped at 08:59:59: range 157.290-158.251 at 1.58x its 60-day average, and "balance too small for the minimum lot of USDJPY at a stop of 1.181"). Noise 2 (sell 0.68 US500.cash at 16:29:59, 7657.45, bands 7783.22 / 7662.51; sell 0.09 US100.cash at 16:29:59, 29172.68, bands 29922.10 / 29227.01). One order each, no repeat. No bell, Tokyo, fix or other leg lines today.
+- **Account:** the firm-day lines (day start, day stop, final stop) are not logged today, so the day stop and final stop cannot be checked from the log. No margin error logged.
+- **P/L of the day:** not logged (no close lines in the EA log).
+- **Slippage:** not logged. The log gives fill prices only, not the quote at signal time, so the fills cannot be compared with the tester yet. The fill comparison starts 10-23.
+- **Trades without a broker stop:** none. The midday line shows its stop. The noise lines print the bands, not the stop, but the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`, 3 x the leg's volatility from the entry price). The printed line does not show that stop value, so it is not logged.
+- **Odd:** the breakout skip is the RiskLots floor (judge notes 14:43 and 16:33 in `docs/HANDOFF.md`), not a fault. The two noise shorts are designed lower-band entries.
