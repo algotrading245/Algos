@@ -12,12 +12,10 @@ and the demo runs an old EA build.
   router.json, run-agent.ps1 and install.ps1.
 
 ## Open, for Opus
-1. Doctor task not registered. Evidence: Register-ScheduledTask denied by the permission classifier on 2026-10-23.
-   Fix: owner runs `powershell -ExecutionPolicy Bypass -File tools\autopilot\install.ps1` when no agent is mid-run.
+1. FIXED 2026-10-23: Aurum Doctor registered (install.ps1 run at the owner's request), daily 07:00.
 2. Idea-engine spec factory inflates the multiple-testing N (~27k), so the luck bar is 1.00 and every factory spec
    fails. Fix: count factory variants per family, not per spec, in the N the gate uses (gate change - owner approval).
-3. Demo runs AurumFunded 1.06; repo has 1.09. Evidence: docs/demo_log.md tail, approval a4 pending.
-   Fix: owner approves a4, then copy the 1.09 .ex5 and re-attach on T16.
+3. FIXED 2026-10-23 01:45: T16 restarted with AurumFunded 1.10 (trades as 1.09) and phase1_legs.set; a4 applied.
 4. Breakout leg skips on the demo: the 0.01-lot floor needs a bigger balance. Fix: scale the leg's risk to the
    balance or switch it off on small accounts (EA change - reviewer).
 5. demo_check counts noise-leg orders as "other". Fix: add the noise leg's magic number to the demo_check map.
