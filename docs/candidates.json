@@ -4,6 +4,7 @@
   {
    "id": "breakout",
    "name": "USD/JPY London breakout",
+   "belief_recheck": "2026-10-23 builder: same parameters, real costs, 9 markets (research/breakout_markets.py, marketdata/candidates/breakout_markets.csv): 7 profitable, AUDJPY -0.32 and AUDUSD -0.26 lose; gates.py belief FAIL (needs all of 3+). Other gates pass. Leg already runs in the demo at step 17 and was left at status tester: the judge decides whether it stays on the published/own-test belief or is pulled.",
    "source": "retail London-breakout concept, own test; research/london_breakout.py, research/breakout_ticks.py",
    "status": "tester",
    "step": 5,
@@ -24,47 +25,52 @@
    "notes": "The gates' own 2017-fitted weight (k=0.5 of Hydra's volatility) adds nothing from 2018 (3.37 -> 3.36): the leg was stronger to 2017 (1.18) than after (0.83), so the fit over-weights it. At AurumFunded's tested size (weight 1 = 0.125% risk) Hydra 3.37 -> 3.43. HANDOFF's 0.5% risk for Hydra (weight 4) gives about 3.46. The tester run decides whether it stays. Step 16 base: j3 legs off (AurumFunded 1.03, backtests/2026-10-17_0505_AurumFunded_funded_off) +167.7%, 6.67% eq DD, 17 day stops - matches the model once the 1.4 cushion cap of 1.01 is counted (research/funded_tester_gap.py). The legs-on run (both candidates) should give about +185-190% and 7.5-8% DD; well under the base's growth would count against the legs. Legs-on run (2026-10-17 07:10): +221.5% / 8.28%, step 16 passed in AurumFunded. j4 (AurumHydra 5x preset) was a set-up fault: 12 of 16 symbol inputs on another broker's names, one goal round at a 100 deposit; j5 reruns Hydra at size 1 from 10,000 on FTMO names (preset AurumHydra_FTMO_size1.set; model legs off +1184% / 10.7%, on +1574% / 11.5%, research/hydra_tester_expect.py). Step 17 (demo with the legs on) needs the owner: a3. j5 (2026-10-17 10:05): no valid pair - the tester kept j4's inputs that the size1 preset left out, so both runs had the legs on plus InpMonthEndBoost=2 and no halt: +1460.44% / 13.11% eq DD both times (return per DD 111, ~97% of the legs-on model's log growth). The preset now pins those inputs at the EA defaults; j6 reruns the pair and decides Hydra's step 16. j6 (2026-10-17 13:10): step 16 passed in AurumHydra too (off +725.1% / 12.48% -> on +1076.2% / 15.54%, return per DD 58.1 -> 69.2), USDJPY 9,695 -> 25,860; the breakout lost about 1 point in 2026-01, the legs-on run's deepest month, and gave +4.1 points in 2024-07, the legs-off run's. Step 16 done in both EAs; step 17 (demo forward test) waits on the owner's a3.",
    "gates": {
     "id": "breakout",
-    "when": "2026-10-17T01:19:58",
-    "verdict": "PASS",
+    "when": "2026-10-23T01:13:14",
+    "verdict": "FAIL at belief",
     "gates": [
      {
       "gate": "halves",
       "pass": true,
-      "figure": "1.18 / 0.83",
-      "rule": ">= 0.5 to 2017 and from 2018"
+      "figure": "1.10 / 0.84 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
      },
      {
       "gate": "costs",
       "pass": true,
       "figure": "0.59",
-      "rule": ">= 0.3 at 1.5x cost"
-     },
-     {
-      "gate": "dsr",
-      "pass": true,
-      "figure": "0.969 (N=47, luck bar 0.55)",
-      "rule": ">= 0.9"
+      "rule": "> 0.0 at 1.5x cost"
      },
      {
       "gate": "corr",
       "pass": true,
-      "figure": "book -0.00, max leg hold -0.03",
-      "rule": "|book| <= 0.2, |leg| <= 0.3"
+      "figure": "book -0.00, max leg grid +0.02",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
      },
      {
-      "gate": "goal",
+      "gate": "belief",
+      "pass": false,
+      "figure": "7/9 markets profitable",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
       "pass": true,
-      "figure": "Hydra 2018+ 3.37 -> 3.43 at weight 1; P(5x) 55.2% -> 55.9%",
-      "rule": "Sharpe gain >= 0.03, weight fixed by --weight"
+      "figure": "book 2018+ 3.27 -> 3.34",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=27117, luck bar 1.01)",
+      "rule": ">= 0.9"
      }
     ],
-    "weight": 1.0,
-    "p5x": [
-     0.5522581158607921,
-     0.5588167045143293
-    ],
-    "dry_run": true,
-    "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+    "replaces": [],
+    "published": null,
+    "profitable_months_2018": [
+     0.809,
+     0.798
+    ]
    },
    "tester": [
     {
