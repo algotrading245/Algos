@@ -74,13 +74,61 @@ def result_text(c):
     return clip(c or "", 260)
 
 
+TOK = ("input", "output", "cache_read", "cache_create")
+API_KEYS = {"input": "input_tokens", "output": "output_tokens", "cache_read": "cache_read_input_tokens",
+            "cache_create": "cache_creation_input_tokens"}
+# Anthropic's price ratios to one input token (output 5x, cache read 0.1x, cache write 1.25x). The input price itself
+# is not hard-coded: it is fitted per model family from the runs in usage.jsonl (Rates).
+WEIGHT = {"input": 1.0, "output": 5.0, "cache_read": 0.1, "cache_create": 1.25}
+
+
+def family(model):
+    m = str(model or "").lower()
+    for f in ("opus", "sonnet", "haiku", "fable"):
+        if f in m:
+            return f
+    return "other"
+
+
 class Stream:
-    """Reads one events file incrementally and keeps the agent's recent actions."""
+    """Reads one events file incrementally and keeps the agent's recent actions and its token use so far."""
 
     def __init__(self, path):
         self.path, self.pos, self.rest = path, 0, b""
         self.actions, self.pending, self.progress = [], {}, None
         self.result, self.model, self.n_tools = None, None, 0
+        self.msgs, self.cur = {}, {}                                    # message id -> {tokens, model}; parent -> id
+
+    def usage(self, mid, u, model=None):
+        if not mid or not isinstance(u, dict):
+            return
+        m = self.msgs.setdefault(mid, {**{k: 0 for k in TOK}, "model": model})
+        for k in TOK:
+            m[k] = max(m[k], int(u.get(API_KEYS[k]) or 0))
+        if model:
+            m["model"] = model
+
+    def stream_event(self, e):
+        ev = e.get("event") or {}
+        parent = e.get("parent_tool_use_id")
+        if ev.get("type") == "message_start":
+            msg = ev.get("message") or {}
+            self.cur[parent] = msg.get("id")
+            self.usage(msg.get("id"), msg.get("usage"), msg.get("model"))
+        elif ev.get("type") == "message_delta":
+            self.usage(self.cur.get(parent), ev.get("usage"))
+
+    def tokens(self, rates):
+        tot = {k: 0 for k in TOK}
+        est = 0.0
+        for m in self.msgs.values():
+            for k in TOK:
+                tot[k] += m[k]
+            est += rates.cost(m, m.get("model") or self.model)
+        tot["total"] = sum(tot[k] for k in TOK)
+        tot["est_usd"] = round(est, 4)
+        tot["messages"] = len(self.msgs)
+        return tot
 
     def update(self):
         try:
@@ -96,7 +144,15 @@ class Stream:
         lines = (self.rest + chunk).split(b"\n")
         self.rest = lines.pop()
         for ln in lines:
-            if b'"stream_event"' in ln[:60] or not ln.strip():
+            if not ln.strip():
+                continue
+            if b'"stream_event"' in ln[:60]:
+                # Only the two partial events that carry token counts; the text deltas are skipped unparsed.
+                if b'"message_start"' in ln[:120] or b'"message_delta"' in ln[:120]:
+                    try:
+                        self.stream_event(json.loads(ln))
+                    except ValueError:
+                        pass
                 continue
             try:
                 self.event(json.loads(ln))
@@ -108,7 +164,9 @@ class Stream:
     def event(self, e):
         t = e.get("type")
         if t == "assistant":
-            for b in (e.get("message") or {}).get("content") or []:
+            msg = e.get("message") or {}
+            self.usage(msg.get("id"), msg.get("usage"), msg.get("model"))
+            for b in msg.get("content") or []:
                 bt = b.get("type")
                 if bt == "tool_use":
                     a = {"k": "tool", "name": b.get("name", "?"), "what": describe(b.get("name"), b.get("input") or {}),
@@ -141,7 +199,7 @@ class Stream:
                 a["open"] = False
             self.pending.clear()
 
-    def view(self):
+    def view(self, rates):
         cur = None
         for a in reversed(self.actions):
             if a.get("open"):
@@ -154,7 +212,70 @@ class Stream:
         except OSError:
             mtime = None
         return {"file": self.path.name, "mtime": mtime, "model": self.model, "tools": self.n_tools, "current": cur,
-                "actions": self.actions[-KEEP_ACTIONS:], "result": self.result}
+                "actions": self.actions[-KEEP_ACTIONS:], "result": self.result, "usage": self.tokens(rates)}
+
+
+sys.path.insert(0, str(ROOT / "tools" / "autopilot"))
+try:
+    import budget as _budget                                            # tools/autopilot/budget.py
+except Exception:                                                       # the page still works without the budget
+    _budget = None
+
+
+class Rates:
+    """The week's budget (budget.status()) and an input price per model family fitted from past runs, both re-read
+    when usage.jsonl changes (and every 30 s, so the day and week roll over)."""
+
+    def __init__(self):
+        self.key, self.at, self.status, self.base, self.error = None, 0.0, None, {}, None
+        self.recorded = set()                                          # events files usage.jsonl already counts
+
+    def refresh(self):
+        if _budget is None:
+            self.error = "tools/autopilot/budget.py did not import"
+            return
+        try:
+            key = _budget.USAGE.stat().st_mtime
+        except OSError:
+            key = None
+        if key == self.key and time.time() - self.at < 30:
+            return
+        self.key, self.at = key, time.time()
+        try:
+            rows = _budget.load()
+            self.status = _budget.status()
+            fit = {}
+            for r in rows:
+                # Only runs on one model family, so each fitted price belongs to that family alone.
+                fams = {family(m) for m in r.get("models") or []} or {family(r.get("model"))}
+                w = sum(WEIGHT[k] * (r.get(k) or 0) for k in TOK)
+                if len(fams) != 1 or not r.get("cost_usd") or w <= 0:
+                    continue
+                f = fams.pop()
+                c, t = fit.get(f, (0.0, 0.0))
+                fit[f] = (c + r["cost_usd"], t + w)
+            self.base = {f: c / t for f, (c, t) in fit.items() if t > 0}
+            self.recorded = {r.get("events") for r in rows}
+            today = {k: 0 for k in TOK}
+            day = dt.date.today().isoformat()
+            for r in rows:
+                if r.get("ts", "")[:10] == day:
+                    for k in TOK:
+                        today[k] += r.get(k) or 0
+            today["total"] = sum(today[k] for k in TOK)
+            self.status["today_tokens"] = today
+            self.error = None
+        except Exception as ex:
+            self.error = f"{type(ex).__name__}: {ex}"
+
+    def cost(self, toks, model):
+        base = self.base.get(family(model))
+        if base is None:
+            base = max(self.base.values()) if self.base else 0.0         # unknown model: the dearest seen
+        return base * sum(WEIGHT[k] * toks.get(k, 0) for k in TOK)
+
+
+RATES = Rates()
 
 
 _tails = {}
@@ -197,6 +318,7 @@ _streams = {}
 
 
 def snapshot(rebuilding):
+    RATES.refresh()
     newest = {}
     try:
         for e in os.scandir(EVENTS):
@@ -218,7 +340,7 @@ def snapshot(rebuilding):
             if s is None or s.path != path:
                 s = _streams[role] = Stream(path)
             s.update()
-            act = s.view()
+            act = s.view(RATES)
         log = newest_log(f"*_agent-{role}.log")
         roles[role] = {
             "running": running,
@@ -238,9 +360,27 @@ def snapshot(rebuilding):
         data_mtime = None if rebuilding else DATA.stat().st_mtime
     except OSError:
         data_mtime = None
+    # Tokens: the week and today from usage.jsonl (finished runs), plus the runs still going, counted live from their
+    # events files (not yet in usage.jsonl, so not counted twice).
+    live = {}
+    for role, r in roles.items():
+        a = r["activity"]
+        # last-<role>.json is only written when a run ends, so "running" is not enough: a file with no result line
+        # written in the last 30 minutes is a run still going.
+        fresh = a and time.time() - (a.get("mtime") or 0) < 1800
+        if fresh and a.get("usage") and a["file"] not in RATES.recorded and (r["running"] or not a.get("result")):
+            live[role] = dict(a["usage"], file=a["file"], model=a.get("model"))
+    extra_usd = sum(v["est_usd"] for v in live.values())
+    extra_tok = sum(v["total"] for v in live.values())
+    b = dict(RATES.status or {})
+    tokens = {"live": live, "live_usd": round(extra_usd, 4), "live_tokens": extra_tok,
+              "week_usd_live": round((b.get("week_usd") or 0) + extra_usd, 2),
+              "today_usd_live": round(sum(x["cost_usd"] for x in (b.get("today") or {}).values()) + extra_usd, 3),
+              "today_tokens_live": ((b.get("today_tokens") or {}).get("total") or 0) + extra_tok,
+              "rates": {f: round(v * 1e6, 3) for f, v in RATES.base.items()}, "error": RATES.error}
     return {"generated": time.time(), "generated_iso": dt.datetime.now().isoformat(timespec="seconds"),
             "data_mtime": data_mtime, "relay": read_json(LOG / "relay.json"),
-            "paused": (LOG / "PAUSE").exists(), "roles": roles, "steps": steps}
+            "paused": (LOG / "PAUSE").exists(), "roles": roles, "steps": steps, "budget": b, "tokens": tokens}
 
 
 def write(snap):

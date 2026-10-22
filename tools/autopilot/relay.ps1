@@ -14,8 +14,9 @@
 #   4. A collected job (to-judge.json): the judge (code tier when the script's expect check matched, else judge tier).
 #   5. A new demo order or ALERT (demo-event.json, from dispatch.py): the judge, at the judge tier for an ALERT.
 #   6. A hand-over naming the judge, builder or tester, when that role has work.
-#   7. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
-#   8. Otherwise the finder, at once, to queue the next idea or fetch data (no budget or empty-run brake).
+#   7. A data item waiting: the finder fetches it (ideas that need it are blocked until then).
+#   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
+#   9. Otherwise the finder, at once, to queue the next idea or fetch data (no budget or empty-run brake).
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
 param([switch]$DryRun)
@@ -109,6 +110,9 @@ while ($true) {
     }
     elseif ($ev) { $role = "judge"; $why = "demo $($ev.kind) at $($ev.at): $($ev.line)"; if ($ev.kind -eq "ALERT") { $tier = "judge" } }
     elseif ($want -eq "judge" -and (Get-Unreviewed) -gt 0) { $role = "judge"; $why = "review: $($r.reason)" }
+    # A data item first: an idea that needs the data cannot be built until the finder fetches it (2026-10-22, the
+    # builder ran 43 times on paper_fx_value_rer while data_fred_cpi_g10 waited behind it).
+    elseif ((Get-DataWaiting) -gt 0) { $role = "finder"; $why = "data item waiting: fetch it before the builder" }
     elseif ((Get-QueueWaiting) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
     else { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 

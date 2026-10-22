@@ -44,6 +44,7 @@ header { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, v
 .logo { width: 30px; height: 30px; border-radius: 8px; background: conic-gradient(from 210deg, var(--gold2), var(--gold), #7a5a08, var(--gold2)); box-shadow: 0 0 18px var(--goldsoft); flex: none; }
 h1 { font-size: 17px; margin: 0; letter-spacing: -.01em; }
 .sub { color: var(--muted); font-size: 12px; }
+.small { font-size: 12px; } .small th, .small td { padding: 4px 6px; }
 .spacer { flex: 1; }
 .btn { background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 10px; cursor: pointer; font: inherit; font-size: 13px; }
 .btn:hover { border-color: var(--gold); }
@@ -86,7 +87,7 @@ th { color: var(--muted); font-weight: 600; font-size: 12px; }
 .gauge svg { width: 100%; max-width: 280px; }
 .gauge .big { font-size: 40px; font-weight: 800; letter-spacing: -.03em; }
 /* pipeline */
-.phases { display: grid; grid-template-columns: repeat(8, minmax(130px, 1fr)); gap: 10px; padding-bottom: 8px; }
+.phases { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 10px; padding-bottom: 8px; }
 @media (max-width: 1180px) { .phases { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 620px) { .phases { grid-template-columns: 1fr; } }
 .phase { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
@@ -170,6 +171,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
 <main>
   <section data-tab="live">
     <div class="card" id="liveRelay" style="margin-bottom:16px"></div>
+    <div class="card" id="liveTokens" style="margin-bottom:16px"></div>
     <div class="grid g4" id="liveCards"></div>
     <div class="card" style="margin-top:16px">
       <div id="liveHead"></div>
@@ -187,14 +189,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
       <div class="grid g4" id="kpis"></div>
     </div>
     <div class="grid g2">
+      <div class="card"><h3>Idea funnel (docs/ideas/queue.jsonl)</h3><div id="funnel"></div></div>
       <div class="card"><h3>Candidates on their way</h3><div id="journeys"></div></div>
       <div class="card"><h3>Hydra book from 2018, with each leg</h3><div class="chartbox sm"><canvas id="bookChart"></canvas></div><div class="sub" id="bookNote"></div></div>
     </div>
   </section>
 
   <section data-tab="pipeline">
-    <h2>The 20 steps</h2>
-    <p class="lead">Every idea walks these in order and stops at the first failed gate. Gold tokens show where each candidate stands. Pick an agent to see its steps; click a step for its detail.</p>
+    <h2>The 5 steps</h2>
+    <p class="lead">Every idea walks these in order and stops at the first failed gate; then the next idea starts at once. Gold tokens show where each candidate stands. Pick an agent to see its steps; click a step for its detail.</p>
     <div class="row" id="agentFilter" style="margin-bottom:12px"></div>
     <div class="phases" id="phases"></div>
     <div class="card detail" id="stepDetail"></div>
@@ -205,7 +208,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     <p class="lead">The five gates in <code>tools/gates.py</code>, with thresholds fixed in code. Click a gate to see its figure and rule.</p>
     <div class="grid g2" id="candCards"></div>
     <h2 style="margin-top:26px">Rejected</h2>
-    <p class="lead">Families already tested and dropped. The researcher checks new ideas against this list.</p>
+    <p class="lead">Families already tested and dropped. The finder checks new ideas against this list.</p>
     <input class="search" id="rejSearch" placeholder="Search rejected ideas, e.g. RL, gold, FOMC">
     <div class="grid g3" id="rejected"></div>
   </section>
@@ -253,7 +256,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
 
   <section data-tab="agents">
     <h2>Agents and models</h2>
-    <p class="lead">One Opus orchestrator hands each step to a role agent. Gates are code, so no agent can wave a candidate through.</p>
+    <p class="lead">The relay starts the finder, builder, tester and judge one idea after another. Gates are code, so no agent can wave a candidate through.</p>
     <div class="card" id="budget" style="margin-bottom:16px"></div>
     <div class="grid g3" id="agentCards"></div>
   </section>
@@ -329,8 +332,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   var cands = D.ledger.candidates;
   var bookS = (D.book && D.book.sharpe) || {};
   var baseS = bookS["Hydra book"] != null ? bookS["Hydra book"] : 3.37;
-  var AGENT_COL = { orchestrator: "#e0b444", researcher: "#5aa9e6", "quant-coder": "#9b7bff", reviewer: "#ff6b9a", "tester-operator": "#3ccf7d", monitor: "#ffb547", owner: "#9a9686",
-    miner: "#2ec4b6", worker: "#9b7bff", scanner: "#7fbf3f", tester: "#3ccf7d", fidelity: "#ff6b9a" };
+  var AGENT_COL = { judge: "#e0b444", finder: "#5aa9e6", builder: "#9b7bff", reviewer: "#ff6b9a", "tester-operator": "#3ccf7d", monitor: "#ffb547", owner: "#9a9686",
+    tester: "#3ccf7d" };
   function verdictChip(v) { return '<span class="chip ' + (v === "PASS" ? "ok" : /FAIL/.test(v) ? "bad" : "warn") + '">' + esc(v) + "</span>"; }
 
   // ---------- overview ----------
@@ -356,15 +359,23 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
       ["Rejected families", D.ledger.rejected.length, (47 + D.trials) + " trials counted for the DSR"],
       ["Last tester run", lr ? (lr.return_pct > 0 ? "+" : "") + fmt(lr.return_pct, 1) + "%" : "-", lr ? esc(lr.expert) + " " + esc(lr.symbol) + ", DD " + fmt(lr.eq_dd_max_pct, 1) + "%, PF " + fmt(lr.profit_factor) : "none yet"],
       ["Demo today", demoT.error ? "-" : demoT.alert ? '<span class="down">ALERT</span>' : '<span class="up">ok</span>', demoT.error ? "checker unavailable" : (demoT.experts_lines || 0) + " EA lines in the log"],
-      ["Agents", D.agents.length, "1 orchestrator + " + (D.agents.length - 1) + " roles"]
+      ["Agents", D.agents.length, "finder, builder, tester, judge, monitor, reviewer"]
     ];
     $("#kpis").innerHTML = k.map(function (x) { return '<div class="card kpi"><div class="l">' + x[0] + '</div><div class="v">' + x[1] + '</div><div class="d">' + x[2] + "</div></div>"; }).join("");
     $("#journeys").innerHTML = cands.map(function (c) {
       var st = D.pipeline.steps.find(function (s) { return s.n === c.step; }) || {};
       return '<div style="margin:10px 0 14px"><div class="row" style="justify-content:space-between"><b>' + esc(c.name) + "</b>" + (c.gates ? verdictChip(c.gates.verdict) : "") + "</div>" +
-        '<div class="sub" style="margin:2px 0 6px">Step ' + c.step + " of 20: " + esc(st.name || "") + " (" + esc(st.agent || "") + ")</div>" +
-        '<div class="progress"><div style="width:' + (c.step / 20 * 100) + '%"></div></div></div>';
+        '<div class="sub" style="margin:2px 0 6px">Step ' + c.step + " of 5: " + esc(st.name || "") + " (" + esc(st.agent || "") + ")</div>" +
+        '<div class="progress"><div style="width:' + (c.step / 5 * 100) + '%"></div></div></div>';
     }).join("") || '<div class="empty">No candidates yet.</div>';
+    var F = D.funnel || { total: 0, by_status: {}, by_source: {}, recent: [] };
+    var order = ["new", "testing", "tester", "hydra", "funded", "both", "rejected"];
+    var keys = order.filter(function (k) { return F.by_status[k]; }).concat(Object.keys(F.by_status).filter(function (k) { return order.indexOf(k) < 0; }));
+    $("#funnel").innerHTML = F.total ? '<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">' +
+        keys.map(function (k) { return '<span class="chip ' + (k === "rejected" ? "bad" : /hydra|funded|both/.test(k) ? "ok" : "idle") + '">' + esc(k) + " " + F.by_status[k] + "</span>"; }).join("") + "</div>" +
+        '<div class="sub" style="margin-bottom:6px">By source: ' + Object.keys(F.by_source).map(function (k) { return esc(k) + " " + F.by_source[k]; }).join(", ") + "</div>" +
+        F.recent.slice(0, 12).map(function (x) { return '<div class="row" style="justify-content:space-between;margin:3px 0"><span>' + esc(x.title || x.id) + ' <span class="sub">(' + esc(x.source || "") + ")</span></span><span class=\"chip " + (x.status === "rejected" ? "bad" : "idle") + '">' + esc(x.status) + "</span></div>"; }).join("")
+      : '<div class="empty">The queue is empty: the finder adds the next ideas.</div>';
     if (D.book.error) { $("#bookNote").textContent = D.book.error; return; }
     $("#bookNote").textContent = "Weights from each candidate's gate run: " + Object.keys(D.book.weights).map(function (k) { return k + " " + fmt(D.book.weights[k], 3); }).join(", ") + ".";
   }
@@ -418,7 +429,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
       var gi = selGate[c.id] != null ? gs[selGate[c.id]] : null;
       var tester = (c.tester || []).map(function (t) { return '<div class="sub">Tester ' + esc(t.symbol) + ": " + t.trades + " trades, " + (t.return_pct > 0 ? "+" : "") + t.return_pct + "%, DD " + t.eq_dd_max_pct + "%, PF " + t.profit_factor + " · " + esc(t.verdict) + "</div>"; }).join("");
       return '<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">' + esc(c.name) + "</h3>" + (g ? verdictChip(g.verdict) : '<span class="chip idle">not gated</span>') + "</div>" +
-        '<div class="row" style="margin:6px 0"><span class="chip gold">' + esc(c.status) + '</span><span class="chip idle">step ' + c.step + " / 20</span>" + (c.stress_sharpe != null ? '<span class="chip idle">Sharpe at 1.5× cost ' + c.stress_sharpe + "</span>" : "") + "</div>" +
+        '<div class="row" style="margin:6px 0"><span class="chip gold">' + esc(c.status) + '</span><span class="chip idle">step ' + c.step + " / 5</span>" + (c.stress_sharpe != null ? '<span class="chip idle">Sharpe at 1.5× cost ' + c.stress_sharpe + "</span>" : "") + "</div>" +
         '<p class="sub" style="margin:6px 0">' + inline(c.summary || "") + "</p>" +
         (g ? '<div class="track">' + track + '</div><div class="glabels">' + gs.map(function (x) { return "<span>" + x.gate + "</span>"; }).join("") + "</div>" +
           '<div class="gbox">' + (gi ? "<b>" + esc(gi.gate) + "</b>: " + esc(gi.figure) + '<div class="sub">Rule: ' + esc(gi.rule) + "</div>" : '<span class="sub">Click a gate. P(5x) ' + pct(g.p5x[0]) + ' → <b class="up">' + pct(g.p5x[1]) + "</b> at weight " + fmt(g.weight, 3) + (g.dry_run ? " (dry run)" : "") + "</span>") + "</div>" : "") +
@@ -431,7 +442,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   function rejected() {
     var q = ($("#rejSearch").value || "").toLowerCase();
     var list = D.ledger.rejected.filter(function (r) { return !q || (r.family + " " + r.examples + " " + r.why).toLowerCase().indexOf(q) >= 0; });
-    $("#rejected").innerHTML = list.map(function (r) { return '<div class="card"><div class="row" style="justify-content:space-between"><b>' + esc(r.family) + '</b><span class="chip bad">rejected</span></div><p class="sub" style="margin:6px 0">' + esc(r.examples) + "</p><div><b>Why:</b> " + esc(r.why) + "</div></div>"; }).join("") || '<div class="empty">Nothing matches. A new family, so check it with the researcher.</div>';
+    $("#rejected").innerHTML = list.map(function (r) { return '<div class="card"><div class="row" style="justify-content:space-between"><b>' + esc(r.family) + '</b><span class="chip bad">rejected</span></div><p class="sub" style="margin:6px 0">' + esc(r.examples) + "</p><div><b>Why:</b> " + esc(r.why) + "</div></div>"; }).join("") || '<div class="empty">Nothing matches. A new family, so the finder can queue it.</div>';
   }
   $("#rejSearch").oninput = rejected;
 
@@ -555,7 +566,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
       var f = Math.min(1, B.fraction || 0), col = B.skip ? "var(--bad)" : f > 0.5 ? "var(--warn)" : "var(--ok)";
       var roles = Object.keys(B.today || {}).sort(function (a, b) { return B.today[b].cost_usd - B.today[a].cost_usd; });
       $("#budget").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Token budget this week</h3>' +
-        '<span class="chip ' + (B.skip ? "bad" : "ok") + '">' + (B.skip ? "over " + pct(B.skip_above, 0) + ": researcher and Opus follow-ups wait" : "all roles run") + "</span></div>" +
+        '<span class="chip ' + (B.skip ? "bad" : "ok") + '">' + (B.skip ? "over " + pct(B.skip_above, 0) + ": the finder waits" : "all roles run") + "</span></div>" +
         '<div class="sub" style="margin:6px 0">$' + fmt(B.week_usd) + " of $" + fmt(B.weekly_usd, 0) + " (" + pct(B.fraction, 0) + "), " + B.week_runs + " runs since " + esc(B.week_start.replace("T", " ")) + "</div>" +
         '<div style="height:10px;border-radius:5px;background:var(--grid);overflow:hidden"><div style="height:100%;width:' + (f * 100).toFixed(1) + "%;background:" + col + '"></div></div>' +
         (roles.length ? '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Today</th><th>Runs</th><th>Cost</th><th>Tokens</th></tr>' +
@@ -591,7 +602,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   if (!window.Chart) document.querySelectorAll(".chartbox").forEach(function (c) { c.innerHTML = '<div class="empty">Charts need the Chart.js script from cdnjs (offline?).</div>'; });
 
   // ---------- live: live.js every second, data.js when it changes ----------
-  var LROLES = ["orchestrator", "miner", "researcher", "worker", "scanner", "tester", "fidelity", "monitor"];
+  var LROLES = ["finder", "builder", "judge", "tester", "monitor"];
   var sel = null;
   try { sel = localStorage.getItem("aurum-live-sel"); } catch (e) {}
   var now = function () { return Date.now() / 1000; };
@@ -634,6 +645,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
         '" style="' + (r.running ? "" : "background:" + (AGENT_COL[n] || "var(--muted)")) + '"></span><b>' + n + '</b></div>' +
         '<span class="chip ' + st.cls + '">' + st.text + "</span></div>" +
         '<div class="sub mono" style="margin-top:4px">' + esc(model || "-") + (s.runs_today != null ? " · " + esc(s.runs_today) + " runs today" : "") + "</div>" +
+        (liveTok(L, n) ? '<div class="mono" style="margin-top:4px;color:var(--warn)">tokens ' + tk(liveTok(L, n).total) + " · ≈$" + fmt(liveTok(L, n).est_usd, 3) + "</div>" : "") +
         '<div class="act">' + (lastLine(r) || '<span class="sub">no activity yet</span>') + "</div></div>";
     }).join(""));
   }
@@ -650,7 +662,9 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     if (!r) { put("liveHead", '<div class="empty">Click an agent above to watch what it is doing: every tool call, what it says, and its run log.</div>'); return; }
     var s = r.state || {}, a = r.activity, st = status(r);
     var bits = [["Started", hm(s.started)], ["Ended", r.running ? "-" : hm(s.ended)], ["Model", [s.model || (a && a.model), s.tier, s.provider].filter(Boolean).join(" · ") || "-"],
-      ["Tool calls", a ? a.tools : 0], ["Last event", a && a.mtime ? ago(now() - a.mtime) + " ago" : "-"], ["Next", hm(s.next)]];
+      ["Tool calls", a ? a.tools : 0], ["Last event", a && a.mtime ? ago(now() - a.mtime) + " ago" : "-"], ["Next", hm(s.next)],
+      ["Tokens (this run)", a && a.usage ? tk(a.usage.total) + " · in " + tk(a.usage.input) + " out " + tk(a.usage.output) + " cache " + tk(a.usage.cache_read + a.usage.cache_create) : "-"],
+      ["Cost (this run)", a && a.result && a.result.cost != null ? "$" + fmt(a.result.cost, 3) : a && a.usage ? "≈$" + fmt(a.usage.est_usd, 3) + " so far" : "-"]];
     var h = '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><h3 style="margin:0"><span class="dot' + (r.running ? " on" : "") + '"></span> ' + esc(sel) +
       ' <span class="chip ' + st.cls + '">' + st.text + '</span></h3><span class="sub mono">' + esc(a ? a.file : "") + "</span></div>" +
       '<div class="grid g3" style="margin-top:10px">' + bits.map(function (b) { return '<div><div class="sub">' + b[0] + '</div><div class="mono">' + esc(b[1]) + "</div></div>"; }).join("") + "</div>" +
@@ -676,17 +690,56 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     put("liveSteps", k.length ? k.map(function (n) { return '<div class="card"><h3 style="margin:0 0 6px">' + esc(n) + '</h3><pre class="logt small">' + esc(L.steps[n].join("\n")) + "</pre></div>"; }).join("")
       : '<div class="empty">No script step has logged today.</div>');
   }
+  // Token counts: 1234 -> 1.2k, 30194256 -> 30.2M.
+  function tk(n) {
+    n = +n || 0;
+    return n >= 1e9 ? (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(n);
+  }
+  function liveTok(L, n) { return L.tokens && L.tokens.live && L.tokens.live[n]; }
+  function liveTokens(L) {
+    var T = L.tokens, B = L.budget;
+    if (!T || !B || B.weekly_usd == null) { put("liveTokens", '<div class="empty">Token use: no data yet' + (T && T.error ? " (" + esc(T.error) + ")" : "") + ".</div>"); return; }
+    var pct = B.weekly_usd ? 100 * T.week_usd_live / B.weekly_usd : 0, over = pct >= 100;
+    var col = over ? "var(--bad)" : pct >= 100 * (B.skip_above || 0.7) ? "var(--warn)" : "var(--ok)";
+    var tt = B.today_tokens || {};
+    var h = '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>Token use</b>' +
+      '<span class="sub">week from ' + esc(hm(B.week_start)) + " " + esc((B.week_start || "").slice(0, 10)) + " · " + esc(B.week_runs) + " runs</span></div>" +
+      '<div class="grid g4" style="margin-top:10px">' +
+      '<div><div class="sub">This week</div><div style="font-size:22px;font-weight:600;color:' + col + '">$' + fmt(T.week_usd_live, 2) + '</div><div class="sub">of $' + fmt(B.weekly_usd, 0) + " budget · " + fmt(pct, 0) + "%</div></div>" +
+      '<div><div class="sub">Today</div><div style="font-size:22px;font-weight:600">$' + fmt(T.today_usd_live, 2) + '</div><div class="sub">' + tk(T.today_tokens_live) + " tokens</div></div>" +
+      '<div><div class="sub">Running now</div><div style="font-size:22px;font-weight:600;color:var(--warn)">' + tk(T.live_tokens) + '</div><div class="sub">≈$' + fmt(T.live_usd, 3) + " · counted live</div></div>" +
+      '<div><div class="sub">Today by kind</div><div class="mono small">in ' + tk(tt.input) + " · out " + tk(tt.output) + "<br>cache read " + tk(tt.cache_read) + "<br>cache write " + tk(tt.cache_create) + "</div></div></div>" +
+      '<div style="margin-top:10px;height:8px;border-radius:4px;background:var(--line);overflow:hidden"><div style="height:100%;width:' + Math.min(100, pct).toFixed(1) + "%;background:" + col + '"></div></div>';
+    var live = Object.keys(T.live || {});
+    if (live.length) h += '<div style="margin-top:12px">' + live.map(function (n) {
+      var u = T.live[n];
+      return '<div class="nowbox"><span class="dot on"></span> <b>' + esc(n) + '</b> <span class="sub mono">' + esc(u.model || "") + "</span> · <b>" + tk(u.total) + "</b> tokens (in " + tk(u.input) +
+        ", out " + tk(u.output) + ", cache " + tk(u.cache_read + u.cache_create) + ") · " + u.messages + " calls · ≈$" + fmt(u.est_usd, 3) + "</div>";
+    }).join("") + "</div>";
+    var roles = Object.keys(B.today || {}).sort(function (a, b) { return B.today[b].cost_usd - B.today[a].cost_usd; });
+    var days = Object.keys(B.week_days || {}).sort();
+    h += '<div class="grid g2" style="margin-top:12px"><div><div class="sub">Today by agent (finished runs)</div><table class="mono small" style="width:100%"><tr><th align="left">agent</th><th align="right">runs</th><th align="right">tokens</th><th align="right">$</th></tr>' +
+      (roles.length ? roles.map(function (n) { var x = B.today[n]; return "<tr><td>" + esc(n) + '</td><td align="right">' + x.runs + '</td><td align="right">' + tk(x.tokens) + '</td><td align="right">' + fmt(x.cost_usd, 2) + "</td></tr>"; }).join("") : '<tr><td colspan="4" class="sub">no runs yet today</td></tr>') +
+      '</table></div><div><div class="sub">This week by day</div><table class="mono small" style="width:100%">' +
+      days.map(function (d) { var v = B.week_days[d], w = Math.max(...days.map(function (k) { return B.week_days[k]; }), 0.01);
+        return '<tr><td style="width:90px">' + esc(d.slice(5)) + '</td><td><div style="height:8px;border-radius:3px;background:var(--gold);width:' + (100 * v / w).toFixed(1) + '%"></div></td><td align="right" style="width:60px">$' + fmt(v, 2) + "</td></tr>"; }).join("") +
+      "</table></div></div>" +
+      '<div class="sub" style="margin-top:8px">Finished runs use the cost Claude reports. Runs still going are estimated from their tokens at prices fitted to past runs (per 1M input-equivalent tokens: ' +
+      Object.keys(T.rates || {}).map(function (f) { return esc(f) + " $" + fmt(T.rates[f], 2); }).join(", ") + ").</div>";
+    put("liveTokens", h);
+  }
   function liveInd(L) {
     var age = L && L.generated ? now() - L.generated : null;
     var ok = age != null && age < 5 && !L.error;
-    $("#liveInd").innerHTML = ok ? '<span class="dot on"></span> live · updated ' + ago(age) + " ago"
+    var tok = L && L.tokens ? " · today $" + fmt(L.tokens.today_usd_live, 2) + " · week $" + fmt(L.tokens.week_usd_live, 2) + (L.tokens.live_tokens ? " · running " + tk(L.tokens.live_tokens) + " tokens" : "") : "";
+    $("#liveInd").innerHTML = ok ? '<span class="dot on"></span> live · updated ' + ago(age) + " ago" + tok
       : '<span class="dot stale"></span> ' + (L && L.error ? "live feed error: " + esc(L.error) : "live feed off" + (age != null ? " (last " + ago(age) + " ago)" : "") + ": run <code>python tools/dashboard_live.py</code>");
   }
   function liveRender() {
     var L = window.AURUM_LIVE;
     liveInd(L);
     if (!L || !L.roles) return;
-    liveRelay(L); liveCards(L); liveDetail(L); liveSteps(L);
+    liveRelay(L); liveTokens(L); liveCards(L); liveDetail(L); liveSteps(L);
     hotReload(L);
   }
   $("#liveCards").onclick = function (e) {
