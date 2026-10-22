@@ -150,3 +150,8 @@
 {"id": "carver_breakout", "when": "2026-10-22T15:00:14", "verdict": "FAIL at halves"}
 {"id": "volmanaged_mm", "when": "2026-10-22T20:21:09", "verdict": "FAIL at halves"}
 {"id": "noise", "when": "2026-10-22T22:19:22", "verdict": "PASS"}
+{"id": "idea:f_reversal_audcad", "when": "2026-10-23T00:00:07", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurusd", "when": "2026-10-23T00:00:13", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_spxusd", "when": "2026-10-23T00:00:19", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_usdjpy", "when": "2026-10-23T00:00:24", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xauusd", "when": "2026-10-23T00:00:31", "verdict": "FAIL at halves", "count": 2}

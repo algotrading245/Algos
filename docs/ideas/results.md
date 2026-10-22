@@ -135,3 +135,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:19 | f_rsi_wtiusd | n/a | 4 | WTIUSD rsi level=10 period=2 L1 both | 0.21 / 0.16 | FAIL at halves | 0.001 (N=27026, luck bar 1.76) |
 | 2026-10-22T01:39 | clare_ma_trend_commodities | in full | 9 | XAUUSD ma_cross fast=1 slow=147 L21 long | 0.34 / 0.81 | FAIL at halves | 0.031 (N=27037, luck bar 1.03) |
 | 2026-10-22T01:39 | lemperiere_ma_trend_gold_fx_equity | in full | 24 | XAGUSD ma_cross fast=1 slow=42 L21 both | 0.30 / -0.05 | FAIL at halves | 0.000 (N=27061, luck bar 1.03) |
+| 2026-10-23T00:00 | f_reversal_audcad | n/a | 2 | AUDCAD reversal lookback=5 L1 both | -0.08 / 0.27 | FAIL at halves | 1.000 (book, N=27073, luck bar 1.00) |
+| 2026-10-23T00:00 | f_reversal_eurusd | n/a | 2 | EURUSD reversal lookback=1 L1 both | 0.26 / -0.80 | FAIL at halves | 1.000 (book, N=27075, luck bar 1.00) |
+| 2026-10-23T00:00 | f_reversal_spxusd | n/a | 2 | SPXUSD reversal lookback=1 L1 both | 0.47 / 0.04 | FAIL at halves | 1.000 (book, N=27077, luck bar 1.00) |
+| 2026-10-23T00:00 | f_reversal_usdjpy | n/a | 2 | USDJPY reversal lookback=5 L1 both | -0.35 / -0.25 | FAIL at halves | 1.000 (book, N=27079, luck bar 1.00) |
+| 2026-10-23T00:00 | f_reversal_xauusd | n/a | 2 | XAUUSD reversal lookback=1 L1 both | 0.09 / 0.09 | FAIL at halves | 1.000 (book, N=27081, luck bar 1.00) |
