@@ -149,3 +149,4 @@
 {"id": "meta_label_hydra", "when": "2026-10-22T03:38:21", "verdict": "FAIL at halves"}
 {"id": "carver_breakout", "when": "2026-10-22T15:00:14", "verdict": "FAIL at halves"}
 {"id": "volmanaged_mm", "when": "2026-10-22T20:21:09", "verdict": "FAIL at halves"}
+{"id": "noise", "when": "2026-10-22T22:19:22", "verdict": "PASS"}
