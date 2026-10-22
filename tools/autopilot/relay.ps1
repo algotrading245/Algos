@@ -57,7 +57,9 @@ function Get-FinderWhy {
     # No brake (owner 2026-10-22): when an idea finishes, pass or fail, the finder starts the next one at once,
     # whatever the week's budget or how many runs in a row found nothing. Only a usage limit (router.py backoff)
     # or PAUSE stops it.
-    if ((Get-DataWaiting) -gt 0) { return "data item waiting" }
+    if (@(Get-DataDue).Count -gt 0) { return "data item waiting" }
+    $stuck = @(Get-DataStuck)
+    if ($stuck.Count) { Write-Log "relay" "data item(s) stuck after $DataTryCap finder runs, priority dropped: $(($stuck | ForEach-Object { $_.id }) -join ', ')" }
     return "queue empty: find the next idea"
 }
 
@@ -112,7 +114,11 @@ while ($true) {
     elseif ($want -eq "judge" -and (Get-Unreviewed) -gt 0) { $role = "judge"; $why = "review: $($r.reason)" }
     # A data item first: an idea that needs the data cannot be built until the finder fetches it (2026-10-22, the
     # builder ran 43 times on paper_fx_value_rer while data_fred_cpi_g10 waited behind it).
-    elseif ((Get-DataWaiting) -gt 0) { $role = "finder"; $why = "data item waiting: fetch it before the builder" }
+    # At most $DataTryCap finder runs per data item (common.ps1), then the builder goes ahead and the doctor reports it.
+    elseif (@(Get-DataDue).Count -gt 0) {
+        $role = "finder"; $why = "data item waiting: fetch it before the builder ($((Get-DataDue | ForEach-Object { $_.id }) -join ', '))"
+        if (-not $DryRun) { Add-DataTry }
+    }
     elseif ((Get-QueueWaiting) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
     else { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 

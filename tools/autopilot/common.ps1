@@ -89,6 +89,34 @@ function Get-QueueWaiting {
 function Get-DataWaiting {
     return @(Get-QueueItems | Where-Object { $_.status -eq "new" -and $_.source -eq "data" }).Count
 }
+# Finder runs the relay gave to each data item (logs\autopilot\data-tries.json). After $DataTryCap runs that leave an
+# item "new", it loses its priority, so one stuck item cannot loop the finder (2026-10-22: 68 runs on data_ftmo_specs,
+# whose file already existed). The doctor reports the stuck ones.
+$DataTryCap = 3
+$DataTries = Join-Path $LogDir "data-tries.json"
+function Get-DataTries {
+    $h = @{}
+    if (Test-Path $DataTries) {
+        try { (Get-Content $DataTries -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $h[$_.Name] = [int]$_.Value } } catch {}
+    }
+    return $h
+}
+# Waiting data items still under the cap.
+function Get-DataDue {
+    $t = Get-DataTries
+    return @(Get-QueueItems | Where-Object { $_.status -eq "new" -and $_.source -eq "data" -and ([int]$t["$($_.id)"]) -lt $DataTryCap })
+}
+# Waiting data items at the cap.
+function Get-DataStuck {
+    $t = Get-DataTries
+    return @(Get-QueueItems | Where-Object { $_.status -eq "new" -and $_.source -eq "data" -and ([int]$t["$($_.id)"]) -ge $DataTryCap })
+}
+# Count one finder run against each due data item.
+function Add-DataTry {
+    $t = Get-DataTries
+    foreach ($i in Get-DataDue) { $t["$($i.id)"] = 1 + [int]$t["$($i.id)"] }
+    [pscustomobject]$t | ConvertTo-Json | Set-Content $DataTries -Encoding UTF8
+}
 
 # Agent runs of a role started today (from its log) (the relay no longer caps runs; kept for reports).
 function Get-RunsToday([string]$Role) {

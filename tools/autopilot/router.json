@@ -74,6 +74,13 @@
       "minutes": 45,
       "claude_agent": "portfolio-manager",
       "agent_file": ".claude/agents/portfolio-manager.md"
+    },
+    "doctor": {
+      "tier": "judge",
+      "turns": 40,
+      "minutes": 45,
+      "claude_agent": "doctor",
+      "agent_file": ".claude/agents/doctor.md"
     }
   },
   "overrides": {

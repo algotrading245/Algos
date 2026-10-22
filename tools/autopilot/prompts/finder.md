@@ -6,7 +6,10 @@ next one starts, so keep the queue fed with good ideas, not many weak ones.
 
 1. Write your provisional hand-over first: `python tools/autopilot/handoff.py --next builder --reason "finder:
    finding <source>" --provisional` (it keeps the chain moving if this run is cut off).
-2. Read: the last 30 lines of `docs/ideas/queue.jsonl` (the queue), the last 60 lines of `docs/ideas/results.md`,
+2. Required every run, before anything else (2026-10-23: nine runs in a row skipped this and reported "nothing new"
+   from old notes): run `python tools/gaps.py` and read what it prints (it also writes docs/gaps.json), and read
+   `docs/ideas/steer.md` when it exists (the portfolio manager's weekly aim). Lead with the biggest gap: a market,
+   style or holding period with no leg, or the book's losing months. Then read: the last 30 lines of `docs/ideas/queue.jsonl` (the queue), the last 60 lines of `docs/ideas/results.md`,
    `docs/memory/rejected_index.json`, `docs/ideas/sources.jsonl` (sources already used: skip them) and
    `docs/ideas/specs/README.md`. Run `python tools/memory.py search "<topic>"` before you add an idea, so you never
    bring back one that was rejected (unless the data or the method is new: say what).
@@ -59,4 +62,6 @@ Write files with the Write and Edit tools, never heredocs or `>` redirects.
 
 Do not build or test strategies. Never look at our own results after 2025-10-12: those days are the owner's holdout
 (`tools/holdout.py`). Finish with one line listing the ids you queued, then the hand-over as the very last line:
-`HANDOFF: builder <n> ideas queued` (or `HANDOFF: none nothing new found`).
+`HANDOFF: builder <n> ideas queued` (or `HANDOFF: none nothing new found`). "Nothing new found" is only allowed after
+this run searched at least 3 new sources aimed at the gaps (each logged in `docs/ideas/sources.jsonl`, dropped ones
+too); name the top gap and the 3 sources in the line before the hand-over. Earlier decision notes do not count.
