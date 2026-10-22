@@ -228,6 +228,10 @@ each finished piece of work.
   (6) `demo_check.py`: an "order ... failed, retcode 10009" line is a fill (TRADE_RETCODE_DONE with deal 0 on
   FTMO's market execution), not a failure. Count it as a fill. Instead, raise an ALERT when one leg sends two orders
   on the same symbol within a minute (a repeat).
+  (7) `demo_check.py` `leg_of()` counts noise orders as "other": the noise leg's order line is "US500.cash sold 0.68
+  lots at ..., bands ..." (`Legs.mqh:1903`) with no leg word, and the breakout line "USD/JPY broke its range" has
+  none either. Match "bands" as noise and "broke its range" as breakout (judge 2026-10-22 16:30: 10-22 shows
+  `other: 2` for the two noise shorts).
 
 - **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
   idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set

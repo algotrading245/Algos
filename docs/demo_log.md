@@ -120,3 +120,15 @@ lines. The Terminal 16 experts log has 9 AurumFunded lines, all listed below.
 - **P/L of the day:** not logged (the EA log has no close lines for today).
 - **Slippage:** not logged; the fill comparison with the tester waits for the first demo week (10-23).
 - **Trades without a broker stop:** none logged; each open line shows a stop (1.12458, 158.388, and the noise bands).
+
+## 2026-10-22 (Thursday), 16:30 check (judge): no ALERT
+
+`tools/demo_check.py` reports 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, no day stop, final stop,
+failure or clock line.
+
+- Midday sold 0.23 EURUSD at 1.12225, stop 1.12422 (1 order).
+- Breakout skipped: USD/JPY range 157.290-158.251 (1.58x its 60-day average), "balance too small for the minimum lot
+  of USDJPY at a stop of 1.181" (`RiskLots()` floor; see the judge's 14:40 note in `docs/HANDOFF.md`).
+- Noise sold 0.68 US500.cash at 7657.45 (bands 7783.22 / 7662.51) and 0.09 US100.cash at 29172.68 (bands 29922.10 /
+  29227.01). Both bids were below the lower band, the designed short entry (`Legs.mqh:1880-1887`); one order each, no
+  repeat. The checker counts them as "other" (proposed tools change (7) in `docs/HANDOFF.md`).
