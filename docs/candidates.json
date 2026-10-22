@@ -131,47 +131,52 @@
    "notes": "Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2018 3.37 -> 3.56. Step 16 base: j3 legs off +167.7%, 6.67% eq DD, 17 day stops - matches (see the breakout's note); legs on expected about +185-190%, 7.5-8% DD. Legs-on run: +221.5% / 8.28%, step 16 passed in AurumFunded; US500.cash -57 there, flat again - look at it once Hydra's j5 is in, without refitting weights on the tester window. j4 did not test the noise leg (SP500.r / NAS100.r not found); j5 did, but legs on in both runs (inherited inputs, see the breakout's note): by symbol US100.cash +5,890, US500.cash -1,036 there (all of Hydra's legs on those symbols together, with the month-end boost, so not the noise leg's own share). j6 decides Hydra's step 16. j6 (2026-10-17 13:10): step 16 passed in AurumHydra (return per DD 58.1 -> 69.2, see the breakout's note). The legs-off run has no US100/US500 trades, so the on run's US100.cash +4,181 and US500.cash -1,092 are the noise leg's own share: the S&P half negative for the third time, but on the same 2024-26 window that Python already had flat (+1.3%), so not new evidence and the weights stay. The noise leg cost about 3.9 points in 2026-01 (the legs-on run's deepest month) and gave +3.5 in 2024-07. Step 17 waits on the owner's a3.",
    "gates": {
     "id": "noise",
-    "when": "2026-10-17T01:19:58",
+    "when": "2026-10-22T22:19:22",
     "verdict": "PASS",
     "gates": [
      {
       "gate": "halves",
       "pass": true,
-      "figure": "0.64 / 1.10",
-      "rule": ">= 0.5 to 2017 and from 2018"
+      "figure": "0.66 / 1.31 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
      },
      {
       "gate": "costs",
       "pass": true,
       "figure": "0.57",
-      "rule": ">= 0.3 at 1.5x cost"
-     },
-     {
-      "gate": "dsr",
-      "pass": true,
-      "figure": "0.938 (N=47, luck bar 0.55)",
-      "rule": ">= 0.9"
+      "rule": "> 0.0 at 1.5x cost"
      },
      {
       "gate": "corr",
       "pass": true,
-      "figure": "book -0.02, max leg cross -0.03",
-      "rule": "|book| <= 0.2, |leg| <= 0.3"
+      "figure": "book -0.02, max leg hold +0.02",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
      },
      {
-      "gate": "goal",
+      "gate": "belief",
       "pass": true,
-      "figure": "Hydra 2018+ 3.37 -> 3.56 at weight 0.609; P(5x) 55.2% -> 57.4%",
-      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      "figure": "published Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": true,
+      "figure": "book 2018+ 3.12 -> 3.34",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=27071, luck bar 1.01)",
+      "rule": ">= 0.9"
      }
     ],
-    "weight": 0.6088017801888469,
-    "p5x": [
-     0.5522581158607921,
-     0.5736192480341962
-    ],
-    "dry_run": true,
-    "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+    "replaces": [],
+    "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+    "profitable_months_2018": [
+     0.766,
+     0.798
+    ]
    },
    "tester": [
     {
@@ -214,7 +219,8 @@
      "eq_dd_max_pct": 15.54,
      "verdict": "step 16 passed in AurumHydra (see the breakout's entry): return per drawdown 58.1 -> 69.2. The noise leg's own share (no index trades with the legs off): US100.cash +4,181.31, US500.cash -1,092.30 - the S&P half negative for the third time on 2024-26 data, not refitted."
     }
-   ]
+   ],
+   "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172"
   },
   {
    "id": "scan_slot_EURUSD_s25_L4_short",

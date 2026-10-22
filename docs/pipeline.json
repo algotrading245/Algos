@@ -12,8 +12,8 @@
    "n": 1,
    "phase": "A",
    "name": "Find the next idea",
-   "detail": "Rotates four sources: prebuilt edges (GitHub, MQL5 CodeBase, Quantpedia, QuantConnect) to improve, research papers read in full, ML models and DRL models. Checks each against the rejected families and queues it in docs/ideas/queue.jsonl; simple rules go to docs/ideas/specs/ for idea_engine.py. Also fetches data the queue asks for.",
-   "model": "haiku",
+   "detail": "Rotates four sources: prebuilt edges (GitHub, MQL5 CodeBase, Quantpedia, QuantConnect) to improve, research papers read in full, ML models and DRL models. Checks each against the rejected families and queues it in docs/ideas/queue.jsonl; simple rules go to docs/ideas/specs/ for idea_engine.py. Also fetches data the queue asks for. Aims at the book's gaps (tools/gaps.py) and the portfolio manager's weekly docs/ideas/steer.md (owner 2026-10-22).",
+   "model": "sonnet",
    "agent": "finder",
    "gate": null
   },
@@ -21,10 +21,10 @@
    "n": 2,
    "phase": "B",
    "name": "Build and test in Python with the gates",
-   "detail": "Builds the idea (or the improved prebuilt edge) in research/ on all the data before the holdout (2025-10-13), at 1x, 1.5x and 2x costs, and runs tools/gates.py: Sharpe >= 0.5 in both halves, >= 0.3 at 1.5x costs, DSR >= 0.90, correlation <= 0.20 with the book and <= 0.30 with each leg, book Sharpe +0.03 and P(5x) up. A FAIL is logged and the next idea starts; a PASS gets a standalone MQL5 EA compiled to 0/0 and a queued tester job.",
+   "detail": "Builds the idea (or the improved prebuilt edge) in research/ on all the data before the holdout (2025-10-13), at 1x, 1.5x and 2x costs, and runs tools/gates.py (portfolio rule, owner 2026-10-22): Sharpe >= 0.2 in both halves, profitable at 1.5x costs, correlation <= 0.30 with the book and with each leg, a reason to believe (a published source, or the same parameters profitable on 3+ markets), the equal-risk book Sharpe from 2018 up by >= 0.03, and book DSR >= 0.90 over all trials. A FAIL is logged and the next idea starts; a PASS gets a standalone MQL5 EA compiled to 0/0 and a queued tester job.",
    "model": "sonnet",
    "agent": "builder",
-   "gate": "halves, costs, dsr, corr, goal"
+   "gate": "halves, costs, corr, belief, book, dsr"
   },
   {
    "n": 3,

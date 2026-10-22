@@ -34,7 +34,7 @@
   "roles": {
     "about": "One entry per relay role. tier picks the model from the active provider's tier table; turns/minutes bound the run. claude_agent is the .claude/agents definition Claude runs the role with (--agent); null means Claude runs it on the tier model alone. agent_file is that definition's path, which Qwen has no flag for, so run-agent.ps1 inlines it into the prompt instead.",
     "finder": {
-      "tier": "routine",
+      "tier": "code",
       "turns": 40,
       "minutes": 60,
       "claude_agent": "finder",
@@ -67,6 +67,13 @@
       "minutes": 20,
       "claude_agent": "monitor",
       "agent_file": ".claude/agents/monitor.md"
+    },
+    "portfolio": {
+      "tier": "judge",
+      "turns": 40,
+      "minutes": 45,
+      "claude_agent": "portfolio-manager",
+      "agent_file": ".claude/agents/portfolio-manager.md"
     }
   },
   "overrides": {

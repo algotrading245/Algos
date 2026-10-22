@@ -4,14 +4,18 @@ What every agent works toward. Only the owner changes this file; agent runs are 
 (`tools/autopilot/settings.json`). An agent that thinks it is wrong writes a decision with kind `question` and a note
 in `docs/HANDOFF.md`.
 
-## The two products
+## The two products (funded first, owner 2026-10-22)
 
-1. **AurumHydra** (`mql5/Experts/AurumHydra/`): turn $100 into $500 within one calendar month with the highest
-   probability. Its measure is the share of fresh-deposit months that reach the goal (`InpTarget` 3, 4 or 5),
-   with P(ruin) next to it.
-2. **AurumFunded** (`mql5/Experts/AurumFunded/`): pass a prop-firm challenge and keep the funded account. Its measures
-   are the chance to pass, the months to the first payout, and the chance of losing the account.
-   Routes: FTMO 2-Step (now in the demo), FundedNext Stellar Instant, Instant Funding PRO.
+The main goal is profit in as many months as possible. That comes from a book of many small, uncorrelated, believable
+edges at equal risk, traded on a funded account. No system profits every month; about 70-80% of months needs a book
+Sharpe of 2-3 (docs/book.json, tools/book_sim.py).
+
+1. **AurumFunded** (`mql5/Experts/AurumFunded/`), first: pass a prop-firm challenge and keep the funded account. Its
+   measures are the share of profitable months, the chance of a payout within 12 months, the payout a month, and the
+   chance of losing the account. Routes: FTMO 2-Step (now in the demo), FundedNext Stellar Instant, Instant Funding PRO.
+2. **AurumHydra** (`mql5/Experts/AurumHydra/`), a capped side bet: turn $100 into $500 within one calendar month. Its
+   measure is the share of fresh-deposit months that reach the goal (`InpTarget` 3, 4 or 5), with P(ruin) next to it.
+   It never takes more than its fixed small stake and never sets the gates.
 
 Both share one leg library, `mql5/Include/Aurum/`. Instruments on FTMO: XAUUSD, USDJPY, EURUSD, AUDCAD, the yen
 crosses, US500.cash, US100.cash.
@@ -19,7 +23,7 @@ crosses, US500.cash, US100.cash.
 ## The pipeline
 
 Idea (2) -> scan (3) -> paper or source read in full (4) -> data, prototype at real costs (5-7) -> gates 8-11
-(halves, DSR, correlation, goal effect; reviewer) -> EA code, leg off by default (12-14) -> Strategy Tester on FTMO
+(portfolio rule in tools/gates.py: halves, costs, correlation, reason to believe, book gain, book DSR; reviewer) -> EA code, leg off by default (12-14) -> Strategy Tester on FTMO
 data (15) -> judged against the Python expectation (16) -> demo (17) -> fidelity checks (16-17) -> live (19, owner
 only) -> monitoring (20).
 

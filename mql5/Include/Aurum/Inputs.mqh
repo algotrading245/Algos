@@ -87,6 +87,12 @@ input group "Overall size"
 input double InpSizeMult        = AURUM_SIZEMULT;   // Every size below is multiplied by this
 input double InpBrakePct        = 0.0;   // Drawdown brake: equity this far under its peak, % (0 = off)
 input double InpBrakeCut        = 0.5;   // ... multiplies every size by this until the drawdown is smaller
+input double InpBrake2Pct       = 0.0;   // Second brake: equity this far under its peak, % (0 = off; plan: 20 with InpBrakePct 10)
+input double InpBrake2Cut       = 0.25;  // ... multiplies every size by this instead of InpBrakeCut
+input double InpAcctVolPct      = 0.0;   // Account vol target: size x this / annual swing of the daily closed P&L, % (0 = off; plan: 20)
+input int    InpAcctVolDays     = 63;    // ... swing measured over this many weekdays (needs 20 with a trade)
+input double InpAcctVolMax      = 2.0;   // ... largest multiple the vol target may apply
+input double InpDayLossPct      = 0.0;   // Day-loss guard: equity this far under the day's start, %, closes all until the next day (0 = off)
 
 input group "Goal (the size with the best chance of multiplying the equity by a deadline)"
 input int    InpTarget          = 0;     // 3, 4 or 5: aim for this multiple each round at its best tested scale (0 = InpGoalMult, InpGoalScale)

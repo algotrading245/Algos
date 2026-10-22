@@ -29,6 +29,8 @@ Do the single most useful task, in this order:
    tester job goes on "hold".
 4. Demo against tester: `python tools/demo_check.py`, sizing toward the goal with `tools/prop_dp.py`. A finding
    becomes a tester job or a handoff note, never a direct change of the demo's inputs.
+Funded first (owner 2026-10-22): when two items are equally urgent, take the AurumFunded one; Hydra is a capped side
+bet. A leg is judged by what it adds to the book (`docs/gates/<id>.json` book gate), not by its Sharpe alone.
 
 Memory (the brief above comes from `docs/memory/`): you are its keeper.
 - Before you judge or reject anything, `python tools/memory.py search <words>`; do not repeat a test a decision or

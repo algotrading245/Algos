@@ -103,23 +103,23 @@ def funnel():
 
 
 def book(ledger):
-    """Hydra's Sharpe from 2018 alone and with the candidate legs at the weights their gate runs used."""
+    """The equal-risk book (tools/book_sim.py, docs/book.json): its legs' weights, the book's Sharpe from 2018 without
+    and with each candidate leg that passed the gates, and the headline numbers (profitable months, FTMO, payout)."""
     try:
-        import pandas as pd
-        import gates
-        legs = pd.read_csv(gates.HYDRA, index_col=0, parse_dates=True)
-        bk = legs[legs.index.dayofweek < 5].sum(axis=1)
-        w = {c["id"]: c["gates"]["weight"] for c in ledger["candidates"] if c.get("gates")}
-        series = {cid: gates.load(cid)[0].reindex(bk.index).fillna(0.0) for cid in w}
-        late = bk.index >= gates.SPLIT
-        combos = {"Hydra book": bk}
-        for cid in w:
-            combos[f"+ {cid}"] = bk + w[cid] * series[cid]
-        if len(w) > 1:
-            combos["+ " + " + ".join(w)] = bk + sum(w[c] * series[c] for c in w)
-        return {"legs": list(legs.columns), "weights": w, "since": gates.SPLIT,
-                "sharpe": {k: round(gates.sharpe(v[late]), 3) for k, v in combos.items()}}
-    except Exception as e:  # market data not on this machine: the page still works without it
+        f = ROOT / "docs" / "book.json"
+        out = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+        sharpe = {"Hydra book": out.get("backtest", {}).get("sharpe_2018")}
+        for c in ledger["candidates"]:
+            g = c.get("gates") or {}
+            fig = next((x["figure"] for x in g.get("gates", []) if x.get("gate") == "book"), "")
+            if g.get("verdict") == "PASS" and "->" in fig:
+                a, b = fig.split("2018+ ")[-1].split(" -> ")
+                sharpe["Hydra book"] = sharpe["Hydra book"] or float(a)
+                sharpe[f"+ {c['id']}"] = float(b.split()[0])
+        out.update(weights={k: v["weight"] for k, v in out.get("legs", {}).items()}, since="2018-01-01",
+                   sharpe={k: v for k, v in sharpe.items() if v is not None})
+        return out if out.get("legs") else {"error": "run python tools/book_sim.py to write docs/book.json"}
+    except Exception as e:  # the page still works without it
         return {"error": f"book figures unavailable: {e}"}
 
 

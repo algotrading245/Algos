@@ -1,6 +1,6 @@
 # Runs one unattended agent session for a pipeline role, started by the relay (relay.ps1) or the monitor task.
 #
-#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role finder|builder|judge|tester|monitor [-Tier routine|code|judge] [-Model <name>] [-IfWork]
+#   powershell -ExecutionPolicy Bypass -File tools\autopilot\run-agent.ps1 -Role finder|builder|judge|tester|monitor|portfolio [-Tier routine|code|judge] [-Model <name>] [-IfWork]
 #
 # - Which CLI and which model run the role comes from the router (tools/autopilot/router.json, read through
 #   router.py): one switch picks the provider for every role (claude or qwen), each role maps to a tier, and each
@@ -21,7 +21,7 @@
 #   the next provider in router.json's fallback order (-NoRetry marks that second run). When the router finds no
 #   provider at all it answers "none" and this script exits at once: the relay then runs code-only (relay.ps1).
 param(
-    [Parameter(Mandatory = $true)][ValidateSet("finder", "builder", "judge", "tester", "monitor")][string]$Role,
+    [Parameter(Mandatory = $true)][ValidateSet("finder", "builder", "judge", "tester", "monitor", "portfolio")][string]$Role,
     [ValidateSet("routine", "code", "judge")][string]$Tier,
     [string]$Model,
     [switch]$IfWork,

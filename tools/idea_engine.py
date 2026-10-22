@@ -515,13 +515,13 @@ def run_spec(G, path, spec):
         return row, None
     folder = Path(tempfile.mkdtemp()) if DRY else CANDIDATES
     folder.mkdir(parents=True, exist_ok=True)
-    old = gates.CANDIDATES
-    gates.CANDIDATES = folder
+    old = gates.CANDIDATES, gates.B.CANDIDATES
+    gates.CANDIDATES = gates.B.CANDIDATES = folder  # book_sim reads the candidate's series
     try:
         write_candidate(cid, G, best, folder)
-        res = gates.judge(cid, n_extra=tried)
+        res = gates.judge(cid, n_extra=tried, published=spec.get("published"))
     finally:
-        gates.CANDIDATES = old
+        gates.CANDIDATES, gates.B.CANDIDATES = old
     row.update(verdict=res["verdict"], best={k: v for k, v in best.items() if k not in ("g", "cost", "gross", "costs")},
                gates={x["gate"]: x["figure"] for x in res["gates"]})
     if res["verdict"] != "PASS" and not DRY:

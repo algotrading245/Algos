@@ -31,15 +31,20 @@ loss limits).
 
 4. Gate it: write `marketdata/candidates/<id>.csv` (`day,r`, one row per trading day, daily return after costs) and
    `marketdata/candidates/<id>_stress.csv` (same at 1.5x cost), then run `python tools/gates.py <id>` (an idea-engine
-   item already passed: skip to 5).
+   item already passed: skip to 5). The portfolio rule (owner 2026-10-22): Sharpe >= 0.2 in each half, profitable at
+   1.5x costs, correlation <= 0.30 with the book and each leg, a reason to believe, the equal-risk book Sharpe from
+   2018 up by >= 0.03, book DSR >= 0.90. Belief: pass `--published <link>` for a paper or documented source, or
+   write `marketdata/candidates/<id>_markets.csv` (`day` plus one column per market, same parameters, real costs)
+   showing a profit on 3+ markets. A sizing overlay that replaces legs is gated with `--replaces <leg> ...`.
    - FAIL: gates.py has set the entry for <id> in `docs/candidates.json` to "rejected"; edit that one entry with your
      reason and evidence (never a second entry for the same id). Record it with `python tools/memory.py decide --role
      builder --kind lesson --decision "<id> rejected" --why "<reason>" --evidence "<file or numbers>"`. Set the queue
      item to "rejected" with the gate and the figure in `"result"`. Most ideas fail; that is normal. Stop.
    - PASS: go to 5.
 
-5. Build the leg into the EA that suits it: AurumHydra when it raises the chance of 5x in a month (`gates.py` reports
-   P(5x)), AurumFunded when it helps pass a challenge inside the firm's daily and total loss limits, or both.
+5. Build the leg into AurumFunded first (funded first, owner 2026-10-22): the book that passes the challenge and earns
+   payouts inside the firm's daily and total loss limits. Also into AurumHydra (a capped side bet) only when it suits a
+   one-month 5x run.
    - A new leg, switched OFF by default, with its own magic number, broker-side stops, restart-safe state and the
      server-clock check. Bump the EA version. Add a .set preset that turns it on.
    - Compile to 0 errors and 0 warnings:

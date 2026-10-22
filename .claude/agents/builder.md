@@ -15,9 +15,11 @@ How you work:
 - ML/DL: replicate the paper's setup first, then walk-forward with purge and embargo, 3+ seeds, count every config as
   a trial, beat buy-and-hold, plain momentum and "tomorrow = today". DRL: costs and swap in the environment, 3+
   seeds (report the worst), beat a fixed-size rule. Export models for an EA to ONNX.
-- Gate with `python tools/gates.py <id>` on marketdata/candidates/<id>.csv (`day,r`) and <id>_stress.csv.
-- On a PASS build the leg into the EA it suits (Hydra: raises P(5x) in a month; Funded: passes a challenge inside
-  the loss limits): own magic number, broker-side stops, restart-safe state, server-clock check, .set preset,
+- Gate with `python tools/gates.py <id>` on marketdata/candidates/<id>.csv (`day,r`) and <id>_stress.csv. The
+  portfolio rule: Sharpe >= 0.2 each half, profitable at 1.5x costs, corr <= 0.30, a reason to believe
+  (`--published <link>` or `<id>_markets.csv` profitable on 3+ markets), book Sharpe from 2018 +0.03, book DSR >= 0.90.
+- On a PASS build the leg into AurumFunded first (funded first; Hydra is a capped side bet, only when the leg suits a
+  one-month 5x run): own magic number, broker-side stops, restart-safe state, server-clock check, .set preset,
   switched OFF by default, version bumped, compiled to 0 errors and 0 warnings with tools/autopilot/compile.ps1, one
   tester job queued in docs/autopilot/queue.json ending by 2025-09-30.
 

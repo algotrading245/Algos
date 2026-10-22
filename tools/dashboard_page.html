@@ -191,7 +191,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     <div class="grid g2">
       <div class="card"><h3>Idea funnel (docs/ideas/queue.jsonl)</h3><div id="funnel"></div></div>
       <div class="card"><h3>Candidates on their way</h3><div id="journeys"></div></div>
-      <div class="card"><h3>Hydra book from 2018, with each leg</h3><div class="chartbox sm"><canvas id="bookChart"></canvas></div><div class="sub" id="bookNote"></div></div>
+      <div class="card"><h3>The book from 2018, with each leg</h3><div class="chartbox sm"><canvas id="bookChart"></canvas></div><div class="sub" id="bookNote"></div></div>
     </div>
   </section>
 
@@ -316,7 +316,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   genLine();
 
   // ---------- tabs ----------
-  var TABS = [["live", "Live"], ["overview", "Overview"], ["pipeline", "Pipeline"], ["candidates", "Candidates"], ["runs", "Tester runs"], ["lab", "P(5x) lab"], ["funded", "Funded"], ["demo", "Demo"], ["agents", "Agents"]];
+  var TABS = [["live", "Live"], ["overview", "Overview"], ["funded", "Funded (first)"], ["pipeline", "Pipeline"], ["candidates", "Candidates"], ["runs", "Tester runs"], ["lab", "P(5x) lab (side bet)"],["demo", "Demo"], ["agents", "Agents"]];
   $("#nav").innerHTML = TABS.map(function (t) { return '<button data-t="' + t[0] + '">' + t[1] + "</button>"; }).join("");
   function show(t) {
     if (!TABS.some(function (x) { return x[0] === t; })) t = "live";
@@ -353,8 +353,12 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     var last = D.runs.find(function (r) { return r.result; });
     var lr = last && last.result;
     var demoT = D.demo.today || {};
+    var BT = D.book.backtest || {}, E7 = D.book.edge_70 || {}, PP = BT.prop || {}, P7 = E7.prop || {};
     var k = [
-      ["Hydra Sharpe 2018+", fmt(baseS), "the book as it trades now"],
+      ["Profitable months", BT.profitable_months != null ? pct(BT.profitable_months) : "-", "the whole book, backtest; " + (E7.profitable_months != null ? pct(E7.profitable_months) : "-") + " at a 70% edge"],
+      ["FTMO payout in 12 months", PP.pass_12m != null ? pct(PP.pass_12m) : "-", "median " + (PP.median_months || "-") + " months; " + (P7.pass_12m != null ? pct(P7.pass_12m) : "-") + " at a 70% edge"],
+      ["Payout a month, funded", BT.payout_month_usd != null ? "$" + BT.payout_month_usd.toLocaleString() : "-", "$100k, 80% split; $" + (E7.payout_month_usd || 0).toLocaleString() + " at a 70% edge"],
+      ["Book Sharpe 2018+", fmt(baseS), "equal risk, with the risk layer; worst month " + (BT.worst_month != null ? fmt(BT.worst_month * 100, 1) + "%" : "-")],
       ["Candidates", cands.length, cands.filter(function (c) { return c.gates && c.gates.verdict === "PASS"; }).length + " pass all gates"],
       ["Rejected families", D.ledger.rejected.length, (47 + D.trials) + " trials counted for the DSR"],
       ["Last tester run", lr ? (lr.return_pct > 0 ? "+" : "") + fmt(lr.return_pct, 1) + "%" : "-", lr ? esc(lr.expert) + " " + esc(lr.symbol) + ", DD " + fmt(lr.eq_dd_max_pct, 1) + "%, PF " + fmt(lr.profit_factor) : "none yet"],
@@ -377,7 +381,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
         F.recent.slice(0, 12).map(function (x) { return '<div class="row" style="justify-content:space-between;margin:3px 0"><span>' + esc(x.title || x.id) + ' <span class="sub">(' + esc(x.source || "") + ")</span></span><span class=\"chip " + (x.status === "rejected" ? "bad" : "idle") + '">' + esc(x.status) + "</span></div>"; }).join("")
       : '<div class="empty">The queue is empty: the finder adds the next ideas.</div>';
     if (D.book.error) { $("#bookNote").textContent = D.book.error; return; }
-    $("#bookNote").textContent = "Weights from each candidate's gate run: " + Object.keys(D.book.weights).map(function (k) { return k + " " + fmt(D.book.weights[k], 3); }).join(", ") + ".";
+    $("#bookNote").textContent = "Equal-risk weights now (cap 25%): " + Object.keys(D.book.weights).map(function (k) { return k + " " + pct(D.book.weights[k]); }).join(", ") + ". Bars: the book from 2018 without and with each leg that passed the gates.";
   }
   function overviewCharts() {
     if (D.book.error) return;
@@ -517,7 +521,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
         scales: { x: { type: "linear", min: 0, max: 6, title: { display: true, text: "Sharpe (annual)", color: css("--muted") } }, y: { min: 0, max: 100, title: { display: true, text: "P(5x in a month) %", color: css("--muted") } } } }) });
   }
   function labInit() {
-    var legs = Object.keys((D.book && D.book.weights) || {});
+    var legs = Object.keys(bookS).filter(function (k) { return k !== "Hydra book" && k.indexOf(" + ", 2) < 0; }).map(function (k) { return k.replace(/^\+ /, ""); });
     $("#labLegs").innerHTML = legs.length ? "<b>Add candidate legs</b>" + legs.map(function (l) { return '<label class="ck"><input type="checkbox" data-l="' + l + '" style="accent-color:var(--gold)"> ' + esc(l) + ' <span class="sub">(weight ' + fmt(D.book.weights[l], 3) + ")</span></label>"; }).join("") : '<div class="sub">' + esc(D.book.error || "") + "</div>";
     $("#labLegs").onchange = function (e) { legOn[e.target.dataset.l] = e.target.checked; lab(true); };
     $("#labS").value = baseS; $("#labS").oninput = function () { lab(false); }; $("#labE").oninput = function () { lab(false); };

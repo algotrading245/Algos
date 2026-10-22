@@ -170,12 +170,137 @@ double GoalSize()
    return(MathMin(InpGoalCap,size));
   }
 
-// InpSizeMult, or the size the goal asks for, cut while the drawdown brake is on, times the wrapper's multiple.
+// Account vol target: InpAcctVolPct over the yearly swing of the daily closed P&L of the last InpAcctVolDays weekdays,
+// at most InpAcctVolMax. Read from the deal history once a day, so it survives a restart. 1 while off or while fewer
+// than 20 of those weekdays had a trade. Positions still open are not counted until they close.
+double VolScale()
+  {
+   static datetime done=0;
+   static double scale=1.0;
+   if(InpAcctVolPct<=0)
+      return(1.0);
+   datetime today=DayOf(TimeCurrent());
+   if(done==today)
+      return(scale);
+   done=today;
+   scale=1.0;
+   int n=InpAcctVolDays;
+   datetime days[];
+   double pnl[],flow[];
+   ArrayResize(days,n);
+   ArrayResize(pnl,n);
+   ArrayResize(flow,n);
+   ArrayInitialize(pnl,0.0);
+   ArrayInitialize(flow,0.0);
+   datetime d=today;
+   for(int i=0; i<n;)           // days[0] is the last weekday before today, then back in time
+     {
+      d-=86400;
+      MqlDateTime dt;
+      TimeToStruct(d,dt);
+      if(dt.day_of_week>=1 && dt.day_of_week<=5)
+         days[i++]=d;
+     }
+   if(!HistorySelect(days[n-1],TimeCurrent()+86400))
+      return(scale);
+   double todayFlow=0.0;
+   for(int k=HistoryDealsTotal()-1; k>=0; k--)
+     {
+      ulong ticket=HistoryDealGetTicket(k);
+      if(ticket==0)
+         continue;
+      long type=HistoryDealGetInteger(ticket,DEAL_TYPE);
+      bool trade=(type!=DEAL_TYPE_BALANCE && type!=DEAL_TYPE_CREDIT && type!=DEAL_TYPE_BONUS);
+      double amount=HistoryDealGetDouble(ticket,DEAL_PROFIT)+(trade ? HistoryDealGetDouble(ticket,DEAL_SWAP)+
+                    HistoryDealGetDouble(ticket,DEAL_COMMISSION)+HistoryDealGetDouble(ticket,DEAL_FEE) : 0.0);
+      datetime day=DayOf((datetime)HistoryDealGetInteger(ticket,DEAL_TIME));
+      if(day>=today)
+        {
+         todayFlow+=amount;
+         continue;
+        }
+      for(int i=0; i<n; i++)    // a weekend deal counts on the weekday before it
+         if(days[i]<=day)
+           {
+            if(trade)
+               pnl[i]+=amount;
+            else
+               flow[i]+=amount;
+            break;
+           }
+     }
+   double r[],end=AccountInfoDouble(ACCOUNT_BALANCE)-todayFlow,sum=0.0;
+   ArrayResize(r,n);
+   int active=0;
+   for(int i=0; i<n; i++)       // walk the balance back day by day to get each day's return
+     {
+      double start=end-pnl[i]-flow[i];
+      r[i]=(start>0 ? pnl[i]/start : 0.0);
+      sum+=r[i];
+      if(pnl[i]!=0.0)
+         active++;
+      end=start;
+     }
+   if(active<20)
+      return(scale);
+   double mean=sum/n,ss=0.0;
+   for(int i=0; i<n; i++)
+      ss+=(r[i]-mean)*(r[i]-mean);
+   double vol=MathSqrt(ss/(n-1)*252.0)*100.0;
+   if(vol>0)
+      scale=MathMin(InpAcctVolMax,InpAcctVolPct/vol);
+   PrintFormat(AURUM_NAME+": account swing %.1f%% a year over %d weekdays, vol target %.1f%% gives size x%.2f",vol,n,InpAcctVolPct,scale);
+   return(scale);
+  }
+
+// InpSizeMult, or the size the goal asks for, cut while a drawdown brake is on (the deeper one wins), times the vol
+// target (not with the goal, which sets its own size) and the wrapper's multiple.
 double SizeMult()
   {
-   bool brake=(InpBrakePct>0 && g_peak>0 && AccountInfoDouble(ACCOUNT_EQUITY)<g_peak*(1.0-InpBrakePct/100.0));
+   double eq=AccountInfoDouble(ACCOUNT_EQUITY);
+   bool brake=(InpBrakePct>0 && g_peak>0 && eq<g_peak*(1.0-InpBrakePct/100.0));
+   bool brake2=(InpBrake2Pct>0 && g_peak>0 && eq<g_peak*(1.0-InpBrake2Pct/100.0));
    double goal=(g_goalMult>1.0 ? GoalSize() : -1.0);
-   return((goal>=0 ? goal : InpSizeMult)*(brake ? InpBrakeCut : 1.0)*AurumSize());
+   return((goal>=0 ? goal : InpSizeMult*VolScale())*(brake2 ? InpBrake2Cut : brake ? InpBrakeCut : 1.0)*AurumSize());
+  }
+
+// Day-loss guard: true (no trading) once equity falls InpDayLossPct under the equity at the first tick of the server
+// day; everything is closed (tried again once a minute) and trading starts again the next day. The day's start is kept
+// in global variables, so a restart keeps it.
+bool DayLossHit(double eq)
+  {
+   static datetime day=0,hit=0,closed=0,tried=0;
+   static double start=0.0;
+   if(InpDayLossPct<=0)
+      return(false);
+   datetime today=DayOf(TimeCurrent());
+   if(day!=today)
+     {
+      string kd=AURUM_NAME+"."+IntegerToString(InpMagic)+".lossday",ks=AURUM_NAME+"."+IntegerToString(InpMagic)+".lossstart";
+      if(GlobalVariableCheck(kd) && (datetime)GlobalVariableGet(kd)==today && GlobalVariableCheck(ks))
+         start=GlobalVariableGet(ks);
+      else
+        {
+         start=eq;
+         GlobalVariableSet(kd,(double)today);
+         GlobalVariableSet(ks,start);
+        }
+      day=today;
+     }
+   if(hit!=today)
+     {
+      if(eq>=start*(1.0-InpDayLossPct/100.0))
+         return(false);
+      hit=today;
+      PrintFormat(AURUM_NAME+": equity %.2f is %.1f%% under the day's start %.2f, closing and pausing to the next day",eq,InpDayLossPct,start);
+     }
+   if(closed!=today && TimeCurrent()>=tried+60)
+     {
+      tried=TimeCurrent();
+      if(CloseEverything())
+         closed=today;
+     }
+   return(true);
   }
 
 // InpMonthEndBoost on the last weekday of a month, 1 on every other day.
@@ -2069,6 +2194,8 @@ void Run()
          TesterStop();
       return;
      }
+   if(DayLossHit(eq))
+      return;
    Session();
    for(int leg=0; leg<LEGS; leg++)
       Leg(leg);
@@ -2098,7 +2225,9 @@ int OnInit()
       InpSnapEntrySec<1 || InpLossMult<=0 || InpLossNorm<=0 || InpFixRiskPct<0 || InpFixBeforeMin<5 ||
       InpFixBeforeMin>600 || InpFixBeforeMin%5!=0 || InpFixAfterMin<0 || InpFixAfterMin>300 || InpFixAfterMin%5!=0 ||
       InpFixEntrySec<1 || InpFixCrossRiskPct<0 || InpCrossMaxSpread<1 || InpFixScalePct<0 || InpFixCap<=0 || InpBrakePct<0 || InpBrakePct>=100 || InpBrakeCut<=0 ||
-      InpBrakeCut>1 || InpFallRiskPct<0 || InpFallPct<=0 || InpFallDays<1 || InpFallDays>60 || InpFallBeforeMin<5 ||
+      InpBrakeCut>1 || InpBrake2Pct<0 || InpBrake2Pct>=100 || (InpBrake2Pct>0 && InpBrake2Pct<=InpBrakePct) ||
+      InpBrake2Cut<=0 || InpBrake2Cut>1 || InpAcctVolPct<0 || InpAcctVolDays<20 || InpAcctVolDays>260 ||
+      InpAcctVolMax<=0 || InpDayLossPct<0 || InpDayLossPct>=100 || InpFallRiskPct<0 || InpFallPct<=0 || InpFallDays<1 || InpFallDays>60 || InpFallBeforeMin<5 ||
       InpFallBeforeMin>600 || InpFallBeforeMin%5!=0 || InpMornRiskPct<0 || InpMornPct<=0 || InpMornBeforeMin<5 ||
       InpMornBeforeMin>120 || InpMornBeforeMin%5!=0 || InpMornAfterMin<0 || InpMornAfterMin>600 || InpMornAfterMin%5!=0 ||
       InpAfterRiskPct<0 || InpAfterHHMM<0 || InpAfterHHMM%100>59 || InpAfterHHMM%5!=0 || InpAfterExitHHMM%100>59 ||

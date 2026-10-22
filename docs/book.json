@@ -1,0 +1,76 @@
+{
+ "when": "2026-10-22T22:21:19",
+ "ends": "2025-10-10",
+ "legs": {
+  "quartet": {
+   "weight": 0.029,
+   "sharpe": 2.17
+  },
+  "grid": {
+   "weight": 0.08,
+   "sharpe": 0.83
+  },
+  "hold": {
+   "weight": 0.049,
+   "sharpe": 0.39
+  },
+  "fix": {
+   "weight": 0.101,
+   "sharpe": 1.3
+  },
+  "cross": {
+   "weight": 0.162,
+   "sharpe": 1.19
+  },
+  "fall": {
+   "weight": 0.109,
+   "sharpe": 0.98
+  },
+  "morning": {
+   "weight": 0.119,
+   "sharpe": 0.99
+  },
+  "after": {
+   "weight": 0.065,
+   "sharpe": 1.03
+  },
+  "breakout": {
+   "weight": 0.25,
+   "sharpe": 0.97
+  },
+  "noise": {
+   "weight": 0.037,
+   "sharpe": 1.0
+  }
+ },
+ "book_raw_sharpe": 2.92,
+ "backtest": {
+  "sharpe": 2.68,
+  "sharpe_2018": 3.01,
+  "profitable_months": 0.78,
+  "profitable_months_2018": 0.798,
+  "worst_month": -0.078,
+  "mean_month": 0.0627,
+  "prop": {
+   "pass_12m": 0.9244570349386213,
+   "failed": 0.0,
+   "median_months": 5.8
+  },
+  "payout_month_usd": 2510
+ },
+ "edge_70": {
+  "sharpe": 1.88,
+  "sharpe_2018": 2.17,
+  "profitable_months": 0.698,
+  "profitable_months_2018": 0.702,
+  "worst_month": -0.0948,
+  "mean_month": 0.0438,
+  "prop": {
+   "pass_12m": 0.6921624173748819,
+   "failed": 0.0,
+   "median_months": 8.1
+  },
+  "payout_month_usd": 1751
+ },
+ "rule": "equal risk, 252-day vol, monthly, cap 25%; vol target 20%, half size past 10% drawdown, quarter past 20%"
+}

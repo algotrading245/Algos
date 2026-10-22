@@ -127,10 +127,14 @@
 //| v1.38: the grid sends no new level until the last one shows among|
 //| the positions or 10 seconds pass (FTMO reports the deal moments  |
 //| later).                                                          |
+//| v1.39: risk layer, all off by default: a second drawdown brake   |
+//| (InpBrake2Pct/Cut), an account vol target from the daily closed  |
+//| P&L (InpAcctVolPct/Days/Max) and a day-loss guard that closes    |
+//| all and pauses to the next day (InpDayLossPct).                  |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.38"
+#property version   "1.39"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

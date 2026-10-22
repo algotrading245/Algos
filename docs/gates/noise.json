@@ -1,44 +1,49 @@
 {
  "id": "noise",
- "when": "2026-10-17T01:19:58",
+ "when": "2026-10-22T22:19:22",
  "verdict": "PASS",
  "gates": [
   {
    "gate": "halves",
    "pass": true,
-   "figure": "0.64 / 1.10",
-   "rule": ">= 0.5 to 2017 and from 2018"
+   "figure": "0.66 / 1.31 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
   },
   {
    "gate": "costs",
    "pass": true,
    "figure": "0.57",
-   "rule": ">= 0.3 at 1.5x cost"
-  },
-  {
-   "gate": "dsr",
-   "pass": true,
-   "figure": "0.938 (N=47, luck bar 0.55)",
-   "rule": ">= 0.9"
+   "rule": "> 0.0 at 1.5x cost"
   },
   {
    "gate": "corr",
    "pass": true,
-   "figure": "book -0.02, max leg cross -0.03",
-   "rule": "|book| <= 0.2, |leg| <= 0.3"
+   "figure": "book -0.02, max leg hold +0.02",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
   },
   {
-   "gate": "goal",
+   "gate": "belief",
    "pass": true,
-   "figure": "Hydra 2018+ 3.37 -> 3.56 at weight 0.609; P(5x) 55.2% -> 57.4%",
-   "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+   "figure": "published Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": true,
+   "figure": "book 2018+ 3.12 -> 3.34",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=27071, luck bar 1.01)",
+   "rule": ">= 0.9"
   }
  ],
- "weight": 0.6088017801888469,
- "p5x": [
-  0.5522581158607921,
-  0.5736192480341962
- ],
- "dry_run": true,
- "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+ "replaces": [],
+ "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+ "profitable_months_2018": [
+  0.766,
+  0.798
+ ]
 }

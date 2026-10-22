@@ -32,15 +32,16 @@ Status **tester**, pipeline step 5 of 5. Source: Zarattini, Aziz, Barbon 2025 (r
 
 Bands of the average move from the 9:30 open, checked each half hour from 10:00 New York, trailing stop, flat at 16:00, 2% daily vol. Sharpe 0.88 at 0.75 bp (0.61 / 1.08), 0.57 at 1.5 bp; corr with Hydra -0.02.
 
-Gates (2026-10-17, dry run): **PASS**
+Gates (2026-10-22): **PASS**
 
 | Gate | Result | Figure | Rule |
 |---|---|---|---|
-| halves | pass | 0.64 / 1.10 | >= 0.5 to 2017 and from 2018 |
-| costs | pass | 0.57 | >= 0.3 at 1.5x cost |
-| dsr | pass | 0.938 (N=47, luck bar 0.55) | >= 0.9 |
-| corr | pass | book -0.02, max leg cross -0.03 | |book| <= 0.2, |leg| <= 0.3 |
-| goal | pass | Hydra 2018+ 3.37 -> 3.56 at weight 0.609; P(5x) 55.2% -> 57.4% | Sharpe gain >= 0.03, weight fitted to 2017 |
+| halves | pass | 0.66 / 1.31 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.57 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.02, max leg hold +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.12 -> 3.34 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=27071, luck bar 1.01) | >= 0.9 |
 
 Strategy Tester (backtests/2026-10-17_0457_AurumNoise_US500): 452 trades, 39.6% winners, PF 1.0, -0.68%, max equity drawdown 26.09% - matches the Python figures (return 2.0 points under, drawdown 2.5 under, trades 452 vs 451); the S&P half was already weak in 2024-26 in Python and is flat here (2024 +17%, 2025 and 2026 losing).
 
@@ -289,6 +290,38 @@ Gates (2026-10-22): **FAIL at halves**
 | dsr | FAIL | 0.694 (N=27068, luck bar 4.14) | >= 0.9 |
 | corr | pass | book +0.18, max leg after +0.13 | book <= +0.2, each leg <= +0.3 (negative passes) |
 | goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## carver_breakout (`carver_breakout`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.08 / 0.18 | >= 0.5 to 2017 and from 2018 |
+| costs | FAIL | 0.01 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.000 (N=27069, luck bar 1.03) | >= 0.9 |
+| corr | FAIL | book +0.07, max leg hold +0.37 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2% | Sharpe gain >= 0.03, weight fitted to 2017 |
+
+## volmanaged_mm (`volmanaged_mm`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-22): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.40 / 0.44 | >= 0.5 to 2017 and from 2018 |
+| costs | pass | 0.38 | >= 0.3 at 1.5x cost |
+| dsr | FAIL | 0.008 (N=27070, luck bar 1.03) | >= 0.9 |
+| corr | pass | book -0.07, max leg morning +0.01 | book <= +0.2, each leg <= +0.3 (negative passes) |
+| goal | FAIL | Hydra 2018+ 3.45 -> 3.48 at weight 0.438; P(5x) 56.2% -> 56.5% | Sharpe gain >= 0.03, weight fitted to 2017 |
 
 ## Rejected families
 
