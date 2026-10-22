@@ -133,3 +133,5 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-22T01:19 | f_rsi_jpxjpy | n/a | 4 | JPXJPY rsi level=30 period=2 L1 both | 0.16 / -0.13 | FAIL at halves | 0.000 (N=27018, luck bar 1.03) |
 | 2026-10-22T01:19 | f_rsi_nzdcad | n/a | 4 | NZDCAD rsi level=30 period=14 L1 both | 0.64 / 0.23 | FAIL at halves | 0.009 (N=27022, luck bar 3.03) |
 | 2026-10-22T01:19 | f_rsi_wtiusd | n/a | 4 | WTIUSD rsi level=10 period=2 L1 both | 0.21 / 0.16 | FAIL at halves | 0.001 (N=27026, luck bar 1.76) |
+| 2026-10-22T01:39 | clare_ma_trend_commodities | in full | 9 | XAUUSD ma_cross fast=1 slow=147 L21 long | 0.34 / 0.81 | FAIL at halves | 0.031 (N=27037, luck bar 1.03) |
+| 2026-10-22T01:39 | lemperiere_ma_trend_gold_fx_equity | in full | 24 | XAGUSD ma_cross fast=1 slow=42 L21 both | 0.30 / -0.05 | FAIL at halves | 0.000 (N=27061, luck bar 1.03) |
