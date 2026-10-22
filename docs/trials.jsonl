@@ -164,3 +164,4 @@
 {"id": "recheck_near_miss_markets", "when": "2026-10-23T01:20:00", "verdict": "FAIL at belief (no rule profitable on all test markets)", "count": 23}
 {"id": "breakout", "when": "2026-10-23T01:08:48", "verdict": "FAIL at belief"}
 {"id": "breakout", "when": "2026-10-23T01:13:14", "verdict": "FAIL at belief"}
+{"id": "tod_eurusd", "when": "2026-10-23T01:26:35", "verdict": "FAIL at halves"}
