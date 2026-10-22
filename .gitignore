@@ -28,3 +28,7 @@ backtests/**/job.json
 
 # Autopilot run logs and the local hold/PAUSE files (tools/autopilot); runs are summarised in docs/autopilot/runs.md
 logs/
+
+# live dashboard feed (tools/dashboard_live.py) and atomic-write temp files
+dashboard/live.js
+dashboard/*.tmp

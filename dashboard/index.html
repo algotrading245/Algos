@@ -138,6 +138,22 @@ label.ck { display: flex; gap: 8px; align-items: center; padding: 6px 0; cursor:
 .ruler .mk.up span { top: -18px; }
 .search { width: 100%; padding: 8px 11px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); border-radius: 9px; font: inherit; margin-bottom: 10px; }
 .empty { color: var(--muted); padding: 18px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--muted); flex: none; }
+.dot.on { background: var(--ok); animation: pulse 1.4s ease-in-out infinite; }
+.dot.stale { background: var(--bad); }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .dot.on { animation: none; } }
+.lcard { cursor: pointer; transition: transform .12s; }
+.lcard:hover { transform: translateY(-1px); }
+.lcard.lsel { outline: 2px solid var(--gold); outline-offset: 1px; }
+.lcard .act { font-size: 12px; margin-top: 8px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; min-height: 2.6em; }
+.feed { max-height: 560px; overflow: auto; }
+.feed .it { padding: 7px 2px; border-bottom: 1px solid var(--line); font-size: 13px; word-break: break-word; }
+.feed .res { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.feed .it.err .res { color: var(--bad); }
+.nowbox { border: 1px solid var(--line); background: var(--bg2); border-radius: 10px; padding: 10px 12px; margin: 10px 0; word-break: break-word; }
+pre.logt { max-height: 560px; overflow: auto; font-size: 11.5px; background: var(--bg2); border: 1px solid var(--line); padding: 10px; border-radius: 10px; white-space: pre-wrap; word-break: break-word; margin: 0; }
+pre.logt.small { max-height: 220px; }
 footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px; }
 </style>
 </head>
@@ -145,13 +161,26 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
 <header>
   <div class="bar">
     <div class="logo" aria-hidden="true"></div>
-    <div><h1>Aurum pipeline</h1><div class="sub" id="gen"></div></div>
+    <div><h1>Aurum pipeline</h1><div class="sub" id="gen"></div><div class="sub" id="liveInd"></div></div>
     <div class="spacer"></div>
     <button class="btn" id="theme" title="Switch theme">◐ Theme</button>
   </div>
   <nav id="nav"></nav>
 </header>
 <main>
+  <section data-tab="live">
+    <div class="card" id="liveRelay" style="margin-bottom:16px"></div>
+    <div class="grid g4" id="liveCards"></div>
+    <div class="card" style="margin-top:16px">
+      <div id="liveHead"></div>
+      <div class="grid g2" id="liveBody">
+        <div><h3>Activity, newest first</h3><div class="feed" id="liveFeed"></div></div>
+        <div><h3 id="liveLogName">Run log</h3><pre class="logt" id="liveLog"></pre></div>
+      </div>
+    </div>
+    <h3 style="margin:20px 0 8px">Script steps (today's logs)</h3>
+    <div class="grid g3" id="liveSteps"></div>
+  </section>
   <section data-tab="overview">
     <div class="hero">
       <div class="card gauge" id="gauge"></div>
@@ -225,10 +254,11 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   <section data-tab="agents">
     <h2>Agents and models</h2>
     <p class="lead">One Opus orchestrator hands each step to a role agent. Gates are code, so no agent can wave a candidate through.</p>
+    <div class="card" id="budget" style="margin-bottom:16px"></div>
     <div class="grid g3" id="agentCards"></div>
   </section>
 </main>
-<footer>Static page built by <code>python tools/dashboard.py</code>. Rebuild it after a gate run, a tester run or a demo check.</footer>
+<footer>Live: <code>python tools/dashboard_live.py</code> (the keeper starts it) writes live.js every second and rebuilds data.js every minute with <code>python tools/dashboard.py</code>; this page reloads both on its own.</footer>
 
 <script>
 (function () {
@@ -279,18 +309,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     var cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(cur === "dark" ? "light" : "dark");
   };
-  $("#gen").textContent = "Built " + D.generated.replace("T", " ") + " · " + D.ledger.candidates.length + " candidates · " + (47 + D.trials) + " trials counted";
+  function genLine() { $("#gen").textContent = "Built " + D.generated.replace("T", " ") + " · " + D.ledger.candidates.length + " candidates · " + (47 + D.trials) + " trials counted"; }
+  genLine();
 
   // ---------- tabs ----------
-  var TABS = [["overview", "Overview"], ["pipeline", "Pipeline"], ["candidates", "Candidates"], ["runs", "Tester runs"], ["lab", "P(5x) lab"], ["funded", "Funded"], ["demo", "Demo"], ["agents", "Agents"]];
+  var TABS = [["live", "Live"], ["overview", "Overview"], ["pipeline", "Pipeline"], ["candidates", "Candidates"], ["runs", "Tester runs"], ["lab", "P(5x) lab"], ["funded", "Funded"], ["demo", "Demo"], ["agents", "Agents"]];
   $("#nav").innerHTML = TABS.map(function (t) { return '<button data-t="' + t[0] + '">' + t[1] + "</button>"; }).join("");
   function show(t) {
-    if (!TABS.some(function (x) { return x[0] === t; })) t = "overview";
+    if (!TABS.some(function (x) { return x[0] === t; })) t = "live";
     document.querySelectorAll("section").forEach(function (s) { s.classList.toggle("on", s.dataset.tab === t); });
     document.querySelectorAll("nav button").forEach(function (b) { b.classList.toggle("on", b.dataset.t === t); });
     current = t; redraw();
   }
-  var current = "overview";
+  var current = "live";
   $("#nav").onclick = function (e) { var b = e.target.closest("button"); if (b) location.hash = b.dataset.t; };
   window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
 
@@ -298,7 +329,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   var cands = D.ledger.candidates;
   var bookS = (D.book && D.book.sharpe) || {};
   var baseS = bookS["Hydra book"] != null ? bookS["Hydra book"] : 3.37;
-  var AGENT_COL = { orchestrator: "#e0b444", researcher: "#5aa9e6", "quant-coder": "#9b7bff", reviewer: "#ff6b9a", "tester-operator": "#3ccf7d", monitor: "#ffb547", owner: "#9a9686" };
+  var AGENT_COL = { orchestrator: "#e0b444", researcher: "#5aa9e6", "quant-coder": "#9b7bff", reviewer: "#ff6b9a", "tester-operator": "#3ccf7d", monitor: "#ffb547", owner: "#9a9686",
+    miner: "#2ec4b6", worker: "#9b7bff", scanner: "#7fbf3f", tester: "#3ccf7d", fidelity: "#ff6b9a" };
   function verdictChip(v) { return '<span class="chip ' + (v === "PASS" ? "ok" : /FAIL/.test(v) ? "bad" : "warn") + '">' + esc(v) + "</span>"; }
 
   // ---------- overview ----------
@@ -517,6 +549,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
 
   // ---------- agents ----------
   function agents() {
+    var B = D.budget;
+    if (!B) { $("#budget").innerHTML = '<h3>Token budget</h3><div class="empty">No usage yet: run python tools/autopilot/budget.py backfill</div>'; }
+    else {
+      var f = Math.min(1, B.fraction || 0), col = B.skip ? "var(--bad)" : f > 0.5 ? "var(--warn)" : "var(--ok)";
+      var roles = Object.keys(B.today || {}).sort(function (a, b) { return B.today[b].cost_usd - B.today[a].cost_usd; });
+      $("#budget").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Token budget this week</h3>' +
+        '<span class="chip ' + (B.skip ? "bad" : "ok") + '">' + (B.skip ? "over " + pct(B.skip_above, 0) + ": researcher and Opus follow-ups wait" : "all roles run") + "</span></div>" +
+        '<div class="sub" style="margin:6px 0">$' + fmt(B.week_usd) + " of $" + fmt(B.weekly_usd, 0) + " (" + pct(B.fraction, 0) + "), " + B.week_runs + " runs since " + esc(B.week_start.replace("T", " ")) + "</div>" +
+        '<div style="height:10px;border-radius:5px;background:var(--grid);overflow:hidden"><div style="height:100%;width:' + (f * 100).toFixed(1) + "%;background:" + col + '"></div></div>' +
+        (roles.length ? '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Today</th><th>Runs</th><th>Cost</th><th>Tokens</th></tr>' +
+          roles.map(function (r) { var x = B.today[r]; return "<tr><td>" + esc(r) + "</td><td>" + x.runs + "</td><td>$" + fmt(x.cost_usd) + "</td><td>" + Number(x.tokens).toLocaleString() + "</td></tr>"; }).join("") + "</table></div>"
+          : '<div class="sub" style="margin-top:10px">No agent runs today.</div>');
+    }
     $("#agentCards").innerHTML = D.agents.map(function (a) {
       var col = AGENT_COL[a.name] || "#888";
       return '<div class="card" style="border-top:3px solid ' + col + '"><div class="row" style="justify-content:space-between"><h3 style="margin:0">' + esc(a.name) + '</h3><span class="chip gold">' + esc(a.model) + "</span></div>" +
@@ -542,8 +587,157 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
 
   overview(); pipeline(); candidates(); runs(); labInit(); funded(); demo(); agents();
-  show(location.hash.slice(1) || "overview");
+  show(location.hash.slice(1) || "live");
   if (!window.Chart) document.querySelectorAll(".chartbox").forEach(function (c) { c.innerHTML = '<div class="empty">Charts need the Chart.js script from cdnjs (offline?).</div>'; });
+
+  // ---------- live: live.js every second, data.js when it changes ----------
+  var LROLES = ["orchestrator", "miner", "researcher", "worker", "scanner", "tester", "fidelity", "monitor"];
+  var sel = null;
+  try { sel = localStorage.getItem("aurum-live-sel"); } catch (e) {}
+  var now = function () { return Date.now() / 1000; };
+  var ts = function (iso) { var t = iso ? Date.parse(iso) : NaN; return isNaN(t) ? null : t / 1000; };
+  function ago(s) {
+    if (s == null || isNaN(s)) return "-";
+    s = Math.max(0, Math.round(s));
+    if (s < 60) return s + "s"; if (s < 3600) return Math.floor(s / 60) + "m " + (s % 60) + "s";
+    if (s < 86400) return Math.floor(s / 3600) + "h " + Math.floor(s % 3600 / 60) + "m"; return Math.floor(s / 86400) + "d";
+  }
+  var hm = function (iso) { return iso ? String(iso).replace("T", " ").slice(5, 16) : "-"; };
+  function put(id, html, stick) {
+    var el = document.getElementById(id); if (!el || el._h === html) return;
+    var atEnd = stick && el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+    el.innerHTML = html; el._h = html;
+    if (atEnd) el.scrollTop = el.scrollHeight;
+  }
+  function status(r) {
+    var s = r.state || {};
+    if (r.running) return { cls: "ok", text: "running " + ago(now() - ts(s.started)) };
+    if (s.timed_out) return { cls: "bad", text: "timed out" };
+    if (s.failed || (s.exit != null && Number(s.exit) !== 0)) return { cls: "bad", text: "failed (exit " + esc(s.exit) + ")" };
+    if (s.ended) return { cls: "idle", text: "idle · " + ago(now() - ts(s.ended)) + " ago" };
+    return { cls: "idle", text: "not run yet" };
+  }
+  function lastLine(r) {
+    var a = r.activity, s = r.state || {};
+    if (r.running && a && a.current) return "<b>" + esc(a.current.name) + "</b> " + esc(a.current.what) + (a.current.secs ? " · " + ago(a.current.secs) : "");
+    if (r.running && a && a.actions.length) { var x = a.actions[a.actions.length - 1]; return (x.name ? "<b>" + esc(x.name) + "</b> " : "") + esc(x.what); }
+    if (a && a.result && a.result.text) return esc(a.result.text);
+    return esc(s.reason || "");
+  }
+  function liveCards(L) {
+    var names = LROLES.concat(Object.keys(L.roles).filter(function (r) { return LROLES.indexOf(r) < 0; }));
+    put("liveCards", names.map(function (n) {
+      var r = L.roles[n] || { state: {}, log: [] }, st = status(r), s = r.state || {};
+      var model = [s.model || (r.activity && r.activity.model), s.tier].filter(Boolean).join(" · ");
+      return '<div class="card lcard' + (sel === n ? " lsel" : "") + '" data-role="' + n + '">' +
+        '<div class="row" style="justify-content:space-between;gap:8px"><div class="row" style="gap:8px"><span class="dot' + (r.running ? " on" : "") +
+        '" style="' + (r.running ? "" : "background:" + (AGENT_COL[n] || "var(--muted)")) + '"></span><b>' + n + '</b></div>' +
+        '<span class="chip ' + st.cls + '">' + st.text + "</span></div>" +
+        '<div class="sub mono" style="margin-top:4px">' + esc(model || "-") + (s.runs_today != null ? " · " + esc(s.runs_today) + " runs today" : "") + "</div>" +
+        '<div class="act">' + (lastLine(r) || '<span class="sub">no activity yet</span>') + "</div></div>";
+    }).join(""));
+  }
+  function feedItem(x) {
+    if (x.k === "text") return '<div class="it"><span class="chip gold">says</span> ' + esc(x.what) + "</div>";
+    if (x.k === "task") return '<div class="it"><span class="chip warn">sub-task</span> ' + esc(x.what) + "</div>";
+    var cls = x.open ? "warn" : x.err ? "bad" : "ok";
+    return '<div class="it' + (x.err ? " err" : "") + '"><span class="chip ' + cls + '">' + esc(x.name) + (x.open ? " …" : "") + '</span> <span class="mono">' + esc(x.what) + "</span>" +
+      (x.result ? '<div class="res mono">' + esc(x.result) + "</div>" : "") + "</div>";
+  }
+  function liveDetail(L) {
+    var r = sel && L.roles[sel];
+    $("#liveBody").style.display = r ? "" : "none";
+    if (!r) { put("liveHead", '<div class="empty">Click an agent above to watch what it is doing: every tool call, what it says, and its run log.</div>'); return; }
+    var s = r.state || {}, a = r.activity, st = status(r);
+    var bits = [["Started", hm(s.started)], ["Ended", r.running ? "-" : hm(s.ended)], ["Model", [s.model || (a && a.model), s.tier, s.provider].filter(Boolean).join(" · ") || "-"],
+      ["Tool calls", a ? a.tools : 0], ["Last event", a && a.mtime ? ago(now() - a.mtime) + " ago" : "-"], ["Next", hm(s.next)]];
+    var h = '<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><h3 style="margin:0"><span class="dot' + (r.running ? " on" : "") + '"></span> ' + esc(sel) +
+      ' <span class="chip ' + st.cls + '">' + st.text + '</span></h3><span class="sub mono">' + esc(a ? a.file : "") + "</span></div>" +
+      '<div class="grid g3" style="margin-top:10px">' + bits.map(function (b) { return '<div><div class="sub">' + b[0] + '</div><div class="mono">' + esc(b[1]) + "</div></div>"; }).join("") + "</div>" +
+      (s.reason ? '<div class="sub" style="margin-top:8px">Why it ran: ' + esc(s.reason) + "</div>" : "");
+    if (r.running && a && a.current) h += '<div class="nowbox"><span class="chip warn">now</span> <b>' + esc(a.current.name) + '</b> <span class="mono">' + esc(a.current.what) + "</span>" + (a.current.secs ? " · " + ago(a.current.secs) : "") + "</div>";
+    if (a && a.result) h += '<div class="nowbox"><span class="chip ' + (a.result.error ? "bad" : "ok") + '">result</span> ' + esc(a.result.text) +
+      '<div class="sub">' + (a.result.turns != null ? a.result.turns + " turns" : "") + (a.result.cost != null ? " · $" + fmt(a.result.cost, 2) : "") + "</div></div>";
+    put("liveHead", h);
+    put("liveFeed", a && a.actions.length ? a.actions.slice().reverse().map(feedItem).join("") : '<div class="empty">No events for this run.</div>');
+    $("#liveLogName").textContent = "Run log" + (r.log_file ? " · " + r.log_file : "");
+    put("liveLog", r.log && r.log.length ? esc(r.log.join("\n")) : "(no log yet)", true);
+  }
+  function liveRelay(L) {
+    var R = L.relay || {}, due = ts(R.due);
+    var h = '<div class="row" style="gap:10px;flex-wrap:wrap"><b>Relay</b>' + (L.paused ? ' <span class="chip bad">paused</span>' : "") +
+      (R.next ? ' next <span class="chip gold">' + esc(R.next) + "</span>" + (due ? (due > now() ? " in " + ago(due - now()) : " due now") + ' <span class="sub">(' + hm(R.due) + ")</span>" : "") : ' <span class="sub">no hand-off queued</span>') +
+      (R.from ? ' <span class="sub">from ' + esc(R.from) + "</span>" : "") + (R.provisional ? ' <span class="chip warn">provisional</span>' : "") + "</div>" +
+      (R.reason ? '<div class="sub" style="margin-top:6px">' + esc(R.reason) + "</div>" : "");
+    put("liveRelay", h);
+  }
+  function liveSteps(L) {
+    var k = Object.keys(L.steps || {});
+    put("liveSteps", k.length ? k.map(function (n) { return '<div class="card"><h3 style="margin:0 0 6px">' + esc(n) + '</h3><pre class="logt small">' + esc(L.steps[n].join("\n")) + "</pre></div>"; }).join("")
+      : '<div class="empty">No script step has logged today.</div>');
+  }
+  function liveInd(L) {
+    var age = L && L.generated ? now() - L.generated : null;
+    var ok = age != null && age < 5 && !L.error;
+    $("#liveInd").innerHTML = ok ? '<span class="dot on"></span> live · updated ' + ago(age) + " ago"
+      : '<span class="dot stale"></span> ' + (L && L.error ? "live feed error: " + esc(L.error) : "live feed off" + (age != null ? " (last " + ago(age) + " ago)" : "") + ": run <code>python tools/dashboard_live.py</code>");
+  }
+  function liveRender() {
+    var L = window.AURUM_LIVE;
+    liveInd(L);
+    if (!L || !L.roles) return;
+    liveRelay(L); liveCards(L); liveDetail(L); liveSteps(L);
+    hotReload(L);
+  }
+  $("#liveCards").onclick = function (e) {
+    var c = e.target.closest(".lcard"); if (!c) return;
+    sel = sel === c.dataset.role ? null : c.dataset.role;
+    try { if (sel) localStorage.setItem("aurum-live-sel", sel); else localStorage.removeItem("aurum-live-sel"); } catch (er) {}
+    $("#liveCards")._h = null; $("#liveHead")._h = null; liveRender();
+    if (sel) $("#liveHead").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
+  var dataMtime = null, reloading = false;
+  var sig = function (d) { var g = d.generated; d.generated = ""; var s = JSON.stringify(d); d.generated = g; return s; };
+  var oldSig = sig(D);
+  function hotReload(L) {
+    if (L.data_mtime == null || reloading) return;
+    if (dataMtime == null) { dataMtime = L.data_mtime; return; }
+    if (L.data_mtime === dataMtime) return;
+    reloading = true;
+    var old = window.AURUM; window.AURUM = null;
+    var tag = document.createElement("script");
+    tag.src = "data.js?t=" + Date.now();
+    tag.onload = tag.onerror = function () {
+      tag.remove(); reloading = false;
+      var nd = window.AURUM;
+      if (!nd || !nd.ledger) { window.AURUM = old; return; }
+      dataMtime = L.data_mtime;
+      var ns = sig(nd);
+      if (ns === oldSig) { D.generated = nd.generated; window.AURUM = D; genLine(); return; }
+      var keep = D;
+      try {
+        D = nd; cands = D.ledger.candidates; bookS = (D.book && D.book.sharpe) || {}; baseS = bookS["Hydra book"] != null ? bookS["Hydra book"] : 3.37;
+        overview(); pipeline(); candidates(); runs(); funded(); demo(); agents(); genLine(); redraw();
+        oldSig = ns;
+      } catch (er) {
+        D = keep; window.AURUM = keep; cands = D.ledger.candidates; bookS = (D.book && D.book.sharpe) || {}; baseS = bookS["Hydra book"] != null ? bookS["Hydra book"] : 3.37;
+        try { overview(); pipeline(); candidates(); runs(); funded(); demo(); agents(); genLine(); redraw(); } catch (er2) {}
+      }
+    };
+    document.body.appendChild(tag);
+  }
+
+  var busy = false;
+  function tick() {
+    if (busy) return;
+    busy = true;
+    var tag = document.createElement("script");
+    tag.src = "live.js?t=" + Date.now();
+    tag.onload = tag.onerror = function () { tag.remove(); busy = false; try { liveRender(); } catch (er) { if (window.console) console.error(er); } };
+    document.body.appendChild(tag);
+  }
+  liveRender(); tick(); setInterval(tick, 1000);
 })();
 </script>
 </body>

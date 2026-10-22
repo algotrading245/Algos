@@ -1,5 +1,7 @@
 """Builds the pipeline dashboard: dashboard/index.html (static page) and dashboard/data.js (everything it shows), plus
 docs/candidates.md, the readable form of the ledger.  Open dashboard/index.html in a browser, no server needed.
+tools/dashboard_live.py (started by the keeper) writes dashboard/live.js each second for the Live tab and reruns this
+script every minute; the page reloads both.
 
     python tools/dashboard.py
 
@@ -9,6 +11,7 @@ legs for the book's Sharpe with the candidate legs added.  Nothing private is co
 settings (no paths), and demo_check drops any line that could hold a login or account number.
 """
 import json
+import os
 import re
 import sys
 from datetime import date, datetime
@@ -153,7 +156,9 @@ def main():
         "demo": demo(),
     }
     OUT.mkdir(exist_ok=True)
-    (OUT / "data.js").write_text("window.AURUM = " + json.dumps(data, indent=1) + ";\n", encoding="utf-8")
+    tmp = OUT / "data.js.tmp"                                       # whole file or nothing: the live page reloads it
+    tmp.write_text("window.AURUM = " + json.dumps(data, indent=1) + ";\n", encoding="utf-8")
+    os.replace(tmp, OUT / "data.js")
     (OUT / "index.html").write_text(PAGE, encoding="utf-8")
     (DOCS / "candidates.md").write_text(candidates_md(ledger), encoding="utf-8")
     b = data["book"].get("sharpe", {})

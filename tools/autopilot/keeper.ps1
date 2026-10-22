@@ -9,7 +9,8 @@
 # It also starts the script steps every minute (fire-and-forget, pythonw so no console window; each script has its
 # own lock and exits at once when locked, paused or idle): tester_step.py starts and collects tester jobs without a
 # Claude run, scanner_step.py works through docs/autopilot/scan_requests.json the same way, and dispatch.py wakes the
-# relay within a minute of a new demo order/ALERT or a new work file (owner 2026-10-21).
+# relay within a minute of a new demo order/ALERT or a new work file (owner 2026-10-21). dashboard_live.py keeps
+# dashboard/live.js current every second and rebuilds data.js every minute (owner 2026-10-22).
 param([int]$Seconds = 60, [switch]$Once)
 . "$PSScriptRoot\common.ps1"
 
@@ -30,6 +31,7 @@ $Steps = [ordered]@{
     "scanner_step" = "tools\autopilot\scanner_step.py"
     "idea_engine" = "tools\idea_engine.py"
     "dispatch" = "tools\autopilot\dispatch.py"
+    "dashboard_live" = "tools\dashboard_live.py"
 }
 
 Add-Type -Namespace Aurum -Name Power -MemberDefinition @"
