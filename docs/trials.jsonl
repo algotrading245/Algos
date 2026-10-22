@@ -155,3 +155,10 @@
 {"id": "idea:f_reversal_spxusd", "when": "2026-10-23T00:00:19", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_usdjpy", "when": "2026-10-23T00:00:24", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_xauusd", "when": "2026-10-23T00:00:31", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_audusd", "when": "2026-10-23T01:00:32", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpusd", "when": "2026-10-23T01:00:36", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_usdcad", "when": "2026-10-23T01:00:39", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_reversal_usdchf", "when": "2026-10-23T01:00:42", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xagusd", "when": "2026-10-23T01:00:45", "verdict": "FAIL at halves", "count": 2}
+{"id": "volmanaged_mm", "when": "2026-10-23T01:02:45", "verdict": "FAIL at halves"}
+{"id": "recheck_near_miss_markets", "when": "2026-10-23T01:20:00", "verdict": "FAIL at belief (no rule profitable on all test markets)", "count": 23}

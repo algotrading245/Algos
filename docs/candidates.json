@@ -453,7 +453,7 @@
    "name": "near_miss_basket",
    "status": "rejected",
    "step": 2,
-   "reason": "Six near-miss rule streams (USDJPY tsmom/donchian, NZDCAD meanrev, AUDCAD/SPXUSD/USDCAD rsi) vol-scaled to 10% and equal-weighted: halves 1.06/1.02, 1.5x cost 0.81, corr and goal pass, but DSR 0.525 < 0.9 at N=27027 (luck bar Sharpe 1.03; basket Sharpe about 1.04). Diversification lifts Sharpe, not enough over the trial count. Evidence: research/near_miss_basket.py, docs/gates/near_miss_basket.json",
+   "reason": "Six near-miss rule streams (USDJPY tsmom/donchian, NZDCAD meanrev, AUDCAD/SPXUSD/USDCAD rsi) vol-scaled to 10% and equal-weighted: halves 1.06/1.02, 1.5x cost 0.81, corr and goal pass, but DSR 0.525 < 0.9 at N=27027 (luck bar Sharpe 1.03; basket Sharpe about 1.04). Diversification lifts Sharpe, not enough over the trial count. Evidence: research/near_miss_basket.py, docs/gates/near_miss_basket.json. Belief recheck 2026-10-23: each rule, parameters unchanged, on 3-4 other markets (FX rules on EURUSD/GBPUSD/AUDUSD/USDCHF, SPX rule on GRXEUR/JPXJPY/XAUUSD): all six rules lose on at least one market (e.g. USDJPY tsmom AUDUSD -0.32, NZDCAD meanrev USDCHF -0.13, SPX rsi GRXEUR -0.25), no survivor, no basket. Evidence: research/near_miss_markets.py",
    "gates": {
     "id": "near_miss_basket",
     "when": "2026-10-22T01:27:28",
