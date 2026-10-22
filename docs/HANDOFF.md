@@ -183,6 +183,14 @@ each finished piece of work.
   EA's live fix leg (`Legs.mqh:1035-1114`) in a weaker unsigned form. New specs should be checked against the
   archive's "Tested and rejected" list before they are written.
 
+## For the owner
+
+- **XAGUSD spread and commission (data_xagusd_costs, finder 2026-10-22):** agents cannot fetch it. The export to
+  `C:\MetaTrader 5 - Tester` is refused to agents and fails at IPC ("Process create failed", 2026-10-22 15:05), and
+  terminal 14 did not answer on the earlier try. The silver legs were rejected at an assumed 4 bp spread. Please run
+  `python tools/export_mt5_data.py --terminal "MetaTrader 5 - Tester" --symbol XAGUSD --tick-days 7` (with the terminal
+  open) or allow the call, then write the measured figure to `docs/data/xagusd_costs.md`.
+
 ## Waiting on the owner
 
 - **(a4) Done in effect on 2026-10-19 at 14:54**: the terminal restarted from `t16_attach.ini` with AurumFunded 1.06
