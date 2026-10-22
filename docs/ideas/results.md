@@ -140,3 +140,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T00:00 | f_reversal_spxusd | n/a | 2 | SPXUSD reversal lookback=1 L1 both | 0.47 / 0.04 | FAIL at halves | 1.000 (book, N=27077, luck bar 1.00) |
 | 2026-10-23T00:00 | f_reversal_usdjpy | n/a | 2 | USDJPY reversal lookback=5 L1 both | -0.35 / -0.25 | FAIL at halves | 1.000 (book, N=27079, luck bar 1.00) |
 | 2026-10-23T00:00 | f_reversal_xauusd | n/a | 2 | XAUUSD reversal lookback=1 L1 both | 0.09 / 0.09 | FAIL at halves | 1.000 (book, N=27081, luck bar 1.00) |
+| 2026-10-23T01:00 | f_reversal_audusd | n/a | 2 | AUDUSD reversal lookback=1 L1 both | 0.17 / 0.08 | FAIL at halves | 1.000 (book, N=27083, luck bar 1.00) |
+| 2026-10-23T01:00 | f_reversal_gbpusd | n/a | 2 | GBPUSD reversal lookback=5 L1 both | 0.16 / -0.09 | FAIL at halves | 1.000 (book, N=27085, luck bar 1.00) |
+| 2026-10-23T01:00 | f_reversal_usdcad | n/a | 2 | USDCAD reversal lookback=1 L1 both | 0.25 / 0.27 | FAIL at belief | 1.000 (book, N=27087, luck bar 1.00) |
+| 2026-10-23T01:00 | f_reversal_usdchf | n/a | 2 | USDCHF reversal lookback=5 L1 both | 0.12 / 0.04 | FAIL at halves | 1.000 (book, N=27089, luck bar 1.00) |
+| 2026-10-23T01:00 | f_reversal_xagusd | n/a | 2 | XAGUSD reversal lookback=1 L1 both | -0.45 / 0.41 | FAIL at halves | 1.000 (book, N=27091, luck bar 1.00) |
