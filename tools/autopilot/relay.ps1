@@ -15,10 +15,9 @@
 #   5. A new demo order or ALERT (demo-event.json, from dispatch.py): the judge, at the judge tier for an ALERT.
 #   6. A hand-over naming the judge, builder or tester, when that role has work.
 #   7. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
-#   8. Otherwise the finder, to queue more ideas or fetch data: not over the week's budget (unless a data item waits),
-#      and after 3 runs in a row that found nothing new, once a day.
-# The weekly token budget (budget.py status, budget.json skip_above) is the only brake. A usage limit backs off only
-# the provider that hit it (router.py backoff); which CLI and model a role runs on is router.json's.
+#   8. Otherwise the finder, at once, to queue the next idea or fetch data (no budget or empty-run brake).
+# The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
+# (router.py backoff); which CLI and model a role runs on is router.json's.
 param([switch]$DryRun)
 . "$PSScriptRoot\common.ps1"
 
@@ -54,18 +53,17 @@ function Get-Unreviewed {
 }
 # Why the finder should run, or $null.
 function Get-FinderWhy {
+    # No brake (owner 2026-10-22): when an idea finishes, pass or fail, the finder starts the next one at once,
+    # whatever the week's budget or how many runs in a row found nothing. Only a usage limit (router.py backoff)
+    # or PAUSE stops it.
     if ((Get-DataWaiting) -gt 0) { return "data item waiting" }
-    if ($overBudget) { return $null }
-    $l = Get-Last "finder"
-    $streak = if ($l -and $l.empty_streak) { [int]$l.empty_streak } else { 0 }
-    if ($streak -ge 3 -and (Get-LastEnd "finder").Date -ge $now.Date) { return $null }
-    return "queue empty: find the next ideas"
+    return "queue empty: find the next idea"
 }
 
 # The week's token budget (budget.py, owner 2026-10-22), read once a tick.
 $bst = try { (& python.exe (Join-Path $PSScriptRoot "budget.py") status 2>$null | Select-Object -Last 1) | ConvertFrom-Json } catch { $null }
 $overBudget = [bool]($bst -and $bst.skip)
-if ($DryRun -and $bst) { Write-Output "budget: `$$($bst.week_usd) of `$$($bst.weekly_usd) this week ($([math]::Round(100 * $bst.fraction))%), skip=$overBudget" }
+if ($DryRun -and $bst) { Write-Output "budget: `$$($bst.week_usd) of `$$($bst.weekly_usd) this week ($([math]::Round(100 * $bst.fraction))%), for information only" }
 
 # A run that ended within 2 minutes (a limit, a fault) or failed is not started again in this tick, so nothing spins.
 $blocked = @()
