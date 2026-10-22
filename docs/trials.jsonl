@@ -165,3 +165,4 @@
 {"id": "breakout", "when": "2026-10-23T01:08:48", "verdict": "FAIL at belief"}
 {"id": "breakout", "when": "2026-10-23T01:13:14", "verdict": "FAIL at belief"}
 {"id": "tod_eurusd", "when": "2026-10-23T01:26:35", "verdict": "FAIL at halves"}
+{"id": "ml_metalabel_breakout_size", "when": "2026-10-23T01:50:50", "verdict": "FAIL at book"}
