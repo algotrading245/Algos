@@ -84,6 +84,13 @@ each finished piece of work.
   against j12-j14, because the demo account is at 1:100 with gold at 1:50. The demo keeps 1.06 until the owner
   copies a new build, so its logs still show the deal-0 "failed" lines and can show a late breakout entry after a
   restart. Both are fixed in 1.07-1.09 (below).
+  **For the fill comparison (judge 2026-10-22 14:40):** on 10-22 the demo skipped the USDJPY breakout, "balance too
+  small for the minimum lot of USDJPY at a stop of 1.181". That is `RiskLots()` working as built (`Legs.mqh:633-644`,
+  balance x risk / loss per lot, floored to 0.01). The risk per yen of stop matches 10-21's trade: 0.03 lot at a
+  0.363 stop gives 0.03 x 0.363 / 1.181 = 0.0092 lot, under the 0.01 minimum. At about 10,000 EUR, a range wider
+  than about 1.09 yen gets no breakout trade. A tester run at the same deposit skips that trade too. A Python model
+  with fractional size does not. So on wide-range days the comparison should expect "no trade" from the demo and the
+  tester, and count those days apart from the model's figure. No input changes.
   **Grid resend guard (2026-10-21 03:07, AurumFunded 1.09 / AurumHydra 1.38, reviewer approve, compile 0/0):**
   `Grid()` sends no new level until the last one sent shows in `GridHeld()` or `GRID_WAIT` (10 s) pass; closes and
   stop-outs are not held. No tester change (deals show at once); the demo preset has the grid off, so it matters for

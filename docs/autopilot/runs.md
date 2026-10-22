@@ -123,3 +123,4 @@ committed).
 | 2026-10-21 20:31 | orchestrator | demo check | no ALERT; 3rd US100 noise buy 20:29 is a designed exit-and-re-entry, as in the Python model (noise_area_index.py:106-117); miner's 4 ma_cross specs failed the halves in the idea engine; no job, no flag |
 | 2026-10-21 21:10 | orchestrator | idle check | nothing to do: demo unchanged since 20:29 (midday 1, breakout 1, US100 noise 3), no ALERT, no job, no flag, all idea specs tested or dropped |
 | 2026-10-22 00:03 | orchestrator | idle check | nothing to do: demo unchanged since 20:29 plus a bell skip at 21:59 (monitor 23:15, no ALERT), no job, no flag, all idea specs tested or dropped, researcher 10-22 no idea |
+| 2026-10-22 14:40 | judge | demo check | no job to judge, nothing at tester, no ALERT; demo 10-22: midday 1 order, USDJPY breakout skipped at the min lot (stop 1.181, designed RiskLots flooring), noted in HANDOFF for the 10-23 fill comparison; 11 worker lesson lines are rejections, none added |
