@@ -27,8 +27,11 @@
     {
       "id": "a4",
       "what": "Re-attach the FTMO demo EA: on Terminal 16 attach AurumFunded 1.06 (the repo's current build, copy AurumFunded.ex5 into the terminal's Experts folder first; 1.05 and 1.06 only add two once-a-day log lines, 'account leverage 1:n, margin of 1 lot' and 'firm day ..., final stop at ...'; no trading change) with AurumFunded_FTMO_phase1_legs.set to XAUUSD M15 (Algo Trading on), check that the journal shows 'loaded successfully' and the EA log shows 'phase 1 started' and the 'account leverage' line, and save the profile. Found 2026-10-19 07:36: the EA has been on no chart since 2026-10-17 04:57:06. The tester runs on Terminal 16 left the charts with no EA, and the keeper restarted the terminal plain at 2026-10-18 01:24, so the clean demo test has not started. Agents may not attach an EA. Also open: the keeper and demo_check changes proposed in HANDOFF.md, so this is caught by a script next time.",
-      "status": "pending",
-      "asked": "2026-10-19"
+      "status": "applied",
+      "asked": "2026-10-19",
+      "approved": "2026-10-23",
+      "applied": "2026-10-23",
+      "note": "Owner asked in chat on 2026-10-23 to attach on T16 on their behalf. The EA had in fact been re-attached by the keeper's t16_attach.ini start on 2026-10-21 01:30, but on an old build. Applied 2026-10-23 01:45 by the owner session: T16's AurumFunded.ex5 already matched the repo build 1.10 (1.09 plus a risk layer that is off by default, so trading equals 1.09 with this preset); T16 was closed cleanly and restarted with /config:tools/autopilot/t16_attach.ini. Journal: authorized on FTMO-Demo, 16 inputs read from AurumFunded_FTMO_phase1_legs.set, 'expert AurumFunded (XAUUSD,M15) loaded successfully' (one instance), 0 positions, 0 orders, trading enabled. EA log: 'account leverage 1:100' line at 01:45:34. No 'phase 1 started' line because the phase state (start balance, peak, day stop) is kept in the terminal's global variables and was restored, not restarted."
     }
   ]
 }
