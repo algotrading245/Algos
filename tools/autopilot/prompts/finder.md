@@ -24,6 +24,12 @@ next one starts, so keep the queue fed with good ideas, not many weak ones.
      the paper or write-up it follows, if any.
    - **drl**: a reinforcement-learning policy (gymnasium, stable-baselines3; CPU) with the state, actions, reward and
      costs stated.
+   ML and DRL are open sources, not rejected families (owner 2026-10-22). The "Machine learning and RL" row in
+   `docs/candidates.md` rejects only those versions: deep and RL replications, daily ML, tick ML scalp, Deep Momentum
+   Networks and deep Q-learning on 20 futures (Sharpe <= 0.5 or seed-dependent). Queue an ml or drl idea when it
+   differs clearly from all of them (a different target, features, market, horizon or use, e.g. sizing, a regime
+   filter or meta-labeling an existing leg), and say in `why` which rejected version is closest and how this one
+   differs.
    Queue **3 to 5 items** this run, each one line appended to `docs/ideas/queue.jsonl` with the Edit or Write tool:
    `{"id": "<short_snake_id>", "source": "prebuilt|paper|ml|drl", "title": "...", "link": "<exact URL>",
    "why": "<the rule or model, its parameters, the markets (ours: XAUUSD, XAGUSD, USDJPY, EURUSD, AUDCAD, SPXUSD and
