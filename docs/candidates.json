@@ -735,6 +735,55 @@
      0.538317884020412
     ]
    }
+  },
+  {
+   "id": "nn_gold_m15",
+   "name": "nn_gold_m15",
+   "status": "rejected",
+   "step": 9,
+   "reason": "gates: FAIL at halves. 1D CNN and LightGBM (3 seeds each, walk-forward yearly 2012-2025-09) on gold M15 next-hour direction: accuracy 50.6-53% (CNN) and 50.5-53% (LGBM), net Sharpe at 2 bp round trip -2.49 (CNN) / -2.67 (LGBM) / -4.28 (momentum), turnover 12 position changes a day; fails halves, costs, DSR, goal. Evidence: research/nn_gold_m15.py",
+   "gates": {
+    "id": "nn_gold_m15",
+    "when": "2026-10-22T02:26:20",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "-2.14 / -2.53",
+      "rule": ">= 0.5 to 2017 and from 2018"
+     },
+     {
+      "gate": "costs",
+      "pass": false,
+      "figure": "-3.68",
+      "rule": ">= 0.3 at 1.5x cost"
+     },
+     {
+      "gate": "dsr",
+      "pass": false,
+      "figure": "0.000 (N=27066, luck bar 1.03)",
+      "rule": ">= 0.9"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book -0.03, max leg morning +0.01",
+      "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "goal",
+      "pass": false,
+      "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+     }
+    ],
+    "weight": 0.0,
+    "p5x": [
+     0.5618464571293371,
+     0.5618464571293371
+    ]
+   }
   }
  ],
  "rejected": [

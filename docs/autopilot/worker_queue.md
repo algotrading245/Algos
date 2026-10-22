@@ -15,7 +15,7 @@ The orchestrator and the owner add items here. Holdout: nothing from 2025-10-13 
 - [ ] Regime classifier (trend vs range: ADX, Hurst, realised-vol ratio; then a LightGBM version) that switches Hydra legs on and off; compare with all legs always on.
 - [x] Volatility forecast for sizing: HAR-RV vs GARCH(1,1) vs LightGBM on gold daily realised vol; size legs to a target vol; gate the resized stream against fixed size. -> rejected 2026-10-22 (forecasters tie on QLIKE; resizing a gold long adds +0.03 to +0.06 Sharpe, worse drawdown; halves 0.04/0.96, DSR 0.035; research/volforecast_sizing.py)
 - [x] Index legs for AurumFunded: opening-range breakout and overnight drift on US500.cash / US100.cash under FTMO limits (5% daily, 10% total). -> rejected 2026-10-22 (SPX only, no US100 data; best overnight 01:00-16:30 halves 0.73/0.48, DSR 0.033, goal fail; ORB weaker; research/index_legs_funded.py)
-- [ ] Small neural net (1D CNN or LSTM, torch, CPU) on gold M15 returns for next-hour direction; must beat LightGBM and the baselines after costs, else reject.
+- [x] Small neural net (1D CNN or LSTM, torch, CPU) on gold M15 returns for next-hour direction; must beat LightGBM and the baselines after costs, else reject. -> rejected 2026-10-22 (CNN/LGBM accuracy ~51-52%, net Sharpe -2.5/-2.7 at 2 bp, 12 flips a day; research/nn_gold_m15.py)
 - [ ] RL position sizing (PPO, stable-baselines3) on the Hydra leg mix: the agent picks each leg's size from 0 to 1 per day from past-only state (recent leg returns, drawdown, realised vol); reward is net return minus a drawdown penalty, costs charged on size changes. Walk-forward folds, 3+ seeds, every config a trial. Must beat equal fixed size and vol-targeted size, else reject.
 
 ## Data requests
