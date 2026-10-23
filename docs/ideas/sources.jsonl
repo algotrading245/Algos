@@ -399,3 +399,6 @@
 {"date": "2026-10-23", "kind": "prebuilt", "title": "EURUSD London breakout backtrex (PF 0.87, negative)", "link": "https://backtrex.com/en/backtests/london-breakout-eur-usd", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "prebuilt", "title": "VIX futures term structure Quantpedia (OOS negative, needs VIX futures)", "link": "https://quantpedia.com/strategies/exploiting-term-structure-of-vix-futures/", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "prebuilt", "title": "FOMC cycle in quantstrat (in-sample, equities)", "link": "https://www.r-bloggers.com/fomc-cycle-trading-strategy-in-quantstrat/", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "prebuilt", "title": "Quantpedia Cross-Asset Price-Based Regimes for Gold (Dujava 2026)", "link": "https://quantpedia.com/cross-asset-price-based-regimes-for-gold/", "read": "in full", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Baur gold seasonality / CXO: in-sample, no OOS after snooping correction", "link": "https://cxoadvisory.com/calendar-effects/gold-seasonality-drivers", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "CXO carry with volatility exit (multi-currency, monthly)", "link": "https://www.cxoadvisory.com/?p=20868", "read": "unverified", "specs": []}
