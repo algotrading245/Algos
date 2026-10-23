@@ -230,3 +230,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T18:00 | f_ma_cross_eurchf_vh | n/a | 4 | EURCHF ma_cross fast=10 slow=50 L1 both | -0.04 / -0.45 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
 | 2026-10-23T18:01 | f_ma_cross_eurgbp_vh | n/a | 4 | EURGBP ma_cross fast=20 slow=100 L1 both | 0.14 / -0.60 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
 | 2026-10-23T18:01 | f_ma_cross_gbpchf_vh | n/a | 4 | GBPCHF ma_cross fast=20 slow=100 L1 both | -0.42 / -0.58 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
+| 2026-10-23T19:00 | f_ma_cross_audnzd_vh | n/a | 4 | AUDNZD ma_cross fast=10 slow=100 L1 both | 0.14 / -0.71 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
+| 2026-10-23T19:00 | f_ma_cross_grxeur_vh | n/a | 4 | GRXEUR ma_cross fast=20 slow=100 L1 both | 0.18 / -0.40 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
+| 2026-10-23T19:00 | f_ma_cross_jpxjpy_vh | n/a | 4 | JPXJPY ma_cross fast=20 slow=100 L1 both | -0.00 / -0.46 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
+| 2026-10-23T19:00 | f_ma_cross_nzdcad_vh | n/a | 4 | NZDCAD ma_cross fast=20 slow=100 L1 both | -0.03 / -0.06 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
+| 2026-10-23T19:00 | f_ma_cross_wtiusd_vh | n/a | 4 | WTIUSD ma_cross fast=10 slow=50 L1 both | 0.00 / 0.17 | FAIL at halves | 1.000 (book, N=26728, luck bar 1.00) |
