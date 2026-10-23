@@ -210,3 +210,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T14:00 | f_donchian_grxeur_vh | n/a | 2 | GRXEUR donchian lookback=55 L1 both | 0.20 / -0.31 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T14:00 | f_donchian_jpxjpy_vh | n/a | 2 | JPXJPY donchian lookback=20 L1 both | 0.05 / -0.16 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T14:00 | f_donchian_nzdcad_vh | n/a | 2 | NZDCAD donchian lookback=20 L1 both | -0.08 / -0.03 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T15:00 | f_donchian_wtiusd_vh | n/a | 2 | WTIUSD donchian lookback=20 L1 both | 0.03 / 0.28 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T15:00 | f_ma_cross_audcad_vh | n/a | 4 | AUDCAD ma_cross fast=20 slow=100 L1 both | 0.01 / -0.54 | FAIL at halves | 1.000 (book, N=26726, luck bar 1.00) |
+| 2026-10-23T15:00 | f_ma_cross_eurusd_vh | n/a | 4 | EURUSD ma_cross fast=20 slow=100 L1 both | 0.34 / 0.18 | FAIL at halves | 1.000 (book, N=26726, luck bar 1.00) |
+| 2026-10-23T15:00 | f_ma_cross_usdjpy_vh | n/a | 4 | USDJPY ma_cross fast=20 slow=100 L1 both | 0.66 / -0.05 | FAIL at halves | 1.000 (book, N=26726, luck bar 1.00) |
+| 2026-10-23T15:00 | f_ma_cross_xauusd_vh | n/a | 4 | XAUUSD ma_cross fast=20 slow=100 L1 both | -0.31 / 0.15 | FAIL at halves | 1.000 (book, N=26726, luck bar 1.00) |
