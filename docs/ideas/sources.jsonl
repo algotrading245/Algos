@@ -489,3 +489,6 @@
 {"date": "2026-10-23", "kind": "paper", "title": "EURUSD hourly predictability net Sharpe search (QuantRocket, Neely-Weller, Breedon-Ranaldo)", "link": "https://quantrocket.com/blog/business-day-fx-patterns/", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Spot-only FX variance premium proxy search (Carr-Lee, Fullwood-James-Marsh)", "link": "https://openaccess.city.ac.uk/id/eprint/24959", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Multi-day gold/FX trend-carry crash search (Forecast-to-Fill again, CEPR DP20745)", "link": "https://cepr.org/publications/dp20745", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "FX carry vol timing G10 (DHL, CEPR, Euromoney)", "link": "https://cepr.org/index.php/publications/dp13571", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "EURUSD vol-targeted trend, QuantInsti walk-forward / MQL5 Beyond the Clock", "link": "https://www.quantinsti.com/articles/trend-following-strategies-major-currency-markets-epat-project/", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Commodity seasonality arXiv 2609.12227 / gold seasonal studies", "link": "https://arxiv.org/pdf/2609.12227", "read": "unverified", "specs": []}
