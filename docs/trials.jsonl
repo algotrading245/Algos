@@ -251,3 +251,8 @@
 {"id": "idea:f_ma_cross_gbpjpy_vh", "when": "2026-10-23T17:00:37", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_nzdusd_vh", "when": "2026-10-23T17:00:44", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_usdchf_vh", "when": "2026-10-23T17:00:49", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_cadjpy_vh", "when": "2026-10-23T18:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_euraud_vh", "when": "2026-10-23T18:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurchf_vh", "when": "2026-10-23T18:00:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurgbp_vh", "when": "2026-10-23T18:01:02", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpchf_vh", "when": "2026-10-23T18:01:05", "verdict": "FAIL at halves", "count": 4}
