@@ -268,3 +268,6 @@
 {"date": "2026-10-23", "kind": "paper", "title": "S&P VIX spike multi-day reversion (CXO, IVolAI)", "link": "https://www.cxoadvisory.com/?p=3498", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Pre-FOMC dollar / EURUSD Fed week (Macrosynergy)", "link": "https://macrosynergy.com/?p=41075", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Gold futures GARCH vol risk premium proxy search", "link": "https://www.tcd.ie/triss/assets/PDFs/iiis/iiisdp225.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "prebuilt", "title": "EURUSD calendar/day-of-week search (QuantRocket business-day FX patterns, trading-treff tax-date)", "link": "https://www.quantrocket.com/blog/business-day-forex-patterns", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Intraday momentum first/last half-hour, commodities and gold (Gao et al. family)", "link": "https://alphaarchitect.com/2014/08/attention-prop-traders-the-first-half-hour-of-trading-predicts-the-last-half-hour/", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "prebuilt", "title": "Quantpedia FX mean reversion (monthly, FX futures)", "link": "https://quantpedia.com/how-to-build-mean-reversion-strategies-in-currencies/", "read": "unverified", "specs": []}
