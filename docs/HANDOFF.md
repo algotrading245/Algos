@@ -81,9 +81,11 @@ each finished piece of work.
   10-19 and 10-21 found no idea, so more researcher runs are unlikely to help until new data or a new route comes in
   (proposed tools change (5)). The noise path from SPXUSD/NSXUSD M1 is already in the goal model
   (`research/hydra_leverage_sens.py`). Fidelity is next, after the first demo week (Friday 2026-10-23). It runs
-  against j12-j14, because the demo account is at 1:100 with gold at 1:50. The demo keeps 1.06 until the owner
-  copies a new build, so its logs still show the deal-0 "failed" lines and can show a late breakout entry after a
-  restart. Both are fixed in 1.07-1.09 (below).
+  against j12-j14, because the demo account is at 1:100 with gold at 1:50. Since 2026-10-23 01:45 the demo runs
+  AurumFunded 1.10 with `AurumFunded_FTMO_phase1_legs.set` (keeper log 01:45:11 "Terminal 16: started, AurumFunded
+  attached"; build compiled 2026-10-22 22:29, commit 2869c12; risk layer off by default, so it trades as 1.09). The
+  deal-0 log fix, the late-breakout guard and the grid resend guard (1.07-1.09, below) are in it. Demo days 10-19 to
+  10-22 ran 1.06 (doctor 2026-10-23).
   **For the fill comparison (judge 2026-10-22 14:40):** on 10-22 the demo skipped the USDJPY breakout, "balance too
   small for the minimum lot of USDJPY at a stop of 1.181". That is `RiskLots()` working as built (`Legs.mqh:633-644`,
   balance x risk / loss per lot, floored to 0.01). The risk per yen of stop matches 10-21's trade: 0.03 lot at a
@@ -204,9 +206,8 @@ each finished piece of work.
   it means setting `InpBreakRiskPct` to 0 in the demo EA and the presets, which is the owner's change.
 - **(a4) Done in effect on 2026-10-19 at 14:54**: the terminal restarted from `t16_attach.ini` with AurumFunded 1.06
   loaded (`docs/demo_log.md`). The owner may close a4. The instructions below are kept for a later re-attach.
-  **Optional: copy build 1.09 to Terminal 16** the same way (it has the deal-0 fill fix, the late-breakout guard and
-  the grid resend guard; trading changes only after a late start or on a deal-0 fill, so the clean test from 10-19 carries on). Not needed
-  before the first fidelity week.
+  **Done 2026-10-23 01:45:** Terminal 16 restarted with build 1.10 (keeper log; see "Next pipeline work" above), so
+  the optional copy of 1.09 is no longer needed (doctor 2026-10-23).
   Re-attach the demo EA: On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.06 (the
   current build in the repo; copy `AurumFunded.ex5` into the terminal's Experts folder first) with
   `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
