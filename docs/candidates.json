@@ -103,7 +103,8 @@
      "eq_dd_max_pct": 15.54,
      "verdict": "step 16 passed in AurumHydra: legs off +725.13% / 12.48% -> on +1076.18% / 15.54%, return per drawdown 58.1 -> 69.2 (model 110 -> 136); the tester kept 83% / 87% of the model's log growth. USDJPY +9,695 -> +25,860. Legs on, the deepest stretch is 2026-01 (breakout -1.0, noise -3.9 points); legs off it is 2024-07/08, which the legs offset (research/hydra_j6_compare.py)."
     }
-   ]
+   ],
+   "judge_2026_10_23": "Judge: gate verdict stands, FAIL at belief (7/9 markets; AUDJPY -0.32, AUDUSD -0.18 whole sample, both about -0.4 from 2018). No AUD-session story is counted as belief (post hoc). Status stays tester (step 17 demo, approved a3), frozen: no weight increase, no new EA use. Keep or pull is the owner call, approvals a6 (pending); judge recommends keep until 3 demo months of breakout trades, then judge against expected_tester."
   },
   {
    "id": "noise",

@@ -193,6 +193,15 @@ each finished piece of work.
 
 ## Waiting on the owner
 
+- **(a6, pending, judge 2026-10-23) Breakout fails the belief gate. Keep it in the demo or pull it?** The recheck ran
+  the same parameters on 9 markets. 7 were profitable; AUDJPY (-0.32) and AUDUSD (-0.18 over the whole sample, about
+  -0.4 for each from 2018) lost (`docs/gates/breakout.json`, `marketdata/candidates/breakout_markets.csv`). Every
+  other gate passes: halves 1.10 / 0.84, 0.59 at 1.5x cost, corr -0.00, book 2018+ 3.27 -> 3.34, DSR 1.000.
+  The judge recommends keeping it. It was approved (a3), and the demo it runs in is the clean out-of-sample test from
+  10-19. Pulling it mid-test would remove the book's largest weight because of a rule added after the approval.
+  Until the owner decides, it stays at "tester" and is frozen: no weight increase and no new EA use. After 3 demo
+  months of breakout trades, judge it against `expected_tester` (about 24 trades a month, win 47%, PF 1.14). Pulling
+  it means setting `InpBreakRiskPct` to 0 in the demo EA and the presets, which is the owner's change.
 - **(a4) Done in effect on 2026-10-19 at 14:54**: the terminal restarted from `t16_attach.ini` with AurumFunded 1.06
   loaded (`docs/demo_log.md`). The owner may close a4. The instructions below are kept for a later re-attach.
   **Optional: copy build 1.09 to Terminal 16** the same way (it has the deal-0 fill fix, the late-breakout guard and
