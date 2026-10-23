@@ -1465,6 +1465,64 @@
      0.798
     ]
    }
+  },
+  {
+   "id": "overreaction_fx",
+   "name": "overreaction_fx",
+   "status": "rejected",
+   "step": 2,
+   "reason": "gates: FAIL at halves (book Sharpe 0.62 to 2017, -0.00 from 2018) and book gain (3.34 -> 3.24). 5 pairs, 2sd/n=20 fade, 01:00-08:00 server, ~270 trades a pair (not the paper's ~60); gross edge 2-4 bp/trade fades in 2018+ (AUDUSD -2.7 bp, EURJPY net 0.08); the paper's effect was no-cost and decayed. Evidence: research/overreaction_fx.py output, 2026-10-23.",
+   "tag": "halves",
+   "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+   "gates": {
+    "id": "overreaction_fx",
+    "when": "2026-10-23T21:38:48",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "0.62 / -0.00 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.26",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book +0.17, max leg quartet +0.25",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.34 -> 3.24",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26726, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+    "profitable_months_2018": [
+     0.798,
+     0.809
+    ]
+   }
   }
  ],
  "rejected": [
