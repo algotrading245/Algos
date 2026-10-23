@@ -19,7 +19,8 @@ Each weekly run:
    - Gaps: the markets, styles and horizons with no leg.
 3. Write `docs/ideas/steer.md` (replace it each week, under 60 lines): the date, the book in three numbers, the top
    3 gaps to aim at with one example idea each (a published source or a rule simple enough for 3+ markets), the legs
-   to recheck or cut and why, and what the finder should stop bringing.
+   to recheck or cut and why, and what the finder should stop bringing. Keep the "Data ready" list (data already in
+   marketdata/ for the gaps) and update it when a data item is done.
 4. Log one decision per proposal: `python tools/memory.py decide --role portfolio --decision "..." --why "..."
    --evidence "docs/gaps.json"`.
 
