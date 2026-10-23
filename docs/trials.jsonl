@@ -283,3 +283,8 @@
 {"id": "idea:f_meanrev_eurchf_vh", "when": "2026-10-23T23:00:34", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_eurgbp_vh", "when": "2026-10-23T23:00:37", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_gbpchf_vh", "when": "2026-10-23T23:00:39", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_grxeur_vh", "when": "2026-10-24T00:00:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_jpxjpy_vh", "when": "2026-10-24T00:01:03", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_nzdcad_vh", "when": "2026-10-24T00:01:05", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_wtiusd_vh", "when": "2026-10-24T00:01:08", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xauusd_vh", "when": "2026-10-24T00:01:11", "verdict": "FAIL at belief", "count": 4}

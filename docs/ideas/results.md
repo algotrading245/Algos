@@ -255,3 +255,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T23:00 | f_meanrev_eurchf_vh | n/a | 4 | EURCHF meanrev lookback=10 z=1.5 L1 both | 0.57 / 0.11 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
 | 2026-10-23T23:00 | f_meanrev_eurgbp_vh | n/a | 4 | EURGBP meanrev lookback=20 z=1.5 L1 both | -0.11 / 0.10 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
 | 2026-10-23T23:00 | f_meanrev_gbpchf_vh | n/a | 4 | GBPCHF meanrev lookback=10 z=2.0 L1 both | 0.81 / -0.20 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T00:00 | f_meanrev_grxeur_vh | n/a | 4 | GRXEUR meanrev lookback=10 z=2.0 L1 both | 0.13 / -0.18 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T00:01 | f_meanrev_jpxjpy_vh | n/a | 4 | JPXJPY meanrev lookback=10 z=2.0 L1 both | 0.40 / 0.28 | FAIL at belief | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T00:01 | f_meanrev_nzdcad_vh | n/a | 4 | NZDCAD meanrev lookback=10 z=2.0 L1 both | 0.83 / 0.14 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T00:01 | f_meanrev_wtiusd_vh | n/a | 4 | WTIUSD meanrev lookback=20 z=2.0 L1 both | 0.42 / 0.15 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T00:01 | f_rsi_xauusd_vh | n/a | 4 | XAUUSD rsi level=10 period=2 L1 both | 0.35 / 0.76 | FAIL at belief | 1.000 (book, N=26730, luck bar 1.00) |
