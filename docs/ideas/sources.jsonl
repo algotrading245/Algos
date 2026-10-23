@@ -313,3 +313,6 @@
 {"date": "2026-10-23", "kind": "prebuilt", "title": "Gold futures roll-yield carry (Vontobel, QuantConnect term-structure)", "link": "https://am.vontobel.com/en/insights/costa-de-roll-how-to-ride-the-commodity-curve?lang=en", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "prebuilt", "title": "RL position-sizing overlay on FX strategy (arXiv 2512.12420, TU Wien DDQN/PPO USDCHF)", "link": "https://arxiv.org/abs/2512.12420", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "prebuilt", "title": "EURUSD Asian-range/London reversal (Backtrex London breakout EURUSD, Krohn et al)", "link": "https://backtrex.com/en/backtests/london-breakout-eur-usd", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Della Corte et al FX volatility risk premium (needs option vols)", "link": "https://cepr.org/publications/dp9549", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Weekly currency reversal/momentum search (Dao weekend gap already dropped; Massey thesis momentum)", "link": "https://mro.massey.ac.nz/handle/10179/7266?show=full", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Ferreira Filipe Suominen carry funding risk (no backtest)", "link": "https://orbilu.uni.lu/handle/10993/15389", "read": "unverified", "specs": []}
