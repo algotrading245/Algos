@@ -180,3 +180,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T08:01 | f_tsmom_eurchf_vh | n/a | 3 | EURCHF tsmom lookback=20 L1 both | -0.08 / -0.70 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T08:01 | f_tsmom_eurgbp_vh | n/a | 3 | EURGBP tsmom lookback=120 L1 both | 0.34 / -0.72 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T08:01 | f_tsmom_gbpjpy_vh | n/a | 3 | GBPJPY tsmom lookback=120 L1 both | 0.52 / -0.61 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T09:00 | f_tsmom_audnzd_vh | n/a | 3 | AUDNZD tsmom lookback=60 L1 both | 0.30 / -0.59 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T09:00 | f_tsmom_euraud_vh | n/a | 3 | EURAUD tsmom lookback=120 L1 both | 0.08 / -0.06 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T09:00 | f_tsmom_gbpchf_vh | n/a | 3 | GBPCHF tsmom lookback=120 L1 both | -0.49 / -0.56 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T09:00 | f_tsmom_grxeur_vh | n/a | 3 | GRXEUR tsmom lookback=120 L1 both | 0.31 / 0.42 | FAIL at belief | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T09:00 | f_tsmom_nzdcad_vh | n/a | 3 | NZDCAD tsmom lookback=60 L1 both | 0.03 / -0.55 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
