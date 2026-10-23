@@ -248,6 +248,15 @@ each finished piece of work.
   margin of 1 lot ..." line (`Legs.mqh:2390`) never reaches the checker or the monitor, which then reads as if the
   line were missing. Let a line through when it matches `account leverage 1:\d+` and has no run of 6+ digits
   (judge 2026-10-23 10:30: the line is in the 10-23 log at 00:05 and 01:45, 1:100, gold 7183 EUR a lot at 4029).
+  (9) Demo ALERT 2026-10-23 14:00 (judge 15:25), harmless: "close on EURUSD failed, retcode 10036 (position
+  closed)". The midday exit (`Legs.mqh:779-780`) sent the close at 13:59:59.507; it took 1235 ms and filled at
+  14:00:00.736 (bought 0.44 at 1.11902 against the 1.11994 sell, about +40 USD). 56 ms later the next OnTick/OnTimer
+  call still saw the position in `PositionsTotal()` (the terminal had not yet dropped it) and `CloseAll`
+  (`Legs.mqh:357-373`) sent a second close, which the server refused ("Position doesn't exist"). Nothing opened, no
+  trade or state changed (`Leg()` ignores CloseAll's return), and the tester fills at once, so it cannot happen there.
+  Proposals, for the owner's session: `demo_check.py` should not raise an ALERT for a retcode 10036 close when the
+  journal shows a deal closing that position in the same second; and a later EA build could check
+  `PositionSelectByTicket(t)` again and skip 10036 in `CloseAll` (log-only change; the demo EA stays as it is).
 
 - **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
   idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set

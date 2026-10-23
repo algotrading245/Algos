@@ -172,3 +172,20 @@ failure or clock line.
   0.84 after one loss. So 10-21's midday trade closed at a loss (inferred from the size; the EA logs no closes) and
   10-22's at a win. Designed behaviour; the tester runs the same code, so it is in the tester figures.
 - No skip, error, day stop or clock line. No ALERT.
+
+## 2026-10-23 (Friday), 15:25 check (judge): ALERT, harmless (a duplicate close)
+
+`tools/demo_check.py` reports ALERT, 6 EA lines, orders Tokyo 1, other 1, midday 1: "close on EURUSD failed,
+retcode 10036 (position closed)" at 14:00:00.795.
+
+- **What happened (terminal journal):** the midday exit sent a close for the 12:30 EURUSD sell at 13:59:59.507. It
+  was placed at 13:59:59.612 and filled at 14:00:00.736 (1235 ms): bought 0.44 at 1.11902 against the 1.11994 sell,
+  about +40 USD before commission. At 14:00:00.792 a second close of the same position was refused ("Position doesn't
+  exist"), and the EA logged it as retcode 10036.
+- **Cause:** `CloseAll` (`Legs.mqh:357-373`) runs on every tick and once a second, and trades synchronously. On the
+  next call, 56 ms after the fill, `PositionsTotal()` still listed the position, so the EA sent the close again.
+  Nothing opened, and `Leg()` (`Legs.mqh:779-780`) ignores the return value, so no state changed. The tester fills
+  at once, so the tester figures are not affected.
+- **Win after loss:** with this win, the next midday size goes up by the 1.25 factor (`Progression()`, 12:36 note).
+- No other skip, error, day stop or clock line. The checker and EA changes are proposed as (9) in `docs/HANDOFF.md`.
+  The demo's inputs are not changed.
