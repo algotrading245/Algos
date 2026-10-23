@@ -25,13 +25,15 @@ Book gates (does it help?):
   5 book     the walk-forward equal-risk book's Sharpe from 2018 rises by >= 0.03 with the leg in (with the leg(s)
              in --replaces out)
   6 dsr      Deflated Sharpe Ratio (Bailey, Lopez de Prado 2014) of the new book >= 0.90, N = every trial ever
-             logged in docs/trials.jsonl plus the 47 counted before the log existed
+             logged in docs/trials.jsonl plus the 47 counted before the log existed; spec-factory specs count once
+             per rule family (trials_logged, owner 2026-10-23)
 The first failure names the verdict.  Profitable months with and without the leg are printed as information.
 Nothing on or after the owner's holdout (tools/holdout.py) is used.
 """
 import argparse
 import json
 import math
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -63,12 +65,35 @@ EULER = 0.5772156649
 sharpe = B.sharpe
 
 
+FACTORY_ID = re.compile(r"^(?:idea:)?f_(.+?)_[a-z]{6}(?:_|$)")
+
+
+def trial_family(trial_id):
+    """The family a trial counts under. A spec-factory spec (idea:f_<rule>_<symbol>[_<filter>], tools/spec_factory.py)
+    is one rule run again on another market or filter, so all specs of one rule are one family (owner 2026-10-23,
+    gaps_report item 2: Bailey and Lopez de Prado's effective N counts groups of alike trials, not each copy).
+    Every other trial is its own family."""
+    m = FACTORY_ID.match(trial_id)
+    return f"factory:{m.group(1)}" if m else None
+
+
 def trials_logged():
     """One per gates.py run, plus every rule a scan tried (tools/edge_scan.py logs its whole search as one line
-    with "count": the number of rules it looked at, not only the survivors)."""
+    with "count": the number of rules it looked at, not only the survivors). Spec-factory specs count per rule
+    family: each family adds the largest count of any one of its specs (its own parameter grid), once."""
     if not TRIALS.exists():
         return 0
-    return sum(int(json.loads(line).get("count", 1)) for line in TRIALS.open(encoding="utf-8") if line.strip())
+    total, families = 0, {}
+    for line in TRIALS.open(encoding="utf-8"):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        count, fam = int(row.get("count", 1)), trial_family(str(row.get("id", "")))
+        if fam:
+            families[fam] = max(families.get(fam, 0), count)
+        else:
+            total += count
+    return total + sum(families.values())
 
 
 def deflated(r, n_trials):

@@ -13,11 +13,17 @@ and the demo runs an old EA build.
 
 ## Open, for Opus
 1. FIXED 2026-10-23: Aurum Doctor registered (install.ps1 run at the owner's request), daily 07:00.
-2. Idea-engine spec factory inflates the multiple-testing N (~27k), so the luck bar is 1.00 and every factory spec
-   fails. Fix: count factory variants per family, not per spec, in the N the gate uses (gate change - owner approval).
+2. FIXED 2026-10-23 (owner approved in chat, a5): tools/gates.py trials_logged counts spec-factory specs once per
+   rule family (6 families). N 27129 -> 26710; the luck bar stays 1.00. Found on the way: the factory was not the
+   cause. Its 135 lines were only 438 of N; edge_scan's two searches are 25960 of it. And factory specs fail at the
+   halves gate (143 of 146), not at dsr; the book's DSR is 1.000. Counting edge_scan per search would be a separate
+   gate change (owner).
 3. FIXED 2026-10-23 01:45: T16 restarted with AurumFunded 1.10 (trades as 1.09) and phase1_legs.set; a4 applied.
-4. Breakout leg skips on the demo: the 0.01-lot floor needs a bigger balance. Fix: scale the leg's risk to the
-   balance or switch it off on small accounts (EA change - reviewer).
+4. Breakout leg skips on the demo only on wide-range days (checked 2026-10-23). With the demo preset (size 0.5,
+   0.125% per side) the 01:00-09:00 range in 2023 to 2025-10-12 needs EUR 3.9k at the median day, 8.2k at p90,
+   9.9k at p95 and 18.8k at the widest. So 10k trades on about 95% of days and a 25k account trades on every day.
+   The one skip in the T16 log was a 1.181 JPY stop (it needs about 10.6k). Open, small: the EA logs a placed
+   breakout order as "failed, retcode 10009", but 10009 means done (EA log fix - reviewer).
 5. demo_check counts noise-leg orders as "other". Fix: add the noise leg's magic number to the demo_check map.
 6. Fidelity check due 2026-10-23 cannot run: firm-day lines, P/L and slippage are not logged. Fix: have the monitor
    write them in docs/demo_log.md each check-in.

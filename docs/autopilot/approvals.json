@@ -32,6 +32,15 @@
       "approved": "2026-10-23",
       "applied": "2026-10-23",
       "note": "Owner asked in chat on 2026-10-23 to attach on T16 on their behalf. The EA had in fact been re-attached by the keeper's t16_attach.ini start on 2026-10-21 01:30, but on an old build. Applied 2026-10-23 01:45 by the owner session: T16's AurumFunded.ex5 already matched the repo build 1.10 (1.09 plus a risk layer that is off by default, so trading equals 1.09 with this preset); T16 was closed cleanly and restarted with /config:tools/autopilot/t16_attach.ini. Journal: authorized on FTMO-Demo, 16 inputs read from AurumFunded_FTMO_phase1_legs.set, 'expert AurumFunded (XAUUSD,M15) loaded successfully' (one instance), 0 positions, 0 orders, trading enabled. EA log: 'account leverage 1:100' line at 01:45:34. No 'phase 1 started' line because the phase state (start balance, peak, day stop) is kept in the terminal's global variables and was restored, not restarted."
+    },
+    {
+      "id": "a5",
+      "what": "Gate change (gaps_report item 2): in tools/gates.py, count spec-factory specs (idea:f_<rule>_<symbol>[_<filter>]) once per rule family in the Deflated Sharpe N, each family adding the largest count of one of its specs.",
+      "status": "applied",
+      "asked": "2026-10-23",
+      "approved": "2026-10-23",
+      "applied": "2026-10-23",
+      "note": "Owner asked in chat on 2026-10-23 to make the item 2 change on their behalf. trials_logged now groups 135 factory lines into 6 families: N 27129 -> 26710, luck bar still 1.00. No verdict changes, because factory specs fail at halves, not dsr. edge_scan's two searches (25960) are most of N; changing that needs its own approval."
     }
   ]
 }
