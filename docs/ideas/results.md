@@ -260,3 +260,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T00:01 | f_meanrev_nzdcad_vh | n/a | 4 | NZDCAD meanrev lookback=10 z=2.0 L1 both | 0.83 / 0.14 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
 | 2026-10-24T00:01 | f_meanrev_wtiusd_vh | n/a | 4 | WTIUSD meanrev lookback=20 z=2.0 L1 both | 0.42 / 0.15 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
 | 2026-10-24T00:01 | f_rsi_xauusd_vh | n/a | 4 | XAUUSD rsi level=10 period=2 L1 both | 0.35 / 0.76 | FAIL at belief | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T01:00 | f_rsi_audcad_vh | n/a | 4 | AUDCAD rsi level=30 period=2 L1 both | 0.65 / 0.55 | FAIL at corr | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T01:00 | f_rsi_eurusd_vh | n/a | 4 | EURUSD rsi level=10 period=2 L1 both | 0.40 / 0.19 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T01:00 | f_rsi_gbpusd_vh | n/a | 4 | GBPUSD rsi level=30 period=14 L1 both | 0.59 / -0.06 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T01:00 | f_rsi_spxusd_vh | n/a | 4 | SPXUSD rsi level=30 period=14 L1 both | 0.04 / 0.61 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
+| 2026-10-24T01:00 | f_rsi_usdjpy_vh | n/a | 4 | USDJPY rsi level=10 period=2 L1 both | -0.22 / -0.09 | FAIL at halves | 1.000 (book, N=26730, luck bar 1.00) |
