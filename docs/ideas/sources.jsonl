@@ -316,3 +316,6 @@
 {"date": "2026-10-23", "kind": "paper", "title": "Della Corte et al FX volatility risk premium (needs option vols)", "link": "https://cepr.org/publications/dp9549", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Weekly currency reversal/momentum search (Dao weekend gap already dropped; Massey thesis momentum)", "link": "https://mro.massey.ac.nz/handle/10179/7266?show=full", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Ferreira Filipe Suominen carry funding risk (no backtest)", "link": "https://orbilu.uni.lu/handle/10993/15389", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "search", "title": "Moreira-Muir volatility-managed portfolios (NBER 22208): equity/carry factor sizing; book already has a risk layer, no FTMO-market net test", "link": "https://www.nber.org/papers/22208", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "search", "title": "Search (finder 76th): gold/index overnight drift net of costs; nothing found", "link": "https://www.google.com/search?q=gold+overnight+drift", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "search", "title": "Search (finder 76th): EURUSD ECB press conference intraday rule; only news commentary", "link": "https://www.fxstreet.com/", "read": "unverified", "specs": []}
