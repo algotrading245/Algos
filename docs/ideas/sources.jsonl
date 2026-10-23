@@ -536,3 +536,6 @@
 {"date": "2026-10-23", "kind": "paper", "title": "EURUSD intraday predictability net of costs search (Neely-Weller, Orquin-Serrano)", "link": "https://repository.essex.ac.uk/7681/", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Gold weekly reversal after large weekly move search (commentary only)", "link": "https://www.barchart.com/story/news/22633923/the-clearest-biggest-and-most-important-reversal-in-gold", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "FX VRP spot proxy search (CEPR DP9549, options-based)", "link": "https://cepr.org/publications/dp9549", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "VIX futures term structure as S&P timing (Fassas/Hourvouliades JRFM 2019)", "link": "https://mdpi-res.com/d_attachment/jrfm/jrfm-12-00113/article_deploy/jrfm-12-00113-v2.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Gold real-yield weekly gate (GitHub)", "link": "https://gitea.com/kwyvern-gitea/gold-gate", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Overnight vs intraday index anomaly (Alpha Architect / arXiv 2507.04481)", "link": "https://arxiv.org/pdf/2507.04481", "read": "unverified", "specs": []}
