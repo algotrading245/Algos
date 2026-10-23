@@ -278,3 +278,8 @@
 {"id": "idea:f_meanrev_eurjpy_vh", "when": "2026-10-23T22:00:50", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_gbpjpy_vh", "when": "2026-10-23T22:00:53", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_nzdusd_vh", "when": "2026-10-23T22:00:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audnzd_vh", "when": "2026-10-23T23:00:25", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_euraud_vh", "when": "2026-10-23T23:00:32", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurchf_vh", "when": "2026-10-23T23:00:34", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurgbp_vh", "when": "2026-10-23T23:00:37", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpchf_vh", "when": "2026-10-23T23:00:39", "verdict": "FAIL at halves", "count": 4}

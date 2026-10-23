@@ -1,0 +1,21 @@
+{
+  "id": "f_meanrev_audnzd_vh",
+  "title": "meanrev on AUDNZD when vol high",
+  "source": "spec factory grid: z-score mean reversion, the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "AUDNZD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "meanrev",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-23",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-23T23:00:25"
+}
