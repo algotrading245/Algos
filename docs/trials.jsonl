@@ -203,3 +203,4 @@
 {"id": "idea:f_tsmom_eurchf_vh", "when": "2026-10-23T08:01:03", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_eurgbp_vh", "when": "2026-10-23T08:01:12", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_gbpjpy_vh", "when": "2026-10-23T08:01:18", "verdict": "FAIL at halves", "count": 3}
+{"id": "gold_bond_regime", "when": "2026-10-23T08:46:12", "verdict": "FAIL at halves"}
