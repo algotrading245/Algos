@@ -211,3 +211,14 @@ lines now; 2 are new:
 - No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo. Owner: please
   confirm whether the XAUUSD chart was switched to M1 at 16:30 (switching back to M15 is the owner's choice; agents do
   not touch the terminal).
+
+## 2026-10-23 (Friday), 20:25 check (judge): no new ALERT; second US100 noise buy at 17:59:59
+
+`tools/demo_check.py` still shows only the explained 14:00 ALERT. There are 9 EA lines; 1 is new:
+
+- **17:59:59.596, US100.cash bought 0.08 lots at 29123.83, bands 29114.00 / 28706.11:** the noise leg's exit and
+  re-entry at the same half-hour check, the pattern judged on 10-21 (18:59 and 20:29). The leg cannot add to a held
+  position: when it holds one it either keeps it (`continue`) or closes it under max(upper band, session average) and,
+  with the bid still above the upper band, buys again (`Legs.mqh:1989-2012`). The close leaves no EA line, and the
+  journal is flushed only to 01:45, so the close itself is not visible. The same code runs in the tester.
+- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo.
