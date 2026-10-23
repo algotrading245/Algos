@@ -171,3 +171,10 @@
 {"id": "idea:f_reversal_eurjpy", "when": "2026-10-23T02:00:51", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_gbpjpy", "when": "2026-10-23T02:01:01", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_nzdusd", "when": "2026-10-23T02:01:11", "verdict": "FAIL at halves", "count": 2}
+{"id": "rebalancing_signal", "when": "2026-10-23T02:36:50", "verdict": "FAIL at halves"}
+{"id": "ma200_pullback", "when": "2026-10-23T02:54:56", "verdict": "FAIL at halves"}
+{"id": "idea:f_reversal_audnzd", "when": "2026-10-23T03:00:12", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_euraud", "when": "2026-10-23T03:00:17", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurchf", "when": "2026-10-23T03:00:20", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurgbp", "when": "2026-10-23T03:00:23", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpchf", "when": "2026-10-23T03:00:26", "verdict": "FAIL at halves", "count": 2}
