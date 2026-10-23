@@ -455,3 +455,6 @@
 {"date": "2026-10-23", "kind": "paper", "title": "Breedon-Ranaldo EURUSD time-of-day (QuantRocket replication)", "link": "https://quantrocket.com/blog/business-day-fx-patterns/", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Realized S&P variance risk premium (Todorov)", "link": "https://afajof.org/management/viewp.php?n=41580", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Pairs trading cointegration critical look (Pandini 2026)", "link": "https://arxiv.org/pdf/2010.01157", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Overnight vs intraday index returns (Lou-Polk-Skouras, Yu et al NQ futures)", "link": "https://researchonline.lse.ac.uk/id/eprint/87481", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Gold futures day-of-week / seasonal timing (CXO, Elcicek)", "link": "https://www.cxoadvisory.com/fundamental-valuation/gold-timing-strategies/", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "EURUSD skewness / range expansion daily (QuantConnect, arXiv 1409.7720)", "link": "https://arxiv.org/abs/1409.7720", "read": "unverified", "specs": []}
