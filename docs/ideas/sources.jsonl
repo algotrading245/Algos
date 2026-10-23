@@ -367,3 +367,6 @@
 {"date": "2026-10-23", "kind": "paper", "title": "Krohn/Mueller/Whelan FX fixings around the clock (EURUSD seasonality search)", "link": "https://benny.aeaweb.org/conference/2020/preliminary/paper/2dedYfDH", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "Della Corte/Ramadorai/Sarno FX volatility risk premia (CEPR DP9549)", "link": "https://cepr.org/publications/dp9549", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "paper", "title": "EFMA 2015 carry trade AUD/JPY daily-weekly", "link": "https://www.efmaefm.org/0EFMAMEETINGS/EFMA%20ANNUAL%20MEETINGS/2015-Amsterdam/papers/EFMA2015_0208_fullpaper.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Della Corte Ramadorai Sarno / BCB wps454 FX volatility risk premia", "link": "https://www.bcb.gov.br/pec/wps/ingl/wps454.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Grant Wolf Yu intraday reversals in US index futures; arXiv 2605.11423 MNQ regime", "link": "https://econpapers.repec.org/paper/arxpapers/2605.11423.htm", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Weekly Gold Gate TIPS real-yield rule (gitea)", "link": "https://gitea.com/kwyvern-gitea/gold-gate", "read": "unverified", "specs": []}
