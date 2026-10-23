@@ -214,3 +214,8 @@
 {"id": "idea:f_donchian_xauusd_vh", "when": "2026-10-23T10:01:03", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_tsmom_jpxjpy_vh", "when": "2026-10-23T10:01:07", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_wtiusd_vh", "when": "2026-10-23T10:01:09", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_audcad_vh", "when": "2026-10-23T11:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audusd_vh", "when": "2026-10-23T11:00:57", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpusd_vh", "when": "2026-10-23T11:01:08", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_spxusd_vh", "when": "2026-10-23T11:01:15", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xagusd_vh", "when": "2026-10-23T11:01:22", "verdict": "FAIL at halves", "count": 2}

@@ -190,3 +190,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T10:01 | f_donchian_xauusd_vh | n/a | 2 | XAUUSD donchian lookback=20 L1 both | 0.01 / -0.42 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T10:01 | f_tsmom_jpxjpy_vh | n/a | 3 | JPXJPY tsmom lookback=120 L1 both | 0.31 / -0.74 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
 | 2026-10-23T10:01 | f_tsmom_wtiusd_vh | n/a | 3 | WTIUSD tsmom lookback=60 L1 both | 0.12 / 0.12 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T11:00 | f_donchian_audcad_vh | n/a | 2 | AUDCAD donchian lookback=55 L1 both | -0.13 / -0.40 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T11:00 | f_donchian_audusd_vh | n/a | 2 | AUDUSD donchian lookback=20 L1 both | 0.02 / 0.25 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T11:01 | f_donchian_gbpusd_vh | n/a | 2 | GBPUSD donchian lookback=55 L1 both | -0.37 / 0.05 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T11:01 | f_donchian_spxusd_vh | n/a | 2 | SPXUSD donchian lookback=55 L1 both | -0.03 / -0.01 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T11:01 | f_donchian_xagusd_vh | n/a | 2 | XAGUSD donchian lookback=20 L1 both | 0.26 / -0.34 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
