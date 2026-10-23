@@ -222,3 +222,27 @@ lines now; 2 are new:
   with the bid still above the upper band, buys again (`Legs.mqh:1989-2012`). The close leaves no EA line, and the
   journal is flushed only to 01:45, so the close itself is not visible. The same code runs in the tester.
 - No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo.
+
+## 2026-10-23 (Friday), 23:16 check (monitor): no new ALERT; the tool's ALERT is the known 14:00 duplicate close
+
+Checked by the monitor role. `tools/demo_check.py` reports ALERT, 10 EA lines, orders Tokyo 1, other 3, midday 1, 0 journal
+trade lines. The flag is the failed close at 14:00:00.795 (retcode 10036), explained in the 15:25 judge check: a second
+close of a position already closed at 13:59:59. It is not a monitor trigger (no day stop, final stop, margin error or
+trade without a broker stop).
+
+- **Trades per leg (logged opens):** Tokyo 1 (sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895). Breakout 1 (bought 0.01
+  USDJPY at 157.123 at 09:06, stop 156.075). Midday 1 (sold 0.44 EURUSD at 1.11993 at 12:30, stop 1.12200; closed at
+  13:59:59 by the leg's exit, per the 15:25 note). Noise 2 (bought 0.08 US100.cash at 17:00:00 and at 17:59:59, bands in
+  the log). Bell skipped at 21:59:59 (move +0.83 is below 1.5 x the average 2.95). Each leg shows one order, no repeat.
+- **Tester comparison:** not possible. Tester jobs end 2025-09-30 (holdout), so there is no tester figure for this day.
+- **P/L of the day:** not logged (no P/L line in the EA log, no journal trade lines, no end-of-day equity). Only the midday
+  close can be worked out from the logged prices: sold 1.11993 and closed at 1.11902 on 0.44 lots is about +40 USD before
+  commission. The other legs' closes are not in the log.
+- **Slippage on fills:** not logged (fill prices only, no quote at signal time). The fill comparison waits for fidelity
+  after the first demo week.
+- **Account:** firm day 2026.10.23, day start 10043.55, day stop 9743.55, final stop 9150.00 (static). No day-stop or
+  final-stop line. No margin error. No clock-check skip.
+- **Trades without a broker stop:** none shown. Midday and breakout lines print a stop. The noise lines print bands, not the
+  stop; the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`), which the printed line does
+  not show.
+- **Odd:** nothing new. The 16:30 M1 re-initialisation and the 17:59:59 noise buy are the ones judged at 17:03 and 20:25.
