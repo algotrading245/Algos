@@ -239,3 +239,9 @@
 {"id": "idea:f_ma_cross_eurusd_vh", "when": "2026-10-23T15:00:48", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_usdjpy_vh", "when": "2026-10-23T15:00:51", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_ma_cross_xauusd_vh", "when": "2026-10-23T15:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "opex_week_indices", "when": "2026-10-23T15:58:25", "verdict": "FAIL at halves"}
+{"id": "idea:f_ma_cross_audusd_vh", "when": "2026-10-23T16:00:22", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpusd_vh", "when": "2026-10-23T16:00:28", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_spxusd_vh", "when": "2026-10-23T16:00:32", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdcad_vh", "when": "2026-10-23T16:00:34", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_xagusd_vh", "when": "2026-10-23T16:00:42", "verdict": "FAIL at halves", "count": 4}
