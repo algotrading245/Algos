@@ -155,3 +155,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T03:00 | f_reversal_eurchf | n/a | 2 | EURCHF reversal lookback=1 L1 both | -0.07 / -0.58 | FAIL at halves | 0.999 (book, N=26714, luck bar 1.00) |
 | 2026-10-23T03:00 | f_reversal_eurgbp | n/a | 2 | EURGBP reversal lookback=5 L1 both | -0.38 / 0.69 | FAIL at halves | 1.000 (book, N=26714, luck bar 1.00) |
 | 2026-10-23T03:00 | f_reversal_gbpchf | n/a | 2 | GBPCHF reversal lookback=1 L1 both | 0.13 / -0.08 | FAIL at halves | 1.000 (book, N=26714, luck bar 1.00) |
+| 2026-10-23T04:00 | f_reversal_grxeur | n/a | 2 | GRXEUR reversal lookback=5 L1 both | 0.56 / -0.56 | FAIL at halves | 0.999 (book, N=26714, luck bar 1.00) |
+| 2026-10-23T04:00 | f_reversal_jpxjpy | n/a | 2 | JPXJPY reversal lookback=5 L1 both | 0.10 / -0.47 | FAIL at halves | 1.000 (book, N=26714, luck bar 1.00) |
+| 2026-10-23T04:00 | f_reversal_nzdcad | n/a | 2 | NZDCAD reversal lookback=1 L1 both | 0.38 / -0.19 | FAIL at halves | 1.000 (book, N=26714, luck bar 1.00) |
+| 2026-10-23T04:00 | f_reversal_wtiusd | n/a | 2 | WTIUSD reversal lookback=1 L1 both | 0.43 / -0.27 | FAIL at halves | 1.000 (book, N=26714, luck bar 1.00) |
+| 2026-10-23T04:00 | f_xsmom_majors | n/a | 3 | EURUSD+GBPUSD+USDJPY+USDCHF+USDCAD+AUDUSD+NZDUSD xsmom lookback=60 top=1 L1 both | 0.05 / -0.54 | FAIL at halves | 1.000 (book, N=26715, luck bar 1.00) |

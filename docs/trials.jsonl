@@ -178,3 +178,8 @@
 {"id": "idea:f_reversal_eurchf", "when": "2026-10-23T03:00:20", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_eurgbp", "when": "2026-10-23T03:00:23", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_gbpchf", "when": "2026-10-23T03:00:26", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_grxeur", "when": "2026-10-23T04:00:35", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_jpxjpy", "when": "2026-10-23T04:00:37", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_nzdcad", "when": "2026-10-23T04:00:39", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_wtiusd", "when": "2026-10-23T04:00:43", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_xsmom_majors", "when": "2026-10-23T04:00:45", "verdict": "FAIL at halves", "count": 3}
