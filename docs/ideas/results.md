@@ -185,3 +185,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T09:00 | f_tsmom_gbpchf_vh | n/a | 3 | GBPCHF tsmom lookback=120 L1 both | -0.49 / -0.56 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
 | 2026-10-23T09:00 | f_tsmom_grxeur_vh | n/a | 3 | GRXEUR tsmom lookback=120 L1 both | 0.31 / 0.42 | FAIL at belief | 1.000 (book, N=26725, luck bar 1.00) |
 | 2026-10-23T09:00 | f_tsmom_nzdcad_vh | n/a | 3 | NZDCAD tsmom lookback=60 L1 both | 0.03 / -0.55 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T10:00 | f_donchian_eurusd_vh | n/a | 2 | EURUSD donchian lookback=20 L1 both | 0.28 / -0.26 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T10:01 | f_donchian_usdjpy_vh | n/a | 2 | USDJPY donchian lookback=55 L1 both | 0.66 / 0.63 | FAIL at belief | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T10:01 | f_donchian_xauusd_vh | n/a | 2 | XAUUSD donchian lookback=20 L1 both | 0.01 / -0.42 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T10:01 | f_tsmom_jpxjpy_vh | n/a | 3 | JPXJPY tsmom lookback=120 L1 both | 0.31 / -0.74 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
+| 2026-10-23T10:01 | f_tsmom_wtiusd_vh | n/a | 3 | WTIUSD tsmom lookback=60 L1 both | 0.12 / 0.12 | FAIL at halves | 1.000 (book, N=26725, luck bar 1.00) |
