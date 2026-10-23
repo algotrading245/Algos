@@ -189,3 +189,25 @@ retcode 10036 (position closed)" at 14:00:00.795.
 - **Win after loss:** with this win, the next midday size goes up by the 1.25 factor (`Progression()`, 12:36 note).
 - No other skip, error, day stop or clock line. The checker and EA changes are proposed as (9) in `docs/HANDOFF.md`.
   The demo's inputs are not changed.
+
+## 2026-10-23 (Friday), 17:03 check (judge): no new ALERT; EA re-initialised on M1 at 16:30
+
+`tools/demo_check.py` still reports the ALERT, but it is the 14:00 duplicate close explained at 15:25. There are 8 EA
+lines now; 2 are new:
+
+- **16:30:16, chart now XAUUSD,M1 (it was attached on M15):** the EA ran OnInit again and printed the USD/JPY
+  breakout range 156.075-157.123 again. This is likely a chart timeframe change. The terminal journal is written to
+  disk only up to 01:45, so the cause is not confirmed. No order was repeated:
+  - OnInit resets the breakout state (`Legs.mqh:2319-2320`).
+  - The late-start guard (`Legs.mqh:1747-1772`) skips a side that is already held or traded, so the 09:06 high-side
+    buy was not sent again.
+  - The low side (156.075) stays armed, as it would in an EA that kept running.
+  - The loss-run sizing (`Progression()`, `Legs.mqh:519-535`) is read from the 90-day deal history, so the reinit
+    does not reset it.
+  - The legs read their bars with explicit `PERIOD_*` arguments, so the chart period should not change what they
+    trade. Ticks on an M1 chart can arrive at different times, which may shift when an order is sent within a minute.
+- **17:00:00, US100.cash bought 0.08 lots at 29120.83, bands 29077.93 / 28742.05:** the noise leg ("other" 2 =
+  breakout + noise). Designed; 1 order, no repeat.
+- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo. Owner: please
+  confirm whether the XAUUSD chart was switched to M1 at 16:30 (switching back to M15 is the owner's choice; agents do
+  not touch the terminal).

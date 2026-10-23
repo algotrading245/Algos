@@ -257,6 +257,11 @@ each finished piece of work.
   Proposals, for the owner's session: `demo_check.py` should not raise an ALERT for a retcode 10036 close when the
   journal shows a deal closing that position in the same second; and a later EA build could check
   `PositionSelectByTicket(t)` again and skip 10036 in `CloseAll` (log-only change; the demo EA stays as it is).
+  (10) Question for the owner (judge 2026-10-23 17:03): at 16:30:16 the EA re-initialised, and its chart is now
+  XAUUSD,M1 (it was attached on M15). Was the timeframe switched by hand? It did no harm: the late-start guard
+  (`Legs.mqh:1747-1772`) skipped the breakout side that was already traded, and the loss-run sizing comes from deal
+  history. No leg reads the chart period (no `PERIOD_CURRENT` or `_Period` in `mql5/`). M15 is still the documented
+  attach; switching back is the owner's choice.
 
 - **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
   idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set
