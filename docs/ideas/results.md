@@ -170,3 +170,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-23T06:00 | f_tsmom_gbpusd_vh | n/a | 3 | GBPUSD tsmom lookback=60 L1 both | -0.26 / -0.04 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T06:00 | f_tsmom_spxusd_vh | n/a | 3 | SPXUSD tsmom lookback=120 L1 both | 0.48 / -0.17 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
 | 2026-10-23T06:00 | f_tsmom_xagusd_vh | n/a | 3 | XAGUSD tsmom lookback=120 L1 both | 0.27 / 0.21 | FAIL at belief | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T07:00 | f_tsmom_audusd_vh | n/a | 3 | AUDUSD tsmom lookback=20 L1 both | 0.11 / 0.00 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T07:00 | f_tsmom_eurjpy_vh | n/a | 3 | EURJPY tsmom lookback=60 L1 both | 0.60 / -0.24 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T07:00 | f_tsmom_nzdusd_vh | n/a | 3 | NZDUSD tsmom lookback=20 L1 both | 0.04 / 0.30 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T07:00 | f_tsmom_usdcad_vh | n/a | 3 | USDCAD tsmom lookback=60 L1 both | 0.04 / -0.01 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |
+| 2026-10-23T07:00 | f_tsmom_usdchf_vh | n/a | 3 | USDCHF tsmom lookback=60 L1 both | 0.08 / -0.69 | FAIL at halves | 1.000 (book, N=26724, luck bar 1.00) |

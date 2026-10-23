@@ -193,3 +193,8 @@
 {"id": "idea:f_tsmom_gbpusd_vh", "when": "2026-10-23T06:00:38", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_spxusd_vh", "when": "2026-10-23T06:00:41", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_xagusd_vh", "when": "2026-10-23T06:00:44", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_audusd_vh", "when": "2026-10-23T07:00:06", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurjpy_vh", "when": "2026-10-23T07:00:13", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_nzdusd_vh", "when": "2026-10-23T07:00:18", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdcad_vh", "when": "2026-10-23T07:00:29", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdchf_vh", "when": "2026-10-23T07:00:38", "verdict": "FAIL at halves", "count": 3}
