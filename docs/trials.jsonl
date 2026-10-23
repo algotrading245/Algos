@@ -198,3 +198,8 @@
 {"id": "idea:f_tsmom_nzdusd_vh", "when": "2026-10-23T07:00:18", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_usdcad_vh", "when": "2026-10-23T07:00:29", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_usdchf_vh", "when": "2026-10-23T07:00:38", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audjpy_vh", "when": "2026-10-23T08:00:55", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_cadjpy_vh", "when": "2026-10-23T08:00:59", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurchf_vh", "when": "2026-10-23T08:01:03", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurgbp_vh", "when": "2026-10-23T08:01:12", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpjpy_vh", "when": "2026-10-23T08:01:18", "verdict": "FAIL at halves", "count": 3}
