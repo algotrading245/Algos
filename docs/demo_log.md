@@ -159,3 +159,16 @@ failure or clock line.
   The checker counts it as "other" (tools change (7)).
 - **Trades without a broker stop:** none; both order lines show a stop.
 - **Slippage:** the fill comparison waits for the full first demo week (fidelity, after today's close).
+
+## 2026-10-23 (Friday), 12:36 check (judge): no ALERT
+
+`tools/demo_check.py` reports ok, 5 EA lines, orders Tokyo 1, other 1, midday 1, 0 journal trade lines.
+
+- **New since 10:30:** at 12:30:00 the midday leg sold 0.44 EURUSD at 1.11993, stop 1.12200, model weight 1.36
+  (1 order, no repeat, broker stop set).
+- **Size check (midday 10-21 / 10-22 / 10-23: 0.42 / 0.23 / 0.44 lots):** risk at the stop divided by model weight is
+  0.63 / 0.40 / 0.60% of balance. With `InpSizeMult` 0.5 and `InpMeridianRiskPct` 1.0 (phase1 preset), that is the
+  loss-run factor `Progression()` (`Legs.mqh:519-535`, `InpLossMult` 0.67 / `InpLossNorm` 0.80): 1.25 after a win,
+  0.84 after one loss. So 10-21's midday trade closed at a loss (inferred from the size; the EA logs no closes) and
+  10-22's at a win. Designed behaviour; the tester runs the same code, so it is in the tester figures.
+- No skip, error, day stop or clock line. No ALERT.
