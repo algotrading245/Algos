@@ -143,3 +143,19 @@ Checked by the monitor role. `tools/demo_check.py` reports ok, 5 EA lines, order
 - **Slippage:** not logged. The log gives fill prices only, not the quote at signal time, so the fills cannot be compared with the tester yet. The fill comparison starts 10-23.
 - **Trades without a broker stop:** none. The midday line shows its stop. The noise lines print the bands, not the stop, but the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`, 3 x the leg's volatility from the entry price). The printed line does not show that stop value, so it is not logged.
 - **Odd:** the breakout skip is the RiskLots floor (judge notes 14:43 and 16:33 in `docs/HANDOFF.md`), not a fault. The two noise shorts are designed lower-band entries.
+
+## 2026-10-23 (Friday), 10:30 check (judge): no ALERT
+
+`tools/demo_check.py` reports ok, 4 EA lines, orders Tokyo 1 and other 1, 0 journal trade lines, no day stop, final stop,
+failure or clock line.
+
+- **Account:** firm day 2026.10.23, day start 10043.55, day stop at 9743.55, final stop at 9150.00 (static).
+- **Leverage:** "account leverage 1:100, margin of 1 lot in EUR, XAUUSD 7183.07 at 4029.02" at 00:05, and again at
+  01:45:34 after the keeper restart onto AurumFunded 1.10 (gold about 1:50, as on 10-19). `demo_check.py` hides this
+  line because it contains "account" (proposed tools change (8) in `docs/HANDOFF.md`).
+- Tokyo sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895, model weight 0.50 (1 order).
+- Breakout: USD/JPY range 156.075-157.123 (1.70x its 60-day average), bought 0.01 lots at 157.123 at 09:06, stop
+  156.075. The 1.048 range is just under the 1.09 above which the 0.01 floor blocks a trade (judge note 10-22 14:40).
+  The checker counts it as "other" (tools change (7)).
+- **Trades without a broker stop:** none; both order lines show a stop.
+- **Slippage:** the fill comparison waits for the full first demo week (fidelity, after today's close).

@@ -93,6 +93,8 @@ each finished piece of work.
   than about 1.09 yen gets no breakout trade. A tester run at the same deposit skips that trade too. A Python model
   with fractional size does not. So on wide-range days the comparison should expect "no trade" from the demo and the
   tester, and count those days apart from the model's figure. No input changes.
+  10-23 confirms the threshold: a range of 1.048 (156.075-157.123) got the 0.01 floor (0.03 x 0.363 / 1.048 =
+  0.0104), bought at 157.123 at 09:06, stop 156.075 (judge 2026-10-23 10:30).
   **Grid resend guard (2026-10-21 03:07, AurumFunded 1.09 / AurumHydra 1.38, reviewer approve, compile 0/0):**
   `Grid()` sends no new level until the last one sent shows in `GridHeld()` or `GRID_WAIT` (10 s) pass; closes and
   stop-outs are not held. No tester change (deals show at once); the demo preset has the grid off, so it matters for
@@ -242,6 +244,10 @@ each finished piece of work.
   lots at ..., bands ..." (`Legs.mqh:1903`) with no leg word, and the breakout line "USD/JPY broke its range" has
   none either. Match "bands" as noise and "broke its range" as breakout (judge 2026-10-22 16:30: 10-22 shows
   `other: 2` for the two noise shorts).
+  (8) `demo_check.py` `PRIVATE` (line 19) drops every line with "account", so the EA's daily "account leverage 1:n,
+  margin of 1 lot ..." line (`Legs.mqh:2390`) never reaches the checker or the monitor, which then reads as if the
+  line were missing. Let a line through when it matches `account leverage 1:\d+` and has no run of 6+ digits
+  (judge 2026-10-23 10:30: the line is in the 10-23 log at 00:05 and 01:45, 1:100, gold 7183 EUR a lot at 4029).
 
 - **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
   idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set
