@@ -266,3 +266,4 @@
 {"id": "idea:f_meanrev_spxusd_vh", "when": "2026-10-23T20:00:49", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_usdjpy_vh", "when": "2026-10-23T20:00:50", "verdict": "FAIL at belief", "count": 4}
 {"id": "idea:f_meanrev_xauusd_vh", "when": "2026-10-23T20:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "totm_us", "when": "2026-10-23T20:56:55", "verdict": "FAIL at halves"}

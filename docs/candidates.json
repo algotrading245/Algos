@@ -1407,6 +1407,64 @@
      0.809
     ]
    }
+  },
+  {
+   "id": "totm_us",
+   "name": "totm_us",
+   "status": "rejected",
+   "step": 2,
+   "reason": "gates: FAIL at halves. Turn-of-month long (buy close last day, sell close day +3) on SPXUSD+NSXUSD 2010-2025.09, 1 bp / 0.5 bp spread + 2 bp/night swap: Sharpe -0.11 to 2017 / 0.14 from 2018, -0.01 all at 1x; gross 0.12 (S&P) / 0.18 (Nasdaq); the effect is gone after costs (as Maberly-Waggoner found post-1990). Variant -2..+3 (secondary trial): S&P 0.08, Nasdaq 0.15 net. Evidence research/totm_indices.py.",
+   "tag": "halves",
+   "published": "https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+   "gates": {
+    "id": "totm_us",
+    "when": "2026-10-23T20:56:55",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "-0.11 / 0.14 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": false,
+      "figure": "-0.01",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book -0.01, max leg morning +0.07",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "published https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.34 -> 3.23",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26725, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": "https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+    "profitable_months_2018": [
+     0.798,
+     0.798
+    ]
+   }
   }
  ],
  "rejected": [
