@@ -166,3 +166,8 @@
 {"id": "breakout", "when": "2026-10-23T01:13:14", "verdict": "FAIL at belief"}
 {"id": "tod_eurusd", "when": "2026-10-23T01:26:35", "verdict": "FAIL at halves"}
 {"id": "ml_metalabel_breakout_size", "when": "2026-10-23T01:50:50", "verdict": "FAIL at book"}
+{"id": "idea:f_reversal_audjpy", "when": "2026-10-23T02:00:28", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_cadjpy", "when": "2026-10-23T02:00:40", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurjpy", "when": "2026-10-23T02:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpjpy", "when": "2026-10-23T02:01:01", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_nzdusd", "when": "2026-10-23T02:01:11", "verdict": "FAIL at halves", "count": 2}
