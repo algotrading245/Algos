@@ -265,3 +265,6 @@
 {"date": "2026-10-23", "kind": "prebuilt", "title": "Nguyen-Prokopczuk-Simen gold VRP / Xu-Roh GLD VRP", "link": "https://macrosynergy.com/?p=40616", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "prebuilt", "title": "StrategyQuant Tuesday Reversal (stocks, vendor)", "link": "https://strategyquant.com/blog/tuesday-reversal-strategy-tested-on-nasdaq-100-and-sp-500-stocks/", "read": "unverified", "specs": []}
 {"date": "2026-10-23", "kind": "prebuilt", "title": "QuantRocket business-day FX patterns (decayed Breedon-Ranaldo family)", "link": "https://quantrocket.com/blog/business-day-fx-patterns/", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "S&P VIX spike multi-day reversion (CXO, IVolAI)", "link": "https://www.cxoadvisory.com/?p=3498", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Pre-FOMC dollar / EURUSD Fed week (Macrosynergy)", "link": "https://macrosynergy.com/?p=41075", "read": "unverified", "specs": []}
+{"date": "2026-10-23", "kind": "paper", "title": "Gold futures GARCH vol risk premium proxy search", "link": "https://www.tcd.ie/triss/assets/PDFs/iiis/iiisdp225.pdf", "read": "unverified", "specs": []}
