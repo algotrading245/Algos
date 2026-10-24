@@ -378,3 +378,8 @@
 {"id": "idea:f_tsmom_gbpchf_vl", "when": "2026-10-24T14:00:17", "verdict": "FAIL at halves", "count": 3}
 {"id": "drl_leg_sizing_ppo", "when": "2026-10-24T14:04:46", "verdict": "FAIL at costs"}
 {"id": "prebuilt_monday_dip_ibs_indices", "when": "2026-10-24T14:14:29", "verdict": "FAIL at halves"}
+{"id": "idea:f_tsmom_audnzd_vl", "when": "2026-10-24T15:00:29", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_grxeur_vl", "when": "2026-10-24T15:00:31", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_jpxjpy_vl", "when": "2026-10-24T15:00:33", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_nzdcad_vl", "when": "2026-10-24T15:00:35", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_wtiusd_vl", "when": "2026-10-24T15:00:38", "verdict": "FAIL at halves", "count": 3}
