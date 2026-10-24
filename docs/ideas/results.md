@@ -355,3 +355,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T19:01 | f_donchian_eurchf_vl | n/a | 2 | EURCHF donchian lookback=55 L1 both | 0.28 / -0.25 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T19:01 | f_donchian_eurgbp_vl | n/a | 2 | EURGBP donchian lookback=20 L1 both | -0.22 / -1.01 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T19:01 | f_donchian_gbpchf_vl | n/a | 2 | GBPCHF donchian lookback=55 L1 both | -0.14 / -0.04 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T20:00 | f_donchian_grxeur_vl | n/a | 2 | GRXEUR donchian lookback=55 L1 both | 0.22 / 0.36 | FAIL at belief | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T20:00 | f_donchian_jpxjpy_vl | n/a | 2 | JPXJPY donchian lookback=20 L1 both | 0.27 / 0.11 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T20:00 | f_donchian_nzdcad_vl | n/a | 2 | NZDCAD donchian lookback=55 L1 both | 0.27 / -0.12 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T20:00 | f_donchian_wtiusd_vl | n/a | 2 | WTIUSD donchian lookback=55 L1 both | -0.01 / -0.09 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T20:00 | f_ma_cross_xauusd_vl | n/a | 4 | XAUUSD ma_cross fast=20 slow=50 L1 both | 0.38 / 0.64 | FAIL at belief | 1.000 (book, N=26756, luck bar 1.00) |

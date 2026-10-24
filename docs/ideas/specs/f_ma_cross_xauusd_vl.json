@@ -1,0 +1,21 @@
+{
+  "id": "f_ma_cross_xauusd_vl",
+  "title": "ma_cross on XAUUSD when vol low",
+  "source": "spec factory grid: moving-average crossover (Brock, Lakonishok & LeBaron 1992), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "XAUUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "ma_cross",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at belief",
+  "tested": "2026-10-24T20:00:49"
+}
