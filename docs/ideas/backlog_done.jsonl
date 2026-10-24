@@ -36,3 +36,19 @@
 {"id": "heston_intraday_periodicity", "gap": "intraday; gold, indices", "kind": "paper", "title": "Heston, Korajczyk, Sadka (2010) Intraday patterns in the cross-section of stock returns, JF", "link": "https://doi.org/10.1111/j.1540-6261.2010.01573.x", "note": "Same half-hour-of-day return continuation at daily lags; test on XAUUSD, US500, US100, USDJPY, EURUSD with same parameters", "status": "done", "added": "2026-10-24", "result": "paper_hks_intraday_periodicity_fx_gold"}
 {"id": "ml_meta_label_grid", "gap": "ML on existing legs", "kind": "ml", "title": "Regime filter for the AUDCAD grid via Kaufman efficiency ratio", "link": "https://www.wiley.com/en-us/Trading+Systems+and+Methods%2C+6th+Edition-p-9781119605355", "note": "Skip grid starts when ER is high (trend); grid loses in trends; losing months 2021-11, 2023-05", "status": "done", "added": "2026-10-24", "result": "ml_grid_er_start_filter"}
 {"id": "erb_harvey_gold_real_yield", "gap": "gold, weeks", "kind": "paper", "title": "Erb & Harvey (2013) The golden dilemma, FAJ (gold vs real yields, FRED DFII10)", "link": "https://doi.org/10.2469/faj.v69.n4.1", "note": "Weekly gold direction from change in 10y TIPS yield; macro signal, FX-macro style failed so low prior", "status": "done", "added": "2026-10-24", "result": "paper_erb_harvey_yield_shock_3mkts"}
+{"id": "eross_btc_intraday_2019", "status": "dropped", "result": "crypto intraday: swap/overnight crypto legs failed; not on FTMO list", "closed": "2026-10-24"}
+{"id": "lou_polk_skouras_overnight", "status": "dropped", "result": "overnight family rejected today", "closed": "2026-10-24"}
+{"id": "baltussen_hedging_demand", "status": "dropped", "result": "noise-leg family, overlap", "closed": "2026-10-24"}
+{"id": "mcconnell_turn_of_month", "status": "dropped", "result": "effect faded, TOM rejected earlier", "closed": "2026-10-24"}
+{"id": "cenedese_hedging_pressure", "status": "dropped", "result": "42-country cross-section, not CFD tradable on EURUSD", "closed": "2026-10-24"}
+{"id": "caminschi_gold_fix", "status": "dropped", "result": "no readable rule, seen 3 times", "closed": "2026-10-24"}
+{"id": "moreira_muir_vol_managed", "status": "dropped", "result": "vol-managed sizing already rejected", "closed": "2026-10-24"}
+{"id": "ml_meta_label_breakout", "status": "dropped", "result": "done: ml_metalabel_breakout_size rejected", "closed": "2026-10-24"}
+{"id": "gatev_pairs_fx_cross", "status": "dropped", "result": "pairs rejected family", "closed": "2026-10-24"}
+{"id": "stivers_opex_week", "status": "dropped", "result": "opex already in queue/rejected", "closed": "2026-10-24"}
+{"id": "ito_yamada_tokyo_fix", "status": "dropped", "result": "tokyo leg overlap", "closed": "2026-10-24"}
+{"id": "gao_intraday_momentum", "status": "dropped", "result": "noise-leg family", "closed": "2026-10-24"}
+{"id": "zarattini_spy_intraday", "status": "dropped", "result": "noise-leg family, SSRN 403", "closed": "2026-10-24"}
+{"id": "aqr_trend_century", "status": "dropped", "result": "tsmom/trend rejected", "closed": "2026-10-24"}
+{"id": "aqr_value_momentum_everywhere", "status": "dropped", "result": "value/FX macro failed", "closed": "2026-10-24"}
+{"id": "ml_regime_hold_gold", "status": "dropped", "result": "done: ml_regime_filter_gold_hold queued earlier", "closed": "2026-10-24"}
