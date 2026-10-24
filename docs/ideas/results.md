@@ -305,3 +305,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T09:00 | f_reversal_gbpchf_vh | n/a | 2 | GBPCHF reversal lookback=1 L1 both | 0.40 / 0.19 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
 | 2026-10-24T09:00 | f_reversal_grxeur_vh | n/a | 2 | GRXEUR reversal lookback=5 L1 both | 0.38 / -0.50 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
 | 2026-10-24T09:00 | f_reversal_nzdcad_vh | n/a | 2 | NZDCAD reversal lookback=1 L1 both | 0.88 / 0.02 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T10:00 | f_reversal_jpxjpy_vh | n/a | 2 | JPXJPY reversal lookback=5 L1 both | 0.66 / -0.06 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T10:01 | f_reversal_wtiusd_vh | n/a | 2 | WTIUSD reversal lookback=1 L1 both | 0.54 / 0.03 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T10:01 | f_xsmom_assets_vh | n/a | 3 | XAUUSD+XAGUSD+SPXUSD+GRXEUR+JPXJPY+WTIUSD xsmom lookback=120 top=1 L1 both | 0.25 / 0.18 | FAIL at halves | 1.000 (book, N=26735, luck bar 1.00) |
+| 2026-10-24T10:01 | f_xsmom_majors_vh | n/a | 3 | EURUSD+GBPUSD+USDJPY+USDCHF+USDCAD+AUDUSD+NZDUSD xsmom lookback=60 top=1 L1 both | 0.24 / -0.02 | FAIL at halves | 1.000 (book, N=26735, luck bar 1.00) |
+| 2026-10-24T10:01 | f_xsmom_yen_vh | n/a | 3 | USDJPY+EURJPY+GBPJPY+AUDJPY+CADJPY xsmom lookback=60 top=1 L1 both | 0.11 / -0.36 | FAIL at halves | 1.000 (book, N=26735, luck bar 1.00) |
