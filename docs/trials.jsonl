@@ -327,3 +327,4 @@
 {"id": "idea:f_reversal_nzdusd_vh", "when": "2026-10-24T07:01:23", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_usdcad_vh", "when": "2026-10-24T07:01:30", "verdict": "FAIL at belief", "count": 2}
 {"id": "idea:f_reversal_usdchf_vh", "when": "2026-10-24T07:01:37", "verdict": "FAIL at halves", "count": 2}
+{"id": "fx_value_rer", "when": "2026-10-24T07:22:40", "verdict": "FAIL at halves"}
