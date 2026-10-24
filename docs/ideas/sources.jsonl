@@ -1289,3 +1289,4 @@
 {"date": "2026-10-24", "kind": "prebuilt", "title": "MQL5 CodeBase GER40 Evening Coil EA (NR7 + tick-volume, long only H1)", "link": "https://www.mql5.com/en/code/78380", "read": "in full", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Fed IFDP 1445 Akinci, Kalemli-Ozcan, Queralto: Pricing Risk Globally (theory, no tradable rule)", "link": "https://www.federalreserve.gov/econres/ifdp/files/ifdp1445.pdf", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Lou, Polk, Skouras: A tug of war, overnight vs intraday returns (stock-level; no index rule with costs)", "link": "https://personal.lse.ac.uk/polk/research/TugOfWar.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Heston, Korajczyk, Sadka 2010 intraday patterns (queued as multi-market rule)", "link": "https://doi.org/10.1111/j.1540-6261.2010.01573.x", "read": "unverified", "specs": []}
