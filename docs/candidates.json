@@ -2790,6 +2790,64 @@
      0.596
     ]
    }
+  },
+  {
+   "id": "erb_yield_shock",
+   "name": "erb_yield_shock",
+   "status": "rejected",
+   "step": 2,
+   "reason": "gates: FAIL at halves. DGS10 5d-change z>1 shock rule on XAUUSD/USDJPY/US100, 5-day hold: equal-weight Sharpe 0.09 to 2017 / 0.45 from 2018; gold 0.36/-0.03, USDJPY -0.39/0.65, NSX 0.03/0.36 net. Also book gain -0.02. Evidence research/erb_yield_shock.py",
+   "tag": "halves",
+   "published": "https://doi.org/10.2469/faj.v69.n4.1",
+   "gates": {
+    "id": "erb_yield_shock",
+    "when": "2026-10-24T22:42:29",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "0.09 / 0.45 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.26",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book +0.00, max leg noise +0.07",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "published https://doi.org/10.2469/faj.v69.n4.1",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.11 -> 3.09",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26755, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": "https://doi.org/10.2469/faj.v69.n4.1",
+    "profitable_months_2018": [
+     0.777,
+     0.787
+    ]
+   }
   }
  ],
  "rejected": [

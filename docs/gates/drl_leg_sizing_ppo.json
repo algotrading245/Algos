@@ -1,0 +1,49 @@
+{
+ "id": "drl_leg_sizing_ppo",
+ "when": "2026-10-24T14:04:46",
+ "verdict": "FAIL at costs",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "1.64 / 2.41 (split at its middle 2023-12-06)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": false,
+   "figure": "-3.35",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": false,
+   "figure": "book +0.53, max leg after +0.75",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": false,
+   "figure": "no source, no other markets",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": false,
+   "figure": "book 2018+ 3.34 -> 3.30",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26751, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [],
+ "published": null,
+ "profitable_months_2018": [
+  0.798,
+  0.798
+ ]
+}
