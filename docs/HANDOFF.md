@@ -43,15 +43,15 @@ each finished piece of work.
 - **Shared memory** in `docs/memory/` (mission, lessons, decisions.jsonl) goes into every prompt; agents search it
   before deciding and log every decision. Orchestrator run limit per idea: 3 (`runs` in `docs/candidates.json`),
   then drop, move on, or ask the owner.
-- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.06 since 2026-10-19 14:54,
-  XAUUSD M15, `AurumFunded_FTMO_phase1_legs.set`, legs on since a3; the repo build is 1.09, which only the owner can
-  copy over); the tester is its own install `C:\MetaTrader 5 - Tester`
+- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.10 since 2026-10-23 01:45,
+  keeper log; 1.06 from 2026-10-19 14:54 to then; `AurumFunded_FTMO_phase1_legs.set`, legs on since a3; attached on
+  XAUUSD M15, re-initialised on M1 at 10-23 16:30, owner question (10)); the tester is its own install `C:\MetaTrader 5 - Tester`
   (owner login done 2026-10-18). Live page: `python tools/live_server.py` (127.0.0.1:8765).
 
 ## Current state
 
-- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.38 and Funded 1.09 in
-  the repo). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
+- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
+  the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
   (AurumBreakout, AurumNoise, AurumFix and others); they are not used.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
