@@ -370,3 +370,11 @@
 {"id": "commod_same_month", "when": "2026-10-24T13:37:19", "verdict": "FAIL at halves"}
 {"id": "crypto_xs_mom", "when": "2026-10-24T13:40:13", "verdict": "FAIL at halves"}
 {"id": "ml_har_rv_leg_sizing", "when": "2026-10-24T13:49:36", "verdict": "FAIL at book"}
+{"id": "ml_regime_hmm_book", "when": "2026-10-24T13:54:42", "verdict": "FAIL at corr"}
+{"id": "idea:f_tsmom_cadjpy_vl", "when": "2026-10-24T14:00:06", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_euraud_vl", "when": "2026-10-24T14:00:10", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurchf_vl", "when": "2026-10-24T14:00:12", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurgbp_vl", "when": "2026-10-24T14:00:14", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpchf_vl", "when": "2026-10-24T14:00:17", "verdict": "FAIL at halves", "count": 3}
+{"id": "drl_leg_sizing_ppo", "when": "2026-10-24T14:04:46", "verdict": "FAIL at costs"}
+{"id": "prebuilt_monday_dip_ibs_indices", "when": "2026-10-24T14:14:29", "verdict": "FAIL at halves"}

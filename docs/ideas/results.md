@@ -320,3 +320,13 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T12:01 | f_tsmom_spxusd_vl | n/a | 3 | SPXUSD tsmom lookback=60 L1 both | 0.07 / 0.29 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
 | 2026-10-24T12:01 | f_tsmom_usdcad_vl | n/a | 3 | USDCAD tsmom lookback=120 L1 both | -0.04 / -0.40 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
 | 2026-10-24T12:01 | f_tsmom_xagusd_vl | n/a | 3 | XAGUSD tsmom lookback=20 L1 both | 0.95 / 0.00 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
+| 2026-10-24T13:00 | f_tsmom_audjpy_vl | n/a | 3 | AUDJPY tsmom lookback=20 L1 both | 0.16 / 0.00 | FAIL at halves | 1.000 (book, N=26747, luck bar 1.00) |
+| 2026-10-24T13:00 | f_tsmom_eurjpy_vl | n/a | 3 | EURJPY tsmom lookback=60 L1 both | 0.24 / 0.58 | FAIL at belief | 1.000 (book, N=26747, luck bar 1.00) |
+| 2026-10-24T13:00 | f_tsmom_gbpjpy_vl | n/a | 3 | GBPJPY tsmom lookback=20 L1 both | 0.57 / -0.04 | FAIL at halves | 1.000 (book, N=26747, luck bar 1.00) |
+| 2026-10-24T13:00 | f_tsmom_nzdusd_vl | n/a | 3 | NZDUSD tsmom lookback=60 L1 both | 0.21 / -0.48 | FAIL at halves | 1.000 (book, N=26747, luck bar 1.00) |
+| 2026-10-24T13:00 | f_tsmom_usdchf_vl | n/a | 3 | USDCHF tsmom lookback=60 L1 both | -0.24 / -0.32 | FAIL at halves | 1.000 (book, N=26747, luck bar 1.00) |
+| 2026-10-24T14:00 | f_tsmom_cadjpy_vl | n/a | 3 | CADJPY tsmom lookback=20 L1 both | 0.40 / -0.35 | FAIL at halves | 1.000 (book, N=26753, luck bar 1.00) |
+| 2026-10-24T14:00 | f_tsmom_euraud_vl | n/a | 3 | EURAUD tsmom lookback=20 L1 both | 0.42 / -0.02 | FAIL at halves | 1.000 (book, N=26753, luck bar 1.00) |
+| 2026-10-24T14:00 | f_tsmom_eurchf_vl | n/a | 3 | EURCHF tsmom lookback=60 L1 both | 0.21 / -0.34 | FAIL at halves | 1.000 (book, N=26753, luck bar 1.00) |
+| 2026-10-24T14:00 | f_tsmom_eurgbp_vl | n/a | 3 | EURGBP tsmom lookback=120 L1 both | 0.10 / -0.55 | FAIL at halves | 1.000 (book, N=26753, luck bar 1.00) |
+| 2026-10-24T14:00 | f_tsmom_gbpchf_vl | n/a | 3 | GBPCHF tsmom lookback=120 L1 both | 0.12 / 0.17 | FAIL at halves | 1.000 (book, N=26753, luck bar 1.00) |
