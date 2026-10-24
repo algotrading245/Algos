@@ -418,3 +418,4 @@
 {"id": "idea:f_meanrev_usdcad_vl", "when": "2026-10-24T22:00:18", "verdict": "FAIL at belief", "count": 4}
 {"id": "idea:f_meanrev_usdchf_vl", "when": "2026-10-24T22:00:23", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_meanrev_xagusd_vl", "when": "2026-10-24T22:00:27", "verdict": "FAIL at halves", "count": 4}
+{"id": "ml_grid_er_start_filter", "when": "2026-10-24T22:27:45", "verdict": "FAIL at belief"}
