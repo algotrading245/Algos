@@ -52,3 +52,5 @@
 {"id": "aqr_trend_century", "status": "dropped", "result": "tsmom/trend rejected", "closed": "2026-10-24"}
 {"id": "aqr_value_momentum_everywhere", "status": "dropped", "result": "value/FX macro failed", "closed": "2026-10-24"}
 {"id": "ml_regime_hold_gold", "status": "dropped", "result": "done: ml_regime_filter_gold_hold queued earlier", "closed": "2026-10-24"}
+{"id": "weekend_gap_fill", "status": "dropped", "result": "weekend gap family rejected (dao_weekend_gap, halves); retail sources only"}
+{"id": "ariel_preholiday", "status": "dropped", "result": "pre-holiday effect gone in large caps; tiny trade count"}
