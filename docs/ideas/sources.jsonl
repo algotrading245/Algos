@@ -1151,3 +1151,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "Gao et al intraday momentum / multi-asset extension: equity and futures only, no EURUSD net test", "link": "https://profiles.wustl.edu/en/publications/market-intraday-momentum/", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Gold COT / seasonality search: only Forecast-to-Fill (seen) and dashboards", "link": "https://arxiv.org/pdf/2511.08571", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "prebuilt", "title": "EURUSD Asian-range London breakout: vendor backtest, 36% win rate, no spread model, breakout family exists", "link": "https://backtrex.com/en/backtests/london-breakout-eur-usd", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "VIX futures term structure as equity timing (Simon-Campasano, Avellaneda 2021)", "link": "https://arxiv.org/pdf/2103.02016", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "FX W-shaped intraday returns AEA 2019 prelim", "link": "https://topcat.aeaweb.org/conference/2019/preliminary/paper/QQ73KSH8", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Commodity/gold vol-scaled momentum KAIST, Fan-Li-Liu", "link": "https://dspace.kaist.ac.kr/handle/10203/321019", "read": "unverified", "specs": []}
