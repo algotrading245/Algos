@@ -355,3 +355,8 @@
 {"id": "idea:f_tsmom_spxusd_vl", "when": "2026-10-24T12:01:05", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_usdcad_vl", "when": "2026-10-24T12:01:07", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_xagusd_vl", "when": "2026-10-24T12:01:09", "verdict": "FAIL at halves", "count": 3}
+{"id": "hau_rey_fx", "when": "2026-10-24T12:19:54", "verdict": "FAIL at halves"}
+{"id": "baltussen_mac5", "when": "2026-10-24T12:23:05", "verdict": "FAIL at halves"}
+{"id": "chen_tsang_slope_fx", "when": "2026-10-24T12:27:12", "verdict": "FAIL at halves"}
+{"id": "safari_cubic", "when": "2026-10-24T12:31:15", "verdict": "FAIL at halves"}
+{"id": "ml_regime_filter_gold_hold", "when": "2026-10-24T12:35:49", "verdict": "FAIL at halves"}
