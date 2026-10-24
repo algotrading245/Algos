@@ -962,3 +962,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "FX order flow explains carry/momentum (Quantpedia / CLS data)", "link": "https://quantpedia.com/order-flow-explains-fx-carry-trade-strategies/", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Gold London PM fix trading rules, transaction costs dominate (UZH)", "link": "https://www.merlin.uzh.ch/publication/show/11299", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "EURUSD HAR realized volatility forecasting with implied vol (Plihal-Lyocsa 2021)", "link": "https://muni.cz/en/research/publications/1684824", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Ferraro-Rogoff-Rossi: Can oil prices forecast exchange rates (NBER w17998)", "link": "https://www.nber.org/papers/w17998", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "prebuilt", "title": "Quantified Strategies turn-of-month / SentimenTrader put-call Nasdaq", "link": "https://quantifiedstrategies.substack.com/p/the-turn-of-the-month-trading-strategy-495", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Gorton-Hayashi-Rouwenhorst inventories and commodity futures returns (NBER w13249)", "link": "https://www.nber.org/papers/w13249.pdf", "read": "unverified", "specs": []}
