@@ -344,3 +344,8 @@
 {"id": "idea:f_xsmom_assets_vh", "when": "2026-10-24T10:01:02", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_xsmom_majors_vh", "when": "2026-10-24T10:01:04", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_xsmom_yen_vh", "when": "2026-10-24T10:01:07", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audcad_vl", "when": "2026-10-24T11:00:19", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurusd_vl", "when": "2026-10-24T11:00:21", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdjpy_vl", "when": "2026-10-24T11:00:23", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_xauusd_vl", "when": "2026-10-24T11:00:25", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_xsmom_all_vh", "when": "2026-10-24T11:00:28", "verdict": "FAIL at halves", "count": 3}
