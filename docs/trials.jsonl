@@ -293,3 +293,12 @@
 {"id": "idea:f_rsi_gbpusd_vh", "when": "2026-10-24T01:00:26", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_spxusd_vh", "when": "2026-10-24T01:00:28", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_usdjpy_vh", "when": "2026-10-24T01:00:31", "verdict": "FAIL at halves", "count": 4}
+{"id": "vrp_gap", "when": "2026-10-24T01:36:59", "verdict": "FAIL at halves"}
+{"id": "fx_carry_g10", "when": "2026-10-24T01:41:17", "verdict": "FAIL at halves"}
+{"id": "policy_gap", "when": "2026-10-24T01:44:14", "verdict": "FAIL at halves"}
+{"id": "vix_vxv_spike", "when": "2026-10-24T01:55:28", "verdict": "FAIL at halves"}
+{"id": "idea:f_rsi_audusd_vh", "when": "2026-10-24T02:01:02", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_nzdusd_vh", "when": "2026-10-24T02:01:09", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdcad_vh", "when": "2026-10-24T02:01:14", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdchf_vh", "when": "2026-10-24T02:01:17", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xagusd_vh", "when": "2026-10-24T02:01:22", "verdict": "FAIL at halves", "count": 4}
