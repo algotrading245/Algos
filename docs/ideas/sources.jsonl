@@ -923,3 +923,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "Quantitative XAUUSD Strategy / session move stats (gold Asia-London session anomaly)", "link": "https://github.com/soloshun/Quantitative-XAUUSD-Strategy", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "LRV Countercyclical Currency Risk Premia (dollar carry, rechecked)", "link": "https://www.nber.org/papers/w16427.pdf", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "arXiv Micro E-mini Nasdaq intraday momentum / vol compression search", "link": "https://econpapers.repec.org/paper/arxpapers/2605.04004.htm", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Neuhierl-Weber Monetary Momentum / Quantpedia pre-announcement drift BoE BoJ SNB", "link": "https://quantpedia.com/pre-announcement-drift-for-boe-boj-snb-do-markets-move-before-the-word-is-out/", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "ml", "title": "Meta-labeling RF feature selection arXiv 2005.12483 (no FX/gold, no costs)", "link": "https://arxiv.org/pdf/2005.12483", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "prebuilt", "title": "EURUSD daily reversal weekly horizon search (retail commentary only)", "link": "https://www.fxstreet.com", "read": "unverified", "specs": []}
