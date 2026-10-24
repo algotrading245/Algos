@@ -345,3 +345,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T17:00 | f_donchian_usdcad_vl | n/a | 2 | USDCAD donchian lookback=55 L1 both | -0.40 / -0.84 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T17:00 | f_donchian_usdchf_vl | n/a | 2 | USDCHF donchian lookback=55 L1 both | 0.03 / 0.06 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T17:00 | f_donchian_xagusd_vl | n/a | 2 | XAGUSD donchian lookback=20 L1 both | 0.52 / -0.25 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T18:00 | f_donchian_audjpy_vl | n/a | 2 | AUDJPY donchian lookback=20 L1 both | -0.02 / -0.19 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T18:00 | f_donchian_cadjpy_vl | n/a | 2 | CADJPY donchian lookback=20 L1 both | 0.21 / -0.76 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T18:00 | f_donchian_eurjpy_vl | n/a | 2 | EURJPY donchian lookback=55 L1 both | 0.01 / 0.70 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T18:00 | f_donchian_gbpjpy_vl | n/a | 2 | GBPJPY donchian lookback=20 L1 both | 0.07 / 0.03 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T18:00 | f_donchian_nzdusd_vl | n/a | 2 | NZDUSD donchian lookback=55 L1 both | -0.01 / -0.49 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |

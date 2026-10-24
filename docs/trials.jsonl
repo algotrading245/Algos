@@ -393,3 +393,8 @@
 {"id": "idea:f_donchian_usdcad_vl", "when": "2026-10-24T17:00:22", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_donchian_usdchf_vl", "when": "2026-10-24T17:00:24", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_donchian_xagusd_vl", "when": "2026-10-24T17:00:26", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audjpy_vl", "when": "2026-10-24T18:00:36", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_cadjpy_vl", "when": "2026-10-24T18:00:38", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurjpy_vl", "when": "2026-10-24T18:00:42", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpjpy_vl", "when": "2026-10-24T18:00:44", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdusd_vl", "when": "2026-10-24T18:00:48", "verdict": "FAIL at halves", "count": 2}
