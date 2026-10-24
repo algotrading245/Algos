@@ -1072,3 +1072,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "QuantInsti trend following major currencies walk-forward", "link": "https://www.quantinsti.com/articles/trend-following-strategies-major-currency-markets/", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Payne 1996 announcement effects and seasonality intra-day FX", "link": "https://researchonline.lse.ac.uk/id/eprint/119169", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Lucca-Moench pre-FOMC drift NY Fed SR512", "link": "https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr512.html", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "prebuilt", "title": "Quantpedia mean reversion strategies in currencies (monthly FX basket)", "link": "https://vvv.quantpedia.com/?p=36499", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "prebuilt", "title": "QuantConnect option expiration week effect (stocks, 2007-2018)", "link": "https://www.quantconnect.com/research/15295/option-expiration-week-effect/", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Gold vs equity ratio rotation search (only Forecast-to-Fill arXiv 2511.08571 and MQL5 signals found)", "link": "https://arxiv.org/pdf/2511.08571", "read": "unverified", "specs": []}
