@@ -83,7 +83,12 @@ due comes before both.
    `{"id": "<short_snake_id>", "source": "prebuilt|paper|ml|drl", "title": "...", "link": "<exact URL>",
    "why": "<the rule or model, its parameters, the markets (ours: XAUUSD, XAGUSD, USDJPY, EURUSD, AUDCAD, SPXUSD and
    the rest in specs/README.md), and whether it suits Hydra, Funded or both>", "status": "new", "added": "<yyyy-mm-dd>"}`.
-   The id must be new (check the queue and `docs/candidates.json`).
+   The id must be new (check the queue and `docs/candidates.json`). When the idea has a simple daily-rule or
+   session proxy, add `"screen"`: an idea-engine spec (format in `docs/ideas/specs/README.md`), e.g. `{"rule":
+   "meanrev", "symbols": ["SPXUSD"], "side": "long", "when": {"trend": "up"}}` or `{"symbols": ["XAUUSD"], "entry":
+   ["03:00"], "hold": [2, 4]}`. The relay tests it for free first (`tools/prescreen.py`) and rejects the item if the
+   proxy is under Sharpe 0.2 in either half, so no builder run is spent on it. Leave it out when no fair proxy exists
+   (ML, DRL, new data).
 5. A plain published rule the engine can test as is (tsmom, reversal, donchian, meanrev, ma_cross, rsi, xsmom with
    the source's own parameters) may also go as a spec in `docs/ideas/specs/` (format in its README, `"status":
    "pending"`, `"read": "in full"` only when you read the whole source): `tools/idea_engine.py` tests it in seconds,

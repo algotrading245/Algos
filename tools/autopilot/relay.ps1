@@ -80,6 +80,15 @@ $bst = try { (& python.exe (Join-Path $PSScriptRoot "budget.py") status 2>$null 
 $overBudget = [bool]($bst -and $bst.skip)
 if ($DryRun -and $bst) { Write-Output "budget: `$$($bst.week_usd) of `$$($bst.weekly_usd) this week ($([math]::Round(100 * $bst.fraction))%), for information only" }
 
+# Free pre-screen before a builder (owner 2026-10-24): queue items whose "screen" proxy fails a half are rejected with
+# no agent run (tools/prescreen.py). Returns the ideas still waiting.
+function Invoke-Prescreen {
+    $a = @(Join-Path $Repo "tools\prescreen.py")
+    if ($DryRun) { $a += "--dry-run" }
+    & python.exe @a 2>$null | ForEach-Object { if ("$_".Trim()) { Write-Log "relay" "prescreen: $_" } }
+    return (Get-QueueWaiting)
+}
+
 # A run that ended within 2 minutes (a limit, a fault) or failed is not started again in this tick, so nothing spins.
 $blocked = @()
 while ($true) {
@@ -135,7 +144,7 @@ while ($true) {
         $role = "finder"; $why = "data item waiting: fetch it before the builder ($((Get-DataDue | ForEach-Object { $_.id }) -join ', '))"
         if (-not $DryRun) { Add-DataTry }
     }
-    elseif ((Get-QueueWaiting) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
+    elseif ((Get-QueueWaiting) -gt 0 -and (Invoke-Prescreen) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
     else { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 
     if (-not $role) { if ($DryRun) { Write-Output "nothing due" }; break }

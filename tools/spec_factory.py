@@ -7,7 +7,8 @@ family the engine knows x every symbol we have x a few market-state filters, wit
 opens (Asia, London, NY, US cash open; held 1, 2 or 4 hours) by weekday. When both are used up it logs it once a day.
 tools/idea_engine.py calls top_up() before each run: when fewer than BATCH specs are pending it writes the next BATCH,
 at most (hour + 1) * PER_HOUR by the end of each hour and DAILY_CAP a day. Every variant the engine tries is logged
-as a DSR trial, so the pacing is what keeps the luck bar from rising fast.
+as a DSR trial, so the pacing is what keeps the luck bar from rising fast. Families the portfolio manager's
+docs/ideas/steer.md lists under "## Stop bringing" are skipped (STOPS), so the grid follows the weekly steer.
 
     python tools/spec_factory.py            # write the next batch now (same limits)
     python tools/spec_factory.py --list     # how many grid specs are left, write nothing
@@ -124,6 +125,34 @@ def _spec(sid, rule, syms, when, src, params=None):
     return s
 
 
+STEER = ROOT / "docs" / "ideas" / "steer.md"
+FX = {"USD", "EUR", "JPY", "GBP", "AUD", "CAD", "CHF", "NZD"}
+TREND = {"tsmom", "xsmom", "donchian", "ma_cross"}
+
+
+def _fx(spec):
+    return all(len(s) == 6 and s[:3] in FX and s[3:] in FX for s in spec["symbols"])
+
+
+# What the portfolio manager's "## Stop bringing" list can switch off here (owner 2026-10-24: the factory wrote 15
+# batches of f_tsmom_* and xsmom specs the steer had already stopped, all failing). (words in the list, spec test)
+STOPS = [
+    (("tsmom", "trend"), lambda s: s.get("rule") in TREND),
+    (("fx calendar", "time-of-day", "short reversal"),
+     lambda s: _fx(s) and (s.get("rule") == "reversal" or "entry" in s or "month_day" in s.get("when", {}))),
+]
+
+
+def stopped():
+    """The spec tests that docs/ideas/steer.md's "## Stop bringing" section turns off (re-read each call)."""
+    try:
+        text = STEER.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    sec = text.split("## Stop bringing", 1)[1].split("\n## ", 1)[0].lower() if "## Stop bringing" in text else ""
+    return [test for words, test in STOPS if any(w in sec for w in words)]
+
+
 def _key(spec):
     keep = ("rule", "params", "symbols", "entry", "hold", "side", "when")
     return json.dumps({k: spec.get(k) for k in keep}, sort_keys=True)
@@ -172,10 +201,13 @@ def top_up(dry=False):
         return []
     n = min(BATCH, allowed - today)
     out = []
+    stops = stopped()
     for s in grid():
         if len(out) >= n:
             break
         if s["id"] in ids or _key(s) in keys:                       # already made, or the miner had the same test
+            continue
+        if any(t(s) for t in stops):                                # the steer stopped this family
             continue
         s["made"] = dt.date.today().isoformat()
         if not dry:
@@ -189,9 +221,12 @@ def top_up(dry=False):
 if __name__ == "__main__":
     if "--list" in sys.argv:
         ids, keys, pending, today = _existing()
-        left = [s["id"] for s in grid() if s["id"] not in ids and _key(s) not in keys]
+        stops = stopped()
+        new = [s for s in grid() if s["id"] not in ids and _key(s) not in keys]
+        left = [s["id"] for s in new if not any(t(s) for t in stops)]
         g1 = sum(1 for _ in grid()) - sum(1 for _ in grid2())
-        print(f"grid {g1} + {sum(1 for _ in grid2())}, left {len(left)}, pending now {pending}, "
+        print(f"grid {g1} + {sum(1 for _ in grid2())}, left {len(left)} ({len(new) - len(left)} more stopped by "
+              f"steer.md), next {left[:3]}, pending now {pending}, "
               f"made today {today}, allowed by now {allowed_now()}/{DAILY_CAP}")
     else:
         print(top_up())

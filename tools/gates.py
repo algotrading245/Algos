@@ -22,8 +22,8 @@ Leg gates (is it real?):
              ledger entry), or the same parameters profitable on 3+ markets (<id>_markets.csv, one column a market,
              every column Sharpe > 0)
 Book gates (does it help?):
-  5 book     the walk-forward equal-risk book's Sharpe from 2018 rises by >= 0.03 with the leg in (with the leg(s)
-             in --replaces out)
+  5 book     the walk-forward equal-risk book's Sharpe from 2018, with the risk layer on (the book we trade, as
+             gaps.py shows it), rises by >= 0.03 with the leg in (with the leg(s) in --replaces out)
   6 dsr      Deflated Sharpe Ratio (Bailey, Lopez de Prado 2014) of the new book >= 0.90, N = every trial ever
              logged in docs/trials.jsonl plus the 47 counted before the log existed; spec-factory specs count once
              per rule family (trials_logged, owner 2026-10-23)
@@ -186,8 +186,10 @@ def judge(cid, stress_sharpe=None, n_extra=1, published=None, replaces=()):
            f"{len(good)}/{len(mk)} markets profitable" if mk else "no source, no other markets")
     gate("belief", ok, why, f"a published source, or the same parameters profitable on all of {MIN_MARKETS}+ markets")
 
-    # 5 book
-    s0, s1 = sharpe(base[base.index >= SPLIT]), sharpe(new[new.index >= SPLIT])
+    # 5 book: the book we trade, with the risk layer on, as gaps.py and book_sim report it (owner 2026-10-24;
+    # before, this used the raw book, 3.34 against the 3.01 the other tools show)
+    mb, mn = B.risk_layer(base), B.risk_layer(new)
+    s0, s1 = sharpe(mb[mb.index >= SPLIT]), sharpe(mn[mn.index >= SPLIT])
     swap = f" replacing {','.join(replaces)}" if replaces else ""
     gate("book", s1 - s0 >= MIN_BOOK_GAIN, f"book 2018+ {s0:.2f} -> {s1:.2f}{swap}",
          f"gain >= {MIN_BOOK_GAIN}, equal risk, weights walk-forward")

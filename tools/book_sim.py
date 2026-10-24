@@ -10,7 +10,8 @@ owner's holdout (tools/holdout.py) is used.
 
 Weights: equal risk, walk-forward.  On the first trading day of each month every leg gets 1 / (its volatility over the
 252 trading days before that day), legs with under 126 days of history get none, no leg gets more than CAP of the
-gross weight, and the weights sum to 1.  Nothing is fitted to returns, so the book's Sharpe is out of sample.
+gross weight, and the weights sum to 1.  A leg in SCALE gets that share of an equal risk
+(cross: half, as it repeats fix).  Nothing is fitted to returns, so the book's Sharpe is out of sample.
 
 Risk layer (the same rules go into the EAs as inputs):
   vol target   size = VOL_TARGET / the book's volatility over the last 63 days, at most LEVER_MAX times the size its
@@ -49,6 +50,10 @@ VOL_TARGET, VOL_LOOKBACK, LEVER_MAX = 0.20, 63, 2.0
 DD_HALF, DD_QUARTER = 0.10, 0.20
 IN_BOOK = ("tester", "demo", "live", "ea")
 SPLIT = "2018-01-01"
+# A leg that repeats another gets a share of a leg's risk (owner 2026-10-24, steer.md): fix and cross correlate 0.61
+# and held 26% of the risk as two legs. Halving cross beat one shared budget in every period (2018+ 3.15 vs 3.05,
+# to 2017 2.40 vs 2.18; none 3.01).
+SCALE = {"cross": 0.5}
 ACCOUNT, SPLIT_SHARE = 100_000, 0.80
 
 
@@ -105,6 +110,9 @@ def weights(L):
         inv = (1 / v[v > 0]).dropna()
         if inv.empty:
             continue
+        for k, f in SCALE.items():
+            if k in inv.index:
+                inv[k] *= f
         w = inv / inv.sum()
         for _ in range(20):  # cap, then share what was cut among the legs under the cap
             over = w > CAP
