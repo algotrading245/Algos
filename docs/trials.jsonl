@@ -328,3 +328,9 @@
 {"id": "idea:f_reversal_usdcad_vh", "when": "2026-10-24T07:01:30", "verdict": "FAIL at belief", "count": 2}
 {"id": "idea:f_reversal_usdchf_vh", "when": "2026-10-24T07:01:37", "verdict": "FAIL at halves", "count": 2}
 {"id": "fx_value_rer", "when": "2026-10-24T07:22:40", "verdict": "FAIL at halves"}
+{"id": "idea:f_reversal_audjpy_vh", "when": "2026-10-24T08:00:43", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_cadjpy_vh", "when": "2026-10-24T08:00:46", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurchf_vh", "when": "2026-10-24T08:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurgbp_vh", "when": "2026-10-24T08:00:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpjpy_vh", "when": "2026-10-24T08:00:57", "verdict": "FAIL at halves", "count": 2}
+{"id": "samehour_fx", "when": "2026-10-24T08:09:34", "verdict": "FAIL at halves"}
