@@ -14,10 +14,12 @@
 #   4. A collected job (to-judge.json): the judge (code tier when the script's expect check matched, else judge tier).
 #   5. A new demo order or ALERT (demo-event.json, from dispatch.py): the judge, at the judge tier for an ALERT.
 #   6. A hand-over naming the judge, builder or tester, when that role has work.
-#   7. A data item waiting: the finder fetches it (ideas that need it are blocked until then).
+#   7. A data item waiting: the finder writes its fetch script (ideas that need it are blocked until then). The
+#      script runs detached (fetch_runner.py step, every pass); the item is skipped while it runs, then the finder
+#      closes it.
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
 #   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget or
-#      empty-run brake).
+#      empty-run brake). The reason it is given says MODE: scout (fewer than 10 open leads) or MODE: normal.
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
 param([switch]$DryRun)
@@ -28,6 +30,7 @@ function Start-Agent([string]$Role, [string]$Why, [string]$Tier = $null) {
     Write-Log "relay" "start $Role ($Why)$(if ($Tier) { " at the $Tier tier" })"
     $a = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $PSScriptRoot "run-agent.ps1"), "-Role", $Role)
     if ($Tier) { $a += @("-Tier", $Tier) }
+    if ($Why) { $a += @("-Why", ($Why -replace '"', "'")) }
     & powershell.exe @a
 }
 function Get-Last([string]$Role) {
@@ -66,7 +69,9 @@ function Get-FinderWhy {
     if ($waiting -ge 2) { return $null }
     $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
     $open = if (Test-Path $bl) { @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' }).Count } else { 0 }
-    $mode = if ($open -lt 10) { "scout mode first" } else { "next backlog lead" }
+    # One job per run (owner 2026-10-24): a scout run only adds leads, a normal run only works them, so neither
+    # hits the turn cap doing both. The finder prompt reads the mode from this line.
+    $mode = if ($open -lt 10) { "MODE: scout" } else { "MODE: normal" }
     return "queue low ($waiting waiting): $open open lead(s), $mode"
 }
 
@@ -87,6 +92,10 @@ while ($true) {
     $now = Get-Date
     # The tester script: collect a finished job, start the next queued one (fast when idle; its own lock).
     & python.exe (Join-Path $Repo "tools\autopilot\tester_step.py") 2>&1 | Out-Null
+    # Long data fetches run as detached scripts, not inside an agent session (owner 2026-10-24).
+    if (-not $DryRun) {
+        & python.exe (Join-Path $PSScriptRoot "fetch_runner.py") step 2>&1 | ForEach-Object { if ("$_" -match '^fetch started') { Write-Log "relay" "$_" } }
+    }
 
     # No AI provider can run (all limited, keyless or missing): code-only until one is back.
     $av = & python.exe (Join-Path $PSScriptRoot "router.py") available 2>$null | Select-Object -Last 1

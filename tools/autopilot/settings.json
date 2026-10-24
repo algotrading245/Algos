@@ -1,4 +1,13 @@
 {
+    "enabledPlugins":  {
+                           "data@knowledge-work-plugins":  false,
+                           "finance@knowledge-work-plugins":  false,
+                           "superpowers@superpowers-dev":  false,
+                           "telegram@synced":  false,
+                           "ecc@synced":  false,
+                           "design@synced":  false,
+                           "engineering@synced":  false
+                       },
     "permissions":  {
                         "allow":  [
                                       "Read",

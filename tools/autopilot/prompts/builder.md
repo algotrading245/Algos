@@ -14,6 +14,9 @@ loss limits).
    `docs/candidates.json`, `docs/memory/rejected_index.json`, and `python tools/memory.py search "<topic>"`, so you
    never redo a rejected idea. A "paper" item: read the paper in full (`python tools/pdf_text.py <link> --pages 1-12`,
    then the rest) before you code it. A "prebuilt" item: read its source code and apply the change named in `why`.
+   Batch your reads (token diet, owner 2026-10-24): when two or more reads, Greps or searches do not depend on each
+   other, make them all in the same turn; every extra turn re-sends the whole context. Grep big files, never read
+   them whole.
 
 3. Build and test it in research/ (Python), on our own data in marketdata/, from the earliest day we have:
    - Past-only features. Costs at 1x, 1.5x and 2x the broker's real spread and commission.

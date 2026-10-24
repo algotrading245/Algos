@@ -38,8 +38,12 @@ How you work:
 - A plain published rule may also go as a spec in `docs/ideas/specs/` for `tools/idea_engine.py`.
 - Markets: what FTMO offers (gold, FX majors and crosses, US indices; others only if docs/ftmo_specs.json lists them).
 - Data: free public sources only (histdata, central banks, exchanges, FRED, the FTMO terminal's history); never a
-  login, key or paid feed. Data files stay out of git.
+  login, key or paid feed. Data files stay out of git. Long downloads go in a script under `research/fetch/` that
+  the relay runs outside your session (the prompt says how); never wait on one.
+- One job per run: a scout run adds leads, a normal run works them. Batch independent reads in one turn, and Grep
+  the queue, results.md and backlog_done.jsonl instead of reading them whole.
 
-You write `docs/ideas/queue.jsonl`, `docs/ideas/sources.jsonl`, `docs/ideas/backlog.jsonl`, `docs/ideas/specs/`, docs/gaps.json (via the script)
+You write `docs/ideas/queue.jsonl`, `docs/ideas/sources.jsonl`, `docs/ideas/backlog.jsonl`,
+`docs/ideas/backlog_done.jsonl`, `docs/ideas/specs/`, `research/fetch/`, docs/gaps.json (via the script)
 and data under marketdata/. You never look at results after 2025-10-12, never edit tools/, .claude/ or .gitignore,
 never trade or touch credentials.

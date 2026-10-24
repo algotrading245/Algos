@@ -101,10 +101,21 @@ function Get-DataTries {
     }
     return $h
 }
+# True while a data item's fetch script (fetch_runner.py, owner 2026-10-24) waits to start or runs: the finder is not
+# started on it until the script has ended (state done or failed in logs\autopilot\fetch\<id>.json).
+function Test-FetchPending($Item) {
+    if (-not ($Item.PSObject.Properties.Name -contains "fetch") -or -not $Item.fetch) { return $false }
+    $f = Join-Path $LogDir "fetch\$($Item.id).json"
+    if (-not (Test-Path $f)) { return $true }
+    $st = try { Get-Content $f -Raw | ConvertFrom-Json } catch { $null }
+    if (-not $st) { return $true }
+    if ($st.script -and (($st.script -replace '\\', '/') -ne ($Item.fetch -replace '\\', '/'))) { return $true }
+    return ($st.state -eq "running")
+}
 # Waiting data items still under the cap.
 function Get-DataDue {
     $t = Get-DataTries
-    return @(Get-QueueItems | Where-Object { $_.status -eq "new" -and $_.source -eq "data" -and ([int]$t["$($_.id)"]) -lt $DataTryCap })
+    return @(Get-QueueItems | Where-Object { $_.status -eq "new" -and $_.source -eq "data" -and ([int]$t["$($_.id)"]) -lt $DataTryCap -and -not (Test-FetchPending $_) })
 }
 # Waiting data items at the cap.
 function Get-DataStuck {

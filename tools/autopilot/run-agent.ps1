@@ -25,7 +25,8 @@ param(
     [ValidateSet("routine", "code", "judge")][string]$Tier,
     [string]$Model,
     [switch]$IfWork,
-    [switch]$NoRetry
+    [switch]$NoRetry,
+    [string]$Why
 )
 . "$PSScriptRoot\common.ps1"
 $log = "agent-$Role"
@@ -150,6 +151,7 @@ HANDOFF line still ends the run.
 $providerSection
 --- Current status (this changes every run; everything above is fixed) ---
 Now: $(Get-Date -Format "dddd yyyy-MM-dd HH:mm") local time (W. Europe).
+$(if ($Why) { "Started by the relay because: $Why" })
 Shell commands: run each one alone and on one line, with paths relative to the repo root (no "cd", no backslash line
 breaks, no ";", "&&", "|", "2>&1" or "echo" added): the permission rules match whole commands, so those forms can
 be refused; the exit code is reported anyway. Quick checks may use python -c "...". Deleting, moving, killing
@@ -169,7 +171,11 @@ $recent
     } else {
         $argv = @("-p", "--settings", (Join-Path $PSScriptRoot "settings.json"), "--permission-mode", "dontAsk",
             "--permission-prompts", "none", "--max-turns", $Turns, "--output-format", "stream-json", "--verbose",
-            "--include-partial-messages")
+            "--include-partial-messages",
+            # Token diet (owner 2026-10-24): no MCP servers, skills, Chrome or user-level plugins in agent runs. They
+            # added about 17k tokens of tool and skill lists to every turn (finder first turn 25.6k -> 8.5k); agents use
+            # only the built-in tools. User settings hold only plugins, theme and the chat model.
+            "--strict-mcp-config", "--disable-slash-commands", "--no-chrome", "--setting-sources", "project,local")
         if ($route.agent) { $argv += @("--agent", $route.agent) } else { $argv += @("--model", $route.model) }
     }
 
