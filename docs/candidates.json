@@ -2617,6 +2617,63 @@
      0.798
     ]
    }
+  },
+  {
+   "id": "prebuilt_monday_dip_ibs_indices",
+   "name": "prebuilt_monday_dip_ibs_indices",
+   "status": "rejected",
+   "step": 2,
+   "reason": "Monday Dip fixed rule on US500+US100 (63 trades 2010-2025): book SR 0.09, halves 0.18/0.05, only 2 of 4 markets profitable (GER40 -0.36, JPN225 -0.14); book 2018+ 3.34->3.20. Evidence research/prebuilt_monday_dip_ibs_indices.py",
+   "tag": "halves",
+   "gates": {
+    "id": "prebuilt_monday_dip_ibs_indices",
+    "when": "2026-10-24T14:14:29",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "0.18 / 0.05 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.06",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book +0.01, max leg fall +0.05",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": false,
+      "figure": "2/4 markets profitable",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.34 -> 3.20",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26752, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": null,
+    "profitable_months_2018": [
+     0.798,
+     0.787
+    ]
+   }
   }
  ],
  "rejected": [
