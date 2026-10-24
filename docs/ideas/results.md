@@ -315,3 +315,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T11:00 | f_tsmom_usdjpy_vl | n/a | 3 | USDJPY tsmom lookback=20 L1 both | -0.03 / -0.45 | FAIL at halves | 1.000 (book, N=26738, luck bar 1.00) |
 | 2026-10-24T11:00 | f_tsmom_xauusd_vl | n/a | 3 | XAUUSD tsmom lookback=20 L1 both | 0.52 / 0.71 | FAIL at belief | 1.000 (book, N=26738, luck bar 1.00) |
 | 2026-10-24T11:00 | f_xsmom_all_vh | n/a | 3 | XAUUSD+USDJPY+EURUSD+AUDCAD+SPXUSD+GBPUSD+XAGUSD+AUDUSD+USDCAD+USDCHF+NZDUSD+EURJPY+GBPJPY+AUDJPY+CADJPY+EURGBP+EURCHF+EURAUD+GBPCHF+AUDNZD+NZDCAD+GRXEUR+JPXJPY+WTIUSD xsmom lookback=120 top=1 L1 both | 0.11 / 0.21 | FAIL at halves | 1.000 (book, N=26738, luck bar 1.00) |
+| 2026-10-24T12:00 | f_tsmom_audusd_vl | n/a | 3 | AUDUSD tsmom lookback=60 L1 both | -0.44 / -0.74 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
+| 2026-10-24T12:01 | f_tsmom_gbpusd_vl | n/a | 3 | GBPUSD tsmom lookback=120 L1 both | 0.41 / -0.03 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
+| 2026-10-24T12:01 | f_tsmom_spxusd_vl | n/a | 3 | SPXUSD tsmom lookback=60 L1 both | 0.07 / 0.29 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
+| 2026-10-24T12:01 | f_tsmom_usdcad_vl | n/a | 3 | USDCAD tsmom lookback=120 L1 both | -0.04 / -0.40 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
+| 2026-10-24T12:01 | f_tsmom_xagusd_vl | n/a | 3 | XAGUSD tsmom lookback=20 L1 both | 0.95 / 0.00 | FAIL at halves | 1.000 (book, N=26742, luck bar 1.00) |
