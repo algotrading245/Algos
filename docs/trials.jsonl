@@ -307,3 +307,8 @@
 {"id": "idea:f_rsi_eurgbp_vh", "when": "2026-10-24T03:00:52", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_eurjpy_vh", "when": "2026-10-24T03:00:54", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_gbpjpy_vh", "when": "2026-10-24T03:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audnzd_vh", "when": "2026-10-24T04:00:31", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_euraud_vh", "when": "2026-10-24T04:00:35", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurchf_vh", "when": "2026-10-24T04:00:38", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_gbpchf_vh", "when": "2026-10-24T04:00:42", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_nzdcad_vh", "when": "2026-10-24T04:00:45", "verdict": "FAIL at halves", "count": 4}
