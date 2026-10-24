@@ -1,0 +1,32 @@
+{
+  "id": "ma_cross_fx_majors_20_200",
+  "title": "20-day vs 200-day moving-average crossover on the dollar majors (Pukthuanthong-Le, Levich, Thomas)",
+  "source": "Pukthuanthong-Le, Levich & Thomas (2006), Do Foreign Exchange Markets Still Trend?, NYU Stern working paper FIN-06-030 (draft 13 Nov 2006)",
+  "link": "https://archive.nyu.edu/jspui/bitstream/2451/26386/2/FIN-06-030.pdf",
+  "read": "in full",
+  "why": "The paper's third rule: the 20-day average against the 200-day average, meant to catch long swings in exchange rates. Same signal convention as the other two rules (long when the short average is above the long one, held until it changes). Exhibit 1 gives the majors' portfolio -2.40% a year in 1995-1999 and -0.59% in 2000-2006. This is the slowest of the three rules; it is kept apart because the engine's daily bars make a 200-day window a different horizon from the 5/20 pair.",
+  "rule": "ma_cross",
+  "symbols": [
+    "USDJPY",
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD",
+    "USDCHF",
+    "USDCAD"
+  ],
+  "params": {
+    "fast": [
+      20
+    ],
+    "slow": [
+      200
+    ],
+    "hold": [
+      1
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T20:21:16"
+}

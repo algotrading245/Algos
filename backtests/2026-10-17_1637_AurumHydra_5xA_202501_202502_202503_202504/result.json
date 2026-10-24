@@ -1,0 +1,72 @@
+{
+ "expert": "AurumHydra",
+ "symbol": "XAUUSD",
+ "period": "M15 (2025.04.01 - 2025.04.30)",
+ "deposit": 10000.0,
+ "net": -6035.03,
+ "gross_profit": 951.2,
+ "gross_loss": -6986.23,
+ "profit_factor": 0.14,
+ "recovery": -0.71,
+ "sharpe": -5.0,
+ "trades": 28.0,
+ "won": "8 (28.57%)",
+ "eq_dd_max": "8 489.16 (68.16%)",
+ "eq_dd_rel": "68.16% (8 489.16)",
+ "bal_dd_max": "6 853.55 (63.35%)",
+ "ticks": 589935.0,
+ "history_quality": "100% real ticks",
+ "win_rate": 28.57,
+ "eq_dd_max_pct": 68.16,
+ "bal_dd_max_pct": 63.35,
+ "deals": 57,
+ "curve": [
+  [
+   "2025-04-01",
+   10181.14
+  ],
+  [
+   "2025-04-02",
+   10154.01
+  ],
+  [
+   "2025-04-03",
+   10808.37
+  ],
+  [
+   "2025-04-04",
+   9725.79
+  ],
+  [
+   "2025-04-07",
+   3964.97
+  ]
+ ],
+ "by_year": {
+  "2025": -6035.03
+ },
+ "by_month": {
+  "2025-04": -6035.03
+ },
+ "by_symbol": {
+  "XAUUSD": -5770.89,
+  "EURUSD": 122.34,
+  "AUDCAD": -438.71,
+  "EURJPY": 2.44,
+  "GBPJPY": -4.64,
+  "CADJPY": -1.21,
+  "USDJPY": -2.0,
+  "GBPUSD": 31.44,
+  "AUDUSD": 22.94,
+  "USDCAD": -0.67,
+  "USDCHF": 3.93
+ },
+ "worst_day": {
+  "day": "2025-04-07",
+  "pct": -59.23
+ },
+ "months_positive": 0,
+ "months": 1,
+ "return_pct": -60.35,
+ "report": "AurumHydra_5xA_202501_202502_202503_202504.htm"
+}

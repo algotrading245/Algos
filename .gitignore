@@ -1,7 +1,10 @@
 __pycache__/
 .obsidian/
 .tools/
-.claude/
+# Claude Code: the role agents are part of the repo, the rest (worktrees, locks) is local
+.claude/*
+!.claude/agents/
+!.claude/settings.json
 
 # Large market data, rebuilt by the downloaders in tools/ (too big for GitHub)
 marketdata/dukascopy/
@@ -9,5 +12,23 @@ marketdata/histdata/raw/
 marketdata/histdata/ticks_raw/
 marketdata/histdata/ticks_m1/
 marketdata/histdata/*_M1.csv.gz
+marketdata/histdata/*.part
 marketdata/histdata/*.npz
 marketdata/histdata/*.npy
+marketdata/histdata/ORB_*.npz
+# Papers fetched by tools/pdf_text.py: other people's copyright, kept local only
+marketdata/papers/
+
+# Strategy Tester raw output: the report header and logs can hold account details; result.json and summary.md are kept
+backtests/**/*.htm
+backtests/**/*.png
+backtests/**/summary.txt
+# job.json holds local paths and the process id; the dashboard copies only the test settings into data.js
+backtests/**/job.json
+
+# Autopilot run logs and the local hold/PAUSE files (tools/autopilot); runs are summarised in docs/autopilot/runs.md
+logs/
+
+# live dashboard feed (tools/dashboard_live.py) and atomic-write temp files
+dashboard/live.js
+dashboard/*.tmp

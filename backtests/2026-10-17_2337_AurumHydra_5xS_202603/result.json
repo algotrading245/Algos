@@ -1,0 +1,52 @@
+{
+ "expert": "AurumHydra",
+ "symbol": "XAUUSD",
+ "period": "M15 (2026.03.01 - 2026.03.31)",
+ "deposit": 10000.0,
+ "net": -5089.94,
+ "gross_profit": 781.11,
+ "gross_loss": -5871.05,
+ "profit_factor": 0.13,
+ "recovery": -0.81,
+ "sharpe": -2.58,
+ "trades": 8.0,
+ "won": "4 (50.00%)",
+ "eq_dd_max": "6 253.52 (56.09%)",
+ "eq_dd_rel": "56.09% (6 253.52)",
+ "bal_dd_max": "5 866.13 (54.44%)",
+ "ticks": 445157.0,
+ "history_quality": "100% real ticks",
+ "win_rate": 50.0,
+ "eq_dd_max_pct": 56.09,
+ "bal_dd_max_pct": 54.44,
+ "deals": 17,
+ "curve": [
+  [
+   "2026-03-02",
+   10776.19
+  ],
+  [
+   "2026-03-03",
+   4910.06
+  ]
+ ],
+ "by_year": {
+  "2026": -5089.94
+ },
+ "by_month": {
+  "2026-03": -5089.94
+ },
+ "by_symbol": {
+  "XAUUSD": -5492.38,
+  "AUDCAD": 321.62,
+  "EURUSD": 80.82
+ },
+ "worst_day": {
+  "day": "2026-03-03",
+  "pct": -54.44
+ },
+ "months_positive": 0,
+ "months": 1,
+ "return_pct": -50.9,
+ "report": "AurumHydra_5xS_202603.htm"
+}

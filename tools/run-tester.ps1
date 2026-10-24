@@ -1,0 +1,193 @@
+# Compiles one EA and runs it in the Strategy Tester of an MT5 install with a preset (.set) plus optional input
+# overrides, then copies the report and the tester log lines into backtests\<date>_<expert>_<symbol>\.
+#
+#   powershell -ExecutionPolicy Bypass -File tools\run-tester.ps1 -Expert AurumBreakout -Symbol USDJPY `
+#       -Preset mql5\Experts\AurumBreakout\AurumBreakout_USDJPY.set
+#   powershell -ExecutionPolicy Bypass -File tools\run-tester.ps1 -Expert AurumNoise -Symbol US100.cash `
+#       -Preset mql5\Experts\AurumNoise\AurumNoise_US100.set
+#   powershell -ExecutionPolicy Bypass -File tools\run-tester.ps1 -Expert AurumFunded -Symbol XAUUSD `
+#       -Preset mql5\Experts\AurumFunded\AurumFunded_FTMO_funded.set -Set InpBreakRiskPct=0.125,InpNoiseMult=0.275
+#
+# -Detach starts the terminal outside this shell's process tree (through WMI), writes job.json into the output folder
+# and returns at once, so a long run survives the shell that launched it. Collect it later:
+#   powershell -ExecutionPolicy Bypass -File tools\run-tester.ps1 -Collect backtests\<folder>
+# which says "running" while that terminal is up, else copies the report and log lines and writes result.json.
+#
+# Default install: C:\MetaTrader 5 - Tester, used only for the tester and logged in to the FTMO demo, so the symbols,
+# their history and the server clock are FTMO's. Terminal 16 keeps running the demo EA. MT5 ignores /config while an
+# install is open, so one run per install at a time (tester_step.py runs up to two installs side by side). Nothing here places live trades: the tester runs on history only.
+param(
+    [string]$Expert = "",
+    [string]$Symbol = "",
+    [string]$Preset = "",
+    [string[]]$Set = @(),
+    [string]$Terminal = "C:\MetaTrader 5 - Tester",
+    [string]$DataFolder = "",
+    [string]$From = "2024.01.01",
+    [string]$To = (Get-Date -Format "yyyy.MM.dd"),
+    [int]$Deposit = 10000,
+    [int]$Leverage = 100,
+    [string]$Period = "M1",
+    [int]$Model = 4,          # 4 = every tick based on real ticks; 1 = 1-minute OHLC (a fast screen, owner 2026-10-21)
+    [string]$Tag = "",
+    [switch]$Detach,
+    [string]$Collect = ""
+)
+$ErrorActionPreference = "Stop"
+$repo = Split-Path -Parent $PSScriptRoot
+
+# Copies the report and the tester log lines written since the run started, then parses the report.
+function Save-Results($job, $out) {
+    Get-ChildItem $job.DataFolder -Filter "$($job.Name)*" | Copy-Item -Destination $out
+    $t0 = [datetime]$job.Started
+    $lines = Get-ChildItem (Join-Path $job.DataFolder "Tester") -Filter *.log -Recurse -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTime -ge $t0 } |
+        ForEach-Object { Get-Content $_.FullName -Encoding Unicode } |
+        Where-Object { $_ -match "$($job.Expert):|final balance|stopped|failed|not found|cannot|error" } |
+        Where-Object { $_ -notmatch "authoriz|login|account \d" }
+    $lines | Set-Content (Join-Path $out "summary.txt")
+    $lines | Select-Object -Last 15 | ForEach-Object { Write-Host $_ }
+    & python (Join-Path $PSScriptRoot "parse_report.py") $out
+    Write-Host "results in $out"
+}
+
+if ($Collect) {
+    $out = if ([System.IO.Path]::IsPathRooted($Collect)) { $Collect } else { Join-Path $repo $Collect }
+    $job = Get-Content (Join-Path $out "job.json") -Raw | ConvertFrom-Json
+    $proc = Get-Process -Id $job.Pid -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $job.Exe }
+    if ($proc) {
+        $mins = [int]((Get-Date) - [datetime]$job.Started).TotalMinutes
+        Write-Host "running: $($job.Expert) on $($job.Symbol), pid $($job.Pid), $mins minutes so far"
+        exit 0
+    }
+    Save-Results $job $out
+    exit 0
+}
+if (-not $Expert -or -not $Symbol) { throw "pass -Expert and -Symbol (or -Collect <folder>)" }
+# The holdout (tools/holdout.py): an agent run (AURUM_AGENT=1, set by tools\autopilot\run-agent.ps1) never tests on it.
+$holdStart = [regex]::Match((Get-Content (Join-Path $PSScriptRoot "holdout.py") -Raw), 'START = pd.Timestamp\("([0-9-]+)"\)').Groups[1].Value
+if ($env:AURUM_AGENT -eq "1" -and $To.Replace(".", "-") -ge $holdStart) {
+    throw "refused: -To $To reaches the holdout (from $holdStart, tools/holdout.py); agent runs end before it"
+}
+$exe = Join-Path $Terminal "terminal64.exe"
+if (-not (Test-Path $exe)) { throw "$exe not found; pass -Terminal <install folder>" }
+
+# Each install's data folder records its install path in origin.txt.
+if (-not $DataFolder) {
+    $DataFolder = Get-ChildItem "$env:APPDATA\MetaQuotes\Terminal" -Directory |
+        Where-Object {
+            $o = Join-Path $_.FullName "origin.txt"
+            (Test-Path $o) -and ("$(Get-Content $o -Raw)".Trim().TrimEnd('\') -eq $Terminal.TrimEnd('\'))
+        } | Select-Object -First 1 -ExpandProperty FullName
+    if (-not $DataFolder) { throw "No data folder for $Terminal yet. Start it once, log in, then close it." }
+}
+# MT5 writes config\accounts.dat at the first login; without one the tester does not start.
+if (-not (Test-Path (Join-Path $DataFolder "config\accounts.dat"))) {
+    throw "$Terminal has no account login yet. Start it once, log in to the FTMO demo, then close it."
+}
+Write-Host "terminal $Terminal"
+Write-Host "data     $DataFolder"
+
+$running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe }
+if ($running) { throw "$exe is open. Close it (File > Exit) and run again; MT5 ignores /config while it is running." }
+
+& (Join-Path $PSScriptRoot "link-terminal.ps1") -DataFolder $DataFolder -Project $Expert
+# The shared legs (mql5\Include\Aurum) that the wrappers include.
+& (Join-Path $PSScriptRoot "link-terminal.ps1") -DataFolder $DataFolder -Project Aurum
+
+$src = Join-Path $DataFolder "MQL5\Experts\$Expert\$Expert.mq5"
+# Per install: two tester installs may compile the same EA at the same time.
+$inst = [Math]::Abs($Terminal.ToLower().GetHashCode()) % 100000
+$log = Join-Path $env:TEMP "${Expert}_${inst}_compile.log"
+Remove-Item $log -ErrorAction SilentlyContinue
+Start-Process (Join-Path $Terminal "metaeditor64.exe") -ArgumentList "/compile:`"$src`"", "/log:`"$log`"" -Wait
+$text = Get-Content $log -Raw
+$text -split "`r?`n" | Where-Object { $_ -match "error|warning" } | ForEach-Object { Write-Host "  $_" }
+if ($text -notmatch "(?<!\d)0 errors?\b") { throw "compile failed (log: $log)" }
+Write-Host "compiled $Expert"
+
+# Every input's default from the EA source, then the preset lines, then the overrides, in the tester's form:
+# name=value||start||step||stop||N (numbers), name=value. Without the defaults, an input missing from the preset kept
+# whatever value the terminal last used for it, so two runs of the same job could differ.
+# The inputs of the shared legs sit in mql5\Include\Aurum\*.mqh (#include <Aurum\...>), with defaults that are macros
+# the wrapper may #define first (#ifndef in the include), so the source is read with its Aurum includes in place and
+# the first #define of a name wins.
+$values = [ordered]@{}
+$skipped = @()
+$macros = @{}
+$lines = foreach ($l in Get-Content (Join-Path $repo "mql5\Experts\$Expert\$Expert.mq5")) {
+    if ($l -match '^\s*#include\s+<(Aurum\\[^>]+)>') { Get-Content (Join-Path $repo "mql5\Include\$($Matches[1])") } else { $l }
+}
+$lines | ForEach-Object {
+    if ($_ -match '^\s*#define\s+(\w+)\s+(.+?)\s*$' -and -not $macros.ContainsKey($Matches[1])) { $macros[$Matches[1]] = $Matches[2] }
+    if ($_ -match '^\s*s?input\s+(?:const\s+)?\w+\s+(Inp\w+)\s*=\s*([^;]+);') {
+        $name = $Matches[1]; $value = $Matches[2].Trim()
+        if ($macros.ContainsKey($value)) { $value = $macros[$value] }
+        if ($value -match '^"(.*)"$') { $values[$name] = $Matches[1] }
+        elseif ($value -match '^(-?\d+(\.\d+)?|true|false)$') { $values[$name] = $value }
+        else { $skipped += $name }    # enum names, D'...' dates, expressions: left to the preset or the terminal
+    }
+}
+Write-Host "source defaults: $($values.Count) inputs$(if ($skipped) { "; not set from the source: $($skipped -join ', ')" })"
+if ($Preset) {
+    Get-Content (Join-Path $repo $Preset) | Where-Object { $_ -match "^\s*Inp\w+=" } | ForEach-Object {
+        $name, $value = $_.Trim() -split "=", 2
+        $values[$name] = $value
+    }
+}
+# -File passes "-Set a=1,b=2" as one string, so split on commas here too.
+foreach ($kv in ($Set -split ",")) { $name, $value = $kv -split "=", 2; $values[$name] = $value }
+$inputs = foreach ($name in $values.Keys) {
+    $value = $values[$name]
+    if ($value -match "^-?\d+(\.\d+)?$") { "$name=$value||$value||0||$value||N" } else { "$name=$value" }
+}
+$name = if ($Tag) { "${Expert}_$Tag" } else { "${Expert}_$($Symbol -replace '\W', '')" }
+$ini = @"
+[Tester]
+Expert=$Expert\$Expert.ex5
+Symbol=$Symbol
+Period=$Period
+Model=$Model
+ExecutionMode=0
+Deposit=$Deposit
+Currency=USD
+Leverage=1:$Leverage
+ForwardMode=0
+ReplaceReport=1
+ShutdownTerminal=1
+Visual=0
+Optimization=0
+FromDate=$From
+ToDate=$To
+Report=$name
+
+[TesterInputs]
+$($inputs -join "`r`n")
+"@
+$out = Join-Path $repo ("backtests\{0}_{1}" -f (Get-Date -Format "yyyy-MM-dd_HHmm"), $name)
+New-Item -ItemType Directory -Force -Path $out | Out-Null
+$tmp = Join-Path $env:TEMP "${name}_${inst}_run.ini"
+Set-Content -Path $tmp -Value $ini -Encoding Unicode
+Copy-Item $tmp (Join-Path $out "tester.ini")
+
+Write-Host "running $Expert on $Symbol from $From to $To ($(if ($Model -eq 4) { "real ticks" } else { "model $Model" }), $Terminal)..."
+$job = [ordered]@{
+    Expert = $Expert; Symbol = $Symbol; Preset = $Preset; Set = ($Set -join ","); From = $From; To = $To
+    Deposit = $Deposit; Leverage = $Leverage; Period = $Period; Model = $Model; Terminal = $Terminal; Name = $name; Exe = $exe; DataFolder = $DataFolder
+    Started = (Get-Date).ToString("o"); Pid = 0
+}
+if ($Detach) {
+    # A process made by WMI has WmiPrvSE as its parent, so it is not killed with this shell's process tree.
+    $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create `
+        -Arguments @{ CommandLine = "`"$exe`" /config:`"$tmp`""; CurrentDirectory = $Terminal }
+    if ($r.ReturnValue -ne 0) { throw "WMI could not start the terminal (code $($r.ReturnValue))" }
+    $job.Pid = [int]$r.ProcessId
+    $job | ConvertTo-Json | Set-Content (Join-Path $out "job.json")
+    Write-Host "detached: pid $($job.Pid); collect with -Collect $out"
+    exit 0
+}
+$p = Start-Process $exe -ArgumentList "/config:`"$tmp`"" -PassThru
+$job.Pid = $p.Id
+$job | ConvertTo-Json | Set-Content (Join-Path $out "job.json")
+$p.WaitForExit()
+Save-Results ([pscustomobject]$job) $out

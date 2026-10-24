@@ -1,0 +1,36 @@
+{
+  "id": "lemperiere_ma_trend_gold_fx_equity",
+  "title": "Sign of price minus a 2-10 month average, daily, on gold, silver, oil, FX majors and S&P 500",
+  "source": "Lemperiere, Deremble, Seager, Potters & Bouchaud (2014), Two centuries of trend following, arXiv:1404.3274 (eq. 1-2, Table 1)",
+  "link": "https://arxiv.org/pdf/1404.3274",
+  "read": "in full",
+  "why": "Paper: signal s_n = (p - EWMA_n(p)) / sigma_n, position = sign(s_n), Sharpe 0.65-0.83 for n = 2-15 months (Table 1). The engine has no EWMA, so the nearest is a simple MA: fast 1 (price) against slow 42, 105 and 210 trading days (about 2, 5 and 10 months). Approximations: simple MA not EWMA, no volatility scaling (sign only, so sigma does not matter here), daily not monthly, and the paper's pool is futures on many markets; its FX result since 1973 is Sharpe 0.57. Each variant is a DSR trial.",
+  "rule": "ma_cross",
+  "symbols": [
+    "XAUUSD",
+    "XAGUSD",
+    "WTIUSD",
+    "SPXUSD",
+    "EURUSD",
+    "USDJPY",
+    "GBPUSD",
+    "AUDUSD"
+  ],
+  "params": {
+    "fast": [
+      1
+    ],
+    "slow": [
+      42,
+      105,
+      210
+    ],
+    "hold": [
+      21
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T01:39:31"
+}

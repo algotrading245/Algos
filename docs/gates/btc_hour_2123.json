@@ -1,0 +1,49 @@
+{
+ "id": "btc_hour_2123",
+ "when": "2026-10-24T13:31:50",
+ "verdict": "FAIL at halves",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": false,
+   "figure": "1.48 / -0.08 (split at its middle 2021-09-09)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.44",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.03, max leg fall +0.03",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": true,
+   "figure": "book 2018+ 3.34 -> 3.43",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26745, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [],
+ "published": "https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+ "profitable_months_2018": [
+  0.798,
+  0.809
+ ]
+}

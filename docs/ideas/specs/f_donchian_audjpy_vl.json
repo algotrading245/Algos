@@ -1,0 +1,21 @@
+{
+  "id": "f_donchian_audjpy_vl",
+  "title": "donchian on AUDJPY when vol low",
+  "source": "spec factory grid: Donchian channel breakout (Turtle rules), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "AUDJPY"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "donchian",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-24T18:00:36"
+}

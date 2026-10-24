@@ -1,0 +1,46 @@
+j14 deals parsed: 4172
+
+floating stops found: 13 (summary.md lists 13)
+% of the initial balance; held = the closed basket marked on histdata M1 with no stop, to server 00:00
+stop                roll at stop   +15m    +1h    +4h day end  worst h left  positions
+2024.02.20 12:36:49        -1.72  -1.68  -1.17  -2.43   -0.81  -2.71   11.4  EURUSD:S0.12(in 09:05) GBPUSD:S0.09(in 09:05) AUDUSD:S0.17(in 09:05) USDCAD:L0.22(in 09:05) USDCHF:L0.11(in 09:05)
+2024.05.01 23:00:26 yes    -1.74  +5.02  +9.56  +9.56   +9.56  -1.84    1.0  XAUUSD:L1.12(in 23:00)
+2024.07.25 06:20:29        -1.70  -1.34  -1.14  -1.35   -2.08  -3.07   17.7  XAUUSD:L0.09(in 04:30)
+2024.11.06 08:28:39        -1.70  -3.40  -1.20  -1.04   -7.80  -8.44   15.5  XAUUSD:L0.10(in 05:34)
+2025.02.21 04:00:37        -1.70  +0.03  +0.28  -1.30   -0.48  -3.44   20.0  XAUUSD:L0.17(in 03:45)
+2025.02.27 23:02:28 yes    -1.75  +0.36  +2.02  +2.02   +2.02  -1.75    1.0  XAUUSD:L0.72(in 23:00)
+2025.03.03 23:03:13 yes    -1.77  -1.09  -2.05  -2.05   -2.05  -4.98    0.9  XAUUSD:S1.22(in 23:00)
+2025.04.03 03:20:08        -1.72  +0.13  -0.42  -0.71   -7.12 -18.08   20.7  XAUUSD:L0.19(in 03:15)
+2025.04.25 08:54:19        -1.71  -1.68  -1.10  -1.59   -0.03  -3.19   15.1  XAUUSD:L0.06(in 07:00)
+2025.05.01 06:13:39        -1.70  -1.70  -1.90  -1.80   -1.27  -3.36   17.8  XAUUSD:L0.06(in 03:30)
+2025.05.30 16:57:26        -1.75  -0.49  +4.87  +2.48   +2.20  -1.83    7.0  EURUSD:L0.16(in 16:00) GBPUSD:L0.17(in 16:00) AUDUSD:L0.24(in 16:00) USDCAD:S0.26(in 16:00) USDCHF:S0.16(in 16:00) AUDJPY:L0.26(in 16:00) CADJPY:L0.27(in 16:00) GBPJPY:L0.17(in 16:00) USDJPY:L0.01(in 10:23)
+2025.06.30 18:16:48        -1.76  -1.16  -2.69  -3.87   -5.12  -5.40    5.7  EURUSD:S0.27(in 18:00) GBPUSD:S0.25(in 18:00) AUDUSD:S0.37(in 18:00) USDCAD:L0.37(in 18:00) USDCHF:L0.26(in 18:00)
+2025.09.24 23:02:23 yes    -1.74  -1.04  -4.57  -4.57   -4.57  -5.46    1.0  XAUUSD:S0.78(in 23:00)
+
+all: n=13  realised at stop -22.46% in total (mean -1.73%)
+  held to day end: total -17.57% (mean -1.35%), so the stop cost 4.89% over these stops
+  day end above the stop's loss: 7 of 13; worst mark past -2.0%: 10 of 13; past -2.5%: 10 of 13
+  stops whose held basket stayed above -2.0% to day end: 3, day-end mark minus stop loss +19.01% in total
+  a 1.8% stop would not have fired (on these marks) in 1 of 13; those end the day +3.77% against the 1.7% stop
+  a 1.9% stop would not have fired (on these marks) in 3 of 13; those end the day +19.01% against the 1.7% stop
+
+outside rollover: n=9  realised at stop -15.46% in total (mean -1.72%)
+  held to day end: total -22.52% (mean -2.50%), so the stop saved 7.06% over these stops
+  day end above the stop's loss: 5 of 9; worst mark past -2.0%: 8 of 9; past -2.5%: 8 of 9
+  stops whose held basket stayed above -2.0% to day end: 1, day-end mark minus stop loss +3.94% in total
+  a 1.8% stop would not have fired (on these marks) in 0 of 9; those end the day +0.00% against the 1.7% stop
+  a 1.9% stop would not have fired (on these marks) in 1 of 9; those end the day +3.94% against the 1.7% stop
+
+rollover 23-01: n=4  realised at stop -7.00% in total (mean -1.75%)
+  held to day end: total +4.95% (mean +1.24%), so the stop cost 11.95% over these stops
+  day end above the stop's loss: 2 of 4; worst mark past -2.0%: 2 of 4; past -2.5%: 2 of 4
+  stops whose held basket stayed above -2.0% to day end: 2, day-end mark minus stop loss +15.07% in total
+  a 1.8% stop would not have fired (on these marks) in 1 of 4; those end the day +3.77% against the 1.7% stop
+  a 1.9% stop would not have fired (on these marks) in 2 of 4; those end the day +15.07% against the 1.7% stop
+
+Check of the 4 rollover bell stops (tester in/out against histdata M1 closes around 23:00, by hand after the run):
+  2024.05.01 long  in 2310.06 out 2308.52 after 26 s; histdata about 2308.0-2310.4   -> partly spread
+  2025.02.27 long  in 2874.15 out 2871.74;            histdata 2873.2 -> 2871.3      -> mostly a real move
+  2025.03.03 short in 2890.53 out 2891.96;            histdata 2890.6 -> 2891.9      -> mostly a real move
+  2025.09.24 short in 3730.03 out 3732.23;            histdata 3730.3 -> 3732.2      -> mostly a real move
+  At 0.72-1.22 lots (5-20x the intraday gold legs here) a gold move of $1.4-2.4/oz reaches the 1.7% line.

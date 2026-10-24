@@ -15,7 +15,7 @@ runs from 1 - tilt to 1 + tilt and is 1 on average.
 
 Test: each year from --from on is sized by a model fitted on the earlier years only (expanding window). The lines
 printed are the plain rule against the sized rule on those years. "overlay" is the extra result from the sizing.
---mql prints the fit on all trades as the arrays of mql5/Experts/AurumQuartet/AurumQuartet.mq5.
+--mql prints the fit on all trades as the arrays of mql5/Experts/_archive/AurumQuartet/AurumQuartet.mq5.
 
 The account lines are built from the single trades and differ a little from tools/backtest_quartet.py, which
 drops the first weeks of the gold leg.

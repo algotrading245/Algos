@@ -1,0 +1,420 @@
+{"id": "edge_scan:slot+own", "when": "2026-10-17T15:26:44", "verdict": "2 survivors, 2 written", "count": 4720}
+{"id": "scan_slot_EURUSD_s25_L4_short", "when": "2026-10-17T15:27:11", "verdict": "FAIL at dsr"}
+{"id": "scan_slot_EURUSD_s21_L8_short", "when": "2026-10-17T15:27:15", "verdict": "FAIL at dsr"}
+{"id": "edge_scan:cal+vol", "when": "2026-10-17T15:44:53", "verdict": "1 survivors, 1 written", "count": 21240}
+{"id": "scan_cal_wed_EURUSD_s25_L2_short", "when": "2026-10-17T15:44:57", "verdict": "FAIL at halves"}
+{"id": "osler_round:grid", "when": "2026-10-18T01:05:22", "verdict": "fails: diff +0.86/-0.46 bp, net Sharpe -0.16/-0.69", "count": 512}
+{"id": "hydra_size_cap:run2", "when": "2026-10-19", "verdict": "keep cap 50; static 20-45 no better; dynamic arm degenerate (void)", "count": 36}
+{"id": "china_release_aud:run2", "when": "2026-10-19T05:07:07", "verdict": "FAIL: fails: 2015-2017: net Sharpe >= 0.5; 2018-2025.09: net R/trade > 0; 2018-2025.09: net Sharpe >= 0.5", "count": 2}
+{"id": "idea:china_activity_aud", "when": "2026-10-21T17:10:55", "verdict": "FAIL at halves", "count": 12}
+{"id": "idea:ma_cross_fx_majors_1_5", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
+{"id": "idea:ma_cross_fx_majors_20_200", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
+{"id": "idea:ma_cross_fx_majors_5_20", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 6}
+{"id": "idea:ma_cross_nzdusd_5_20", "when": "2026-10-21T20:21:16", "verdict": "FAIL at halves", "count": 1}
+{"id": "idea:tsmom_hurst_fx", "when": "2026-10-21T21:51:43", "verdict": "FAIL at halves", "count": 21}
+{"id": "idea:tsmom_hurst_gold", "when": "2026-10-21T21:51:44", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audcad", "when": "2026-10-22T00:44:54", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audusd", "when": "2026-10-22T00:44:55", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurusd", "when": "2026-10-22T00:44:56", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpusd", "when": "2026-10-22T00:44:56", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_spxusd", "when": "2026-10-22T00:44:57", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdcad", "when": "2026-10-22T00:44:59", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdchf", "when": "2026-10-22T00:45:00", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdjpy", "when": "2026-10-22T00:45:01", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_xagusd", "when": "2026-10-22T00:45:02", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_xauusd", "when": "2026-10-22T00:45:02", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audjpy", "when": "2026-10-22T00:47:53", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audnzd", "when": "2026-10-22T00:47:54", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_cadjpy", "when": "2026-10-22T00:47:55", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_euraud", "when": "2026-10-22T00:47:55", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurchf", "when": "2026-10-22T00:47:56", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurgbp", "when": "2026-10-22T00:47:57", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurjpy", "when": "2026-10-22T00:47:57", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpchf", "when": "2026-10-22T00:47:58", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpjpy", "when": "2026-10-22T00:47:58", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_nzdusd", "when": "2026-10-22T00:47:59", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:xsmom_fx_majors_12m", "when": "2026-10-22T00:47:59", "verdict": "FAIL at halves", "count": 1}
+{"id": "idea:xsmom_xau_xag_wti_spx_12m", "when": "2026-10-22T00:48:00", "verdict": "FAIL at halves", "count": 1}
+{"id": "gsr_meanrev", "when": "2026-10-22T00:48:32", "verdict": "FAIL at halves"}
+{"id": "idea:f_donchian_audcad", "when": "2026-10-22T00:51:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurusd", "when": "2026-10-22T00:51:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpusd", "when": "2026-10-22T00:51:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_spxusd", "when": "2026-10-22T00:51:50", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdjpy", "when": "2026-10-22T00:51:50", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xauusd", "when": "2026-10-22T00:51:50", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_tsmom_grxeur", "when": "2026-10-22T00:51:50", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_jpxjpy", "when": "2026-10-22T00:51:50", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_nzdcad", "when": "2026-10-22T00:51:51", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_wtiusd", "when": "2026-10-22T00:51:51", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_audjpy", "when": "2026-10-22T00:54:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audusd", "when": "2026-10-22T00:54:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_cadjpy", "when": "2026-10-22T00:54:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurgbp", "when": "2026-10-22T00:54:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurjpy", "when": "2026-10-22T00:54:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpjpy", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdusd", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdcad", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdchf", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xagusd", "when": "2026-10-22T00:54:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audnzd", "when": "2026-10-22T00:57:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_euraud", "when": "2026-10-22T00:57:54", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurchf", "when": "2026-10-22T00:57:54", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpchf", "when": "2026-10-22T00:57:54", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_grxeur", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_jpxjpy", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdcad", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_wtiusd", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_ma_cross_usdjpy", "when": "2026-10-22T00:57:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_xauusd", "when": "2026-10-22T00:57:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audcad", "when": "2026-10-22T01:00:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audusd", "when": "2026-10-22T01:00:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurjpy", "when": "2026-10-22T01:00:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurusd", "when": "2026-10-22T01:00:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpusd", "when": "2026-10-22T01:00:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_nzdusd", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_spxusd", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdcad", "when": "2026-10-22T01:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdchf", "when": "2026-10-22T01:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_xagusd", "when": "2026-10-22T01:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audjpy", "when": "2026-10-22T01:03:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audnzd", "when": "2026-10-22T01:03:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_cadjpy", "when": "2026-10-22T01:03:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_euraud", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurchf", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurgbp", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpchf", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpjpy", "when": "2026-10-22T01:03:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_grxeur", "when": "2026-10-22T01:03:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_nzdcad", "when": "2026-10-22T01:03:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_jpxjpy", "when": "2026-10-22T01:06:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_wtiusd", "when": "2026-10-22T01:06:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audcad", "when": "2026-10-22T01:06:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audusd", "when": "2026-10-22T01:06:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurusd", "when": "2026-10-22T01:06:55", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpusd", "when": "2026-10-22T01:06:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_spxusd", "when": "2026-10-22T01:06:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdjpy", "when": "2026-10-22T01:06:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_xagusd", "when": "2026-10-22T01:06:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_xauusd", "when": "2026-10-22T01:06:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audjpy", "when": "2026-10-22T01:09:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_cadjpy", "when": "2026-10-22T01:09:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_euraud", "when": "2026-10-22T01:09:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurchf", "when": "2026-10-22T01:09:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurgbp", "when": "2026-10-22T01:09:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurjpy", "when": "2026-10-22T01:09:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpjpy", "when": "2026-10-22T01:09:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_nzdusd", "when": "2026-10-22T01:09:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdcad", "when": "2026-10-22T01:09:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdchf", "when": "2026-10-22T01:09:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audnzd", "when": "2026-10-22T01:12:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpchf", "when": "2026-10-22T01:12:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_grxeur", "when": "2026-10-22T01:12:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_jpxjpy", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_nzdcad", "when": "2026-10-22T01:12:58", "verdict": "FAIL at dsr", "count": 4}
+{"id": "idea:f_meanrev_wtiusd", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audcad", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurusd", "when": "2026-10-22T01:12:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdjpy", "when": "2026-10-22T01:12:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xauusd", "when": "2026-10-22T01:12:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audjpy", "when": "2026-10-22T01:15:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audusd", "when": "2026-10-22T01:15:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurjpy", "when": "2026-10-22T01:15:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpjpy", "when": "2026-10-22T01:16:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpusd", "when": "2026-10-22T01:16:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_nzdusd", "when": "2026-10-22T01:16:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_spxusd", "when": "2026-10-22T01:16:01", "verdict": "FAIL at dsr", "count": 4}
+{"id": "idea:f_rsi_usdcad", "when": "2026-10-22T01:16:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdchf", "when": "2026-10-22T01:16:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xagusd", "when": "2026-10-22T01:16:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audnzd", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_cadjpy", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_euraud", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurchf", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurgbp", "when": "2026-10-22T01:18:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpchf", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_grxeur", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_jpxjpy", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_nzdcad", "when": "2026-10-22T01:19:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_wtiusd", "when": "2026-10-22T01:19:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "near_miss_basket", "when": "2026-10-22T01:27:28", "verdict": "FAIL at dsr"}
+{"id": "gsr_meanrev_h1", "when": "2026-10-22T01:32:55", "verdict": "FAIL at halves"}
+{"id": "idea:clare_ma_trend_commodities", "when": "2026-10-22T01:39:31", "verdict": "FAIL at halves", "count": 9}
+{"id": "idea:lemperiere_ma_trend_gold_fx_equity", "when": "2026-10-22T01:39:31", "verdict": "FAIL at halves", "count": 24}
+{"id": "tod_weekday_scan", "when": "2026-10-22T01:44:14", "verdict": "FAIL at goal"}
+{"id": "volforecast_sizing", "when": "2026-10-22T01:48:08", "verdict": "FAIL at halves"}
+{"id": "silver_legs_port", "when": "2026-10-22T01:51:45", "verdict": "FAIL at halves"}
+{"id": "index_legs_funded", "when": "2026-10-22T02:01:41", "verdict": "FAIL at halves"}
+{"id": "nn_gold_m15", "when": "2026-10-22T02:26:20", "verdict": "FAIL at halves"}
+{"id": "rl_leg_sizing", "when": "2026-10-22T03:29:15", "verdict": "FAIL at corr"}
+{"id": "meta_label_hydra", "when": "2026-10-22T03:38:21", "verdict": "FAIL at halves"}
+{"id": "carver_breakout", "when": "2026-10-22T15:00:14", "verdict": "FAIL at halves"}
+{"id": "volmanaged_mm", "when": "2026-10-22T20:21:09", "verdict": "FAIL at halves"}
+{"id": "noise", "when": "2026-10-22T22:19:22", "verdict": "PASS"}
+{"id": "idea:f_reversal_audcad", "when": "2026-10-23T00:00:07", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurusd", "when": "2026-10-23T00:00:13", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_spxusd", "when": "2026-10-23T00:00:19", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_usdjpy", "when": "2026-10-23T00:00:24", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xauusd", "when": "2026-10-23T00:00:31", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_audusd", "when": "2026-10-23T01:00:32", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpusd", "when": "2026-10-23T01:00:36", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_usdcad", "when": "2026-10-23T01:00:39", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_reversal_usdchf", "when": "2026-10-23T01:00:42", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xagusd", "when": "2026-10-23T01:00:45", "verdict": "FAIL at halves", "count": 2}
+{"id": "volmanaged_mm", "when": "2026-10-23T01:02:45", "verdict": "FAIL at halves"}
+{"id": "recheck_near_miss_markets", "when": "2026-10-23T01:20:00", "verdict": "FAIL at belief (no rule profitable on all test markets)", "count": 23}
+{"id": "breakout", "when": "2026-10-23T01:08:48", "verdict": "FAIL at belief"}
+{"id": "breakout", "when": "2026-10-23T01:13:14", "verdict": "FAIL at belief"}
+{"id": "tod_eurusd", "when": "2026-10-23T01:26:35", "verdict": "FAIL at halves"}
+{"id": "ml_metalabel_breakout_size", "when": "2026-10-23T01:50:50", "verdict": "FAIL at book"}
+{"id": "idea:f_reversal_audjpy", "when": "2026-10-23T02:00:28", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_cadjpy", "when": "2026-10-23T02:00:40", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurjpy", "when": "2026-10-23T02:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpjpy", "when": "2026-10-23T02:01:01", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_nzdusd", "when": "2026-10-23T02:01:11", "verdict": "FAIL at halves", "count": 2}
+{"id": "rebalancing_signal", "when": "2026-10-23T02:36:50", "verdict": "FAIL at halves"}
+{"id": "ma200_pullback", "when": "2026-10-23T02:54:56", "verdict": "FAIL at halves"}
+{"id": "idea:f_reversal_audnzd", "when": "2026-10-23T03:00:12", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_euraud", "when": "2026-10-23T03:00:17", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurchf", "when": "2026-10-23T03:00:20", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurgbp", "when": "2026-10-23T03:00:23", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpchf", "when": "2026-10-23T03:00:26", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_grxeur", "when": "2026-10-23T04:00:35", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_jpxjpy", "when": "2026-10-23T04:00:37", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_nzdcad", "when": "2026-10-23T04:00:39", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_wtiusd", "when": "2026-10-23T04:00:43", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_xsmom_majors", "when": "2026-10-23T04:00:45", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdjpy_vh", "when": "2026-10-23T05:00:31", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_xauusd_vh", "when": "2026-10-23T05:00:33", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_xsmom_all", "when": "2026-10-23T05:00:37", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_xsmom_assets", "when": "2026-10-23T05:00:40", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_xsmom_yen", "when": "2026-10-23T05:00:42", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audcad_vh", "when": "2026-10-23T06:00:27", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurusd_vh", "when": "2026-10-23T06:00:34", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpusd_vh", "when": "2026-10-23T06:00:38", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_spxusd_vh", "when": "2026-10-23T06:00:41", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_xagusd_vh", "when": "2026-10-23T06:00:44", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_audusd_vh", "when": "2026-10-23T07:00:06", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurjpy_vh", "when": "2026-10-23T07:00:13", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_nzdusd_vh", "when": "2026-10-23T07:00:18", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdcad_vh", "when": "2026-10-23T07:00:29", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdchf_vh", "when": "2026-10-23T07:00:38", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audjpy_vh", "when": "2026-10-23T08:00:55", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_cadjpy_vh", "when": "2026-10-23T08:00:59", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurchf_vh", "when": "2026-10-23T08:01:03", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurgbp_vh", "when": "2026-10-23T08:01:12", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpjpy_vh", "when": "2026-10-23T08:01:18", "verdict": "FAIL at halves", "count": 3}
+{"id": "gold_bond_regime", "when": "2026-10-23T08:46:12", "verdict": "FAIL at halves"}
+{"id": "idea:f_tsmom_audnzd_vh", "when": "2026-10-23T09:00:34", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_euraud_vh", "when": "2026-10-23T09:00:36", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpchf_vh", "when": "2026-10-23T09:00:39", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_grxeur_vh", "when": "2026-10-23T09:00:41", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_nzdcad_vh", "when": "2026-10-23T09:00:44", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_eurusd_vh", "when": "2026-10-23T10:00:58", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdjpy_vh", "when": "2026-10-23T10:01:01", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_donchian_xauusd_vh", "when": "2026-10-23T10:01:03", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_tsmom_jpxjpy_vh", "when": "2026-10-23T10:01:07", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_wtiusd_vh", "when": "2026-10-23T10:01:09", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_audcad_vh", "when": "2026-10-23T11:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audusd_vh", "when": "2026-10-23T11:00:57", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpusd_vh", "when": "2026-10-23T11:01:08", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_spxusd_vh", "when": "2026-10-23T11:01:15", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xagusd_vh", "when": "2026-10-23T11:01:22", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurjpy_vh", "when": "2026-10-23T12:00:45", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpjpy_vh", "when": "2026-10-23T12:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdusd_vh", "when": "2026-10-23T12:00:58", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdcad_vh", "when": "2026-10-23T12:01:08", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdchf_vh", "when": "2026-10-23T12:01:16", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audjpy_vh", "when": "2026-10-23T13:00:45", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_cadjpy_vh", "when": "2026-10-23T13:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_euraud_vh", "when": "2026-10-23T13:00:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurchf_vh", "when": "2026-10-23T13:01:01", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurgbp_vh", "when": "2026-10-23T13:01:09", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audnzd_vh", "when": "2026-10-23T14:00:20", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpchf_vh", "when": "2026-10-23T14:00:22", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_grxeur_vh", "when": "2026-10-23T14:00:24", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_jpxjpy_vh", "when": "2026-10-23T14:00:26", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdcad_vh", "when": "2026-10-23T14:00:28", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_wtiusd_vh", "when": "2026-10-23T15:00:43", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_ma_cross_audcad_vh", "when": "2026-10-23T15:00:46", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurusd_vh", "when": "2026-10-23T15:00:48", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdjpy_vh", "when": "2026-10-23T15:00:51", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_xauusd_vh", "when": "2026-10-23T15:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "opex_week_indices", "when": "2026-10-23T15:58:25", "verdict": "FAIL at halves"}
+{"id": "idea:f_ma_cross_audusd_vh", "when": "2026-10-23T16:00:22", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpusd_vh", "when": "2026-10-23T16:00:28", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_spxusd_vh", "when": "2026-10-23T16:00:32", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdcad_vh", "when": "2026-10-23T16:00:34", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_xagusd_vh", "when": "2026-10-23T16:00:42", "verdict": "FAIL at halves", "count": 4}
+{"id": "dao_gap", "when": "2026-10-23T16:35:19", "verdict": "FAIL at halves"}
+{"id": "idea:f_ma_cross_audjpy_vh", "when": "2026-10-23T17:00:19", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurjpy_vh", "when": "2026-10-23T17:00:27", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpjpy_vh", "when": "2026-10-23T17:00:37", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_nzdusd_vh", "when": "2026-10-23T17:00:44", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_usdchf_vh", "when": "2026-10-23T17:00:49", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_cadjpy_vh", "when": "2026-10-23T18:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_euraud_vh", "when": "2026-10-23T18:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurchf_vh", "when": "2026-10-23T18:00:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_eurgbp_vh", "when": "2026-10-23T18:01:02", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_gbpchf_vh", "when": "2026-10-23T18:01:05", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_audnzd_vh", "when": "2026-10-23T19:00:15", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_grxeur_vh", "when": "2026-10-23T19:00:17", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_jpxjpy_vh", "when": "2026-10-23T19:00:19", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_nzdcad_vh", "when": "2026-10-23T19:00:20", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_ma_cross_wtiusd_vh", "when": "2026-10-23T19:00:23", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audcad_vh", "when": "2026-10-23T20:00:42", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_eurusd_vh", "when": "2026-10-23T20:00:45", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_spxusd_vh", "when": "2026-10-23T20:00:49", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdjpy_vh", "when": "2026-10-23T20:00:50", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_xauusd_vh", "when": "2026-10-23T20:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "totm_us", "when": "2026-10-23T20:56:55", "verdict": "FAIL at halves"}
+{"id": "idea:f_meanrev_audusd_vh", "when": "2026-10-23T21:00:17", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpusd_vh", "when": "2026-10-23T21:00:24", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdcad_vh", "when": "2026-10-23T21:00:31", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdchf_vh", "when": "2026-10-23T21:00:37", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_xagusd_vh", "when": "2026-10-23T21:00:46", "verdict": "FAIL at halves", "count": 4}
+{"id": "overreaction_fx", "when": "2026-10-23T21:38:48", "verdict": "FAIL at halves"}
+{"id": "idea:f_meanrev_audjpy_vh", "when": "2026-10-23T22:00:45", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_cadjpy_vh", "when": "2026-10-23T22:00:48", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurjpy_vh", "when": "2026-10-23T22:00:50", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpjpy_vh", "when": "2026-10-23T22:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_nzdusd_vh", "when": "2026-10-23T22:00:58", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audnzd_vh", "when": "2026-10-23T23:00:25", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_euraud_vh", "when": "2026-10-23T23:00:32", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurchf_vh", "when": "2026-10-23T23:00:34", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurgbp_vh", "when": "2026-10-23T23:00:37", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpchf_vh", "when": "2026-10-23T23:00:39", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_grxeur_vh", "when": "2026-10-24T00:00:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_jpxjpy_vh", "when": "2026-10-24T00:01:03", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_nzdcad_vh", "when": "2026-10-24T00:01:05", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_wtiusd_vh", "when": "2026-10-24T00:01:08", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xauusd_vh", "when": "2026-10-24T00:01:11", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_audcad_vh", "when": "2026-10-24T01:00:22", "verdict": "FAIL at corr", "count": 4}
+{"id": "idea:f_rsi_eurusd_vh", "when": "2026-10-24T01:00:24", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpusd_vh", "when": "2026-10-24T01:00:26", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_spxusd_vh", "when": "2026-10-24T01:00:28", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdjpy_vh", "when": "2026-10-24T01:00:31", "verdict": "FAIL at halves", "count": 4}
+{"id": "vrp_gap", "when": "2026-10-24T01:36:59", "verdict": "FAIL at halves"}
+{"id": "fx_carry_g10", "when": "2026-10-24T01:41:17", "verdict": "FAIL at halves"}
+{"id": "policy_gap", "when": "2026-10-24T01:44:14", "verdict": "FAIL at halves"}
+{"id": "vix_vxv_spike", "when": "2026-10-24T01:55:28", "verdict": "FAIL at halves"}
+{"id": "idea:f_rsi_audusd_vh", "when": "2026-10-24T02:01:02", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_nzdusd_vh", "when": "2026-10-24T02:01:09", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdcad_vh", "when": "2026-10-24T02:01:14", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_usdchf_vh", "when": "2026-10-24T02:01:17", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_xagusd_vh", "when": "2026-10-24T02:01:22", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audjpy_vh", "when": "2026-10-24T03:00:48", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_cadjpy_vh", "when": "2026-10-24T03:00:50", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurgbp_vh", "when": "2026-10-24T03:00:52", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurjpy_vh", "when": "2026-10-24T03:00:54", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpjpy_vh", "when": "2026-10-24T03:00:57", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_audnzd_vh", "when": "2026-10-24T04:00:31", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_euraud_vh", "when": "2026-10-24T04:00:35", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurchf_vh", "when": "2026-10-24T04:00:38", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_gbpchf_vh", "when": "2026-10-24T04:00:42", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_nzdcad_vh", "when": "2026-10-24T04:00:45", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_reversal_usdjpy_vh", "when": "2026-10-24T05:00:57", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xauusd_vh", "when": "2026-10-24T05:00:58", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_rsi_grxeur_vh", "when": "2026-10-24T05:01:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_jpxjpy_vh", "when": "2026-10-24T05:01:03", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_wtiusd_vh", "when": "2026-10-24T05:01:04", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_reversal_audcad_vh", "when": "2026-10-24T06:00:17", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_reversal_eurusd_vh", "when": "2026-10-24T06:00:19", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpusd_vh", "when": "2026-10-24T06:00:21", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_spxusd_vh", "when": "2026-10-24T06:00:22", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xagusd_vh", "when": "2026-10-24T06:00:24", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_audusd_vh", "when": "2026-10-24T07:01:06", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurjpy_vh", "when": "2026-10-24T07:01:15", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_nzdusd_vh", "when": "2026-10-24T07:01:23", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_usdcad_vh", "when": "2026-10-24T07:01:30", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_reversal_usdchf_vh", "when": "2026-10-24T07:01:37", "verdict": "FAIL at halves", "count": 2}
+{"id": "fx_value_rer", "when": "2026-10-24T07:22:40", "verdict": "FAIL at halves"}
+{"id": "idea:f_reversal_audjpy_vh", "when": "2026-10-24T08:00:43", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_cadjpy_vh", "when": "2026-10-24T08:00:46", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurchf_vh", "when": "2026-10-24T08:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_eurgbp_vh", "when": "2026-10-24T08:00:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpjpy_vh", "when": "2026-10-24T08:00:57", "verdict": "FAIL at halves", "count": 2}
+{"id": "samehour_fx", "when": "2026-10-24T08:09:34", "verdict": "FAIL at halves"}
+{"id": "idea:f_reversal_audnzd_vh", "when": "2026-10-24T09:00:23", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_euraud_vh", "when": "2026-10-24T09:00:29", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpchf_vh", "when": "2026-10-24T09:00:37", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_grxeur_vh", "when": "2026-10-24T09:00:44", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_nzdcad_vh", "when": "2026-10-24T09:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_jpxjpy_vh", "when": "2026-10-24T10:00:58", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_wtiusd_vh", "when": "2026-10-24T10:01:00", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_xsmom_assets_vh", "when": "2026-10-24T10:01:02", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_xsmom_majors_vh", "when": "2026-10-24T10:01:04", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_xsmom_yen_vh", "when": "2026-10-24T10:01:07", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_audcad_vl", "when": "2026-10-24T11:00:19", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurusd_vl", "when": "2026-10-24T11:00:21", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdjpy_vl", "when": "2026-10-24T11:00:23", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_xauusd_vl", "when": "2026-10-24T11:00:25", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_xsmom_all_vh", "when": "2026-10-24T11:00:28", "verdict": "FAIL at halves", "count": 3}
+{"id": "cot_contrarian", "when": "2026-10-24T11:43:54", "verdict": "FAIL at halves"}
+{"id": "idea:f_tsmom_audusd_vl", "when": "2026-10-24T12:00:56", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpusd_vl", "when": "2026-10-24T12:01:03", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_spxusd_vl", "when": "2026-10-24T12:01:05", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdcad_vl", "when": "2026-10-24T12:01:07", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_xagusd_vl", "when": "2026-10-24T12:01:09", "verdict": "FAIL at halves", "count": 3}
+{"id": "hau_rey_fx", "when": "2026-10-24T12:19:54", "verdict": "FAIL at halves"}
+{"id": "baltussen_mac5", "when": "2026-10-24T12:23:05", "verdict": "FAIL at halves"}
+{"id": "chen_tsang_slope_fx", "when": "2026-10-24T12:27:12", "verdict": "FAIL at halves"}
+{"id": "safari_cubic", "when": "2026-10-24T12:31:15", "verdict": "FAIL at halves"}
+{"id": "ml_regime_filter_gold_hold", "when": "2026-10-24T12:35:49", "verdict": "FAIL at halves"}
+{"id": "idea:f_tsmom_audjpy_vl", "when": "2026-10-24T13:00:32", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurjpy_vl", "when": "2026-10-24T13:00:39", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_gbpjpy_vl", "when": "2026-10-24T13:00:45", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_nzdusd_vl", "when": "2026-10-24T13:00:54", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_usdchf_vl", "when": "2026-10-24T13:00:59", "verdict": "FAIL at halves", "count": 3}
+{"id": "btc_hour_2123", "when": "2026-10-24T13:31:50", "verdict": "FAIL at halves"}
+{"id": "btc_weekend_1521", "when": "2026-10-24T13:34:15", "verdict": "FAIL at halves"}
+{"id": "commod_same_month", "when": "2026-10-24T13:37:19", "verdict": "FAIL at halves"}
+{"id": "crypto_xs_mom", "when": "2026-10-24T13:40:13", "verdict": "FAIL at halves"}
+{"id": "ml_har_rv_leg_sizing", "when": "2026-10-24T13:49:36", "verdict": "FAIL at book"}
+{"id": "ml_regime_hmm_book", "when": "2026-10-24T13:54:42", "verdict": "FAIL at corr"}
+{"id": "idea:f_tsmom_cadjpy_vl", "when": "2026-10-24T14:00:06", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_euraud_vl", "when": "2026-10-24T14:00:10", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurchf_vl", "when": "2026-10-24T14:00:12", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_eurgbp_vl", "when": "2026-10-24T14:00:14", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_gbpchf_vl", "when": "2026-10-24T14:00:17", "verdict": "FAIL at halves", "count": 3}
+{"id": "drl_leg_sizing_ppo", "when": "2026-10-24T14:04:46", "verdict": "FAIL at costs"}
+{"id": "prebuilt_monday_dip_ibs_indices", "when": "2026-10-24T14:14:29", "verdict": "FAIL at halves"}
+{"id": "idea:f_tsmom_audnzd_vl", "when": "2026-10-24T15:00:29", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_grxeur_vl", "when": "2026-10-24T15:00:31", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_jpxjpy_vl", "when": "2026-10-24T15:00:33", "verdict": "FAIL at belief", "count": 3}
+{"id": "idea:f_tsmom_nzdcad_vl", "when": "2026-10-24T15:00:35", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_tsmom_wtiusd_vl", "when": "2026-10-24T15:00:38", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_audcad_vl", "when": "2026-10-24T16:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurusd_vl", "when": "2026-10-24T16:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_spxusd_vl", "when": "2026-10-24T16:00:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdjpy_vl", "when": "2026-10-24T16:00:55", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xauusd_vl", "when": "2026-10-24T16:00:57", "verdict": "FAIL at corr", "count": 2}
+{"id": "idea:f_donchian_audusd_vl", "when": "2026-10-24T17:00:14", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpusd_vl", "when": "2026-10-24T17:00:19", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdcad_vl", "when": "2026-10-24T17:00:22", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdchf_vl", "when": "2026-10-24T17:00:24", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xagusd_vl", "when": "2026-10-24T17:00:26", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audjpy_vl", "when": "2026-10-24T18:00:36", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_cadjpy_vl", "when": "2026-10-24T18:00:38", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurjpy_vl", "when": "2026-10-24T18:00:42", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpjpy_vl", "when": "2026-10-24T18:00:44", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdusd_vl", "when": "2026-10-24T18:00:48", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_audnzd_vl", "when": "2026-10-24T19:00:59", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_euraud_vl", "when": "2026-10-24T19:01:01", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurchf_vl", "when": "2026-10-24T19:01:02", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurgbp_vl", "when": "2026-10-24T19:01:04", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_gbpchf_vl", "when": "2026-10-24T19:01:06", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_grxeur_vl", "when": "2026-10-24T20:00:36", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_donchian_jpxjpy_vl", "when": "2026-10-24T20:00:41", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_nzdcad_vl", "when": "2026-10-24T20:00:44", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_wtiusd_vl", "when": "2026-10-24T20:00:46", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_ma_cross_xauusd_vl", "when": "2026-10-24T20:00:49", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_audcad_vl", "when": "2026-10-24T21:00:49", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurusd_vl", "when": "2026-10-24T21:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_spxusd_vl", "when": "2026-10-24T21:00:56", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_usdjpy_vl", "when": "2026-10-24T21:00:59", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_xauusd_vl", "when": "2026-10-24T21:01:03", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_audusd_vl", "when": "2026-10-24T22:00:10", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpusd_vl", "when": "2026-10-24T22:00:14", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdcad_vl", "when": "2026-10-24T22:00:18", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_usdchf_vl", "when": "2026-10-24T22:00:23", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_xagusd_vl", "when": "2026-10-24T22:00:27", "verdict": "FAIL at halves", "count": 4}

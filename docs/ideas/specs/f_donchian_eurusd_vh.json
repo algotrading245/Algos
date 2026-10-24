@@ -1,0 +1,21 @@
+{
+  "id": "f_donchian_eurusd_vh",
+  "title": "donchian on EURUSD when vol high",
+  "source": "spec factory grid: Donchian channel breakout (Turtle rules), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "EURUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "donchian",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-23",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-23T10:00:58"
+}

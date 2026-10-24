@@ -1,0 +1,16 @@
+; AurumFunded - FTMO Account after the 1-Step Challenge (assumed same limits: 3% daily, 10% trailing end-of-day; no
+; target, payouts on a 14-day cycle). Start it with a new InpPropRound so the limits count from the funded balance.
+InpPropTargetPct=0.0
+InpPropRound=2
+InpPropMinDays=0
+InpPropDayStopPct=2.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=true
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+InpPropFast=false

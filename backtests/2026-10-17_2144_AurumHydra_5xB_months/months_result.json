@@ -1,0 +1,75 @@
+{
+ "goal": 5.0,
+ "months_planned": 7,
+ "months_run": 7,
+ "share_goal_at_month_end": 0.14285714285714285,
+ "share_goal_reached": 0.14285714285714285,
+ "median_multiple": 1.369,
+ "share_below_half": 0.0,
+ "months_with_margin_refusals": 0,
+ "months": [
+  {
+   "month": "2025.08",
+   "multiple": 1.116,
+   "round": 1.09,
+   "trades": 65.0,
+   "eq_dd_pct": 30.74,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2025.09",
+   "multiple": 2.429,
+   "round": 1.09,
+   "trades": 47.0,
+   "eq_dd_pct": 19.14,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2025.10",
+   "multiple": 1.147,
+   "round": 1.09,
+   "trades": 67.0,
+   "eq_dd_pct": 78.52,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2025.11",
+   "multiple": 1.538,
+   "round": 1.09,
+   "trades": 70.0,
+   "eq_dd_pct": 48.31,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2025.12",
+   "multiple": 1.369,
+   "round": 1.09,
+   "trades": 39.0,
+   "eq_dd_pct": 43.56,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2026.01",
+   "multiple": 5.001,
+   "round": 1.09,
+   "trades": 46.0,
+   "eq_dd_pct": 16.83,
+   "margin_refusals": 0,
+   "status": "done"
+  },
+  {
+   "month": "2026.02",
+   "multiple": 1.327,
+   "round": 1.09,
+   "trades": 52.0,
+   "eq_dd_pct": 23.85,
+   "margin_refusals": 0,
+   "status": "done"
+  }
+ ]
+}
