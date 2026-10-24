@@ -365,3 +365,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T21:00 | f_meanrev_spxusd_vl | n/a | 4 | SPXUSD meanrev lookback=10 z=2.0 L1 both | 0.56 / 0.24 | FAIL at belief | 1.000 (book, N=26756, luck bar 1.00) |
 | 2026-10-24T21:00 | f_meanrev_usdjpy_vl | n/a | 4 | USDJPY meanrev lookback=10 z=2.0 L1 both | 0.15 / 0.08 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
 | 2026-10-24T21:01 | f_meanrev_xauusd_vl | n/a | 4 | XAUUSD meanrev lookback=20 z=1.5 L1 both | -0.14 / -0.85 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T22:00 | f_meanrev_audusd_vl | n/a | 4 | AUDUSD meanrev lookback=10 z=2.0 L1 both | 0.38 / -0.19 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T22:00 | f_meanrev_gbpusd_vl | n/a | 4 | GBPUSD meanrev lookback=10 z=1.5 L1 both | 0.26 / 0.10 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T22:00 | f_meanrev_usdcad_vl | n/a | 4 | USDCAD meanrev lookback=10 z=1.5 L1 both | 0.32 / 0.23 | FAIL at belief | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T22:00 | f_meanrev_usdchf_vl | n/a | 4 | USDCHF meanrev lookback=20 z=1.5 L1 both | -0.24 / 0.12 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T22:00 | f_meanrev_xagusd_vl | n/a | 4 | XAGUSD meanrev lookback=10 z=1.5 L1 both | -0.33 / -0.15 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
