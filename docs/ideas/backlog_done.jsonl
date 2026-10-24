@@ -27,3 +27,5 @@
 {"id": "lyons_flow_proxy", "status": "dropped", "closed": "2026-10-24", "result": "needs non-free flow data; no price-only proxy"}
 {"id": "gh_froot_ramadorai_replication", "status": "dropped", "closed": "2026-10-24", "result": "needs non-free flow data; no price-only proxy"}
 {"id": "gh_awesome_systematic_trading", "status": "dropped", "added": "2026-10-24", "result": "README lists titles only, no rules; FX entries carry/macro, commodity entries would need paper reads"}
+{"id": "mql5_codebase_experts_p1", "status": "dropped", "closed": "2026-10-24", "result": "page lists generic MA cross, Bollinger, range-breakout EAs with no source reason; failed styles or already held (breakout)"}
+{"id": "arxiv_qfin_tr_2510", "status": "dropped", "closed": "2026-10-24", "result": "new listing has only market-making/stock-exchange papers, no FX/gold/index rule"}
