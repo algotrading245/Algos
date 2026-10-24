@@ -2328,6 +2328,63 @@
      0.819
     ]
    }
+  },
+  {
+   "id": "commod_same_month",
+   "name": "commod_same_month",
+   "status": "rejected",
+   "step": 2,
+   "reason": "gates: FAIL at halves. Keloharju same-calendar-month commodity L/S (top3/bottom3 of 15, 2010+): gross SR 0.47 (halves 0.22/0.69) but financing 4%/yr + 8bp turnover leaves 1x SR 0.05 (-0.24/0.30), 1.5x -0.16. Placebo gross -0.54 as the paper says, so the effect is real in sign but too small after costs. Evidence research/commod_same_month.py",
+   "tag": "halves",
+   "gates": {
+    "id": "commod_same_month",
+    "when": "2026-10-24T13:37:19",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "-0.24 / 0.30 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": false,
+      "figure": "-0.16",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book -0.00, max leg hold +0.04",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": false,
+      "figure": "no source, no other markets",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.34 -> 3.28",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26747, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": null,
+    "profitable_months_2018": [
+     0.798,
+     0.787
+    ]
+   }
   }
  ],
  "rejected": [
