@@ -360,3 +360,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T20:00 | f_donchian_nzdcad_vl | n/a | 2 | NZDCAD donchian lookback=55 L1 both | 0.27 / -0.12 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T20:00 | f_donchian_wtiusd_vl | n/a | 2 | WTIUSD donchian lookback=55 L1 both | -0.01 / -0.09 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T20:00 | f_ma_cross_xauusd_vl | n/a | 4 | XAUUSD ma_cross fast=20 slow=50 L1 both | 0.38 / 0.64 | FAIL at belief | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T21:00 | f_meanrev_audcad_vl | n/a | 4 | AUDCAD meanrev lookback=10 z=2.0 L1 both | 0.16 / -0.21 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T21:00 | f_meanrev_eurusd_vl | n/a | 4 | EURUSD meanrev lookback=20 z=1.5 L1 both | -0.14 / 0.26 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T21:00 | f_meanrev_spxusd_vl | n/a | 4 | SPXUSD meanrev lookback=10 z=2.0 L1 both | 0.56 / 0.24 | FAIL at belief | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T21:00 | f_meanrev_usdjpy_vl | n/a | 4 | USDJPY meanrev lookback=10 z=2.0 L1 both | 0.15 / 0.08 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
+| 2026-10-24T21:01 | f_meanrev_xauusd_vl | n/a | 4 | XAUUSD meanrev lookback=20 z=1.5 L1 both | -0.14 / -0.85 | FAIL at halves | 1.000 (book, N=26756, luck bar 1.00) |
