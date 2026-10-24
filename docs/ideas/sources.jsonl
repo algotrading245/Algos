@@ -1284,3 +1284,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "MDPI JRFM 19(9) 692 BTC/ETH 12-hour sessions", "link": "https://www.mdpi.com/1911-8074/19/9/692", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Ewald et al 2025 intra-day seasonality Brent (manuscript embargoed)", "link": "https://doi.org/10.1080/14697688.2025.2535479", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "prebuilt", "title": "Quantpedia currency category page 1 (4 listed, none usable)", "link": "https://quantpedia.com/strategies/currency/", "read": "in full", "specs": []}
+{"date": "2026-10-24", "kind": "prebuilt", "title": "MQL5 CodeBase Monday Dip EA (index D1 mean reversion, IBS+MA180)", "link": "https://www.mql5.com/en/code/78343", "read": "in full", "specs": []}
+{"date": "2026-10-24", "kind": "prebuilt", "title": "MQL5 CodeBase GER40 Evening Coil EA (NR7 + tick-volume, long only H1)", "link": "https://www.mql5.com/en/code/78380", "read": "in full", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Fed IFDP 1445 Akinci, Kalemli-Ozcan, Queralto: Pricing Risk Globally (theory, no tradable rule)", "link": "https://www.federalreserve.gov/econres/ifdp/files/ifdp1445.pdf", "read": "unverified", "specs": []}
