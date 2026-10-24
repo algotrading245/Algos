@@ -26,3 +26,4 @@
 {"id": "froot_ramadorai_flows", "status": "dropped", "closed": "2026-10-24", "result": "needs non-free flow data; no price-only proxy"}
 {"id": "lyons_flow_proxy", "status": "dropped", "closed": "2026-10-24", "result": "needs non-free flow data; no price-only proxy"}
 {"id": "gh_froot_ramadorai_replication", "status": "dropped", "closed": "2026-10-24", "result": "needs non-free flow data; no price-only proxy"}
+{"id": "gh_awesome_systematic_trading", "status": "dropped", "added": "2026-10-24", "result": "README lists titles only, no rules; FX entries carry/macro, commodity entries would need paper reads"}
