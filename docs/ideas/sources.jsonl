@@ -1045,3 +1045,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "Speculative pressure COT (CXO summary)", "link": "https://cxoadvisory.com/equity-premium/net-speculators-position-as-futures-return-predictor", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Gold weekly TIPS real-yield gate repo / Bartsch et al gold timing", "link": "https://quantpedia.com/an-extensive-test-of-market-timing-strategies-in-the-gold-market/", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Clare et al carry + trend overlay (CXO) / BIS WP366", "link": "https://www.bis.org/publ/work366.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Gold weekly/200d trend net of costs search (Forecast-to-Fill 2511.08571 already logged)", "link": "https://arxiv.org/abs/2511.08571", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "USDJPY carry/risk-reversal/intervention rule search: commentary only", "link": "https://forums.babypips.com/t/carry-trade-survival-kit/11711", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Nasdaq turn-of-month/buy-dip weekly search: stock-basket blogs only", "link": "https://backtest.substack.com/p/buying-weakness-on-the-nasdaq-100", "read": "unverified", "specs": []}
