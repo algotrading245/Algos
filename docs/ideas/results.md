@@ -285,3 +285,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T05:01 | f_rsi_grxeur_vh | n/a | 4 | GRXEUR rsi level=30 period=2 L1 both | -0.07 / -0.20 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
 | 2026-10-24T05:01 | f_rsi_jpxjpy_vh | n/a | 4 | JPXJPY rsi level=30 period=2 L1 both | 0.58 / 0.26 | FAIL at belief | 1.000 (book, N=26734, luck bar 1.00) |
 | 2026-10-24T05:01 | f_rsi_wtiusd_vh | n/a | 4 | WTIUSD rsi level=30 period=2 L1 both | 0.42 / 0.08 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T06:00 | f_reversal_audcad_vh | n/a | 2 | AUDCAD reversal lookback=5 L1 both | 0.52 / 0.56 | FAIL at belief | 1.000 (book, N=26732, luck bar 1.00) |
+| 2026-10-24T06:00 | f_reversal_eurusd_vh | n/a | 2 | EURUSD reversal lookback=1 L1 both | 0.35 / -0.59 | FAIL at halves | 1.000 (book, N=26732, luck bar 1.00) |
+| 2026-10-24T06:00 | f_reversal_gbpusd_vh | n/a | 2 | GBPUSD reversal lookback=5 L1 both | 0.41 / -0.47 | FAIL at halves | 1.000 (book, N=26732, luck bar 1.00) |
+| 2026-10-24T06:00 | f_reversal_spxusd_vh | n/a | 2 | SPXUSD reversal lookback=1 L1 both | -0.02 / -0.03 | FAIL at halves | 1.000 (book, N=26732, luck bar 1.00) |
+| 2026-10-24T06:00 | f_reversal_xagusd_vh | n/a | 2 | XAGUSD reversal lookback=1 L1 both | -0.22 / 0.41 | FAIL at halves | 1.000 (book, N=26732, luck bar 1.00) |

@@ -317,3 +317,8 @@
 {"id": "idea:f_rsi_grxeur_vh", "when": "2026-10-24T05:01:01", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_jpxjpy_vh", "when": "2026-10-24T05:01:03", "verdict": "FAIL at belief", "count": 4}
 {"id": "idea:f_rsi_wtiusd_vh", "when": "2026-10-24T05:01:04", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_reversal_audcad_vh", "when": "2026-10-24T06:00:17", "verdict": "FAIL at belief", "count": 2}
+{"id": "idea:f_reversal_eurusd_vh", "when": "2026-10-24T06:00:19", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_gbpusd_vh", "when": "2026-10-24T06:00:21", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_spxusd_vh", "when": "2026-10-24T06:00:22", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xagusd_vh", "when": "2026-10-24T06:00:24", "verdict": "FAIL at halves", "count": 2}
