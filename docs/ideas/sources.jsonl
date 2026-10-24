@@ -1208,3 +1208,6 @@
 {"date": "2026-10-24", "kind": "paper", "title": "Krohn et al. Treasury auctions and USD (FRBSF)", "link": "https://www.frbsf.org/wp-content/uploads/Krohn-Paper.pdf", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "prebuilt", "title": "RBA announcement-day AUD drift search", "link": "https://forums.babypips.com/t/audusd-techs-ahead-of-rba/20853", "read": "unverified", "specs": []}
 {"date": "2026-10-24", "kind": "paper", "title": "Nova SBE gap-fill E-mini S&P work project", "link": "https://run.unl.pt/bitstream/10362/145336/1/individualcommon.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Krohn et al FX fixings around the clock (fix family already in book)", "link": "https://www.wu.ac.at/fileadmin/wu/d/ri/isk/VSFX_2022/Paper/Session_III_1a_Krohn__foreign_Exchange_Fixings_Returns_Around_The_Clock_0712.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "Gold volatility risk premium: no gold-specific paper, needs options data", "link": "https://quantpedia.com/strategies/volatility-risk-premium-effect/", "read": "unverified", "specs": []}
+{"date": "2026-10-24", "kind": "paper", "title": "NBER w32900 currency strategies anatomy: monthly, carry/swap-bound", "link": "https://www.nber.org/papers/w32900", "read": "unverified", "specs": []}
