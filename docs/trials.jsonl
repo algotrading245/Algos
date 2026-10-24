@@ -421,3 +421,8 @@
 {"id": "ml_grid_er_start_filter", "when": "2026-10-24T22:27:45", "verdict": "FAIL at belief"}
 {"id": "hks_periodicity", "when": "2026-10-24T22:35:58", "verdict": "FAIL at halves"}
 {"id": "erb_yield_shock", "when": "2026-10-24T22:42:29", "verdict": "FAIL at halves"}
+{"id": "idea:f_meanrev_audjpy_vl", "when": "2026-10-24T23:00:33", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_cadjpy_vl", "when": "2026-10-24T23:00:36", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_eurjpy_vl", "when": "2026-10-24T23:00:40", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_gbpjpy_vl", "when": "2026-10-24T23:00:43", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_nzdusd_vl", "when": "2026-10-24T23:00:47", "verdict": "FAIL at halves", "count": 4}
