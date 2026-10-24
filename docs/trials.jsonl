@@ -383,3 +383,8 @@
 {"id": "idea:f_tsmom_jpxjpy_vl", "when": "2026-10-24T15:00:33", "verdict": "FAIL at belief", "count": 3}
 {"id": "idea:f_tsmom_nzdcad_vl", "when": "2026-10-24T15:00:35", "verdict": "FAIL at halves", "count": 3}
 {"id": "idea:f_tsmom_wtiusd_vl", "when": "2026-10-24T15:00:38", "verdict": "FAIL at halves", "count": 3}
+{"id": "idea:f_donchian_audcad_vl", "when": "2026-10-24T16:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_eurusd_vl", "when": "2026-10-24T16:00:51", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_spxusd_vl", "when": "2026-10-24T16:00:53", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_usdjpy_vl", "when": "2026-10-24T16:00:55", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_donchian_xauusd_vl", "when": "2026-10-24T16:00:57", "verdict": "FAIL at corr", "count": 2}
