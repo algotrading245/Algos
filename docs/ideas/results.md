@@ -270,3 +270,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T02:01 | f_rsi_usdcad_vh | n/a | 4 | USDCAD rsi level=30 period=2 L1 both | 0.16 / 0.62 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
 | 2026-10-24T02:01 | f_rsi_usdchf_vh | n/a | 4 | USDCHF rsi level=30 period=2 L1 both | 0.16 / -0.33 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
 | 2026-10-24T02:01 | f_rsi_xagusd_vh | n/a | 4 | XAGUSD rsi level=30 period=14 L1 both | 0.03 / -0.17 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T03:00 | f_rsi_audjpy_vh | n/a | 4 | AUDJPY rsi level=10 period=2 L1 both | -0.20 / -0.01 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T03:00 | f_rsi_cadjpy_vh | n/a | 4 | CADJPY rsi level=30 period=14 L1 both | 0.08 / -0.58 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T03:00 | f_rsi_eurgbp_vh | n/a | 4 | EURGBP rsi level=30 period=14 L1 both | 0.27 / 0.06 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T03:00 | f_rsi_eurjpy_vh | n/a | 4 | EURJPY rsi level=10 period=2 L1 both | 0.44 / -0.26 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
+| 2026-10-24T03:00 | f_rsi_gbpjpy_vh | n/a | 4 | GBPJPY rsi level=30 period=14 L1 both | 0.71 / -0.02 | FAIL at halves | 1.000 (book, N=26734, luck bar 1.00) |
