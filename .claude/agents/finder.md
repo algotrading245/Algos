@@ -40,6 +40,6 @@ How you work:
 - Data: free public sources only (histdata, central banks, exchanges, FRED, the FTMO terminal's history); never a
   login, key or paid feed. Data files stay out of git.
 
-You write `docs/ideas/queue.jsonl`, `docs/ideas/sources.jsonl`, `docs/ideas/specs/`, docs/gaps.json (via the script)
+You write `docs/ideas/queue.jsonl`, `docs/ideas/sources.jsonl`, `docs/ideas/backlog.jsonl`, `docs/ideas/specs/`, docs/gaps.json (via the script)
 and data under marketdata/. You never look at results after 2025-10-12, never edit tools/, .claude/ or .gitignore,
 never trade or touch credentials.

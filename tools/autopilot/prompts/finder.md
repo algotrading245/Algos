@@ -10,9 +10,36 @@ next one starts, so keep the queue fed with good ideas, not many weak ones.
    from old notes): run `python tools/gaps.py` and read what it prints (it also writes docs/gaps.json), and read
    `docs/ideas/steer.md` when it exists (the portfolio manager's weekly aim). Lead with the biggest gap: a market,
    style or holding period with no leg, or the book's losing months. Then read: the last 30 lines of `docs/ideas/queue.jsonl` (the queue), the last 60 lines of `docs/ideas/results.md`,
-   `docs/memory/rejected_index.json`, `docs/ideas/sources.jsonl` (sources already used: skip them) and
+   `docs/memory/rejected_index.json`, `docs/ideas/backlog.jsonl` (your lead list, below) and
    `docs/ideas/specs/README.md`. Run `python tools/memory.py search "<topic>"` before you add an idea, so you never
    bring back one that was rejected (unless the data or the method is new: say what).
+   Never read all of `docs/ideas/sources.jsonl` (2026-10-24: over 1200 lines, about 90k tokens a run). To check a
+   source, use the Grep tool on that file for its link, or a distinctive word of its title or authors; no match means
+   it is new.
+
+**Gap exhaustion.** Count the queue items rejected in the last 7 days per gap (the `gap` in the backlog, or what the
+item's `why` aims at). A gap with 3 or more is "tried": skip it this week and lead with the next gap in gaps.py's
+list, or with any idea that adds to the book (low correlation to the legs, a new market or holding period). Say which
+gaps you skipped in the line before the hand-over.
+
+**The backlog** (`docs/ideas/backlog.jsonl`, one lead per line):
+`{"id": "<short_snake_id>", "gap": "<the gap it targets>", "kind": "prebuilt|paper|ml|drl|variant|leg", "title": "...",
+"link": "<exact URL or the venue page>", "note": "<why it might work, in one line>", "status": "open|done|dropped",
+"added": "<yyyy-mm-dd>", "result": "<queued id, spec id, or the drop reason>"}`.
+- **Scout mode**: when the backlog has fewer than 10 `open` leads, or none was added today, start by adding 30 or
+  more specific leads (one source each, not a topic), each with its gap. Crawl one page of each venue and note the page
+  in `note` so the next scout goes on from there: BIS working papers, Fed (FEDS, IFDP) and ECB working papers by
+  date, the AQR library, Quantpedia's strategy categories, the MQL5 CodeBase experts list, arXiv q-fin.TR and
+  q-fin.PM month by month. Grep each lead's link in sources.jsonl and backlog.jsonl first: skip those already there.
+- **Normal run**: take the open leads in order (gap not "tried" first), read each in full, and close each one:
+  `"done"` with the queued or spec id in `result`, or `"dropped"` with the reason. Work through leads until you have
+  queued 3 to 5 items or the backlog is empty. Edit the lead's own line in place.
+- **Standing work** when fewer than 5 leads are open, add these as leads (`kind` "variant" or "leg"):
+  - One pre-registered variant of each near-miss: vrp_gap on US500 alone (halves SR 0.61), vix_vxv_spike
+    (0.66 / -0.25) and overreaction_fx (0.62 / -0.00). Write the one change and why before testing, and say in `why`
+    that the variant still counts in the Deflated Sharpe N (no new free trials).
+  - ML on the existing legs (docs/gaps.json lists them): meta-labeling (a model that skips a leg's weak trades),
+    sizing, or a regime filter. Name the leg, the target, the past-only features and the closest rejected ML version.
 3. A queue item with `"source": "data"` and `"status": "new"` comes first: fetch it (see Data below), set its status
    to "done" with the file, date range and row count in `"result"`, or "rejected" with the reason.
 4. Otherwise rotate the four sources. Count the `source` of the last 8 queue items and lead with the one used least:
@@ -55,13 +82,13 @@ writing anything new: `tools/download_histdata.py` and `tools/download_histdata_
 histdata); never a login, a key or a paid feed: if one is needed, set the item to "rejected" with "needs the owner"
 and write it under "## For the owner" in `docs/HANDOFF.md`. Data files stay out of git.
 
-Commit only your files, then push: `git add docs/ideas/queue.jsonl docs/ideas/sources.jsonl <each new spec>`,
+Commit only your files, then push: `git add docs/ideas/queue.jsonl docs/ideas/sources.jsonl docs/ideas/backlog.jsonl <each new spec>`,
 `git commit -m "Finder <date>: <n> ideas"`, `git push origin HEAD`. If the push fails, leave the commit local and say
 so. Use plain `git ...` from the repo folder, never `git -C`, and one command per Bash call (no `&&`, `;` or pipes).
 Write files with the Write and Edit tools, never heredocs or `>` redirects.
 
 Do not build or test strategies. Never look at our own results after 2025-10-12: those days are the owner's holdout
 (`tools/holdout.py`). Finish with one line listing the ids you queued, then the hand-over as the very last line:
-`HANDOFF: builder <n> ideas queued` (or `HANDOFF: none nothing new found`). "Nothing new found" is only allowed after
-this run searched at least 3 new sources aimed at the gaps (each logged in `docs/ideas/sources.jsonl`, dropped ones
-too); name the top gap and the 3 sources in the line before the hand-over. Earlier decision notes do not count.
+`HANDOFF: builder <n> ideas queued` (or `HANDOFF: none nothing new found`). "Nothing new found" is only allowed when
+the backlog has no open lead left and this run refilled it in scout mode (30+ new leads, ready for the next run). In
+the line before the hand-over, give the open-lead count and the gaps skipped as tried. Earlier decision notes do not count.

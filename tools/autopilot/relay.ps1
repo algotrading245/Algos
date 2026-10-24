@@ -16,7 +16,8 @@
 #   6. A hand-over naming the judge, builder or tester, when that role has work.
 #   7. A data item waiting: the finder fetches it (ideas that need it are blocked until then).
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
-#   9. Otherwise the finder, at once, to queue the next idea or fetch data (no budget or empty-run brake).
+#   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget or
+#      empty-run brake).
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
 param([switch]$DryRun)
@@ -54,13 +55,19 @@ function Get-Unreviewed {
 }
 # Why the finder should run, or $null.
 function Get-FinderWhy {
-    # No brake (owner 2026-10-22): when an idea finishes, pass or fail, the finder starts the next one at once,
-    # whatever the week's budget or how many runs in a row found nothing. Only a usage limit (router.py backoff)
-    # or PAUSE stops it.
+    # Queue-low trigger (owner 2026-10-24, replaces "no brake" of 2026-10-22): the finder starts only when fewer than
+    # 2 ideas wait for the builder. No budget or empty-run brake: the finder prompt keeps a lead backlog
+    # (docs/ideas/backlog.jsonl) so a run is empty only when it refilled that backlog. Only a usage limit
+    # (router.py backoff) or PAUSE stops it.
     if (@(Get-DataDue).Count -gt 0) { return "data item waiting" }
     $stuck = @(Get-DataStuck)
     if ($stuck.Count) { Write-Log "relay" "data item(s) stuck after $DataTryCap finder runs, priority dropped: $(($stuck | ForEach-Object { $_.id }) -join ', ')" }
-    return "queue empty: find the next idea"
+    $waiting = Get-QueueWaiting
+    if ($waiting -ge 2) { return $null }
+    $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
+    $open = if (Test-Path $bl) { @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' }).Count } else { 0 }
+    $mode = if ($open -lt 10) { "scout mode first" } else { "next backlog lead" }
+    return "queue low ($waiting waiting): $open open lead(s), $mode"
 }
 
 # The week's token budget (budget.py, owner 2026-10-22), read once a tick.
