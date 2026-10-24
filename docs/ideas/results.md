@@ -350,3 +350,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-24T18:00 | f_donchian_eurjpy_vl | n/a | 2 | EURJPY donchian lookback=55 L1 both | 0.01 / 0.70 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T18:00 | f_donchian_gbpjpy_vl | n/a | 2 | GBPJPY donchian lookback=20 L1 both | 0.07 / 0.03 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
 | 2026-10-24T18:00 | f_donchian_nzdusd_vl | n/a | 2 | NZDUSD donchian lookback=55 L1 both | -0.01 / -0.49 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T19:00 | f_donchian_audnzd_vl | n/a | 2 | AUDNZD donchian lookback=55 L1 both | 0.20 / -0.33 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T19:01 | f_donchian_euraud_vl | n/a | 2 | EURAUD donchian lookback=20 L1 both | 0.07 / -0.17 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T19:01 | f_donchian_eurchf_vl | n/a | 2 | EURCHF donchian lookback=55 L1 both | 0.28 / -0.25 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T19:01 | f_donchian_eurgbp_vl | n/a | 2 | EURGBP donchian lookback=20 L1 both | -0.22 / -1.01 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
+| 2026-10-24T19:01 | f_donchian_gbpchf_vl | n/a | 2 | GBPCHF donchian lookback=55 L1 both | -0.14 / -0.04 | FAIL at halves | 1.000 (book, N=26754, luck bar 1.00) |
