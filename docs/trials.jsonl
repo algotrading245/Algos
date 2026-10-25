@@ -512,3 +512,6 @@
 {"id": "idea:f_rsi_gbpchf_tu", "when": "2026-10-25T16:00:53", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_grxeur_tu", "when": "2026-10-25T16:01:01", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_nzdcad_tu", "when": "2026-10-25T16:01:08", "verdict": "FAIL at belief", "count": 4}
+{"id": "paper_gatev_ratio_xau_xag", "when": "2026-10-25T16:16:00", "verdict": "FAIL at halves"}
+{"id": "paper_gatev_ratio_fx_pairs", "when": "2026-10-25T16:16:05", "verdict": "FAIL at halves"}
+{"id": "paper_gatev_ratio_nsx_spx", "when": "2026-10-25T16:16:10", "verdict": "FAIL at halves"}
