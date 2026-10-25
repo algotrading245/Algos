@@ -27,6 +27,7 @@ param(
     [string]$To = (Get-Date -Format "yyyy.MM.dd"),
     [int]$Deposit = 10000,
     [int]$Leverage = 100,
+    [string]$Currency = "USD",  # the FTMO demo account is in EUR (fidelity runs pass -Currency EUR)
     [string]$Period = "M1",
     [int]$Model = 4,          # 4 = every tick based on real ticks; 1 = 1-minute OHLC (a fast screen, owner 2026-10-21)
     [string]$Tag = "",
@@ -150,7 +151,7 @@ Period=$Period
 Model=$Model
 ExecutionMode=0
 Deposit=$Deposit
-Currency=USD
+Currency=$Currency
 Leverage=1:$Leverage
 ForwardMode=0
 ReplaceReport=1
