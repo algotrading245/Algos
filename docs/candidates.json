@@ -3252,6 +3252,64 @@
      0.809
     ]
    }
+  },
+  {
+   "id": "paper_melvin_prins_eom_equity_hedge",
+   "name": "paper_melvin_prins_eom_equity_hedge",
+   "status": "rejected",
+   "step": 2,
+   "reason": "gates: FAIL at corr. Variant A (15:00-16:00 London hour on last business day, equity-conditioned, 5 pairs pooled, 2011-2025, 417 events): halves 1.02/0.51, 1.5x 0.61, but corr with the cross leg +0.53 (limit 0.30) and book 2018+ 3.11 -> 3.03. Duplicates the month-end fix flow already in the book. Variant B (reversion) SR 0.10, dies at 1.5x. Not tuned. Evidence: research/paper_melvin_prins_eom_equity_hedge.py",
+   "tag": "corr",
+   "published": "https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+   "gates": {
+    "id": "paper_melvin_prins_eom_equity_hedge",
+    "when": "2026-10-25T17:20:26",
+    "verdict": "FAIL at corr",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "1.02 / 0.51 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.61",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": false,
+      "figure": "book +0.21, max leg cross +0.53",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "published https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.11 -> 3.03",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26763, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": "https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+    "profitable_months_2018": [
+     0.777,
+     0.777
+    ]
+   }
   }
  ],
  "rejected": [
