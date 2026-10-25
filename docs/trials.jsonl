@@ -546,3 +546,4 @@
 {"id": "idea:f_meanrev_xagusd_td", "when": "2026-10-25T19:00:48", "verdict": "FAIL at halves", "count": 4}
 {"id": "ml_metalabel_after_morning_fall", "when": "2026-10-25T19:01:50", "verdict": "PASS"}
 {"id": "paper_lunar_new_moon_indices", "when": "2026-10-25T19:06:11", "verdict": "FAIL at halves"}
+{"id": "vrp_gap_equity_indices", "when": "2026-10-25T19:52:35", "verdict": "PASS"}
