@@ -1294,3 +1294,6 @@
 {"date": "2026-10-25", "kind": "paper", "title": "FEDS Notes newest 25, NY Fed staff reports sr813-832, Wen et al EIA-WTI intraday (PDF not readable again)", "link": "https://digital.library.adelaide.edu.au/dspace/bitstream/2440/141224/2/hdl_141224.pdf", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "Safari & Schmidhuber: Trends and reversion in financial markets (pages 1-12)", "link": "https://arxiv.org/pdf/2501.16772", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "Chen, Chen, Jang: Dynamic Grid Trading Strategy (BTC/ETH spot, crypto only, long-only grid)", "link": "https://arxiv.org/pdf/2506.11921", "read": "in full", "specs": []}
+{"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 Monday Dip Weekly Exit EA", "link": "https://www.mql5.com/en/code/78343", "read": "unverified", "specs": []}
+{"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 Crabel ORB Gold NR4/NR7", "link": "https://www.mql5.com/en/code/78259", "read": "unverified", "specs": []}
+{"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 GER40 Evening Coil (dropped: many in-sample filters, single market)", "link": "https://www.mql5.com/en/code/78380", "read": "unverified", "specs": []}
