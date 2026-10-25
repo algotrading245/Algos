@@ -1,0 +1,31 @@
+fix_vrp_leg_fidelity, 2026-10-25. Output of research/vrp_gap_fidelity.py and research/vrp_ctrl_book.py (no new settings;
+hold 10 trading days, top third of 252, vol scale 10%/yr, same costs as vrp_gap.run).
+
+Per market (net Sharpe; all / to 2017 / from 2018 / 1.5x cost):
+US500  0.61 / 0.91 / 0.36 / 0.58
+US100  0.75 / 1.20 / 0.46 / 0.71
+DAX    0.48 / 1.06 / 0.11 / 0.49   <- below 0.2 in the second half on its own
+US500+US100 (the EA's two markets) 0.71 / 1.04 / 0.44 / 0.68
+all three (the gated series)       0.73 / 1.12 / 0.38
+
+Correlation of the daily series to every book leg (3 markets): quartet -0.065, grid -0.032, hold -0.065, fix 0.000,
+cross -0.010, fall 0.004, morning 0.043, after -0.010, breakout -0.036, noise -0.086. Gold hold: -0.065 (US500+US100: -0.053).
+The pre-registered limit 0.30 is met; no size cut.
+
+Random-long control (same number of entries per market: 160 / 154 / 152, random Mondays, 10-day long, same vol scale and
+costs, 3 seeds; candidates vrp_ctrl_s0..s2, with _markets.csv):
+                        Sharpe all / to 2017 / from 2018 / 1.5x    book 2018+ without VRP 3.11 -> with it    gain
+vrp_gap_equity_indices  0.73 / 1.12 / 0.38 / 0.70                  3.20                                      +0.090
+vrp_ctrl_s0             0.19 / 0.34 / 0.04 / 0.16                  3.09                                      -0.016
+vrp_ctrl_s1             0.64 / 0.67 / 0.61 / 0.61                  3.26                                      +0.147
+vrp_ctrl_s2             0.34 / 0.30 / 0.43 / 0.33                  2.52                                      -0.590
+(Earlier 50-seed US500-only control: 0.41 +- 0.21.) gates.py --dry-run on the controls compares them with a book that
+already holds the VRP leg, so its book line is not used; the "gain" column above is against the book without the VRP leg
+(research/vrp_ctrl_book.py).
+Reading: the VRP leg beats all 3 controls on Sharpe (0.73 against a mean of 0.39) and on book gain against 2 of 3; one
+random control (s1) does better on the book (+0.147). So the timing adds something over a random long, but it is not
+decisive: much of the leg is equity beta, and 3 seeds cannot say more. It is kept (not rejected), with the leg off by
+default, and the demo / tester must show it. Controls would pass the gates only by luck of the draw (s1 passes halves,
+costs and belief and fails corr only because the VRP leg is in the book).
+Not run: the gate rerun for a US500+US100-only market set, because DAX is not dropped (the EA trades US500 + US100; DAX is
+in the gated series with 3 markets; US500+US100 alone is 0.71 / 1.04 / 0.44, no worse).

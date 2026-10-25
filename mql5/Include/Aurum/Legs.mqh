@@ -26,7 +26,9 @@ bool   AurumInputsBad();                                            // true: the
 #define AFTER_MAGIC 24     // the after-holiday trades have magic InpMagic+24
 #define DRIFT_MAGIC 25     // the overnight-drift trade has magic InpMagic+25
 #define BREAK_MAGIC 26     // the breakout trades have magic InpMagic+26 (long) and InpMagic+27 (short)
-#define NOISE_MAGIC 28     // the noise-area trades have magic InpMagic+28 (S&P 500) and InpMagic+29 (Nasdaq)
+#define VRP_HOLD_DAYS 10   // variance-premium hold in trading days (D1 bars of the index)
+#define VRP_MAGIC 30      // the variance-premium trades have magic InpMagic+30 (S&P 500) and InpMagic+31 (Nasdaq)
+#define NOISE_MAGIC 28    // the noise-area trades have magic InpMagic+28 (S&P 500) and InpMagic+29 (Nasdaq)
 #define NOISE_OPEN  990    // 9:30 New York in server minutes (the server is New York + 7)
 #define NOISE_CLOSE 1380   // 16:00 New York
 #define NOISE_N     12     // checks at 10:00, 10:30, ... 15:30 New York
@@ -75,6 +77,9 @@ datetime g_breakDay=0;     // day the range below belongs to
 bool     g_breakOk=false;  // that day's range exists and passed the filter
 double   g_breakHi=0.0,g_breakLo=0.0;
 datetime g_breakTraded[2]; // per side (long, short): day a trade was opened
+bool     g_vrpOn=false;    // the variance-premium leg has a size and the VIX symbol is there
+string   g_vrpSym[2];      // S&P 500 and Nasdaq, "" for one that is missing
+datetime g_vrpDone[2];     // per index: Monday whose check has been dealt with
 bool     g_noiseOn=false;  // the noise-area leg has a size
 string   g_noiseSym[2];    // S&P 500 and Nasdaq, "" for one that is missing
 datetime g_noiseDay[2];    // day the bands below belong to
@@ -2159,6 +2164,174 @@ void Drift()
    g_driftDone=today;
   }
 
+// Variance-premium timing (Bollerslev-Tauchen-Zhou 2009), research/vrp_gap_equity_indices.py. Every Monday near the US
+// close: gap = VIX^2 - realised variance (22 daily closes, annualised) as of the last closed D1 bar (Friday); when it is
+// in the top third of the last 252 trading days' gaps the index is bought and held 10 trading days (D1 bars of the
+// index, normally to the Monday two weeks on), a later Monday signal inside the hold restarts the 10 days. No entry on
+// US holiday Mondays; no signal when the last VIX bar is more than 5 days older than the index bar. Size: notional of 10% a year volatility (60 days, at most 3x) x equity x
+// SizeMult() x InpVrpMult. Python (US500, US100, DAX, 2010-2025): Sharpe 1.12 / 0.38 by half, 0.70 at 1.5x cost. The
+// broker stop (InpVrpStopEqPct of equity) is not in the Python test; the VIX symbol must exist on the broker.
+bool VrpSignal(string sym,double &gap,double &vol)
+  {
+   const int N=252,W=22,V=60;
+   double c[];
+   datetime tm[];
+   ArraySetAsSeries(c,true);
+   ArraySetAsSeries(tm,true);
+   if(CopyClose(sym,PERIOD_D1,1,N+W+2,c)<N+W+2 || CopyTime(sym,PERIOD_D1,1,N+W+2,tm)<N+W+2)
+      return(false);
+   double r[];
+   ArrayResize(r,N+W+1);
+   for(int j=0; j<N+W+1; j++)
+     {
+      if(c[j+1]<=0)
+         return(false);
+      r[j]=c[j]/c[j+1]-1.0;
+     }
+   int v0=iBarShift(InpVrpVix,PERIOD_D1,tm[0],false);
+   if(v0<0 || tm[0]-iTime(InpVrpVix,PERIOD_D1,v0)>5*86400)
+      return(false);                  // VIX feed stale
+   double g[];
+   ArrayResize(g,N);
+   for(int k=0; k<N; k++)
+     {
+      double m=0.0,s=0.0;
+      for(int j=k; j<k+W; j++)
+         m+=r[j];
+      m/=W;
+      for(int j=k; j<k+W; j++)
+         s+=(r[j]-m)*(r[j]-m);
+      double rv2=s/(W-1)*252.0;
+      int vs=iBarShift(InpVrpVix,PERIOD_D1,tm[k],false);
+      double v=(vs<0 ? 0.0 : iClose(InpVrpVix,PERIOD_D1,vs));
+      if(v<=0)
+         return(false);
+      g[k]=(v/100.0)*(v/100.0)-rv2;
+     }
+   gap=g[0];
+   double sorted[];
+   ArrayCopy(sorted,g);
+   ArraySort(sorted);
+   double pos=(N-1)*2.0/3.0;
+   int lo=(int)MathFloor(pos);
+   double thr=sorted[lo]+(pos-lo)*(sorted[MathMin(lo+1,N-1)]-sorted[lo]);
+   double m=0.0,s=0.0;
+   for(int j=0; j<V; j++)
+      m+=r[j];
+   m/=V;
+   for(int j=0; j<V; j++)
+      s+=(r[j]-m)*(r[j]-m);
+   vol=MathSqrt(s/(V-1)*252.0);
+   gap-=thr;                       // > 0: in the top third
+   return(vol>0);
+  }
+
+void Vrp()
+  {
+   if(!g_vrpOn)
+      return;
+   datetime now=TimeCurrent(),today=DayOf(now),opened;
+   MqlDateTime st;
+   TimeToStruct(today,st);
+   for(int i=0; i<2; i++)
+     {
+      string sym=g_vrpSym[i];
+      if(sym=="")
+         continue;
+      long magic=InpMagic+VRP_MAGIC+i;
+      // The global variable holds the signal day (the Monday the hold counts from). The hold ends at the entry time of
+      // the 10th trading day after it, counted in D1 bars of the index, so holidays do not stretch it.
+      string key=AURUM_NAME+".vrp2."+IntegerToString(magic);
+      bool held=(HeldLots(sym,magic,opened)>0);
+      double anchor=(GlobalVariableCheck(key) ? GlobalVariableGet(key) : 0.0);
+      if(held && anchor<=0)
+        {
+         anchor=(double)DayOf(opened);   // state lost: count from the day the position was opened
+         GlobalVariableSet(key,anchor);
+        }
+      if(!held && anchor>0)
+        {
+         GlobalVariableDel(key);
+         anchor=0.0;
+        }
+      datetime start=today+HHMMSec(InpVrpHHMM);
+      bool inWindow=(st.day_of_week==1 && now>=start && now-start<InpVrpEntrySec && g_vrpDone[i]!=today && !UsHoliday(today));
+      if(held)
+        {
+         if(inWindow)
+           {
+            double g2=0.0,v2=0.0;
+            bool sig=(VrpSignal(sym,g2,v2) && g2>0);
+            g_vrpDone[i]=today;
+            if(sig)   // a Monday signal inside the hold (also on the exit day) restarts the 10 days, no close and reopen
+              {
+               GlobalVariableSet(key,(double)today);
+               PrintFormat(AURUM_NAME+": variance-premium hold on %s extended from %s",sym,TimeToString(today));
+               continue;
+              }
+           }
+         int bars=iBarShift(sym,PERIOD_D1,(datetime)GlobalVariableGet(key),false);
+         if(bars<VRP_HOLD_DAYS || now<start)
+            continue;
+         if(CloseAll(sym,magic))
+            GlobalVariableDel(key);
+         continue;
+        }
+      if(st.day_of_week!=1 || now<start || g_vrpDone[i]==today)
+         continue;
+      if(UsHoliday(today))
+        {
+         g_vrpDone[i]=today;   // US cash market shut: the Python test has no Monday here
+         continue;
+        }
+      if(now-start>=InpVrpEntrySec)
+        {
+         g_vrpDone[i]=today;
+         continue;
+        }
+      double gap=0.0,vol=0.0;
+      if(!VrpSignal(sym,gap,vol))
+        {
+         PrintFormat(AURUM_NAME+": no variance-premium signal on %s (D1 history short or %s stale, older than 5 days)",sym,InpVrpVix);
+         g_vrpDone[i]=today;
+         continue;
+        }
+      if(gap<=0)
+        {
+         g_vrpDone[i]=today;
+         continue;
+        }
+      if(TradedSince(sym,magic,start))
+        {
+         g_vrpDone[i]=today;
+         continue;
+        }
+      MqlTick q;
+      if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0 || (q.ask-q.bid)/q.bid*1e4>InpVrpMaxSpreadBp)
+         continue;                 // tried again until the entry time has run out
+      double mult=SizeMult()*InpVrpMult*MathMin(3.0,0.10/vol);
+      double lots=NotionalLots(sym,1,q.ask,mult);
+      if(lots<=0)
+        {
+         PrintFormat(AURUM_NAME+": balance too small for the minimum lot of %s, no variance-premium trade",sym);
+         g_vrpDone[i]=today;
+         continue;
+        }
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      double sl=NormalizeDouble(q.ask*(1.0-MathMin(0.5,InpVrpStopEqPct/100.0/mult)),dg);
+      Prepare(sym,magic);
+      if(!Filled(g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" vrp")))
+        {
+         PrintFormat(AURUM_NAME+": variance-premium order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+         continue;
+        }
+      GlobalVariableSet(key,(double)today);
+      PrintFormat(AURUM_NAME+": variance-premium gap above its 252-day third (%.4f), bought %.2f %s at %.2f, stop %.2f, hold %d trading days",
+                  gap,lots,sym,FillPrice(q.ask),sl,VRP_HOLD_DAYS);
+      g_vrpDone[i]=today;
+     }
+  }
+
 // Everything the EA does, called on every tick of the chart and once a second.
 // Closes every position of the EA. Returns false if a close failed.
 bool CloseEverything()
@@ -2191,6 +2364,10 @@ bool CloseEverything()
       for(int i=0; i<2; i++)
          if(g_noiseSym[i]!="")
             ok=CloseAll(g_noiseSym[i],InpMagic+NOISE_MAGIC+i) && ok;
+   if(g_vrpOn)
+      for(int i=0; i<2; i++)
+         if(g_vrpSym[i]!="")
+            ok=CloseAll(g_vrpSym[i],InpMagic+VRP_MAGIC+i) && ok;
    return(ok);
   }
 
@@ -2237,6 +2414,7 @@ void Run()
    Breakout();
    Noise();
    Drift();
+   Vrp();
   }
 
 //+------------------------------------------------------------------+
@@ -2268,6 +2446,8 @@ int OnInit()
       InpBreakExitHHMM%100>59 || InpBreakExitHHMM>2359 || HHMMSec(InpBreakToHHMM)<=HHMMSec(InpBreakFromHHMM)+3600 ||
       HHMMSec(InpBreakStartHHMM)<HHMMSec(InpBreakToHHMM) || HHMMSec(InpBreakExitHHMM)<=HHMMSec(InpBreakStartHHMM) ||
       InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange ||
+      InpVrpMult<0 || InpVrpHHMM<0 || InpVrpHHMM%100>59 || InpVrpHHMM>2350 || InpVrpEntrySec<1 || InpVrpMaxSpreadBp<=0 ||
+      InpVrpStopEqPct<=0 || InpVrpVix=="" ||
       InpNoiseMult<0 || InpNoiseBandSpx<=0 || InpNoiseBandNdx<=0 || InpNoiseMaxSpreadBp<=0 || AurumInputsBad())
       return(INIT_PARAMETERS_INCORRECT);
    // InpTarget: the goal scale with the best chance of each multiple in tools/target_odds.py (21 weekdays, 70% of
@@ -2367,6 +2547,28 @@ int OnInit()
          g_noiseSym[i]="";
         }
      }
+   g_vrpOn=(InpVrpMult>0);
+   g_vrpSym[0]=InpStocks;
+   g_vrpSym[1]=InpNasdaq;
+   g_vrpDone[0]=0;
+   g_vrpDone[1]=0;
+   if(g_vrpOn && !SymbolSelect(InpVrpVix,true))
+     {
+      PrintFormat(AURUM_NAME+": volatility index %s is not available, the variance-premium leg is off",InpVrpVix);
+      g_vrpOn=false;
+     }
+   for(int i=0; i<2 && g_vrpOn; i++)
+     {
+      if(SymbolSelect(g_vrpSym[i],true))
+         iBars(g_vrpSym[i],PERIOD_D1);
+      else
+        {
+         PrintFormat(AURUM_NAME+": symbol %s is not available, the variance-premium leg leaves it out",g_vrpSym[i]);
+         g_vrpSym[i]="";
+        }
+     }
+   if(g_vrpOn)
+      iBars(InpVrpVix,PERIOD_D1);
    if(g_driftOn && !SymbolSelect(InpStocks,true))
      {
       PrintFormat(AURUM_NAME+": stock index %s is not available, the overnight-drift leg is off",InpStocks);

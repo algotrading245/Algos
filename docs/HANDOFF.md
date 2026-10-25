@@ -58,6 +58,14 @@ each finished piece of work.
   The leg is not yet shown to beat a random long with the same exposure (Sharpe 0.73 against a control of 0.41±0.21).
   Builder fix item `fix_vrp_leg_fidelity` is queued. j16 was already running, so it was left to finish and counts as a
   first look only. The candidate is not integrated until the fixed build has its own tester run.
+  - **Judge 2026-10-25 20:25, v1.14 review:** the 9 earlier issues are fixed or acceptable. There is no blocker and
+    there are 7 new minor issues. One of them changes trades: `UsHoliday` uses the federal calendar, so the EA skips
+    the Columbus Day and Veterans Day Mondays, which NYSE and the Python model both trade. The others: the stale-VIX
+    limit is 5 calendar days, the size is not resized when a hold extends, and one comment quotes the 3-market
+    figures. The random-long control used only 3 seeds and VRP beats 2 of them, so it needs ≥50 seeds before the leg
+    is switched on. Nothing shows whether VIX.cash is spot VIX. j17 is on hold and the builder fix item
+    `fix_vrp_leg_fidelity2` is queued. The judge committed the uncommitted VRP leg files (Inputs.mqh, Legs.mqh, the
+    .mq5 file, the preset and the research scripts) so the repo compiles at HEAD.
 - **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
   the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference

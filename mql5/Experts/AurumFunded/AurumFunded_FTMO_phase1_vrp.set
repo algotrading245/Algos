@@ -1,0 +1,24 @@
+; AurumFunded v1.13 - FTMO 2-Step Swing, phase 1 legs preset plus the variance-premium leg (research/vrp_gap_equity_indices.py).
+; Tester only until the judge has passed it. The leg needs a VIX symbol on the broker (InpVrpVix); without it the leg stays off.
+InpPropTargetPct=10.0
+InpPropRound=1
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275
+InpVrpMult=0.5
+InpVrpVix=VIX.cash
+InpVrpHHMM=2230
+InpVrpEntrySec=600
+InpVrpMaxSpreadBp=3.0
+InpVrpStopEqPct=5.0

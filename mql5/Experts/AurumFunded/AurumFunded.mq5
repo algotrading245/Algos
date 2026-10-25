@@ -76,6 +76,12 @@
 //| down: at 10k it is 1-3 steps and skipped its widest stops. At    |
 //| most 2x its risk at one step, so a size cut (brake, coast, the   |
 //| cushion floor) to under a step can round back up to one step.    |
+//| v1.13: variance-premium leg (InpVrpMult, off by default, magic   |
+//| +30 S&P 500 / +31 Nasdaq): Monday, VIX^2 minus realised variance |
+//| in the top third of 252 days -> long 10 trading days, broker     |
+//| stop, signal day kept in a global variable. Needs a VIX symbol.  |
+//| v1.14: VRP fixes: hold counted in D1 bars, a signal on the exit  |
+//| day extends, no US-holiday Monday, stale-VIX check.              |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -84,7 +90,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.12"
+#property version   "1.14"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

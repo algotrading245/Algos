@@ -223,6 +223,14 @@ input int    InpDriftExitHHMM   = 1000;  // Close at this time, HHMM
 input int    InpDriftEntrySec   = 600;   // No entry later than this after the start, seconds
 input double InpDriftMaxSpread  = 1.5;   // No entry while the index spread is above this, price units
 
+input group "Variance-premium timing (S&P 500 and Nasdaq, weekly; research/vrp_gap_equity_indices.py)"
+input double InpVrpMult         = 0.0;   // Notional per index, multiple of min(3, 10% / annual volatility) x equity (0 = off; 0.5 = two indices at equal weight)
+input string InpVrpVix          = "VIX.cash"; // The VIX on the broker (the leg is off when the symbol is missing)
+input int    InpVrpHHMM         = 2230;  // Monday check and entry time, server HHMM (near the US close)
+input int    InpVrpEntrySec     = 600;   // No entry later than this after the start, seconds
+input double InpVrpMaxSpreadBp  = 3.0;   // No entry while the spread is above this, basis points of price
+input double InpVrpStopEqPct    = 5.0;   // Broker stop: loss in % of equity (not in the Python test)
+
 input group "Fast leg (2-minute fade at the bell)"
 input double InpSnapRiskPct     = 0.0;   // Loss at the stop, % of balance (0 = off)
 input int    InpSnapLookMin     = 5;     // Move is measured over this many minutes (multiple of 5)
