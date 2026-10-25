@@ -1335,3 +1335,6 @@
 {"date": "2026-10-26", "kind": "prebuilt", "title": "Quantpedia: Uncovering the Pre-ECB Drift", "link": "https://quantpedia.com/uncovering-the-pre-ecb-drift-and-its-trading-strategy-applications/", "read": "in full", "specs": []}
 {"date": "2026-10-26", "kind": "prebuilt", "title": "MQL5 Monday Dip EA / GER40 Evening Coil", "link": "https://www.mql5.com/en/code/78380", "read": "in full", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "AQR research page (no rule)", "link": "https://www.aqr.com/Insights/Research", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "prebuilt", "title": "Quantpedia #0100 Trading WTI/Brent Spread", "link": "https://quantpedia.com/strategies/trading-wti-brent-spread/", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "Jin et al. Intraday Time-series Momentum: Evidence from China", "link": "https://mpra.ub.uni-muenchen.de/97134/", "read": "unverified", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "Wen et al. Intraday Return Predictability in the Crude Oil Market: EIA announcements (Energy Journal 2023)", "link": "https://ideas.repec.org/a/sae/enejou/v44y2023i5p149-172.html", "read": "unverified", "specs": []}
