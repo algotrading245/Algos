@@ -1331,3 +1331,4 @@
 {"date": "2026-10-25", "kind": "paper", "title": "SMDAM Macro View: Is Risk-Off Yen Appreciation a Thing of the Past? (VIX>25/30 and USDJPY, 2000-2026)", "link": "https://www.smd-am.co.jp/english/market_information/monthly/2026/MacroView20260701.pdf", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "search", "title": "Search: leveraged ETF rebalancing late-day returns (Ivanov-Lenkey 2018, Rodier 2016); insignificant or gross-only", "link": "https://ideas.repec.org/a/eee/finmar/v41y2018icp36-56.html", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "Gold vs EURUSD residual fade (own rule; Erb-Harvey framing)", "link": "https://fred.stlouisfed.org/series/DEXUSEU", "read": "unverified", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "Griffin and Shams, Manipulation in the VIX (search results only)", "link": "https://quantpedia.com/is-vix-index-manipulated/", "read": "unverified", "specs": []}
