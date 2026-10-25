@@ -1338,3 +1338,4 @@
 {"date": "2026-10-26", "kind": "prebuilt", "title": "Quantpedia #0100 Trading WTI/Brent Spread", "link": "https://quantpedia.com/strategies/trading-wti-brent-spread/", "read": "in full", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "Jin et al. Intraday Time-series Momentum: Evidence from China", "link": "https://mpra.ub.uni-muenchen.de/97134/", "read": "unverified", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "Wen et al. Intraday Return Predictability in the Crude Oil Market: EIA announcements (Energy Journal 2023)", "link": "https://ideas.repec.org/a/sae/enejou/v44y2023i5p149-172.html", "read": "unverified", "specs": []}
+{"date": "2026-10-26", "kind": "ml", "title": "Kamauchi-Yokouchi VAR-based turbulence index (Kritzman-Li TI)", "link": "https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf", "read": "in full", "specs": ["ml_book_turbulence_scaler"]}
