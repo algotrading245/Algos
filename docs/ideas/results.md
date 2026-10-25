@@ -400,3 +400,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-25T04:01 | f_rsi_eurgbp_vl | n/a | 4 | EURGBP rsi level=30 period=14 L1 both | -0.01 / 0.54 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
 | 2026-10-25T04:01 | f_rsi_eurjpy_vl | n/a | 4 | EURJPY rsi level=10 period=2 L1 both | -0.46 / 0.08 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
 | 2026-10-25T04:01 | f_rsi_gbpjpy_vl | n/a | 4 | GBPJPY rsi level=10 period=2 L1 both | -0.29 / -0.60 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T05:00 | f_rsi_audnzd_vl | n/a | 4 | AUDNZD rsi level=30 period=14 L1 both | 0.17 / -0.04 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T05:00 | f_rsi_euraud_vl | n/a | 4 | EURAUD rsi level=30 period=14 L1 both | 0.09 / -0.19 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T05:00 | f_rsi_eurchf_vl | n/a | 4 | EURCHF rsi level=30 period=14 L1 both | 0.26 / 0.07 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T05:00 | f_rsi_gbpchf_vl | n/a | 4 | GBPCHF rsi level=30 period=14 L1 both | 0.62 / -0.22 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T05:00 | f_rsi_nzdcad_vl | n/a | 4 | NZDCAD rsi level=30 period=14 L1 both | 0.41 / 0.42 | FAIL at belief | 1.000 (book, N=26759, luck bar 1.00) |
