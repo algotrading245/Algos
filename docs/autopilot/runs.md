@@ -141,3 +141,4 @@ committed).
 | 2026-10-25 20:40 | judge | review AurumFunded v1.15 VRP fix (fix_vrp_leg_fidelity2, j17) | clean, no blocker; j17 runs as queued; 5 minor (no Hydra compile log, LF-only vixcls.csv: check close count in j17 log, control overlap/DAX, weekday stale limit, holiday bars in windows), no fix item |
 | 2026-10-25 20:49 | tester | Collected j17 off run, started the on run | j17 running |
 | 2026-10-25 21:23 | tester | Collected j17 (AurumFunded vrp2): net +13,737 (+137%), 2301.0 trades, PF 1.61, equity DD 5.99% | j17 done, needs judging |
+| 2026-10-25 23:00 | judge | judge j17 (AurumFunded v1.15 VRP leg) | FAIL: VRP trades net +0.31 USD vs model +260 (0%), DD 4.16 to 5.99%, return/DD 32.2 to 22.9; vrp_gap_equity_indices rejected, leg off by default, no fix item |

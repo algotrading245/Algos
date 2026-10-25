@@ -50,49 +50,17 @@ each finished piece of work.
 
 ## Current state
 
-- **VRP leg (variant_vrp_gap_equity_indices, AurumFunded v1.13, off by default), judge 2026-10-25 20:10:** the
-  reviewer found no blocker and 9 minor issues (see the `review` field in `docs/ideas/queue.jsonl`). The EA exits after
-  14 calendar days where the model holds 10 trading days. It closes and reopens when a new signal lands on the exit day.
-  It does not skip US holidays and does not guard against a stale VIX feed. The EA diff is not committed and has no
-  compile log, because the builder hit its turn limit. The gate includes DAX, but the EA trades only US500 and US100.
-  The leg is not yet shown to beat a random long with the same exposure (Sharpe 0.73 against a control of 0.41±0.21).
-  Builder fix item `fix_vrp_leg_fidelity` is queued. j16 was already running, so it was left to finish and counts as a
-  first look only. The candidate is not integrated until the fixed build has its own tester run.
-  - **Judge 2026-10-25 20:25, v1.14 review:** the 9 earlier issues are fixed or acceptable. There is no blocker and
-    there are 7 new minor issues. One of them changes trades: `UsHoliday` uses the federal calendar, so the EA skips
-    the Columbus Day and Veterans Day Mondays, which NYSE and the Python model both trade. The others: the stale-VIX
-    limit is 5 calendar days, the size is not resized when a hold extends, and one comment quotes the 3-market
-    figures. The random-long control used only 3 seeds and VRP beats 2 of them, so it needs ≥50 seeds before the leg
-    is switched on. Nothing shows whether VIX.cash is spot VIX. j17 is on hold and the builder fix item
-    `fix_vrp_leg_fidelity2` is queued. The judge committed the uncommitted VRP leg files (Inputs.mqh, Legs.mqh, the
-    .mq5 file, the preset and the research scripts) so the repo compiles at HEAD.
-  - **Judge 2026-10-25 20:30, j16: no result, the leg is blocked.** VIX.cash is not on the FTMO tester server. The
-    run with InpVrpMult 0.5 logged "volatility index VIX.cash is not available, the variance-premium leg is off"
-    (`backtests/2026-10-25_2005_AurumFunded_vrp_on/summary.txt` line 45). The on and off runs came out the same to the
-    cent: +1,000.15 (+10%), 346 trades, PF 1.44, DD 3.61%. FTMO lists no VIX CFD (`docs/ideas/2026-10-19.md:450`), so
-    the demo has no VIX either. Both runs also stopped at the phase-1 target on 2024-04-16, so only 3.5 of the 21
-    months ran. Step 8 (a VIX source the tester can read, such as a daily VIXCLS CSV) and step 9 (a preset that does
-    not stop at the target) are added to `fix_vrp_leg_fidelity2`. j17 stays on hold until both are done. **Owner:**
-    a CSV source means the demo or live terminal needs the file refreshed every day, which is your call. Without a
-    VIX feed this leg cannot run on FTMO.
-  - **Job-writing note for the builder:** j16's report folders have the wrong labels. `_vrp_off` holds the
-    InpVrpMult=0.5 run and `_vrp_on` holds the 0.0 run (input lists in the two `.htm` files).
-    `tools/autopilot/tester_step.py:476-478` runs the preset as "off" and preset + `compare_set` as "on". So
-    `compare_set` must be the setting that switches the leg on, for example `InpVrpMult=0.5` with a preset that has the
-    leg at 0. j17 is written the same wrong way round (`compare_set` InpVrpMult=0.0), which belongs in fix step 9.
-  - **Judge 2026-10-25 20:40, review of v1.15 (`fix_vrp_leg_fidelity2`, commit 71542eb): clean, j17 is running.**
-    There is no look-ahead: the leg uses Friday's VIXCLS close. `vixcls.csv` goes through `holdout.drop` and ends on
-    2025-10-10. With the leg off, both EAs behave as before. j17 is now the right way round (the preset is OFF, and
-    `compare_set` InpVrpMult=0.5 turns it ON, with no target). The 50-seed control reproduces: the 2018+ Sharpe is
-    at the 44th percentile of random longs, so the leg is mostly equity beta. Judge j17 with that in mind.
-    There are five minor findings and no fix item:
-    - **Check the j17 OnInit line.** It should report about 5,250 closes, the last on 2025.10.10. The CSV has LF line
-      endings only, and if the line says 1 close, the leg never traded.
-    - **Hydra compile.** AurumHydra has no compile log for the shared `Legs.mqh`/`Inputs.mqh` change. Compile it
-      before any Hydra job.
-    - The control overlaps itself and includes DAX.
-    - The stale limit counts weekdays, not NYSE trading days.
-    - The 22- and 252-bar windows include bars from US holidays.
+- **VRP leg (variant_vrp_gap_equity_indices): rejected, judge 2026-10-25 23:00 on j17.** AurumFunded v1.15 at
+  InpVrpMult 0.5, 2024.01-2025.09, 10k, 1:33. The VIX file source worked (5,253 closes, last 2025.10.10, a VIX line
+  every Monday). The leg's 26 trades (magic +30/+31) netted +0.31 USD against the model's +2.6% (about +260), which is
+  0% of it against lesson 4's 67-87%. With the leg on, equity DD went from 4.16% to 5.99% and return per unit of DD
+  from 32.2 to 22.9. 14 of the 26 trades were closed early by a CloseAll from the risk layer and lost 972.60. The 12
+  that ran to their planned exit or to the end of the test made 972.91. The 50-seed control had already put it at the
+  44th percentile of random longs. The leg stays in v1.15, off by default (InpVrpMult 0), so there is no fix item. Do
+  not use `AurumFunded_FTMO_phase1_vrp.set`. Still open from the v1.15 review: compile AurumHydra for the shared
+  `Legs.mqh`/`Inputs.mqh` change before any Hydra job. The early-close finding is proposed as a lesson
+  (decisions.jsonl, 2026-10-25T22:57); the reviewer has not checked it yet. Earlier VRP history (j16, v1.13-v1.15
+  reviews) is in git history of this file.
 - **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
   the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference

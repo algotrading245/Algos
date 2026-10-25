@@ -4009,7 +4009,7 @@
   {
    "id": "vrp_gap_equity_indices",
    "name": "vrp_gap_equity_indices",
-   "status": "tester",
+   "status": "rejected",
    "job": "j17",
    "ea": "funded",
    "note": "BLOCKED (judge 2026-10-25 20:30): j16 measured nothing, because VIX.cash is not on the FTMO tester server and the leg was off from OnInit (summary.txt line 45). Not integrated, not rejected; fix_vrp_leg_fidelity2 step 8 needs a VIX source, j17 on hold. v1.14 fixes (fix_vrp_leg_fidelity): j17 requeued, j16 = v1.13 first look. Controls (3 random-long seeds, research/vrp_gap_equity_indices.out.txt): Sharpe 0.19/0.64/0.34 vs 0.73, book gain -0.02/+0.15/-0.59 vs +0.09 - beats on average, not decisive. AurumFunded v1.13 leg InpVrpMult (off by default, magic +30/+31), preset AurumFunded_FTMO_phase1_vrp.set. EA trades US500+US100 only (DAX not on the list). Note: long equity beta - random-entry control Sharpe 0.41+-0.21 vs 0.73; needs a VIX symbol on the broker.",
@@ -4062,7 +4062,9 @@
      0.777,
      0.798
     ]
-   }
+   },
+   "tag": "tester",
+   "reason": "Tester FAIL j17 (AurumFunded v1.15, 2024.01-2025.09, 10k, 1:33): the 26 VRP trades net +0.31 USD against the model +2.6% (0% of it, lesson 4 range 67-87%); equity DD 4.16% -> 5.99% with the leg on, return/DD 32.2 -> 22.9. 14 of 26 trades closed early by a CloseAll (risk layer) lost 972.60. 50-seed control: Sharpe 2018+ at the 44th percentile of random longs (equity beta). Leg stays in v1.15 off by default (InpVrpMult 0), preset AurumFunded_FTMO_phase1_vrp.set not for use. Evidence backtests/2026-10-25_2049_AurumFunded_vrp2_on/summary.md, research/vrp_ctrl50.py."
   }
  ],
  "rejected": [
