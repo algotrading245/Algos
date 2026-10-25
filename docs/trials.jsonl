@@ -531,3 +531,7 @@
 {"id": "idea:f_reversal_jpxjpy_tu", "when": "2026-10-25T18:00:32", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_wtiusd_tu", "when": "2026-10-25T18:00:35", "verdict": "FAIL at halves", "count": 2}
 {"id": "ml_hold_ridge_sizing", "when": "2026-10-25T18:02:57", "verdict": "FAIL at halves"}
+{"id": "paper_nagel_vix_reversal_index", "when": "2026-10-25T18:11:06", "verdict": "FAIL at halves"}
+{"id": "prebuilt_ger40_evening_coil", "when": "2026-10-25T18:20:39", "verdict": "FAIL at halves"}
+{"id": "prebuilt_jpn225_quiet_drift", "when": "2026-10-25T18:24:28", "verdict": "FAIL at halves"}
+{"id": "paper_hamao_us_close_to_asia_eu_open", "when": "2026-10-25T18:28:37", "verdict": "FAIL at halves"}
