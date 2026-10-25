@@ -515,3 +515,8 @@
 {"id": "paper_gatev_ratio_xau_xag", "when": "2026-10-25T16:16:00", "verdict": "FAIL at halves"}
 {"id": "paper_gatev_ratio_fx_pairs", "when": "2026-10-25T16:16:05", "verdict": "FAIL at halves"}
 {"id": "paper_gatev_ratio_nsx_spx", "when": "2026-10-25T16:16:10", "verdict": "FAIL at halves"}
+{"id": "idea:f_reversal_spxusd_tu", "when": "2026-10-25T17:00:05", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xagusd_tu", "when": "2026-10-25T17:00:10", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xauusd_tu", "when": "2026-10-25T17:00:17", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_rsi_jpxjpy_tu", "when": "2026-10-25T17:00:23", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_wtiusd_tu", "when": "2026-10-25T17:00:27", "verdict": "FAIL at halves", "count": 4}
