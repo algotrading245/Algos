@@ -384,6 +384,28 @@
         "to": "2025.09"
       },
       "expect": "InpTarget=4 (goal 4x, scale 2.5) on the same 21 months as j10b and j11b. tools/target_odds.py, 4x target, scale 2.5, every weekday a round: P(4x) 22% at edge 0.7 and 32% at edge 1.0, P(ruin) 17% / 12%, median 1.11x / 1.77x. By j10b and j11b the tester's ruin tail is narrower than the model's, so expect few or no ruins. Report P(3x/4x/5x), P(ruin), median, months below 0.5x and margin refusals. Count the levels from the month multiples (2.99x or 3.99x counts as reached), not the 'round' field: the day's summary.txt also holds j10b's and j11b's round lines, and months_summary.py takes the first hit (see j11b's judgement)."
+    },
+    {
+      "id": "j16",
+      "expert": "AurumFunded",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_vrp.set",
+      "deposit": 10000,
+      "leverage": 33,
+      "tag": "vrp",
+      "set": [],
+      "compare_set": [
+        "InpVrpMult=0.0"
+      ],
+      "from": "2024.01.01",
+      "to": "2025.09.30",
+      "status": "running",
+      "needs": null,
+      "expect": "Step 15 for the variance-premium leg (AurumFunded v1.13, research/vrp_gap_equity_indices.py). Leg alone at InpVrpMult 0.5 on 10k, 2024.01-2025.09: about +2.6% / 3.7% DD from the Python daily series (2 indices at 0.25 x the 10%-vol series), about 11 entries a year per index (hold 10 trading days), magics +30/+31. Judge against 67-87% of the model (lesson 4). Check the input list shows InpVrpMult 0.5 (on) and 0.0 (off compare). NEEDS a VIX symbol on the FTMO tester server (InpVrpVix, default VIX.cash): if the log says the volatility index is not available, the leg never traded; that is a data problem, not a result - report the symbol list and stop.",
+      "folder": "backtests\\2026-10-25_1955_AurumFunded_vrp_off",
+      "terminal": "C:\\MetaTrader 5 - Tester",
+      "note": "Started by tools/autopilot/tester_step.py 2026-10-25 19:55 on MetaTrader 5 - Tester."
     }
   ]
 }
