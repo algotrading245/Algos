@@ -524,3 +524,4 @@
 {"id": "prebuilt_dual_thrust_indices_overnight_free", "when": "2026-10-25T17:13:07", "verdict": "FAIL at corr"}
 {"id": "ml_regime_grid_audcad", "when": "2026-10-25T17:15:39", "verdict": "FAIL at corr"}
 {"id": "paper_melvin_prins_eom_equity_hedge", "when": "2026-10-25T17:20:26", "verdict": "FAIL at corr"}
+{"id": "paper_moreira_muir_hold_sizing", "when": "2026-10-25T17:56:06", "verdict": "FAIL at book"}
