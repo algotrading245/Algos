@@ -50,6 +50,14 @@ each finished piece of work.
 
 ## Current state
 
+- **VRP leg (variant_vrp_gap_equity_indices, AurumFunded v1.13, off by default), judge 2026-10-25 20:10:** the
+  reviewer found no blocker and 9 minor issues (see the `review` field in `docs/ideas/queue.jsonl`). The EA exits after
+  14 calendar days where the model holds 10 trading days. It closes and reopens when a new signal lands on the exit day.
+  It does not skip US holidays and does not guard against a stale VIX feed. The EA diff is not committed and has no
+  compile log, because the builder hit its turn limit. The gate includes DAX, but the EA trades only US500 and US100.
+  The leg is not yet shown to beat a random long with the same exposure (Sharpe 0.73 against a control of 0.41±0.21).
+  Builder fix item `fix_vrp_leg_fidelity` is queued. j16 was already running, so it was left to finish and counts as a
+  first look only. The candidate is not integrated until the fixed build has its own tester run.
 - **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
   the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
