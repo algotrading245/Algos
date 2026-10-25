@@ -6,7 +6,8 @@ questions in this run: decide, do the work, and stop.
    following your agent instructions: date, trades per leg, P/L of the day if logged, slippage, anything odd.
    If no EA is attached or nothing traded, write that in one line ("no trades logged; EA not attached?").
    Start the entry with "ALERT" for a day stop, final stop, margin error, or a trade without a broker stop.
-   A "duplicate_close" line (retcode 10036 in the same second as a closing deal) is harmless: list it, no ALERT.
+   A "duplicate_close" line (retcode 10036, or 10013 on a close, in the same second as a deal on that symbol) is
+   harmless: list it, no ALERT. So is "done_reported_failed" (retcode 10009 is "done": the journal shows the fill).
 3. The fidelity week (owner 2026-10-25; the retired fidelity role's job). If today is a Friday, or the last Friday
    has no `docs/fidelity/<that Friday>.md` yet, write that file for the week Monday to Friday:
    run `python tools/demo_check.py --day <each day> --json`, one call per day, and put in a table per day the orders

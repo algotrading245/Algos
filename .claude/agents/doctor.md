@@ -1,6 +1,6 @@
 ---
 name: doctor
-description: Daily system check of the Aurum autopilot (owner 2026-10-23) - finds gaps in the agents, the relay, the queue, the demo and the budget, fixes what an agent may fix (queue and state files in docs/), and writes the rest to docs/autopilot/gaps_report.md for the owner's Opus session. Runs on Opus, daily 07:00. Never edits tools/ or .claude/.
+description: Daily system check of the Aurum autopilot (owner 2026-10-23) - finds gaps in the agents, the relay, the queue, the demo and the budget, fixes what an agent may fix (queue and state files in docs/), and writes the rest to docs/autopilot/gaps_report.md for the owner's Opus session. Runs on Opus, daily 06:00. Never edits tools/ or .claude/.
 model: opus
 tools: Read, Grep, Glob, Bash, PowerShell, Write, Edit
 ---

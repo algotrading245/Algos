@@ -63,13 +63,21 @@ def check(day):
     stamp = day.strftime("%Y%m%d")
     experts = [l for l in read(DATA / "MQL5" / "Logs" / f"{stamp}.log") if "Aurum" in l]
     journal = read(DATA / "logs" / f"{stamp}.log")
-    deal_secs = {second(l) for l in journal if re.search(r"deal #", l)}
+    by_sec = {}                                                     # second -> journal deal lines in it
+    for l in journal:
+        if re.search(r"deal #", l):
+            by_sec.setdefault(second(l), []).append(l)
     orders = Counter()
-    found = {k: [] for k in (*ALERTS, *EVENTS, "duplicate_close")}
+    found = {k: [] for k in (*ALERTS, *EVENTS, "duplicate_close", "done_reported_failed")}
     for l in experts:
         msg = l.split("\t")[-1]
-        if re.search(r"retcode 10036", msg) and second(l) in deal_secs:
+        sym = re.search(r" on (\S+?)[,:]? ", msg)
+        dealt = any(not sym or sym.group(1) in d for d in by_sec.get(second(l), []))   # a deal on its symbol that second
+        if dealt and (re.search(r"retcode 10036", msg) or re.search(r"close .*retcode 10013", msg)):
             found["duplicate_close"].append(msg)                    # a second close of a position a deal just closed
+            continue
+        if dealt and re.search(r"retcode 10009", msg):
+            found["done_reported_failed"].append(msg)               # 10009 is "done": the order filled (journal deal)
             continue
         for k, rx in {**ALERTS, **EVENTS}.items():
             if rx.search(msg):
@@ -97,6 +105,6 @@ if __name__ == "__main__":
         print(f"{res['day']}: {'ALERT' if res['alert'] else 'ok'}; logs {res['logs_found'] or 'none'}; "
               f"{res['experts_lines']} EA lines, orders {res['orders_by_leg'] or 'none'}, "
               f"{res['journal_trade_lines']} journal trade lines")
-        for k in (*ALERTS, *EVENTS, "duplicate_close"):
+        for k in (*ALERTS, *EVENTS, "duplicate_close", "done_reported_failed"):
             for m in res[k]:
                 print(f"  {k}: {m}")

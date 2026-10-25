@@ -5,7 +5,7 @@
 #   Aurum Keeper        at logon and every 15 min    keeps the PC awake and Terminal 16 open (keeper.ps1)
 #   Aurum Monitor       Mon-Fri 23:15                monitor agent (haiku): demo check-in
 #   Aurum Portfolio     Saturday 10:00               portfolio manager (opus): weekly book review, steer.md
-#   Aurum Doctor        daily 07:00                  doctor (opus): system gaps, fixes what it may, reports the
+#   Aurum Doctor        daily 06:00                  doctor (opus): system gaps, fixes what it may, reports the
 #                                                    rest in docs\autopilot\gaps_report.md
 #   Aurum Relay         every 5 min                  the agent team (relay.ps1): each agent hands over to the next,
 #                                                    which starts at once; one idea after another, no break
@@ -43,7 +43,7 @@ Register "Aurum Monitor" (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday, T
 Register "Aurum Portfolio" (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Saturday -At 10:00) `
     (Action "run-agent.ps1" "-Role portfolio") "Portfolio manager (opus): weekly book review and docs\ideas\steer.md for the finder."
 
-Register "Aurum Doctor" (New-ScheduledTaskTrigger -Daily -At 07:00) `
+Register "Aurum Doctor" (New-ScheduledTaskTrigger -Daily -At 06:00) `
     (Action "run-agent.ps1" "-Role doctor") "Doctor (opus): system gaps, fixes what it may, reports the rest in docs\autopilot\gaps_report.md."
 
 $every5 = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 5)
