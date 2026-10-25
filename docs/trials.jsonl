@@ -521,3 +521,6 @@
 {"id": "idea:f_rsi_jpxjpy_tu", "when": "2026-10-25T17:00:23", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_wtiusd_tu", "when": "2026-10-25T17:00:27", "verdict": "FAIL at halves", "count": 4}
 {"id": "prebuilt_dual_thrust_fx_gold", "when": "2026-10-25T17:10:05", "verdict": "FAIL at book"}
+{"id": "prebuilt_dual_thrust_indices_overnight_free", "when": "2026-10-25T17:13:07", "verdict": "FAIL at corr"}
+{"id": "ml_regime_grid_audcad", "when": "2026-10-25T17:15:39", "verdict": "FAIL at corr"}
+{"id": "paper_melvin_prins_eom_equity_hedge", "when": "2026-10-25T17:20:26", "verdict": "FAIL at corr"}
