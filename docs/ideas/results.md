@@ -405,3 +405,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-25T05:00 | f_rsi_eurchf_vl | n/a | 4 | EURCHF rsi level=30 period=14 L1 both | 0.26 / 0.07 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
 | 2026-10-25T05:00 | f_rsi_gbpchf_vl | n/a | 4 | GBPCHF rsi level=30 period=14 L1 both | 0.62 / -0.22 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
 | 2026-10-25T05:00 | f_rsi_nzdcad_vl | n/a | 4 | NZDCAD rsi level=30 period=14 L1 both | 0.41 / 0.42 | FAIL at belief | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T06:00 | f_reversal_spxusd_vl | n/a | 2 | SPXUSD reversal lookback=1 L1 both | 0.60 / -0.06 | FAIL at halves | 1.000 (book, N=26757, luck bar 1.00) |
+| 2026-10-25T06:00 | f_reversal_xauusd_vl | n/a | 2 | XAUUSD reversal lookback=1 L1 both | -0.00 / -0.50 | FAIL at halves | 1.000 (book, N=26757, luck bar 1.00) |
+| 2026-10-25T06:00 | f_rsi_grxeur_vl | n/a | 4 | GRXEUR rsi level=30 period=14 L1 both | 0.22 / -0.37 | FAIL at halves | 0.094 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T06:00 | f_rsi_jpxjpy_vl | n/a | 4 | JPXJPY rsi level=10 period=2 L1 both | -0.06 / -0.54 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T06:00 | f_rsi_wtiusd_vl | n/a | 4 | WTIUSD rsi level=30 period=14 L1 both | 0.10 / 0.15 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
