@@ -549,3 +549,4 @@
 {"id": "vrp_gap_equity_indices", "when": "2026-10-25T19:52:35", "verdict": "PASS"}
 {"id": "prebuilt_gold_holiday_drift", "when": "2026-10-25T23:08:44", "verdict": "FAIL at book"}
 {"id": "gold_eur_resid", "when": "2026-10-25T23:53:44", "verdict": "FAIL at halves"}
+{"id": "ml_hold_gvz_regime", "when": "2026-10-25T23:57:26", "verdict": "FAIL at halves"}
