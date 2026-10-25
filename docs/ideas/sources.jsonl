@@ -1297,3 +1297,4 @@
 {"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 Monday Dip Weekly Exit EA", "link": "https://www.mql5.com/en/code/78343", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 Crabel ORB Gold NR4/NR7", "link": "https://www.mql5.com/en/code/78259", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 GER40 Evening Coil (dropped: many in-sample filters, single market)", "link": "https://www.mql5.com/en/code/78380", "read": "unverified", "specs": []}
+{"date": "2026-10-25", "kind": "paper", "title": "Gatev et al pairs rule applied to XAU/XAG, FX spreads, index ratios", "link": "https://www.nber.org/papers/w7032", "read": "unverified", "specs": []}
