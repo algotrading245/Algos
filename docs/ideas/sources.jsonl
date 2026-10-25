@@ -1327,3 +1327,4 @@
 {"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 CodeBase experts page 3 re-read (all flagged items already tested)", "link": "https://www.mql5.com/en/code/mt5/experts?page=3", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "Quantpedia: Crude Oil Predicts Equity Returns (Driesprong et al)", "link": "https://quantpedia.com/strategies/crude-oil-predicts-equity-returns", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "Quantpedia: Earnings Announcement Premium", "link": "https://quantpedia.com/strategies/earnings-announcement-premium", "read": "in full", "specs": []}
+{"date": "2026-10-25", "kind": "paper", "title": "Frazzini Lamont earnings announcement premium (search for post-2010 evidence)", "link": "https://www.aqr.com/Insights/Research/Working-Paper/The-Earnings-Announcement-Premium-and-Trading-Volume", "read": "unverified", "specs": []}
