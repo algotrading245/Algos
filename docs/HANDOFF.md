@@ -153,7 +153,8 @@ each finished piece of work.
   `decide` and `git commit -m` commands are refused even without ";", short ones go through, so keep them short). Prop
   routes and presets: see archive.
 - **Demo (step 17): running since 2026-10-19 14:54.** The terminal was restarted from `t16_attach.ini`, and AurumFunded
-  1.06 is loaded with `AurumFunded_FTMO_phase1_legs.set` (the morning ALERT, EA not attached since 10-17 04:57, is over).
+  1.06 was loaded with `AurumFunded_FTMO_phase1_legs.set` (the morning ALERT, EA not attached since 10-17 04:57, is over);
+  since 2026-10-23 01:45 the demo runs 1.10 (keeper log; doctor 2026-10-25).
   **The demo account is 1:100 with gold at 1:50**, the same as the tester install, so j12-j14 are the demo's
   reference and j3 (1:33) is not. That settles the fidelity leverage question. The **account currency is EUR**
   (the tester deposits USD), so compare in %. First fill: a breakout buy of 0.01 USDJPY at 158.365. demo_check's ALERT

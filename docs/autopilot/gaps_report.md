@@ -1,65 +1,65 @@
-# Gaps report - 2026-10-24 07:10 (doctor)
+# Gaps report - 2026-10-25 06:05 (doctor)
 
-Health: **amber** - the relay, the keeper and the demo (AurumFunded 1.10) run with no gap over an hour, and the queue
-is clean. But the finder uses up the Claude session quota about every 4-5 hours, which holds back demo checks by up
-to 2.5 h. The fidelity week also has no role to run it and no P/L data to use.
+Health: **amber** - the queue is clean and the demo is attached (AurumFunded 1.10). Three things are wrong: the system
+was paused for about 3 h overnight with repeated PC or keeper restarts, the finder burned $48.78 in 237 empty runs
+on 10-24, and the week's budget is already at 0.767, past its 0.7 skip line.
 
 ## Fixed this run
-- `docs/HANDOFF.md` (Terminals line 46, Current state line 53): these lines still said the demo runs 1.06 and the
-  repo builds are 1.09 / 1.38. The keeper log shows 2026-10-23 01:45:11 "Terminal 16: started, AurumFunded attached"
-  (1.10), and the source has `AurumFunded.mq5:83` "1.10" and `AurumHydra.mq5:137` "1.39". Both lines are corrected,
-  and the M1 re-init points to owner question (10). Decision logged at 07:05.
+- `docs/HANDOFF.md:155-156` still said the demo has "1.06 loaded". The keeper log (10-23 01:45 "Terminal 16:
+  started, AurumFunded attached") and HANDOFF:86 say 1.10. The line now says 1.06 was loaded and 1.10 runs since
+  10-23 01:45. Decision logged at 06:02.
 
 ## Open, for Opus
-1. **The finder uses up the session quota, and the demo checks wait for it.** The finder has run 84 times today by
-   07:01 ($19.98 of $21.09, `budget.py status`). The Claude session limit hit 4 times on 10-23 (03:00, 08:49, 13:21,
-   17:20) and twice today (00:16, 04:51), and finder runs set off the last five (`2026-10-2x_relay.log`). Because of
-   this, the 17:59:59 demo order was judged only at 20:25, the 09:06 order at 10:23 and the 14:00 ALERT at 15:25.
-   Fix (relay.ps1, owner): keep part of the quota for judge and monitor, for example by pausing the finder for 30-60
-   min after an empty run while the demo market is open.
-2. **The fidelity week (due 10-23) has no role and no data.** HANDOFF:83 says "Fidelity is next, after the first demo
-   week", but the 5-step loop has no fidelity role (`last-fidelity.json` is from 10-18) and nothing ran. Also,
-   `demo_check.py:19` drops deal and order lines with 6+ digit tickets, so journal_trade_lines has been 0 every day
-   (demo_log 10-23 23:16, "P/L not logged"). Fix: give fidelity to the judge or monitor, mask digit runs instead of
-   dropping the line, and log P/L and close lines in the EA.
-3. **The builder's gate verdicts are not committed.** These are untracked: `docs/gates/` dao_gap, fx_carry_g10,
-   opex_week_indices, overreaction_fx, policy_gap, totm_us, vix_vxv_spike and vrp_gap.json (`git status`). The
-   queue results cite them, and their scripts are committed. Fix: have the builder prompt `git add docs/gates/<id>.json`,
-   and commit these 8 now.
-4. **demo_check false flags.** (a) The 14:00 10036 duplicate close still shows as ALERT in every check (HANDOFF
-   proposal 9). (b) Noise orders count as "other" (`demo_check.py:20,42-46`; 10-23 "other 3" = breakout 1 + noise 2).
-   Fix: skip a 10036 close when the same second has a closing deal, and treat "bands" lines as noise.
-5. **Refused heredoc writes are still happening.** `python - <<'E'` was refused for the finder at 10-24 02:01, 02:05
-   and 04:47, and at 10-23 02:27, 05:27, 06:56, 07:19, 16:13, 17:14, 22:12 and 23:32. Each one wastes turns. At 22:14
-   the finder also tried `git checkout` / `git restore docs/ideas/sources.jsonl`, both refused. sources.jsonl still
-   parses (1110 lines). Fix: tell the finder prompt to use the Write tool or `python tools/...`.
-6. **Stray temp files from the finder:** `docs/ideas/_finder_tmp_note.txt` and `docs/ideas/sources_tmp_note.txt`
-   (untracked). Agents are not allowed to delete. Owner: delete them.
-7. **Agents cannot read their own large tool results** (`~/.claude/projects/*/tool-results/*`). The last refusal was
-   finder 10-23 01:23, so full paper reads (lesson 15) fail. Fix: allow read-only access in tools/autopilot/settings.json.
-8. **Owner questions are waiting:** (10) the XAUUSD chart has been on M1 since the 10-23 16:30 re-init (judge says
-   harmless), and (a6) whether to keep breakout in the demo after it failed the belief gate.
-9. Old role files: `last-orchestrator/researcher/scanner/tester/fidelity/worker/miner.json` (newest 10-22) still
-   look like failed or overdue roles (`last-scanner.json` exit 1, 10-18). Fix: archive them.
+1. **Overnight pause and restarts, 10-25 00:01-03:02.** `2026-10-25_keeper-steps.log` shows "paused: no steps
+   started" from 00:01:52 to 02:55:55, so the pause file existed. The relay log has nothing between 00:00:05 and 03:02:22.
+   The finder run that started at 00:00:06 has no end line (`2026-10-25_agent-finder.log:1`). The keeper started 6 times,
+   each with a new pid (`2026-10-25_keeper.log` 00:19, 00:57, 01:15, 01:30, 01:45, 02:55), and each time it found
+   Terminal 16 down and restarted it. The line before 00:57 is padded with blanks, which points to an unclean
+   shutdown. The 03:00 to 02:00 DST change falls inside this window, so the times between 02:00 and 03:00 are ambiguous.
+   No harm on a Sunday, but on a weekday this would stop the demo. Fix (owner): check the Windows restart and update
+   history for that night, and why the pause file was set. Have relay/keeper log who sets or clears the pause.
+2. **The finder's cost.** On 10-24 it made 237 runs for $48.78 (sum of usage lines in `2026-10-24_agent-finder.log`),
+   against $5.76 for the builder. It also hit the Claude session limit 4 times (relay 00:16, 04:51, 09:35, 14:19), and
+   the relay was idle for 1.1-2.1 h each time. Today: 36 runs by 05:55, each about 30 s, all "0 ideas". The relay logs
+   each one as "ended at once or failed". Fix (relay.ps1, owner): space the finder out after an empty run (e.g. 60 min)
+   and keep quota for judge and monitor in market hours. This continues item 1 of 10-24.
+3. **Budget past its skip line:** `budget.py status` gives the week from 10-23 18:00 at $76.66 of $100 (fraction
+   0.767 > skip_above 0.7, skip true), with 5 days left. Information only, no brake. If skip does nothing and the finder
+   spends at 10-24's rate, the week passes $100 within a day. Owner: decide whether skip should stop the finder.
+4. **The fidelity week (due 10-23) still has no role and no P/L data** (HANDOFF:83, `last-fidelity.json` 10-18).
+   `demo_check.py:19` drops deal lines with 6+ digit tickets (journal_trade_lines 0). Fix as on 10-24: give
+   fidelity to judge or monitor, mask the digits, and log P/L and close lines in the EA.
+5. **demo_check false flags:** the 10-23 14:00 retcode 10036 duplicate close still raises ALERT (demo_log 10-23 23:16).
+   Noise orders count as "other". Fix: skip a 10036 close when the same second has a closing deal, and count
+   "bands" lines as noise.
+6. **Refused commands are still happening.** Finder heredocs `python - <<'E'` were refused on 10-24 at 02:01, 02:05,
+   04:47, 08:15 and 12:46. Reads of tool-results were refused at 12:09 and 12:16, which blocks full paper reads
+   (lesson 15). `memory.py search RSI(2)` was refused at 14:11 (parentheses). None so far today. Fix: tell the finder
+   prompt to use Write or a script, and allow read-only tool-results in tools/autopilot/settings.json.
+7. **Stray and uncommitted files.** Untracked: `docs/ideas/_finder_tmp_note.txt`, `sources_tmp_note.txt` and the new
+   `sources.jsonl.new`; 5 `docs/ideas/specs/f_*_vl.json`; and `AurumBreakout/Funded/Noise.ex5`. Modified:
+   `AurumHydra.ex5` (no source change since 2869c12). The finder says it does not commit its decision lines. Owner:
+   delete the temp files, and decide whether the specs and `.ex5` files belong in git or in .gitignore.
+8. **Owner questions are waiting:** (10) the XAUUSD chart has been on M1 since the 10-23 re-init, and (a6) whether
+   to keep breakout in the demo after it failed the belief gate (HANDOFF:200).
+9. **Old role files** still look like failed or overdue roles: `last-scanner.json` (exit 1, 10-18), and
+   `last-tester/fidelity/orchestrator/researcher/worker/miner.json` (10-18 to 10-22). Fix: archive them.
 
-## Earlier items
-- Item 1 (02:55 order never checked): fixed. The 10:23 judge run covered the Tokyo sell (`2026-10-23_agent-judge.log`
-  line 13), and after each limit on 10-23 the relay resumed the judge (10:23, 15:25, 20:25). Closed.
-- Item 6 (builder repeated one blocked item 41 times): not seen again. 14 builder runs on 10-23/24, each on a new item
-  and each ending with exit 0. Closed, but the relay guard is still not built.
-- Item 7 (10.7 h silence on 10-22): no gap over 1 h from 10-23 00:00 to 10-24 07:03 in the relay and keeper-steps
-  logs. Closed.
-- Item 8 (breakout "failed, retcode 10009"): fixed by the deal-0 change in 1.07 (now on the demo in 1.10). The 10-21
-  and 10-23 breakout fills log as "bought/sold". Closed.
-- Items 2, 3, 4, 5, 9 are still open (now 2, 4, 7, 5, 9 above).
+## Earlier items (10-24 report)
+- Item 3 (8 gate verdicts uncommitted): **fixed**. `docs/gates/` is no longer untracked, and `vrp_gap.json` and the
+  others are in commit 0322e13.
+- Portfolio check: **done**. The portfolio manager ran Saturday 10-24 11:53-12:01 (exit 0, `last-portfolio.json`).
+  It was late against 10:00 because of the 09:35 session limit.
+- Items 1, 2, 4, 5, 6, 7, 8, 9 are still open (now 2, 4, 5, 6, 7, 7, 8, 9 above).
 
 ## Watching
-- Finder `empty_streak` is **72** (owner's choice, no brake). 84 runs today and about 346 numbered runs so far, every
-  one "0 ideas" with the steer examples (carry, VRP, policy gap) already rejected.
-- Budget: week from 10-23 18:00, $36.61 of $100 (fraction 0.366, skip false). Today: finder $19.98, builder $1.10.
-- Queue: 25 lines, all parse, no duplicate ids, nothing at "testing" or "tester". 21 rejected, 4 data items done.
-  `data-tries.json`: data_fred_dgs10 1 (done). No tester-help or to-judge file.
-- The monitor ran Friday 10-23 at 23:16 (no ALERT, exit 0). The portfolio manager is due today at 10:00 (install.ps1:7)
-  and has not run yet (no last-portfolio.json). Check that it ran in the next report.
-- Demo log: last check-in 10-23 23:16 (monitor), no unanswered ALERT. Today (Saturday): 0 EA lines, as expected.
-  Window open until 10-25 18:00.
+- Finder `empty_streak` is **14** in `last-finder.json` (it was 72 on 10-24, so it was reset by the dropped and closed
+  leads). That is the owner's choice, with no brake. 36 runs today, 125 numbered runs so far on 10-25 (decisions
+  log), and 14 open leads, all venue crawls.
+- Queue: 49 lines, all parse, no duplicate ids. 41 rejected, 8 done, none at "testing" or "tester".
+  `data-tries.json`: none at 3 or more (binance_crypto_1h at 2). No tester-help or to-judge file.
+- Monitor: last run Friday 10-23 23:16, exit 0 (none due on the weekend). Judge: last run 10-23 20:25.
+- Demo log: last check-in 10-23 23:16, no unanswered ALERT apart from the known 10036 flag. Weekend: no EA lines
+  expected. Terminal 16 is running, with the window open until 10-25 18:00. Repo builds: Funded 1.10 (= demo), Hydra 1.39.
+- Gaps on 10-24 in the relay (00:16-01:25, 04:51-06:25, 09:35-11:25, 14:19-16:25) are the session-limit back-offs.
+  keeper-steps has no gap over 30 min on 10-24.
