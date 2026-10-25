@@ -1307,3 +1307,5 @@
 {"date": "2026-10-25", "kind": "prebuilt", "title": "MQL5 CodeBase experts list page 1 (Monday Dip, Crabel ORB)", "link": "https://www.mql5.com/en/code/mt5/experts", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "je-suis-tm quant-trading (London Breakout, Oil Money)", "link": "https://github.com/je-suis-tm/quant-trading", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "arXiv q-fin.ST gold API listing (Achilles LSTM, Forecast-to-Fill, 1-2-3 trend)", "link": "http://export.arxiv.org/api/query?search_query=all:gold+AND+cat:q-fin.ST&max_results=30", "read": "unverified", "specs": []}
+{"date": "2026-10-25", "kind": "prebuilt", "title": "GER40 Evening Coil EA (MQL5 CodeBase)", "link": "https://www.mql5.com/en/code/78380", "read": "in full", "specs": ["prebuilt_ger40_evening_coil"]}
+{"date": "2026-10-25", "kind": "prebuilt", "title": "JPN225 Quiet Drift EA (MQL5 CodeBase)", "link": "https://www.mql5.com/en/code/78027", "read": "in full", "specs": ["prebuilt_jpn225_quiet_drift"]}
