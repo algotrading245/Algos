@@ -353,6 +353,20 @@ double HeldLots(string sym,long magic,datetime &opened)
    return(lots);
   }
 
+// The last closes sent. FTMO answers a close DONE before its deal lands, so the position is still listed on the next
+// tick and a second close is refused (10013 on 2026-10-19, 10036 on 10-23). A close sent under 10 s ago is in flight.
+ulong    g_closeTicket[16];
+datetime g_closeTime[16];
+int      g_closeNext=0;
+
+bool CloseInFlight(ulong t)
+  {
+   for(int k=0; k<ArraySize(g_closeTicket); k++)
+      if(g_closeTicket[k]==t && TimeCurrent()<g_closeTime[k]+10)
+         return(true);
+   return(false);
+  }
+
 // Closes every position on 'sym' under 'magic'. Returns false if a close failed.
 bool CloseAll(string sym,long magic)
   {
@@ -363,7 +377,18 @@ bool CloseAll(string sym,long magic)
       ulong t=PositionGetTicket(i);
       if(t==0 || PositionGetString(POSITION_SYMBOL)!=sym || PositionGetInteger(POSITION_MAGIC)!=magic)
          continue;
-      if(!g_trade.PositionClose(t))
+      if(CloseInFlight(t))
+        {
+         ok=false;                                                     // not gone yet: a stop caller retries before it halts
+         continue;
+        }
+      if(g_trade.PositionClose(t))
+        {
+         g_closeTicket[g_closeNext]=t;
+         g_closeTime[g_closeNext]=TimeCurrent();
+         g_closeNext=(g_closeNext+1)%ArraySize(g_closeTicket);
+        }
+      else if(g_trade.ResultRetcode()!=TRADE_RETCODE_POSITION_CLOSED)       // already gone: nothing left to close
         {
          PrintFormat(AURUM_NAME+": close on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          ok=false;
