@@ -133,3 +133,4 @@ committed).
 | 2026-10-23 20:25 | judge | demo check | no job, nothing at tester, no new ALERT (14:00 10036 explained); 17:59:59 second US100 noise buy 0.08 is the designed exit-and-re-entry at one check (Legs.mqh:1989-2012, as on 10-21); no lesson lines since 17:08 |
 | 2026-10-25 19:55 | tester | Started j16 (AurumFunded vrp_off) | j16 running in 2026-10-25_1955_AurumFunded_vrp_off |
 | 2026-10-25 20:10 | judge | review VRP leg (Funded v1.13) | reviewer: no blocker, 9 minor (14 calendar vs 10 trading-day hold, close-and-reopen on exit-day signal, no holiday skip, stale VIX, no compile log/uncommitted diff, DAX in gate not EA, beta vs random long unproven); fix item fix_vrp_leg_fidelity queued; j16 left running as first look; lesson lines are idea-specific, none added |
+| 2026-10-25 20:05 | tester | Collected j16 off run, started the on run | j16 running |
