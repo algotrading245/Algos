@@ -1303,3 +1303,4 @@
 {"date": "2026-10-25", "kind": "prebuilt", "title": "je-suis-tm quant-trading (Dual Thrust, London Breakout)", "link": "https://github.com/je-suis-tm/quant-trading", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "Melvin-Prins equity hedging and exchange rates at the London 4pm fix (read pp.1-22 in full)", "link": "https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "Fed IFDP list page (no intraday FX rule)", "link": "https://www.federalreserve.gov/econres/ifdp/", "read": "in full", "specs": []}
+{"date": "2026-10-25", "kind": "paper", "title": "Nagel: Evaporating liquidity", "link": "https://www.nber.org/papers/w17653", "read": "unverified", "specs": ["paper_nagel_vix_reversal_index"]}
