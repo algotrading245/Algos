@@ -134,3 +134,5 @@ committed).
 | 2026-10-25 19:55 | tester | Started j16 (AurumFunded vrp_off) | j16 running in 2026-10-25_1955_AurumFunded_vrp_off |
 | 2026-10-25 20:10 | judge | review VRP leg (Funded v1.13) | reviewer: no blocker, 9 minor (14 calendar vs 10 trading-day hold, close-and-reopen on exit-day signal, no holiday skip, stale VIX, no compile log/uncommitted diff, DAX in gate not EA, beta vs random long unproven); fix item fix_vrp_leg_fidelity queued; j16 left running as first look; lesson lines are idea-specific, none added |
 | 2026-10-25 20:05 | tester | Collected j16 off run, started the on run | j16 running |
+| 2026-10-25 20:25 | judge | review AurumFunded v1.14 VRP fix (fix_vrp_leg_fidelity, j17) | no blocker, 7 minor; j17 hold, fix_vrp_leg_fidelity2 queued; VRP leg files committed |
+| 2026-10-25 20:16 | tester | Collected j16 (AurumFunded vrp): net +1,000 (+10%), 346.0 trades, PF 1.44, equity DD 3.61% | j16 done, needs judging |

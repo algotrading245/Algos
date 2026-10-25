@@ -400,13 +400,33 @@
       ],
       "from": "2024.01.01",
       "to": "2025.09.30",
-      "status": "running",
+      "status": "done",
       "needs": null,
       "expect": "Step 15 for the variance-premium leg (AurumFunded v1.13, research/vrp_gap_equity_indices.py). Leg alone at InpVrpMult 0.5 on 10k, 2024.01-2025.09: about +2.6% / 3.7% DD from the Python daily series (2 indices at 0.25 x the 10%-vol series), about 11 entries a year per index (hold 10 trading days), magics +30/+31. Judge against 67-87% of the model (lesson 4). Check the input list shows InpVrpMult 0.5 (on) and 0.0 (off compare). NEEDS a VIX symbol on the FTMO tester server (InpVrpVix, default VIX.cash): if the log says the volatility index is not available, the leg never traded; that is a data problem, not a result - report the symbol list and stop.",
       "folder": "backtests\\2026-10-25_1955_AurumFunded_vrp_off",
       "terminal": "C:\\MetaTrader 5 - Tester",
-      "note": "Off run collected, on run started by tools/autopilot/tester_step.py 2026-10-25 20:05. Started by tools/autopilot/tester_step.py 2026-10-25 19:55 on MetaTrader 5 - Tester. Judge 2026-10-25 20:10: reviewer found 9 minor issues in the v1.13 leg (docs/ideas/queue.jsonl variant_vrp_gap_equity_indices review; fix item fix_vrp_leg_fidelity). The job was already running, so it was left to finish rather than put on hold. Read it as a first look only: the EA exits after 14 calendar days rather than 10 trading days, and closes then reopens when the exit day carries a new signal. The candidate is not integrated until the fixed build has its own tester run. Do not tune on this result.",
+      "note": "Collected by tools/autopilot/tester_step.py 2026-10-25 20:16: net +1,000 (+10%), 346.0 trades, PF 1.44, equity DD 3.61%; summary.md written. Off run collected, on run started by tools/autopilot/tester_step.py 2026-10-25 20:05. Started by tools/autopilot/tester_step.py 2026-10-25 19:55 on MetaTrader 5 - Tester. Judge 2026-10-25 20:10: reviewer found 9 minor issues in the v1.13 leg (docs/ideas/queue.jsonl variant_vrp_gap_equity_indices review; fix item fix_vrp_leg_fidelity). The job was already running, so it was left to finish rather than put on hold. Read it as a first look only: the EA exits after 14 calendar days rather than 10 trading days, and closes then reopens when the exit day carries a new signal. The candidate is not integrated until the fixed build has its own tester run. Do not tune on this result.",
       "folder_on": "backtests\\2026-10-25_2005_AurumFunded_vrp_on"
+    },
+    {
+      "id": "j17",
+      "expert": "AurumFunded",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_vrp.set",
+      "deposit": 10000,
+      "leverage": 33,
+      "tag": "vrp2",
+      "set": [],
+      "compare_set": [
+        "InpVrpMult=0.0"
+      ],
+      "from": "2024.01.01",
+      "to": "2025.09.30",
+      "status": "hold",
+      "needs": null,
+      "expect": "Step 15 for AurumFunded v1.14 (VRP leg fixes: hold 10 D1 bars, exit-day signal extends, no US-holiday Monday, stale-VIX check; fix_vrp_leg_fidelity). Same Python series as j16 (research/vrp_gap_equity_indices.py, US500+US100 at InpVrpMult 0.5): about +2.6% / 3.7% DD on 10k, 2024.01-2025.09, about 11 entries a year per index, magics +30/+31. Judge against 67-87% of the model (lesson 4). Check the input list shows InpVrpMult 0.5 (on) and 0.0 (off). Needs a VIX symbol on the tester server (InpVrpVix): if the log says the volatility index is not available, or 'stale', the leg never traded. Do not tune on this window; j16 (v1.13) stays the first look.",
+      "note": "Judge 2026-10-25 20:25: on hold. Reviewer of v1.14 (fix_vrp_leg_fidelity): no blocker, 7 minor findings; one changes trades (UsHoliday skips Columbus/Veterans Day Mondays that NYSE and the Python trade). Fix item fix_vrp_leg_fidelity2 queued; the builder releases j17 (status queued) when it is done. Settings unchanged."
     }
   ]
 }
