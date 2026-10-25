@@ -1333,3 +1333,5 @@
 {"date": "2026-10-25", "kind": "prebuilt", "title": "Gold vs EURUSD residual fade (own rule; Erb-Harvey framing)", "link": "https://fred.stlouisfed.org/series/DEXUSEU", "read": "unverified", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "Griffin and Shams, Manipulation in the VIX (search results only)", "link": "https://quantpedia.com/is-vix-index-manipulated/", "read": "unverified", "specs": []}
 {"date": "2026-10-26", "kind": "prebuilt", "title": "Quantpedia: Uncovering the Pre-ECB Drift", "link": "https://quantpedia.com/uncovering-the-pre-ecb-drift-and-its-trading-strategy-applications/", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "prebuilt", "title": "MQL5 Monday Dip EA / GER40 Evening Coil", "link": "https://www.mql5.com/en/code/78380", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "AQR research page (no rule)", "link": "https://www.aqr.com/Insights/Research", "read": "in full", "specs": []}
