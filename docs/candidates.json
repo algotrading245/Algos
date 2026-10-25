@@ -3195,6 +3195,63 @@
      0.819
     ]
    }
+  },
+  {
+   "id": "ml_regime_grid_audcad",
+   "name": "ml_regime_grid_audcad",
+   "status": "rejected",
+   "step": 2,
+   "reason": "Pre-registered judge failed first: walk-forward logistic regression out-of-fold AUC 0.513 (< 0.55) on 688 cycles; loss share 0.25 so P(loss)>0.5 never fires, filter = plain grid (0 skip days). Gates: corr (grid +0.97), belief, book 3.11->3.01 fail. Evidence: research/ml_regime_grid_audcad.py",
+   "tag": "corr",
+   "gates": {
+    "id": "ml_regime_grid_audcad",
+    "when": "2026-10-25T17:15:39",
+    "verdict": "FAIL at corr",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "0.89 / 0.87 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.79",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": false,
+      "figure": "book +0.30, max leg grid +0.97",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": false,
+      "figure": "no source, no other markets",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.11 -> 3.01",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26762, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": null,
+    "profitable_months_2018": [
+     0.777,
+     0.809
+    ]
+   }
   }
  ],
  "rejected": [
