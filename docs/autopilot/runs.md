@@ -139,3 +139,4 @@ committed).
 | 2026-10-25 20:30 | judge | j16 (VRP leg, AurumFunded v1.13) | no result: VIX.cash not on the FTMO tester server, leg never traded (on = off, +10% to the phase-1 target on 2024-04-16); candidate blocked, j17 on hold, VIX source + preset + compare_set direction added to fix_vrp_leg_fidelity2 |
 | 2026-10-25 20:25 | tester | Started j17 (AurumFunded vrp2_off) | j17 running in 2026-10-25_2025_AurumFunded_vrp2_off |
 | 2026-10-25 20:40 | judge | review AurumFunded v1.15 VRP fix (fix_vrp_leg_fidelity2, j17) | clean, no blocker; j17 runs as queued; 5 minor (no Hydra compile log, LF-only vixcls.csv: check close count in j17 log, control overlap/DAX, weekday stale limit, holiday bars in windows), no fix item |
+| 2026-10-25 20:49 | tester | Collected j17 off run, started the on run | j17 running |
