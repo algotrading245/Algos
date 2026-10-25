@@ -21,7 +21,10 @@ Each weekly run:
    3 gaps to aim at with one example idea each (a published source or a rule simple enough for 3+ markets), the legs
    to recheck or cut and why, and what the finder should stop bringing. Keep the "Data ready" list (data already in
    marketdata/ for the gaps) and update it when a data item is done.
-4. Log one decision per proposal: `python tools/memory.py decide --role portfolio --decision "..." --why "..."
+4. Near-miss review (owner 2026-10-25): group the unreviewed rows of `docs/ideas/near_miss.jsonl` by theme and
+   either merge a theme into one basket item in `docs/ideas/queue.jsonl` or close it, marking each row's `review`
+   (the prompt gives the steps). At most 2 merged items a week.
+5. Log one decision per proposal: `python tools/memory.py decide --role portfolio --decision "..." --why "..."
    --evidence "docs/gaps.json"`.
 
 Limits: never change tools/gates.py, the gate thresholds, the EAs, .set files, router.json or .claude/; a cut or

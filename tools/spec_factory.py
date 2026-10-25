@@ -9,6 +9,7 @@ tools/idea_engine.py calls top_up() before each run: when fewer than BATCH specs
 at most (hour + 1) * PER_HOUR by the end of each hour and DAILY_CAP a day. Every variant the engine tries is logged
 as a DSR trial, so the pacing is what keeps the luck bar from rising fast. Families the portfolio manager's
 docs/ideas/steer.md lists under "## Stop bringing" are skipped (STOPS), so the grid follows the weekly steer.
+ENABLED = False (2026-10-25) turns the grid off: top_up() writes nothing, --list still counts what is left.
 
     python tools/spec_factory.py            # write the next batch now (same limits)
     python tools/spec_factory.py --list     # how many grid specs are left, write nothing
@@ -24,6 +25,10 @@ LOGDIR = ROOT / "logs" / "autopilot"
 EXHAUSTED = LOGDIR / "spec-factory-exhausted"                       # date of the last "grids used up" log line
 BATCH = 10
 DAILY_CAP = 120
+# Off since 2026-10-25: on 10-23 to 10-25 the grid was nearly every trial the engine logged (rsi/meanrev/reversal on
+# every symbol) and none passed. It raised the Deflated Sharpe N for all ideas and crowded out the finder's own specs.
+# The engine still tests the miner's and finder's specs. Turn it on again only with a new grid that adds to the book.
+ENABLED = False
 PER_HOUR = 5                                                        # pacing: (hour + 1) * 5 by the end of each hour
 
 FTMO = ["XAUUSD", "USDJPY", "EURUSD", "AUDCAD", "SPXUSD"]          # the funded EA's markets go first
@@ -195,6 +200,8 @@ def _log_exhausted():
 
 def top_up(dry=False):
     """Write the next batch when the queue is low. Returns the ids written."""
+    if not ENABLED:
+        return []
     ids, keys, pending, today = _existing()
     allowed = allowed_now()
     if pending >= BATCH or today >= allowed:
@@ -227,6 +234,6 @@ if __name__ == "__main__":
         g1 = sum(1 for _ in grid()) - sum(1 for _ in grid2())
         print(f"grid {g1} + {sum(1 for _ in grid2())}, left {len(left)} ({len(new) - len(left)} more stopped by "
               f"steer.md), next {left[:3]}, pending now {pending}, "
-              f"made today {today}, allowed by now {allowed_now()}/{DAILY_CAP}")
+              f"made today {today}, allowed by now {allowed_now()}/{DAILY_CAP}, enabled {ENABLED}")
     else:
         print(top_up())

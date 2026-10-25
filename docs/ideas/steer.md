@@ -26,11 +26,12 @@
   a leg with Sharpe 1.24. Cost: worst month -7.98% -> -8.62%; losing months stay at 19. It also brings the dollar pairs below the 35% cap.
 - fix alone (3.08 without it): mixed, +0.19 in 2018-21 and -0.06 in 2022-25. Keep it; the merge above covers it.
 - grid (3.04 without it: +0.08 / -0.01) and morning (3.04: -0.18 / +0.28): the gain does not hold in both halves. Keep both.
-- breakout is at the 25% cap but adds little (2.98 without it). Halving it costs 0.06, so keep it. Still frozen while a6 is open.
+- breakout is at the 25% cap but adds little (2.98 without it). Halving it costs 0.06, so keep it. Kept frozen (a6 decided 2026-10-25: keep, check 11-22).
 - Losing months: hold (26% of the loss), after (24%), morning (21%) and fall (19%) carry most of it. No single leg
   drives them, and 2021-11 (-8.0%) and 2023-05 (-6.2%) were broad. A leg that offsets them has to be off-gold, off-intraday,
   and earn when the gold trend reverses. Gaps 1 and 3 aim there.
-- Note for the owner: the gates quote the book at 3.34, but book_sim and gaps give 3.01. Align the baseline the gate's "book gain" uses.
+- Done 2026-10-24 (12006ad): gate 5 now uses the risk-layered book, the same baseline as book_sim and gaps.py
+  (3.11 from 2018 on 2026-10-25). Gate lines before that quote the raw 3.34.
 
 ## Stop bringing
 - More carry, VRP or policy-gap variants. Each was tested once and failed the halves: fx_carry_g10_monthly_swapadj
@@ -50,4 +51,11 @@
 - Implied vol: fred/GVZCLS, VIXCLS, EVZCLS (stops 2025-03-11); volidx/ (GVZ, OVX, MOVE, SKEW); vixidx/ (VIX, VIX3M, VVIX).
 - CFTC COT legacy futures-only, weekly: cot/{AUD,CAD,CHF,EUR,GBP,JPY,GOLD}.csv (done 2026-10-24).
 - Index M1 for gaps 1 and 2: histdata/SPXUSD, NSXUSD, GRXEUR (DAX), JPXJPY (Nikkei); daily futures in commod/ (ES, NQ, ZN, ZB, CL, GC).
-- **Needed for gap 3:** FRED IRLTLT01{US,EZ,JP,GB,AU,CA}M156N (monthly 10-year yields). Queue it as a data item.
+- 10-year yields, monthly: fred/IRLTLT01{US,EZ,JP,GB,AU,CA,DE}M156N (data_fred_long_yields_g6, done 2026-10-24).
+
+## Update 2026-10-25 (owner's session)
+- All 3 gap examples above were tested on 10-24 and failed the halves: paper_hau_rey_equity_fx_relative (-0.09/0.07),
+  paper_baltussen_mac5_index_reversal (-0.26/-0.18), paper_chen_tsang_relative_slope_fx (the Ang-Chen sibling,
+  -0.81/-0.14). The gaps are still open. Find a different mechanism for them; do not bring a variant of these 3.
+- The spec factory's textbook grid is off (tools/spec_factory.py ENABLED = False). Rule specs now come only from
+  sources read in full.

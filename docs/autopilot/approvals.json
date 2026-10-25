@@ -45,8 +45,10 @@
     {
       "id": "a6",
       "what": "breakout (USDJPY London breakout, on in the FTMO demo since a3) fails the belief gate on the 2026-10-23 recheck: same parameters on 9 markets, 7 profitable, AUDJPY -0.32 and AUDUSD -0.18 lose over the whole sample (Sharpe from marketdata/candidates/breakout_markets.csv; 2018 on -0.40 / -0.41) (docs/gates/breakout.json; research/breakout_markets.py). Every other gate passes (halves 1.10/0.84, 1.5x cost 0.59, corr -0.00, book 2018+ 3.27 -> 3.34, DSR 1.000). Keep it on in the demo, or pull it (InpBreakRiskPct 0 in the demo EA and the presets)?",
-      "status": "pending",
+      "status": "approved",
       "asked": "2026-10-23",
+      "approved": "2026-10-25",
+      "decision": "keep, frozen (owner's session 2026-10-25): breakout stays on in the FTMO demo at its current weight as the out-of-sample test; no weight increase, no new EA use and no live money until it is judged. Interim check 2026-11-22 (about 4 weeks of trades: pull only on a clear break from expected_tester, e.g. PF < 0.8 on 20+ trades or a fill or rule error); full verdict after 3 demo months, about 2027-01-19, against expected_tester.",
       "note": "Judge 2026-10-23 recommends keep: the leg was approved and has run on the demo since 10-19, which is the clean out-of-sample test, and pulling it mid-test removes the book largest weight (0.25) on a rule that came after it was approved. It is frozen: no weight increase and no new EA use until the demo has 3 months of breakout trades. Judge it then against the tester (candidates.json expected_tester: 777 trades 2024.01-2026.09, about 24 a month, win 47%, PF 1.14). Pulling needs a demo EA change, so only the owner can do it."
     }
   ]

@@ -3,9 +3,18 @@ run: decide, do the work, and stop.
 
 1. Follow your agent instructions: run `python tools/book_sim.py` and `python tools/gaps.py`, review dilution,
    weights, drawdowns and gaps, and write `docs/ideas/steer.md` for the finder.
-2. Log each proposal with `python tools/memory.py decide --role portfolio ...`.
-3. Commit only these files and push:
-   `git add docs/ideas/steer.md docs/gaps.json docs/book.json docs/memory/decisions.jsonl` then
+2. Near-miss review (owner 2026-10-25). `docs/ideas/near_miss.jsonl` holds idea-engine specs whose halves both
+   cleared Sharpe 0.3 but failed a later gate. Take the rows with no `review` field and group them by theme (the
+   same rule family on related markets, e.g. RSI or mean reversion on the commodity crosses). For each theme do one:
+   - Merge: queue ONE item in `docs/ideas/queue.jsonl` (source "spec", status "new") that tests the theme as one
+     basket, with the same parameters on every market, and drops a market that failed `corr`. Give
+     `"evidence": "own leg: near-miss <ids>"`.
+   - Close: when the theme is on the steer's "Stop bringing" list, failed `corr` on every market, or was merged before.
+   Then add `"review": "queued <queue id>"` or `"review": "closed: <reason>"` and `"reviewed": "<date>"` to each row.
+   At most 2 merged items a week.
+3. Log each proposal with `python tools/memory.py decide --role portfolio ...`.
+4. Commit only these files and push:
+   `git add docs/ideas/steer.md docs/gaps.json docs/book.json docs/memory/decisions.jsonl docs/ideas/queue.jsonl` then
    `git commit -m "Portfolio review <date>"` then `git push origin HEAD`.
    If the push fails, leave the commit local and say so in your last line.
 

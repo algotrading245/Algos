@@ -198,7 +198,10 @@ each finished piece of work.
 
 ## Waiting on the owner
 
-- **(a6, pending, judge 2026-10-23) Breakout fails the belief gate. Keep it in the demo or pull it?** The recheck ran
+- **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
+  weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
+  `expected_tester`, e.g. PF < 0.8 on 20+ trades, or a fill or rule error); full verdict about 2027-01-19. The question
+  as it was asked: **Breakout fails the belief gate. Keep it in the demo or pull it?** The recheck ran
   the same parameters on 9 markets. 7 were profitable; AUDJPY (-0.32) and AUDUSD (-0.18 over the whole sample, about
   -0.4 for each from 2018) lost (`docs/gates/breakout.json`, `marketdata/candidates/breakout_markets.csv`). Every
   other gate passes: halves 1.10 / 0.84, 0.59 at 1.5x cost, corr -0.00, book 2018+ 3.27 -> 3.34, DSR 1.000.

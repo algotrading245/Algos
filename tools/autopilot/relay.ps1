@@ -19,7 +19,7 @@
 #      closes it.
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
 #   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
-#      The reason it is given says MODE: scout (fewer than 10 open leads) or MODE: normal. A finder run under 2
+#      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder run under 2
 #      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json).
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
@@ -55,6 +55,7 @@ function Get-DemoEvent {
 }
 # Queue items at "tester" the judge has not reviewed yet (no "review" field).
 $FinderBackoff = Join-Path $LogDir "finder-backoff.json"
+$FinderScoutDay = Join-Path $LogDir "finder-scout-day"              # date of the day's scout run
 function Get-OpenLeads {
     $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
     if (Test-Path $bl) { @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' }).Count } else { 0 }
@@ -87,7 +88,12 @@ function Get-FinderWhy {
     $open = Get-OpenLeads
     # One job per run (owner 2026-10-24): a scout run only adds leads, a normal run only works them, so neither
     # hits the turn cap doing both. The finder prompt reads the mode from this line.
-    $mode = if ($open -lt 10) { "MODE: scout" } else { "MODE: normal" }
+    # Scout at most once a day (owner 2026-10-25): the many shallow scout runs crowded out deep reads. After the day's
+    # scout, a run works the leads that are open; it scouts again only when none is open.
+    $today = (Get-Date).ToString("yyyy-MM-dd")
+    $scouted = (Test-Path $FinderScoutDay) -and ((Get-Content $FinderScoutDay -Raw).Trim() -eq $today)
+    $mode = if ($open -eq 0 -or ($open -lt 10 -and -not $scouted)) { "MODE: scout" } else { "MODE: normal" }
+    if ($mode -eq "MODE: scout" -and -not $DryRun) { Set-Content -Path $FinderScoutDay -Value $today -Encoding ascii }
     return "queue low ($waiting waiting): $open open lead(s), $mode"
 }
 

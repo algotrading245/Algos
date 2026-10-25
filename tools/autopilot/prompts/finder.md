@@ -35,7 +35,8 @@ gaps you skipped in the line before the hand-over.
 `backlog.jsonl` holds only `open` leads: when you close one, delete its line there and append it, with its new status
 and `result`, to `docs/ideas/backlog_done.jsonl`. To check whether a lead was seen before, Grep both files.
 **One job per run** (owner 2026-10-24): the "Started by the relay because" line in the status at the end says
-`MODE: scout` or `MODE: normal` (no such line: scout when fewer than 10 leads are open, else normal). A scout run
+`MODE: scout` or `MODE: normal` (no such line: scout when fewer than 10 leads are open, else normal). The relay gives
+one scout run a day (2026-10-25), so a scout run must leave a day's worth of good leads. A scout run
 only adds leads and then hands over (`HANDOFF: none scouted <n> leads`); a normal run only works leads. A data item
 due comes before both.
 - **Scout mode**: add 30 or
@@ -51,7 +52,10 @@ due comes before both.
   `note`), or `"dropped"` with the items you read and why each fails (moved to `backlog_done.jsonl`). "Venue crawl"
   or "no tradeable rule" without naming what you read is not a valid reason (2026-10-25: 30 finder runs in a row
   dropped nothing and queued nothing on that excuse). Every normal run opens at least the oldest open lead.
-  Work through leads until you have queued 3 to 5 items or the backlog is empty.
+  **Deep, not wide** (owner 2026-10-25: hundreds of shallow runs queued almost nothing that passed). Take the lead
+  that aims at the biggest gap not "tried", read its source in full (definitions, tables, the out-of-sample section),
+  and queue 1 or 2 items from it. Then go on to the next lead only if turns are left. One idea read in full and
+  queued beats five leads skimmed and dropped.
 - **What fails and what to favour** (results.md, 2026-10-21 to 24): these styles failed the halves gate again and
   again: carry (FX and rates), volatility risk premium on its own, crypto legs that hold overnight (swap), FX macro
   signals (CPI, PMI, rate surprises, real exchange rates), and published tsmom / trend rules on more FX pairs. Drop
@@ -85,10 +89,18 @@ due comes before both.
    differs clearly from all of them (a different target, features, market, horizon or use, e.g. sizing, a regime
    filter or meta-labeling an existing leg), and say in `why` which rejected version is closest and how this one
    differs.
-   Queue **3 to 5 items** this run, each one line appended to `docs/ideas/queue.jsonl` with the Edit or Write tool:
+   Queue **1 to 3 items** this run, each one line appended to `docs/ideas/queue.jsonl` with the Edit or Write tool:
    `{"id": "<short_snake_id>", "source": "prebuilt|paper|ml|drl", "title": "...", "link": "<exact URL>",
    "why": "<the rule or model, its parameters, the markets (ours: XAUUSD, XAGUSD, USDJPY, EURUSD, AUDCAD, SPXUSD and
-   the rest in specs/README.md), and whether it suits Hydra, Funded or both>", "status": "new", "added": "<yyyy-mm-dd>"}`.
+   the rest in specs/README.md), and whether it suits Hydra, Funded or both>", "evidence": "<see below>",
+   "status": "new", "added": "<yyyy-mm-dd>"}`.
+   **Evidence check before queueing** (owner 2026-10-25: 32 of the last 41 builds failed the halves gate, mostly
+   effects that worked in the paper's sample and faded later). `evidence` quotes the source's own result on data
+   after its publication or after 2018 (a holdout, out-of-sample or post-publication table, a live track record, or
+   a later replication), with the number and where it is (e.g. "Table 6, 2010-2020 OOS, Sharpe 0.8"). A source with
+   no such result is not queued; drop the lead with "no post-publication evidence". Two exceptions, said in
+   `evidence`: a pre-registered variant of a near-miss or a model on an existing leg ("own leg: <name>"), and a
+   prebuilt with a public forward record ("forward: <where>").
    The id must be new (check the queue and `docs/candidates.json`). When the idea has a simple daily-rule or
    session proxy, add `"screen"`: an idea-engine spec (format in `docs/ideas/specs/README.md`), e.g. `{"rule":
    "meanrev", "symbols": ["SPXUSD"], "side": "long", "when": {"trend": "up"}}` or `{"symbols": ["XAUUSD"], "entry":
