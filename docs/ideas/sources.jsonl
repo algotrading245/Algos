@@ -1315,3 +1315,4 @@
 {"date": "2026-10-25", "kind": "paper", "title": "arXiv q-fin.PM gold search 2026: dynamic stock/bond/gold, HMM-RL allocation (ETF allocation, not CFD rules)", "link": "http://export.arxiv.org/api/query?search_query=cat:q-fin.PM+AND+all:gold", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "prebuilt", "title": "Finder normal: Baltussen 2019 gap fade, Asian-range London fade, DGS10 shock", "link": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3030609", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "ml", "title": "Lopez de Prado AFML meta-labeling", "link": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086", "read": "unverified", "specs": []}
+{"date": "2026-10-25", "kind": "paper", "title": "Yuan, Zheng, Zhu: Are investors moonstruck? Lunar phases and stock returns", "link": "https://personal.lse.ac.uk/yuan/papers/lunar.pdf", "read": "in full", "specs": []}
