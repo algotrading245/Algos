@@ -547,3 +547,4 @@
 {"id": "ml_metalabel_after_morning_fall", "when": "2026-10-25T19:01:50", "verdict": "PASS"}
 {"id": "paper_lunar_new_moon_indices", "when": "2026-10-25T19:06:11", "verdict": "FAIL at halves"}
 {"id": "vrp_gap_equity_indices", "when": "2026-10-25T19:52:35", "verdict": "PASS"}
+{"id": "prebuilt_gold_holiday_drift", "when": "2026-10-25T23:08:44", "verdict": "FAIL at book"}
