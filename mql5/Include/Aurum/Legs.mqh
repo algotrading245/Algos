@@ -780,17 +780,20 @@ double AverageMove(int leg,datetime today)
   }
 
 // Lots that lose 'riskPct' of the balance when price goes 'dist' against the position; 0 when below the minimum lot.
-double RiskLots(string sym,int side,double price,double dist,double riskPct)
+// 'nearest' rounds the risk lots to the nearest step instead of down (at most 2x 'riskPct' at the first step, still
+// capped by the margin), for a leg whose size is only a few steps: rounding down there skips its widest stops.
+double RiskLots(string sym,int side,double price,double dist,double riskPct,bool nearest=false)
   {
    ENUM_ORDER_TYPE type=(side>0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL);
    double loss,margin;
    if(!OrderCalcProfit(type,sym,1.0,price,price-side*dist,loss) || loss>=0)
       return(0.0);
-   double lots=AccountInfoDouble(ACCOUNT_BALANCE)*riskPct/100.0/(-loss);
-   if(OrderCalcMargin(type,sym,1.0,price,margin) && margin>0)
-      lots=MathMin(lots,AccountInfoDouble(ACCOUNT_MARGIN_FREE)*InpMarginPct/100.0/margin);
    double step=SymbolInfoDouble(sym,SYMBOL_VOLUME_STEP);
-   lots=MathMin(MathFloor(lots/step+1e-9)*step,SymbolInfoDouble(sym,SYMBOL_VOLUME_MAX));
+   double lots=AccountInfoDouble(ACCOUNT_BALANCE)*riskPct/100.0/(-loss)/step;
+   lots=(nearest ? MathRound(lots) : MathFloor(lots+1e-9))*step;
+   if(OrderCalcMargin(type,sym,1.0,price,margin) && margin>0)
+      lots=MathMin(lots,MathFloor(AccountInfoDouble(ACCOUNT_MARGIN_FREE)*InpMarginPct/100.0/margin/step+1e-9)*step);
+   lots=MathMin(lots,SymbolInfoDouble(sym,SYMBOL_VOLUME_MAX));
    return(lots<SymbolInfoDouble(sym,SYMBOL_VOLUME_MIN) ? 0.0 : NormalizeDouble(lots,2));
   }
 
@@ -1824,7 +1827,8 @@ void Breakout()
          g_breakTraded[s]=today;           // already through the other side: no room for the stop
          continue;
         }
-      double lots=RiskLots(sym,side,px,dist,SizeMult()*InpBreakRiskPct);
+      // Nearest step: at a 10k balance the leg is 1-3 steps of USDJPY and rounding down skipped every stop over ~1 yen.
+      double lots=RiskLots(sym,side,px,dist,SizeMult()*InpBreakRiskPct,true);
       if(lots<=0)
         {
          PrintFormat(AURUM_NAME+": balance too small for the minimum lot of %s at a stop of %s, no breakout",sym,

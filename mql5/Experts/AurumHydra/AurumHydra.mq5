@@ -131,10 +131,12 @@
 //| (InpBrake2Pct/Cut), an account vol target from the daily closed  |
 //| P&L (InpAcctVolPct/Days/Max) and a day-loss guard that closes    |
 //| all and pauses to the next day (InpDayLossPct).                  |
+//| v1.41: the breakout rounds its lots to the nearest step, not     |
+//| down, so a size of a few steps no longer skips the widest stops. |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.40"
+#property version   "1.41"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

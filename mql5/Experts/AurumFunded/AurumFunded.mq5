@@ -72,6 +72,10 @@
 //| P&L (InpAcctVolPct/Days/Max) and a day-loss guard that closes    |
 //| all and pauses to the next day (InpDayLossPct, set it under      |
 //| InpPropDayStopPct so it acts first).                             |
+//| v1.12: the breakout rounds its lots to the nearest step, not     |
+//| down: at 10k it is 1-3 steps and skipped its widest stops. At    |
+//| most 2x its risk at one step, so a size cut (brake, coast, the   |
+//| cushion floor) to under a step can round back up to one step.    |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -80,7 +84,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.11"
+#property version   "1.12"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
