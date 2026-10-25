@@ -29,3 +29,15 @@ default, and the demo / tester must show it. Controls would pass the gates only 
 costs and belief and fails corr only because the VRP leg is in the book).
 Not run: the gate rerun for a US500+US100-only market set, because DAX is not dropped (the EA trades US500 + US100; DAX is
 in the gated series with 3 markets; US500+US100 alone is 0.71 / 1.04 / 0.44, no worse).
+
+fix_vrp_leg_fidelity2, 2026-10-25: research/vrp_ctrl50.py (50 seeds, random Mondays, same entries per market 160/154/152,
+10-day long, same scale and costs, 3 markets, book gain against the book without VRP, same risk layer as gates.py):
+  book without VRP 2018+ Sharpe 3.111; VRP leg Sharpe all 0.73, 2018+ 0.38, book gain +0.090
+  controls: in-market share 0.38 (VRP 0.41-0.43; random entries overlap more)
+  Sharpe all   mean 0.46 sd 0.13, VRP 0.73 = percentile 94%
+  Sharpe 2018+ mean 0.37 sd 0.16, VRP 0.38 = percentile 44%
+  book gain 2018+ mean -0.243 sd 0.357, VRP +0.090 = percentile 80%
+Reading: over the whole sample the timing beats a random long (94th percentile), but from 2018 on it is no better than a
+random long (44th percentile on Sharpe); the book gain percentile (80%) is helped by the controls' large spread, not by a
+clear edge. The leg's value from 2018 is mostly equity beta that happens to diversify the book. It stays off by default
+and the demo / tester must show it; this does not justify raising its size.

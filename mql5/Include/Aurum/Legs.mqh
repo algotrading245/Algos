@@ -80,6 +80,10 @@ datetime g_breakTraded[2]; // per side (long, short): day a trade was opened
 bool     g_vrpOn=false;    // the variance-premium leg has a size and the VIX symbol is there
 string   g_vrpSym[2];      // S&P 500 and Nasdaq, "" for one that is missing
 datetime g_vrpDone[2];     // per index: Monday whose check has been dealt with
+int      g_vrpSrc=0;       // VIX source: 1 = broker symbol, 2 = file in the common Files folder
+datetime g_vixT[];         // file source: day of each VIX close, ascending
+double   g_vixV[];         // file source: the close
+datetime g_vixLoaded=0;    // server day the file was last read
 bool     g_noiseOn=false;  // the noise-area leg has a size
 string   g_noiseSym[2];    // S&P 500 and Nasdaq, "" for one that is missing
 datetime g_noiseDay[2];    // day the bands below belong to
@@ -1613,6 +1617,17 @@ bool UsHoliday(datetime day)
           day==Observed(y,12,25));
   }
 
+// True when the NYSE is shut on 'day' (a weekday): the federal holidays without Columbus Day and Veterans Day.
+bool NyseClosed(datetime day)
+  {
+   MqlDateTime s;
+   TimeToStruct(day,s);
+   int y=s.year;
+   return(day==Observed(y,1,1) || day==Observed(y+1,1,1) || day==Weekday(y,1,1,3) || day==Weekday(y,2,1,3) ||
+          day==Weekday(y,5,1,-1) || (y>=2022 && day==Observed(y,6,19)) || day==Observed(y,7,4) ||
+          day==Weekday(y,9,1,1) || day==Weekday(y,11,4,4) || day==Observed(y,12,25));
+  }
+
 // True on the first weekday after a US federal holiday that is not one itself.
 bool AfterDay(datetime day)
   {
@@ -2168,11 +2183,102 @@ void Drift()
 // close: gap = VIX^2 - realised variance (22 daily closes, annualised) as of the last closed D1 bar (Friday); when it is
 // in the top third of the last 252 trading days' gaps the index is bought and held 10 trading days (D1 bars of the
 // index, normally to the Monday two weeks on), a later Monday signal inside the hold restarts the 10 days. No entry on
-// US holiday Mondays; no signal when the last VIX bar is more than 5 days older than the index bar. Size: notional of 10% a year volatility (60 days, at most 3x) x equity x
-// SizeMult() x InpVrpMult. Python (US500, US100, DAX, 2010-2025): Sharpe 1.12 / 0.38 by half, 0.70 at 1.5x cost. The
-// broker stop (InpVrpStopEqPct of equity) is not in the Python test; the VIX symbol must exist on the broker.
+// NYSE holiday Mondays (NyseClosed); no signal when the last VIX close is more than 3 weekdays older than the index bar.
+// Size: notional of 10% a year volatility (60 days, at most 3x) x equity x SizeMult() x InpVrpMult, fixed at the entry
+// (the Python series rescales every day and an extension keeps the entry size: a small difference, not modelled).
+// Python (US500, US100, DAX, 2010-2025): Sharpe 1.12 / 0.38 by half, 0.70 at 1.5x cost; US500 + US100 alone
+// 0.71 / 1.04 / 0.44. The broker stop (InpVrpStopEqPct of equity) is not in the Python test.
+// VIX source: the broker symbol InpVrpVix when it exists, else the file InpVrpVixFile (FRED VIXCLS, written by
+// research/vrp_vix_file.py; on a demo or live terminal it needs a daily refresh by the owner).
+
+// Weekdays strictly after 'a' up to and including 'b' (a <= b), both server dates.
+int WeekdaysBetween(datetime a,datetime b)
+  {
+   int n=0;
+   for(datetime d=DayOf(a)+86400; d<=DayOf(b); d+=86400)
+     {
+      MqlDateTime s;
+      TimeToStruct(d,s);
+      if(s.day_of_week>=1 && s.day_of_week<=5)
+         n++;
+     }
+   return(n);
+  }
+
+// Reads the VIX file into g_vixT / g_vixV, at most once per server day.
+bool LoadVixFile()
+  {
+   datetime today=DayOf(TimeCurrent());
+   if(g_vixLoaded==today)
+      return(ArraySize(g_vixT)>0);
+   g_vixLoaded=today;
+   ArrayResize(g_vixT,0);
+   ArrayResize(g_vixV,0);
+   int h=FileOpen(InpVrpVixFile,FILE_READ|FILE_TXT|FILE_ANSI|FILE_COMMON);
+   if(h==INVALID_HANDLE)
+     {
+      PrintFormat(AURUM_NAME+": VIX file %s cannot be opened (error %d)",InpVrpVixFile,GetLastError());
+      return(false);
+     }
+   int n=0;
+   while(!FileIsEnding(h))
+     {
+      string line=FileReadString(h);
+      int p=StringFind(line,",");
+      if(p!=10)
+         continue;
+      string ds=StringSubstr(line,0,10);
+      StringReplace(ds,"-",".");
+      datetime t=StringToTime(ds);
+      double v=StringToDouble(StringSubstr(line,p+1));
+      if(t<=0 || v<=0 || (n>0 && t<=g_vixT[n-1]))
+         continue;
+      ArrayResize(g_vixT,n+1,4096);
+      ArrayResize(g_vixV,n+1,4096);
+      g_vixT[n]=t;
+      g_vixV[n]=v;
+      n++;
+     }
+   FileClose(h);
+   return(n>0);
+  }
+
+// The latest VIX close on or before the D1 bar 'bar' (a server date); vt = the day of that close. False if none.
+bool VixAt(datetime bar,double &v,datetime &vt)
+  {
+   if(g_vrpSrc==1)
+     {
+      int b=iBarShift(InpVrpVix,PERIOD_D1,bar,false);
+      if(b<0)
+         return(false);
+      vt=iTime(InpVrpVix,PERIOD_D1,b);
+      v=iClose(InpVrpVix,PERIOD_D1,b);
+      return(v>0);
+     }
+   int lo=0,hi=ArraySize(g_vixT)-1,at=-1;
+   datetime d=DayOf(bar);
+   while(lo<=hi)
+     {
+      int mid=(lo+hi)/2;
+      if(g_vixT[mid]<=d)
+        {
+         at=mid;
+         lo=mid+1;
+        }
+      else
+         hi=mid-1;
+     }
+   if(at<0)
+      return(false);
+   vt=g_vixT[at];
+   v=g_vixV[at];
+   return(v>0);
+  }
+
 bool VrpSignal(string sym,double &gap,double &vol)
   {
+   if(g_vrpSrc==2 && !LoadVixFile())
+      return(false);
    const int N=252,W=22,V=60;
    double c[];
    datetime tm[];
@@ -2188,9 +2294,20 @@ bool VrpSignal(string sym,double &gap,double &vol)
          return(false);
       r[j]=c[j]/c[j+1]-1.0;
      }
-   int v0=iBarShift(InpVrpVix,PERIOD_D1,tm[0],false);
-   if(v0<0 || tm[0]-iTime(InpVrpVix,PERIOD_D1,v0)>5*86400)
-      return(false);                  // VIX feed stale
+   double v0=0.0;
+   datetime vt0=0;
+   if(!VixAt(tm[0],v0,vt0))
+      return(false);
+   static datetime logged[2];
+   int li=(sym==g_vrpSym[0] ? 0 : 1);
+   if(logged[li]!=DayOf(TimeCurrent()))
+     {
+      logged[li]=DayOf(TimeCurrent());   // once a day per index, not on every retry tick
+      PrintFormat(AURUM_NAME+": variance-premium check %s: index bar %s, VIX %.2f of %s (source %s)",sym,
+                  TimeToString(tm[0],TIME_DATE),v0,TimeToString(vt0,TIME_DATE),g_vrpSrc==1 ? InpVrpVix : InpVrpVixFile);
+     }
+   if(WeekdaysBetween(vt0,tm[0])>3)
+      return(false);                  // VIX feed stale: last close more than 3 weekdays before the index bar
    double g[];
    ArrayResize(g,N);
    for(int k=0; k<N; k++)
@@ -2202,9 +2319,9 @@ bool VrpSignal(string sym,double &gap,double &vol)
       for(int j=k; j<k+W; j++)
          s+=(r[j]-m)*(r[j]-m);
       double rv2=s/(W-1)*252.0;
-      int vs=iBarShift(InpVrpVix,PERIOD_D1,tm[k],false);
-      double v=(vs<0 ? 0.0 : iClose(InpVrpVix,PERIOD_D1,vs));
-      if(v<=0)
+      double v=0.0;
+      datetime vtk;
+      if(!VixAt(tm[k],v,vtk))
          return(false);
       g[k]=(v/100.0)*(v/100.0)-rv2;
      }
@@ -2255,7 +2372,7 @@ void Vrp()
          anchor=0.0;
         }
       datetime start=today+HHMMSec(InpVrpHHMM);
-      bool inWindow=(st.day_of_week==1 && now>=start && now-start<InpVrpEntrySec && g_vrpDone[i]!=today && !UsHoliday(today));
+      bool inWindow=(st.day_of_week==1 && now>=start && now-start<InpVrpEntrySec && g_vrpDone[i]!=today && !NyseClosed(today));
       if(held)
         {
          if(inWindow)
@@ -2279,9 +2396,9 @@ void Vrp()
         }
       if(st.day_of_week!=1 || now<start || g_vrpDone[i]==today)
          continue;
-      if(UsHoliday(today))
+      if(NyseClosed(today))
         {
-         g_vrpDone[i]=today;   // US cash market shut: the Python test has no Monday here
+         g_vrpDone[i]=today;   // NYSE shut: the Python test has no Monday here
          continue;
         }
       if(now-start>=InpVrpEntrySec)
@@ -2292,7 +2409,7 @@ void Vrp()
       double gap=0.0,vol=0.0;
       if(!VrpSignal(sym,gap,vol))
         {
-         PrintFormat(AURUM_NAME+": no variance-premium signal on %s (D1 history short or %s stale, older than 5 days)",sym,InpVrpVix);
+         PrintFormat(AURUM_NAME+": no variance-premium signal on %s (D1 history short, or the VIX from %s stale (more than 3 weekdays old) or missing)",sym,g_vrpSrc==1 ? InpVrpVix : InpVrpVixFile);
          g_vrpDone[i]=today;
          continue;
         }
@@ -2447,7 +2564,7 @@ int OnInit()
       HHMMSec(InpBreakStartHHMM)<HHMMSec(InpBreakToHHMM) || HHMMSec(InpBreakExitHHMM)<=HHMMSec(InpBreakStartHHMM) ||
       InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange ||
       InpVrpMult<0 || InpVrpHHMM<0 || InpVrpHHMM%100>59 || InpVrpHHMM>2350 || InpVrpEntrySec<1 || InpVrpMaxSpreadBp<=0 ||
-      InpVrpStopEqPct<=0 || InpVrpVix=="" ||
+      InpVrpStopEqPct<=0 || (InpVrpVix=="" && InpVrpVixFile=="") ||
       InpNoiseMult<0 || InpNoiseBandSpx<=0 || InpNoiseBandNdx<=0 || InpNoiseMaxSpreadBp<=0 || AurumInputsBad())
       return(INIT_PARAMETERS_INCORRECT);
    // InpTarget: the goal scale with the best chance of each multiple in tools/target_odds.py (21 weekdays, 70% of
@@ -2552,10 +2669,29 @@ int OnInit()
    g_vrpSym[1]=InpNasdaq;
    g_vrpDone[0]=0;
    g_vrpDone[1]=0;
-   if(g_vrpOn && !SymbolSelect(InpVrpVix,true))
+   g_vrpSrc=0;
+   if(g_vrpOn)
      {
-      PrintFormat(AURUM_NAME+": volatility index %s is not available, the variance-premium leg is off",InpVrpVix);
-      g_vrpOn=false;
+      if(InpVrpVix!="" && SymbolSelect(InpVrpVix,true))
+         g_vrpSrc=1;
+      else
+        {
+         if(InpVrpVix!="")
+            PrintFormat(AURUM_NAME+": volatility index %s is not available on this server, trying the file %s",InpVrpVix,InpVrpVixFile);
+         g_vixLoaded=0;
+         if(InpVrpVixFile!="" && LoadVixFile())
+            g_vrpSrc=2;
+        }
+      if(g_vrpSrc==0)
+        {
+         PrintFormat(AURUM_NAME+": no VIX source (symbol %s, file %s), the variance-premium leg is off",InpVrpVix,InpVrpVixFile);
+         g_vrpOn=false;
+        }
+      else
+         PrintFormat(AURUM_NAME+": variance-premium leg uses the VIX from %s (%d closes, last %s)",
+                     g_vrpSrc==1 ? "the broker symbol " + InpVrpVix : "the file " + InpVrpVixFile,
+                     g_vrpSrc==1 ? iBars(InpVrpVix,PERIOD_D1) : ArraySize(g_vixT),
+                     g_vrpSrc==2 ? TimeToString(g_vixT[ArraySize(g_vixT)-1],TIME_DATE) : "-");
      }
    for(int i=0; i<2 && g_vrpOn; i++)
      {
@@ -2567,9 +2703,7 @@ int OnInit()
          g_vrpSym[i]="";
         }
      }
-   if(g_vrpOn)
-      iBars(InpVrpVix,PERIOD_D1);
-   if(g_driftOn && !SymbolSelect(InpStocks,true))
+   if(g_driftOn &&!SymbolSelect(InpStocks,true))
      {
       PrintFormat(AURUM_NAME+": stock index %s is not available, the overnight-drift leg is off",InpStocks);
       g_driftOn=false;

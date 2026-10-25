@@ -82,6 +82,10 @@
 //| stop, signal day kept in a global variable. Needs a VIX symbol.  |
 //| v1.14: VRP fixes: hold counted in D1 bars, a signal on the exit  |
 //| day extends, no US-holiday Monday, stale-VIX check.              |
+//| v1.15: VRP leg: NYSE holiday list (Columbus and Veterans Day     |
+//| Mondays trade), stale-VIX limit 3 weekdays, VIX from the broker  |
+//| symbol or else the file vixcls.csv in the common Files folder    |
+//| (InpVrpVixFile), source and VIX level logged each Monday.        |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -90,7 +94,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.14"
+#property version   "1.15"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
