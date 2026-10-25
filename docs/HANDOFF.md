@@ -66,6 +66,20 @@ each finished piece of work.
     is switched on. Nothing shows whether VIX.cash is spot VIX. j17 is on hold and the builder fix item
     `fix_vrp_leg_fidelity2` is queued. The judge committed the uncommitted VRP leg files (Inputs.mqh, Legs.mqh, the
     .mq5 file, the preset and the research scripts) so the repo compiles at HEAD.
+  - **Judge 2026-10-25 20:30, j16: no result, the leg is blocked.** VIX.cash is not on the FTMO tester server. The
+    run with InpVrpMult 0.5 logged "volatility index VIX.cash is not available, the variance-premium leg is off"
+    (`backtests/2026-10-25_2005_AurumFunded_vrp_on/summary.txt` line 45). The on and off runs came out the same to the
+    cent: +1,000.15 (+10%), 346 trades, PF 1.44, DD 3.61%. FTMO lists no VIX CFD (`docs/ideas/2026-10-19.md:450`), so
+    the demo has no VIX either. Both runs also stopped at the phase-1 target on 2024-04-16, so only 3.5 of the 21
+    months ran. Step 8 (a VIX source the tester can read, such as a daily VIXCLS CSV) and step 9 (a preset that does
+    not stop at the target) are added to `fix_vrp_leg_fidelity2`. j17 stays on hold until both are done. **Owner:**
+    a CSV source means the demo or live terminal needs the file refreshed every day, which is your call. Without a
+    VIX feed this leg cannot run on FTMO.
+  - **Job-writing note for the builder:** j16's report folders have the wrong labels. `_vrp_off` holds the
+    InpVrpMult=0.5 run and `_vrp_on` holds the 0.0 run (input lists in the two `.htm` files).
+    `tools/autopilot/tester_step.py:476-478` runs the preset as "off" and preset + `compare_set` as "on". So
+    `compare_set` must be the setting that switches the leg on, for example `InpVrpMult=0.5` with a preset that has the
+    leg at 0. j17 is written the same wrong way round (`compare_set` InpVrpMult=0.0), which belongs in fix step 9.
 - **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
   the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference

@@ -136,3 +136,4 @@ committed).
 | 2026-10-25 20:05 | tester | Collected j16 off run, started the on run | j16 running |
 | 2026-10-25 20:25 | judge | review AurumFunded v1.14 VRP fix (fix_vrp_leg_fidelity, j17) | no blocker, 7 minor; j17 hold, fix_vrp_leg_fidelity2 queued; VRP leg files committed |
 | 2026-10-25 20:16 | tester | Collected j16 (AurumFunded vrp): net +1,000 (+10%), 346.0 trades, PF 1.44, equity DD 3.61% | j16 done, needs judging |
+| 2026-10-25 20:30 | judge | j16 (VRP leg, AurumFunded v1.13) | no result: VIX.cash not on the FTMO tester server, leg never traded (on = off, +10% to the phase-1 target on 2024-04-16); candidate blocked, j17 on hold, VIX source + preset + compare_set direction added to fix_vrp_leg_fidelity2 |
