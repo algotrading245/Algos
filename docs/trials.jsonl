@@ -507,3 +507,8 @@
 {"id": "idea:f_rsi_eurgbp_tu", "when": "2026-10-25T15:01:08", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_gbpjpy_tu", "when": "2026-10-25T15:01:10", "verdict": "FAIL at halves", "count": 4}
 {"id": "prebuilt_crabel_nr7_orb_gold", "when": "2026-10-25T15:52:18", "verdict": "FAIL at halves"}
+{"id": "idea:f_rsi_audnzd_tu", "when": "2026-10-25T16:00:37", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_euraud_tu", "when": "2026-10-25T16:00:48", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpchf_tu", "when": "2026-10-25T16:00:53", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_grxeur_tu", "when": "2026-10-25T16:01:01", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_nzdcad_tu", "when": "2026-10-25T16:01:08", "verdict": "FAIL at belief", "count": 4}
