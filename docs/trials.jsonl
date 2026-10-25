@@ -461,3 +461,8 @@
 {"id": "idea:f_rsi_grxeur_vl", "when": "2026-10-25T06:00:33", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_jpxjpy_vl", "when": "2026-10-25T06:00:37", "verdict": "FAIL at halves", "count": 4}
 {"id": "idea:f_rsi_wtiusd_vl", "when": "2026-10-25T06:00:39", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_xauusd_tu", "when": "2026-10-25T07:00:47", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_reversal_grxeur_vl", "when": "2026-10-25T07:00:49", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_jpxjpy_vl", "when": "2026-10-25T07:00:52", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_wtiusd_vl", "when": "2026-10-25T07:00:54", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_reversal_xagusd_vl", "when": "2026-10-25T07:00:56", "verdict": "FAIL at halves", "count": 2}
