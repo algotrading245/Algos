@@ -80,6 +80,19 @@ each finished piece of work.
     `tools/autopilot/tester_step.py:476-478` runs the preset as "off" and preset + `compare_set` as "on". So
     `compare_set` must be the setting that switches the leg on, for example `InpVrpMult=0.5` with a preset that has the
     leg at 0. j17 is written the same wrong way round (`compare_set` InpVrpMult=0.0), which belongs in fix step 9.
+  - **Judge 2026-10-25 20:40, review of v1.15 (`fix_vrp_leg_fidelity2`, commit 71542eb): clean, j17 is running.**
+    There is no look-ahead: the leg uses Friday's VIXCLS close. `vixcls.csv` goes through `holdout.drop` and ends on
+    2025-10-10. With the leg off, both EAs behave as before. j17 is now the right way round (the preset is OFF, and
+    `compare_set` InpVrpMult=0.5 turns it ON, with no target). The 50-seed control reproduces: the 2018+ Sharpe is
+    at the 44th percentile of random longs, so the leg is mostly equity beta. Judge j17 with that in mind.
+    There are five minor findings and no fix item:
+    - **Check the j17 OnInit line.** It should report about 5,250 closes, the last on 2025.10.10. The CSV has LF line
+      endings only, and if the line says 1 close, the leg never traded.
+    - **Hydra compile.** AurumHydra has no compile log for the shared `Legs.mqh`/`Inputs.mqh` change. Compile it
+      before any Hydra job.
+    - The control overlaps itself and includes DAX.
+    - The stale limit counts weekdays, not NYSE trading days.
+    - The 22- and 252-bar windows include bars from US holidays.
 - **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
   the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
