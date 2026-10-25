@@ -537,3 +537,5 @@
 {"id": "paper_hamao_us_close_to_asia_eu_open", "when": "2026-10-25T18:28:37", "verdict": "FAIL at halves"}
 {"id": "paper_rapach_us_lead_weekly_indices", "when": "2026-10-25T18:34:30", "verdict": "FAIL at halves"}
 {"id": "variant_index_open_gap_fade_4mkts", "when": "2026-10-25T18:40:27", "verdict": "FAIL at halves"}
+{"id": "variant_asian_range_london_fade_eurusd", "when": "2026-10-25T18:48:04", "verdict": "FAIL at halves"}
+{"id": "variant_yield_shock_gold_usdjpy_nextday", "when": "2026-10-25T18:49:55", "verdict": "FAIL at halves"}
