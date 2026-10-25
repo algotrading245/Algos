@@ -501,3 +501,8 @@
 {"id": "idea:f_rsi_nzdusd_tu", "when": "2026-10-25T14:00:46", "verdict": "FAIL at belief", "count": 4}
 {"id": "idea:f_rsi_usdcad_tu", "when": "2026-10-25T14:00:48", "verdict": "FAIL at belief", "count": 4}
 {"id": "idea:f_rsi_usdchf_tu", "when": "2026-10-25T14:00:51", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_rsi_audjpy_tu", "when": "2026-10-25T15:00:56", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_cadjpy_tu", "when": "2026-10-25T15:01:00", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurchf_tu", "when": "2026-10-25T15:01:05", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_eurgbp_tu", "when": "2026-10-25T15:01:08", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_rsi_gbpjpy_tu", "when": "2026-10-25T15:01:10", "verdict": "FAIL at halves", "count": 4}
