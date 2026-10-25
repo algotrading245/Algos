@@ -466,3 +466,8 @@
 {"id": "idea:f_reversal_jpxjpy_vl", "when": "2026-10-25T07:00:52", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_wtiusd_vl", "when": "2026-10-25T07:00:54", "verdict": "FAIL at halves", "count": 2}
 {"id": "idea:f_reversal_xagusd_vl", "when": "2026-10-25T07:00:56", "verdict": "FAIL at halves", "count": 2}
+{"id": "idea:f_meanrev_audcad_tu", "when": "2026-10-25T08:00:02", "verdict": "FAIL at corr", "count": 4}
+{"id": "idea:f_meanrev_eurusd_tu", "when": "2026-10-25T08:00:05", "verdict": "FAIL at belief", "count": 4}
+{"id": "idea:f_meanrev_gbpusd_tu", "when": "2026-10-25T08:00:09", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_spxusd_tu", "when": "2026-10-25T08:00:12", "verdict": "FAIL at halves", "count": 4}
+{"id": "idea:f_meanrev_usdjpy_tu", "when": "2026-10-25T08:00:15", "verdict": "FAIL at halves", "count": 4}
