@@ -120,7 +120,9 @@ and write it under "## For the owner" in `docs/HANDOFF.md`. Data files stay out 
 Commit only your files, then push: `git add docs/ideas/queue.jsonl docs/ideas/sources.jsonl docs/ideas/backlog.jsonl docs/ideas/backlog_done.jsonl <each new spec> <each new research/fetch script>`,
 `git commit -m "Finder <date>: <n> ideas"`, `git push origin HEAD`. If the push fails, leave the commit local and say
 so. Use plain `git ...` from the repo folder, never `git -C`, and one command per Bash call (no `&&`, `;` or pipes).
-Write files with the Write and Edit tools, never heredocs or `>` redirects.
+Write files with the Write and Edit tools, never heredocs or `>` redirects. To run Python, Write the script to a file
+first and run `python <file>`: `python - <<'E'` is refused (owner 2026-10-25, 6 refused runs on
+10-23 and 10-24). Keep shell characters out of arguments: `python tools/memory.py search "RSI 2"`, never `RSI(2)`.
 
 Do not build or test strategies. Never look at our own results after 2025-10-12: those days are the owner's holdout
 (`tools/holdout.py`). Finish with one line listing the ids you queued, then the hand-over as the very last line:

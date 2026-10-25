@@ -51,7 +51,16 @@ while ($true) {
             Write-Log "keeper-steps" "$name started ($r)"
         }
     } elseif ($lastPause -ne $true) { Write-Log "keeper-steps" "paused: no steps started" }
-    $lastPause = Test-Path $Pause
+    # Who sets or clears PAUSE (owner 2026-10-25, after an unexplained night pause): no script writes it, so log the
+    # change with the file's time and its first line - whoever pauses writes their name and reason in it.
+    $nowPause = Test-Path $Pause
+    if ($nowPause -and -not $lastPause) {
+        $p = Get-Item $Pause -ErrorAction SilentlyContinue
+        $why = (Get-Content $Pause -TotalCount 1 -ErrorAction SilentlyContinue) -replace '\d{6,}', '<num>'
+        if (-not $why) { $why = "(empty file, no reason given)" }
+        Write-Log "keeper" "PAUSE set (file written $($p.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss'))): $($why.Substring(0, [Math]::Min(120, $why.Length)))"
+    } elseif ($lastPause -and -not $nowPause) { Write-Log "keeper" "PAUSE cleared" }
+    $lastPause = $nowPause
     try {
         $hold = Get-Hold
         $t = Get-T16

@@ -108,7 +108,7 @@ function Invoke-Prescreen {
 # A run that ended within 2 minutes (a limit, a fault) or failed is not started again in this tick, so nothing spins.
 $blocked = @()
 while ($true) {
-    if (Test-Path $Pause) { break }
+    if (Test-Path $Pause) { Write-Log "relay" "paused (logs\autopilot\PAUSE exists; the keeper log says when it was set)"; break }
     $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
     if (-not $mutex.WaitOne(0)) { break }
     $mutex.ReleaseMutex()

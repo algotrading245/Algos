@@ -32,3 +32,6 @@ logs/
 # live dashboard feed (tools/dashboard_live.py) and atomic-write temp files
 dashboard/live.js
 dashboard/*.tmp
+
+# Compiled EAs: built by tools/autopilot/compile.ps1 next to the source, never committed (owner 2026-10-25).
+*.ex5

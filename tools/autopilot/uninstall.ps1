@@ -2,7 +2,8 @@
 #
 #   powershell -ExecutionPolicy Bypass -File tools\autopilot\uninstall.ps1
 #
-# To pause the agents without uninstalling, create logs\autopilot\PAUSE (delete it to resume).
+# To pause the agents without uninstalling, create logs\autopilot\PAUSE (delete it to resume), with who and why as its
+# first line; the keeper logs that line and the times it was set and cleared.
 $folder = "\Aurum\"
 Get-ScheduledTask -TaskPath $folder -ErrorAction SilentlyContinue | ForEach-Object {
     Stop-ScheduledTask -TaskPath $folder -TaskName $_.TaskName -ErrorAction SilentlyContinue

@@ -13,10 +13,12 @@ Each check-in:
 2. Compare with what the tester did on the same kind of day: number of trades per leg, slippage on fills.
 3. Append one entry to `docs/demo_log.md`: date, trades per leg, P/L of the day if logged, slippage, anything odd.
 4. If a day stop, final stop, margin error, or a trade with no broker stop appears, start the entry with
-   "ALERT" so the orchestrator (Opus) reviews it the same day.
+   "ALERT" so the judge (Opus) reviews it the same day.
+5. Weekly (Fridays, or the first run after a Friday that has no file): the fidelity week in
+   `docs/fidelity/<Friday>.md`, as the run prompt says (owner 2026-10-25).
 
 Rules:
 - Read-only on the terminal: never place, modify or close trades, never change EA inputs.
-- Write only to `docs/demo_log.md`.
+- Write only to `docs/demo_log.md` and `docs/fidelity/`.
 - Never print or record the account number, login or any credential. Leave out log lines that contain them.
 - Report only what the logs show; if a figure is not in them, write "not logged".
