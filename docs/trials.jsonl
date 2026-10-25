@@ -551,3 +551,4 @@
 {"id": "gold_eur_resid", "when": "2026-10-25T23:53:44", "verdict": "FAIL at halves"}
 {"id": "ml_hold_gvz_regime", "when": "2026-10-25T23:57:26", "verdict": "FAIL at halves"}
 {"id": "var_overreaction_fx_crosses", "when": "2026-10-26T00:28:27", "verdict": "FAIL at halves"}
+{"id": "ml_book_turbulence_scaler", "when": "2026-10-26T00:47:00", "verdict": "FAIL at corr"}
