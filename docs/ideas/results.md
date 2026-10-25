@@ -465,3 +465,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-25T17:00 | f_reversal_xauusd_tu | n/a | 2 | XAUUSD reversal lookback=1 L1 both | -0.27 / 0.15 | FAIL at halves | 1.000 (book, N=26761, luck bar 1.00) |
 | 2026-10-25T17:00 | f_rsi_jpxjpy_tu | n/a | 4 | JPXJPY rsi level=30 period=2 L1 both | 0.14 / -0.36 | FAIL at halves | 1.000 (book, N=26763, luck bar 1.00) |
 | 2026-10-25T17:00 | f_rsi_wtiusd_tu | n/a | 4 | WTIUSD rsi level=30 period=14 L1 both | 0.54 / 0.07 | FAIL at halves | 1.000 (book, N=26763, luck bar 1.00) |
+| 2026-10-25T18:00 | f_meanrev_usdjpy_td | n/a | 4 | USDJPY meanrev lookback=20 z=1.5 L1 both | 0.80 / 0.16 | FAIL at halves | 1.000 (book, N=26768, luck bar 1.00) |
+| 2026-10-25T18:00 | f_meanrev_xauusd_td | n/a | 4 | XAUUSD meanrev lookback=20 z=1.5 L1 both | -0.11 / 0.05 | FAIL at halves | 1.000 (book, N=26768, luck bar 1.00) |
+| 2026-10-25T18:00 | f_reversal_grxeur_tu | n/a | 2 | GRXEUR reversal lookback=5 L1 both | 0.08 / -0.56 | FAIL at halves | 0.838 (book, N=26766, luck bar 1.00) |
+| 2026-10-25T18:00 | f_reversal_jpxjpy_tu | n/a | 2 | JPXJPY reversal lookback=1 L1 both | 0.19 / -0.09 | FAIL at halves | 1.000 (book, N=26766, luck bar 1.00) |
+| 2026-10-25T18:00 | f_reversal_wtiusd_tu | n/a | 2 | WTIUSD reversal lookback=1 L1 both | 0.23 / 0.05 | FAIL at halves | 1.000 (book, N=26766, luck bar 1.00) |
