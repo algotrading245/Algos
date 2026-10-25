@@ -33,5 +33,8 @@ logs/
 dashboard/live.js
 dashboard/*.tmp
 
+# Pickled research intermediates (rebuilt by the scripts that write them)
+research/*.pkl
+
 # Compiled EAs: built by tools/autopilot/compile.ps1 next to the source, never committed (owner 2026-10-25).
 *.ex5
