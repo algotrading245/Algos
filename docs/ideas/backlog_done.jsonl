@@ -55,3 +55,5 @@
 {"id": "weekend_gap_fill", "status": "dropped", "result": "weekend gap family rejected (dao_weekend_gap, halves); retail sources only"}
 {"id": "ariel_preholiday", "status": "dropped", "result": "pre-holiday effect gone in large caps; tiny trade count"}
 {"id": "melvin_prins_4pm_fix", "gap": "EURUSD, intraday", "kind": "paper", "title": "Melvin & Prins 2015 4pm fix", "status": "dropped", "added": "2026-10-24", "result": "overlaps fix leg; monthend_eurusd_fix already rejected"}
+{"id": "arxiv_qfin_tr_2509", "gap": "any", "kind": "paper", "title": "arXiv q-fin.TR listing", "link": "https://arxiv.org/list/q-fin.TR/2509", "note": "crawl", "status": "dropped", "added": "2026-10-24", "result": "WebFetch 404 on 2026-10-25"}
+{"id": "arxiv_qfin_tr_2510", "gap": "any", "kind": "paper", "title": "arXiv q-fin.TR listing", "link": "https://arxiv.org/list/q-fin.TR/2510", "note": "crawl", "status": "dropped", "added": "2026-10-24", "result": "WebFetch 404 on 2026-10-25"}
