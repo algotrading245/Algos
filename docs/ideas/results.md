@@ -445,3 +445,8 @@ Best variant picked on the days before 2018; Sharpe at the real cost before 2018
 | 2026-10-25T13:00 | f_rsi_gbpusd_tu | n/a | 4 | GBPUSD rsi level=10 period=2 L1 both | 0.59 / 0.47 | FAIL at belief | 1.000 (book, N=26759, luck bar 1.00) |
 | 2026-10-25T13:00 | f_rsi_spxusd_tu | n/a | 4 | SPXUSD rsi level=10 period=2 L1 both | 0.56 / 0.02 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
 | 2026-10-25T13:00 | f_rsi_xagusd_tu | n/a | 4 | XAGUSD rsi level=30 period=2 L1 both | -0.38 / 0.06 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T14:00 | f_rsi_audusd_tu | n/a | 4 | AUDUSD rsi level=30 period=2 L1 both | 0.26 / 0.18 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T14:00 | f_rsi_eurjpy_tu | n/a | 4 | EURJPY rsi level=30 period=2 L1 both | -0.16 / -0.50 | FAIL at halves | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T14:00 | f_rsi_nzdusd_tu | n/a | 4 | NZDUSD rsi level=30 period=14 L1 both | 0.62 / 0.35 | FAIL at belief | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T14:00 | f_rsi_usdcad_tu | n/a | 4 | USDCAD rsi level=10 period=2 L1 both | 0.26 / 0.46 | FAIL at belief | 1.000 (book, N=26759, luck bar 1.00) |
+| 2026-10-25T14:00 | f_rsi_usdchf_tu | n/a | 4 | USDCHF rsi level=30 period=2 L1 both | 0.54 / 0.22 | FAIL at belief | 1.000 (book, N=26759, luck bar 1.00) |
