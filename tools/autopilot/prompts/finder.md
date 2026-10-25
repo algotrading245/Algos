@@ -43,8 +43,14 @@ due comes before both.
   in `note` so the next scout goes on from there: BIS working papers, Fed (FEDS, IFDP) and ECB working papers by
   date, the AQR library, Quantpedia's strategy categories, the MQL5 CodeBase experts list, arXiv q-fin.TR and
   q-fin.PM month by month. Grep each lead's link in sources.jsonl and backlog.jsonl first: skip those already there.
-- **Normal run**: take the open leads in order (gap not "tried" first), read each in full, and close each one:
-  `"done"` with the queued or spec id in `result`, or `"dropped"` with the reason (moved to `backlog_done.jsonl`).
+- **Normal run**: take the open leads oldest first (gap not "tried" first). For each one, open its `link` (WebFetch,
+  or `pdf_text.py` for a PDF) and read the page. A venue or listing page (working-paper series, library, CodeBase
+  list) is a lead to open, not a reason to drop: pick from it one specific paper or prebuilt strategy with a rule our
+  markets can trade, read that in full and queue it (or write its spec). Then close the lead: `"done"` with the
+  queued or spec id in `result` (if the page holds more good items, keep it open instead and put where to go on in
+  `note`), or `"dropped"` with the items you read and why each fails (moved to `backlog_done.jsonl`). "Venue crawl"
+  or "no tradeable rule" without naming what you read is not a valid reason (2026-10-25: 30 finder runs in a row
+  dropped nothing and queued nothing on that excuse). Every normal run opens at least the oldest open lead.
   Work through leads until you have queued 3 to 5 items or the backlog is empty.
 - **What fails and what to favour** (results.md, 2026-10-21 to 24): these styles failed the halves gate again and
   again: carry (FX and rates), volatility risk premium on its own, crypto legs that hold overnight (swap), FX macro
@@ -121,4 +127,6 @@ Do not build or test strategies. Never look at our own results after 2025-10-12:
 `HANDOFF: builder <n> ideas queued` (a scout run: `HANDOFF: none scouted <n> leads`; a run that only set up a fetch:
 `HANDOFF: none fetch started <id>`). "Nothing new found" is only allowed in a normal run that closed every open lead
 without queueing one (say why each was dropped). In
-the line before the hand-over, give the open-lead count and the gaps skipped as tried. Earlier decision notes do not count.
+the line before the hand-over, give the open-lead count and the gaps skipped as tried. Earlier decision notes do not count:
+an earlier finder's "queued 0" is not evidence that a lead is empty; only a lead's own `result` in
+`backlog_done.jsonl` is. Keep using `memory.py search` to check an idea was not rejected before.

@@ -18,8 +18,9 @@
 #      script runs detached (fetch_runner.py step, every pass); the item is skipped while it runs, then the finder
 #      closes it.
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
-#   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget or
-#      empty-run brake). The reason it is given says MODE: scout (fewer than 10 open leads) or MODE: normal.
+#   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
+#      The reason it is given says MODE: scout (fewer than 10 open leads) or MODE: normal. A finder run under 2
+#      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json).
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
 param([switch]$DryRun)
@@ -53,6 +54,15 @@ function Get-DemoEvent {
     return $null
 }
 # Queue items at "tester" the judge has not reviewed yet (no "review" field).
+$FinderBackoff = Join-Path $LogDir "finder-backoff.json"
+function Get-OpenLeads {
+    $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
+    if (Test-Path $bl) { @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' }).Count } else { 0 }
+}
+function Get-QueueLines {
+    $q = Join-Path $Repo "docs\ideas\queue.jsonl"
+    if (Test-Path $q) { @(Get-Content $q -Encoding UTF8 | Where-Object { "$_".Trim() }).Count } else { 0 }
+}
 function Get-Unreviewed {
     return @(Get-QueueItems | Where-Object { $_.status -eq "tester" -and -not ($_.PSObject.Properties.Name -contains "review") }).Count
 }
@@ -67,8 +77,14 @@ function Get-FinderWhy {
     if ($stuck.Count) { Write-Log "relay" "data item(s) stuck after $DataTryCap finder runs, priority dropped: $(($stuck | ForEach-Object { $_.id }) -join ', ')" }
     $waiting = Get-QueueWaiting
     if ($waiting -ge 2) { return $null }
-    $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
-    $open = if (Test-Path $bl) { @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' }).Count } else { 0 }
+    # Empty-run backoff (owner 2026-10-25): a finder run under 2 minutes that queued nothing and closed no lead
+    # waits 30 minutes before the next one (it re-ran every 5 minutes). A data item due is not held back.
+    $fb = if (Test-Path $FinderBackoff) { try { Get-Content $FinderBackoff -Raw | ConvertFrom-Json } catch { $null } }
+    if ($fb -and $fb.until -and ([datetime]$fb.until) -gt (Get-Date)) {
+        Write-Log "relay" "finder backed off until $($fb.until): $($fb.why)"
+        return $null
+    }
+    $open = Get-OpenLeads
     # One job per run (owner 2026-10-24): a scout run only adds leads, a normal run only works them, so neither
     # hits the turn cap doing both. The finder prompt reads the mode from this line.
     $mode = if ($open -lt 10) { "MODE: scout" } else { "MODE: normal" }
@@ -155,8 +171,15 @@ while ($true) {
             ConvertTo-Json | Set-Content $Relay -Encoding UTF8
     }
     $t0 = Get-Date
+    $leads0 = Get-OpenLeads; $queue0 = Get-QueueLines
     Start-Agent $role $why $tier
     if ($DryRun) { break }
     $lr = Get-Last $role
-    if ((-not $lr) -or ($lr.failed -eq $true) -or (((Get-Date) - $t0).TotalMinutes -lt 2)) { $blocked += $role }
+    $short = ((Get-Date) - $t0).TotalMinutes -lt 2
+    if ((-not $lr) -or ($lr.failed -eq $true) -or $short) { $blocked += $role }
+    if ($role -eq "finder" -and $short -and (Get-OpenLeads) -ge $leads0 -and (Get-QueueLines) -le $queue0) {
+        $fbWhy = "run of $([int]((Get-Date) - $t0).TotalSeconds) s queued nothing and closed no lead ($leads0 open)"
+        [ordered]@{ until = (Get-Date).AddMinutes(30).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
+        Write-Log "relay" "finder backoff 30 min: $fbWhy"
+    }
 }

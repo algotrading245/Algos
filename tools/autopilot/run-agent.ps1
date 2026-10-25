@@ -90,7 +90,12 @@ try {
         if (Test-Path $mp) { Get-Content $mp -Raw -Encoding UTF8 }
     }
     $decFile = Join-Path $mem "decisions.jsonl"
-    $recent = if (Test-Path $decFile) { (Get-Content $decFile -Encoding UTF8 | Select-Object -Last 5) -join "`n" } else { "(none yet)" }
+    # A finder is not shown earlier finders' empty runs (2026-10-25: 30 runs in a row copied "queued 0" from them).
+    $decLines = if (Test-Path $decFile) { Get-Content $decFile -Encoding UTF8 } else { @() }
+    if ($Role -eq "finder") {
+        $decLines = $decLines | Where-Object { -not ($_ -match '"role":\s*"finder"' -and $_ -match '(?i)queued 0|0 ideas|nothing new') }
+    }
+    $recent = if (@($decLines).Count) { (@($decLines) | Select-Object -Last 5) -join "`n" } else { "(none yet)" }
     # The head of docs/HANDOFF.md (2 KB), so a run need not read the whole file to know where things stand.
     $handFile = Join-Path $Repo "docs\HANDOFF.md"
     $hand = if (Test-Path $handFile) { Get-Content $handFile -Raw -Encoding UTF8 } else { "(no docs/HANDOFF.md)" }
