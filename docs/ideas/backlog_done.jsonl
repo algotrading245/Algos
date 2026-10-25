@@ -124,3 +124,17 @@
 {"id": "turn_of_week_fx", "gap": "days", "kind": "variant", "title": "FX day-of-week", "link": "docs/ideas/results.md", "note": "", "status": "dropped", "added": "2026-10-25", "result": "steer: FX calendar/time-of-day effects on majors stop; quartet already seasonal"}
 {"id": "nagel_evaporating_liquidity", "gap": "days", "kind": "paper", "title": "Nagel: Evaporating liquidity (VIX-conditioned short-term reversal)", "link": "https://www.nber.org/papers/w17653", "note": "reversal returns rise with VIX; test US500/US100 daily reversal only when VIX high (days horizon); not seen in sources.jsonl", "status": "done", "added": "2026-10-25", "result": "paper_nagel_vix_reversal_index"}
 {"id": "halloween_indicator_bouman", "gap": "weeks+", "kind": "paper", "title": "Bouman & Jacobsen: The Halloween indicator, Sell in May", "link": "https://www.aeaweb.org/articles?id=10.1257/000282802762024683", "note": "Nov-Apr long US500/US100 seasonal; weeks+ horizon; very low trade count so belief ok, check halves", "status": "dropped", "added": "2026-10-25", "result": "Halloween already in sources.jsonl and seasonal family rejected 2026-10-23 (data-snooping test); not queued"}
+{"id": "mql5_codebase_session_ea", "status": "done", "result": "MQL5 page 1 read: Monday Dip (rejected halves 0.18/0.05), Crabel NR7 ORB (rejected), range breakout and BB examples have no numbers; no EURUSD EA", "closed": "2026-10-25"}
+{"id": "mql5_codebase_page2", "status": "done", "result": "page 2 read by earlier finder; Monday Dip only candidate, already rejected", "closed": "2026-10-25"}
+{"id": "quantpedia_free_strategies", "status": "dropped", "result": "Quantpedia strategy pages return 404", "closed": "2026-10-25"}
+{"id": "quantpedia_fx_intraday", "status": "dropped", "result": "currencies page 404", "closed": "2026-10-25"}
+{"id": "quantpedia_commodities", "status": "dropped", "result": "commodities page 404", "closed": "2026-10-25"}
+{"id": "github_awesome_quant_fx", "status": "dropped", "result": "je-suis-tm page: London Breakout has no parameters (breakout leg exists), Oil Money has no rules on the page", "closed": "2026-10-25"}
+{"id": "arxiv_qfin_st_gold", "status": "dropped", "result": "API read: Achilles LSTM bot (23 days), Forecast-to-Fill gold trend (trend style fails), 1-2-3 trend indicator (trend); no new rule", "closed": "2026-10-25"}
+{"id": "ml_regime_hmm_legs", "status": "dropped", "result": "duplicate of queued ml_regime_hmm_book; arXiv id on lead pointed to an unrelated math paper", "closed": "2026-10-25"}
+{"id": "ml_vol_forecast_sizing", "status": "dropped", "result": "duplicate of queued ml_har_rv_leg_sizing", "closed": "2026-10-25"}
+{"id": "drl_position_sizing_legs", "status": "dropped", "result": "duplicate of queued drl_leg_sizing_ppo", "closed": "2026-10-25"}
+{"id": "cftc_cot_gold_contrarian", "status": "dropped", "result": "already queued as data_cftc_cot_fx_gold and paper_cot_extreme_contrarian_weekly", "closed": "2026-10-25"}
+{"id": "vrp_gap_us500_variant", "status": "dropped", "result": "vrp_gap US500 works only as long equity beta (0.4 in market), fails belief; no new reason", "closed": "2026-10-25"}
+{"id": "vix_vxv_spike_variant", "status": "dropped", "result": "vix_vxv_spike no better than random same-length long (control SR 0.24/0.40/0.09)", "closed": "2026-10-25"}
+{"id": "overreaction_fx_variant", "status": "dropped", "result": "gross edge 2-4 bp a trade, fades 2018+, costs erase it; a sigma filter does not change that", "closed": "2026-10-25"}
