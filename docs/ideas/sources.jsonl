@@ -1317,3 +1317,4 @@
 {"date": "2026-10-25", "kind": "ml", "title": "Lopez de Prado AFML meta-labeling", "link": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086", "read": "unverified", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "Yuan, Zheng, Zhu: Are investors moonstruck? Lunar phases and stock returns", "link": "https://personal.lse.ac.uk/yuan/papers/lunar.pdf", "read": "in full", "specs": []}
 {"date": "2026-10-25", "kind": "paper", "title": "Pre-registered variant of vrp_gap on equity indices only", "link": "https://academic.oup.com/rfs/article/22/11/4463/1565787", "read": "unverified", "specs": []}
+{"date": "2026-10-25", "kind": "paper", "title": "arXiv q-fin.TR API listing (MNQ intraday studies 2605.x)", "link": "http://export.arxiv.org/api/query?search_query=cat:q-fin.TR+AND+all:intraday", "read": "unverified", "specs": []}
