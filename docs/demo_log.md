@@ -34,9 +34,7 @@
   137.11 at 7694.45". At EURUSD 1.12241 that is gold 1:50.0, USDJPY 1:100.0, EURUSD 1:100, US500.cash 1:50.0 (at
   contract size 1). That is the tester install's setting (1:100, gold 1:50), so j12-j14 are the right reference for
   the demo, and j3 (Terminal 16 tester at 1:33, gold 1:16.5) is not.
-- **Account currency is EUR**, while the tester jobs use a deposit of 10000 USD. The firm's limits are in EUR: "firm day
-  2026.10.19, day start 10000.00, day stop at 9700.00, final stop at 9150.00 (static)". Compare demo and tester in %
-  of the balance, not in currency. The P&L of USD-quoted symbols carries the EURUSD move.
+- **Account currency is EUR**, while the tester jobs use a deposit of 10000 USD. The firm's limits are in EUR: "firm day 2026.10.19, day start 10000.00, day stop at 9700.00, final stop at 9150.00 (static)". Compare demo and tester in % of the balance, not in currency. The P&L of USD-quoted symbols carries the EURUSD move.
 - **Trades:** 1 order, 1 deal: a breakout market buy of 0.01 USDJPY with sl 157.700, "done in 180.438 ms". The deal
   filled at 158.365 three ms after the order result. Range 157.700-158.143 (0.73x its 60-day average).
 - **The ALERT is false.** demo_check reported "breakout order on USDJPY failed, retcode 10009 (done at 0.000)".
@@ -246,3 +244,21 @@ trade without a broker stop).
   stop; the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`), which the printed line does
   not show.
 - **Odd:** nothing new. The 16:30 M1 re-initialisation and the 17:59:59 noise buy are the ones judged at 17:03 and 20:25.
+
+## 2026-10-24 and 2026-10-25 (weekend)
+
+No entry: the demo window was closed (Saturday 00:00 to Sunday 18:00), so no trades were expected.
+
+## 2026-10-26 (Monday), 23:15 check (monitor): no ALERT; no trades logged
+
+`tools/demo_check.py` reports ok: 3 EA lines, orders none, 0 journal trade lines, no day stop, final stop, margin error, failure, skip or clock line.
+
+- **Trades per leg:** none. No order was logged for any leg.
+- **Reason given in the log:** no trading today, European and US summer time differ. The EA held out for the session; the two regions change clocks on different dates, so session times are off for part of the year.
+- **Account:** firm day 2026.10.27 as logged, day start 10000.97, day stop 9700.97, final stop 9150.00 (static). Neither stop was hit; no trade was taken.
+- **Leverage:** account leverage 1:100 (gold 7189.40 at 4016.43), the same as the 10-19 reading.
+- **P/L of the day:** not logged.
+- **Slippage on fills:** not logged (no fills). No tester figure: tester jobs end 2025-09-30 and demo days are after the holdout.
+- **Trades without a broker stop:** none (no orders).
+- **Odd:** only the summer-time note. Worth a look if the demo should trade every weekday.
+- **Fidelity:** docs/fidelity/2026-10-23.md exists, so no fidelity week is due today.
