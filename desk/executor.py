@@ -92,6 +92,9 @@ def reconcile(b, cfg, state=None, t=None):
     state = tickets.fold() if state is None else state
     pos = b.positions()
     ords = b.orders()
+    if pos is None or ords is None:  # a failed read is not "nothing open": settle nothing on it
+        journal.log("reconcile_skip", why="the terminal did not return positions or orders")
+        return state
     deals = _deals(b, state, t)
     by_pos = {p["ticket"]: p for p in pos}
     by_ord = {o["ticket"]: o for o in ords}
@@ -122,7 +125,11 @@ def reconcile(b, cfg, state=None, t=None):
         if oid in by_ord:
             known_ord.add(oid)
             exp = _t(tk.get("expires_at"))
-            if exp and t >= exp:
+            if tk.get("close_request"):  # a close asked before the fill: pull the pending order
+                r = b.cancel(oid)
+                if r.get("ok"):
+                    tickets.cancel(tid, tk["close_request"], by="executor")
+            elif exp and t >= exp:
                 r = b.cancel(oid)
                 if r.get("ok"):
                     tickets.expire(tid, "entry not reached before it expired")
@@ -134,6 +141,8 @@ def reconcile(b, cfg, state=None, t=None):
         pid = tk.get("position")
         if pid in by_pos:
             known_pos.add(pid)
+            if tk.get("gone_since"):  # it was only a missed read: start the wait afresh next time
+                tickets.update(tk["id"], gone_since=None)
             continue
         settle(b, tk, deals, t)
 
@@ -155,14 +164,19 @@ def flatten(b, cfg, why, state=None, t=None):
     t = t or clocks.now()
     state = tickets.fold() if state is None else state
     n = 0
-    for o in b.orders():
-        if desk_magic(o.get("magic"), cfg):
-            b.cancel(o["ticket"])
-            n += 1
-    for p in b.positions():
-        if desk_magic(p.get("magic"), cfg):
-            b.close_position(p["ticket"])
-            n += 1
+    # one failure must not stop the rest; the next pass tries again
+    for kind, items, act in (("order", b.orders() or [], b.cancel), ("position", b.positions() or [], b.close_position)):
+        for x in items:
+            if not desk_magic(x.get("magic"), cfg):
+                continue
+            try:
+                r = act(x["ticket"])
+            except Exception as e:
+                r = {"ok": False, "comment": repr(e)}
+            if r.get("ok"):
+                n += 1
+            else:
+                journal.log("flatten_fail", kind=kind, ticket=x["ticket"], comment=r.get("comment"))
     for tk in state.values():
         st = tk.get("status")
         if st in ("proposed", "approved"):
@@ -214,7 +228,7 @@ def manage(b, cfg, state=None, t=None):
     """Work every open position by its ticket. Returns how many actions were taken."""
     t = t or clocks.now()
     state = tickets.fold() if state is None else state
-    pos = {p["ticket"]: p for p in b.positions()}
+    pos = {p["ticket"]: p for p in b.positions() or []}
     acct = b.account() or {}
     acts = 0
     for tk in [v for v in state.values() if v.get("status") == "open"]:
@@ -255,8 +269,9 @@ def manage(b, cfg, state=None, t=None):
                 if r.get("ok"):
                     p["volume"] = round(left, 8)
                     acts += 1
-                else:
-                    note = f"partial close failed: {r.get('comment')}"
+                else:  # not done: the next pass tries this target again
+                    journal.log("partial_fail", id=tid, target=targets[done][0], volume=vol, comment=r.get("comment"))
+                    break
             else:
                 note = "share below the minimum lot; kept"
             done += 1
@@ -355,12 +370,14 @@ def run(b, cfg=None, t=None):
     cfg = cfg or paths.config()
     t = t or clocks.now()
     name, prof = risk_gate.profile()
+    if not prof:
+        return {"ok": False, "why": f"risk profile {name!r} missing in risk.json"}
     acct = b.account()
     if not acct:
         return {"ok": False, "why": "no account"}
     phase.start(acct["kind"])
     ph = phase.current(acct["kind"])
-    lim = risk_gate.update_limits(acct, prof, t)
+    lim = risk_gate.update_limits(acct, prof, t, name)
     state = reconcile(b, cfg, None, t)
 
     level = (lim.get("halt") or {}).get("level")

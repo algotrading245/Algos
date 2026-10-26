@@ -178,12 +178,22 @@ class MT5Broker(Broker):
                 "price_open": p.price_open, "sl": p.sl, "tp": p.tp, "profit": p.profit + p.swap, "magic": p.magic,
                 "comment": p.comment, "time": server_epoch_to_utc(p.time), "price_current": p.price_current}
 
+    def _failed(self, got):
+        # None with an error is a failed read, not "nothing open": the reconcile must not settle tickets on it
+        return got is None and self.mt5.last_error()[0] != 1
+
     def positions(self):
-        return [self._pos(p) for p in (self.mt5.positions_get() or [])]
+        got = self.mt5.positions_get()
+        if self._failed(got):
+            return None
+        return [self._pos(p) for p in (got or [])]
 
     def orders(self):
+        got = self.mt5.orders_get()
+        if self._failed(got):
+            return None
         out = []
-        for o in self.mt5.orders_get() or []:
+        for o in got or []:
             out.append({"ticket": o.ticket, "symbol": o.symbol, "type": o.type, "volume": o.volume_current,
                         "price": o.price_open, "sl": o.sl, "tp": o.tp, "magic": o.magic, "comment": o.comment})
         return out
@@ -206,7 +216,10 @@ class MT5Broker(Broker):
         return self.mt5.order_calc_margin(t, sym, volume, price)
 
     def _filling(self, sym):
-        f = self.mt5.symbol_info(sym).filling_mode
+        info = self.mt5.symbol_info(sym)
+        if info is None:
+            return self.mt5.ORDER_FILLING_RETURN
+        f = info.filling_mode
         return self.mt5.ORDER_FILLING_FOK if f & 1 else self.mt5.ORDER_FILLING_IOC if f & 2 else self.mt5.ORDER_FILLING_RETURN
 
     def _result(self, r):
@@ -222,6 +235,8 @@ class MT5Broker(Broker):
                "comment": comment[:31], "deviation": 20, "type_time": m.ORDER_TIME_GTC}
         if kind == "market":
             t = self.tick(symbol)
+            if t is None:
+                return {"ok": False, "retcode": None, "comment": f"no price for {symbol}"}
             req.update(action=m.TRADE_ACTION_DEAL, type=m.ORDER_TYPE_BUY if side == "buy" else m.ORDER_TYPE_SELL,
                        price=t["ask"] if side == "buy" else t["bid"], type_filling=self._filling(symbol))
         else:
@@ -252,6 +267,8 @@ class MT5Broker(Broker):
             return {"ok": False, "comment": "no such position"}
         p = p[0]
         t = self.tick(p.symbol)
+        if t is None:
+            return {"ok": False, "retcode": None, "comment": f"no price for {p.symbol}"}
         buy = p.type == 0
         req = {"action": self.mt5.TRADE_ACTION_DEAL, "position": ticket, "symbol": p.symbol,
                "volume": float(volume or p.volume), "type": self.mt5.ORDER_TYPE_SELL if buy else self.mt5.ORDER_TYPE_BUY,

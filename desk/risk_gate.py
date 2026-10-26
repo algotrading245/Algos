@@ -32,18 +32,22 @@ def limits():
     return paths.read_json(LIMITS, {})
 
 
-def update_limits(acct, prof, t=None):
+HALT_RANK = {"day": 1, "week": 2, "kill": 3}
+
+
+def update_limits(acct, prof, t=None, name=None):
     """Roll the day and week, track the equity peak, and set a halt when a loss line is crossed. Returns the state.
 
-    halt levels: 'day' clears at the next server day, 'week' at the next week, 'kill' only by the owner (cli resume).
+    halt levels: 'day' clears at the next server day; 'week' (DESIGN §9: stop until the owner reviews) and 'kill' only
+    by the owner (cli resume). A halt is never downgraded by a milder one.
     """
     t = t or clocks.now()
     s = limits()
     day, week = clocks.trading_day(t).isoformat(), clocks.week_key(t)
     bal, eq = acct["balance"], acct["equity"]
-    who = f"{acct.get('company')}/{acct.get('kind')}"
+    who = f"{acct.get('company')}/{acct.get('kind')}/{name}"
     if s.get("account") != who:
-        # a new account starts its own lines: the old peak and day/week marks belong to the old balance
+        # a new account or risk profile starts its own lines: the old peak and day/week marks belong to the old one
         for k in ("day", "week", "peak", "day_balance", "day_equity", "week_equity"):
             s.pop(k, None)
         if s.get("halt", {}).get("level") in ("day", "week"):
@@ -55,7 +59,7 @@ def update_limits(acct, prof, t=None):
             s.pop("halt")
     if s.get("week") != week:
         s.update(week=week, week_equity=eq)
-        if s.get("halt", {}).get("level") in ("day", "week"):
+        if s.get("halt", {}).get("level") == "day":
             s.pop("halt")
     s["peak"] = max(s.get("peak", eq), eq)
     s["equity"], s["balance"] = eq, bal
@@ -76,7 +80,7 @@ def update_limits(acct, prof, t=None):
             level, why = "week", f"weekly loss: equity {eq:.2f} under {fl['week']:.2f}"
         elif eq <= fl["day"]:
             level, why = "day", f"daily loss: equity {eq:.2f} under {fl['day']:.2f}"
-        if why and s.get("halt", {}).get("level") != level:
+        if why and HALT_RANK[level] > HALT_RANK.get(s.get("halt", {}).get("level"), 0):
             s["halt"] = {"level": level, "why": why, "t": t.isoformat(timespec="seconds")}
             journal.log("halt", level=level, why=why)
     paths.write_json(LIMITS, s)
@@ -175,6 +179,9 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     def no(why):
         return {"ok": False, "why": why}
 
+    if not prof:
+        return no("risk profile missing in risk.json")
+
     # 1. halts
     h = halted()
     if h:
@@ -247,7 +254,8 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     if mine and not slots:  # a systematic grid holds one position per level (slot) of the same edge
         add = tk.get("add_to")
         base = state.get(add) if add else None
-        if not base or base.get("status") != "open" or exposure(base) > 0:
+        if (not base or base.get("status") != "open" or exposure(base) > 0
+                or base.get("instrument") != ins or base.get("pod") != pod):
             return no(f"{pod} already holds {ins}; add only with add_to a ticket whose stop is at breakeven")
     pod_open = sum(exposure(v) for v in live if v["pod"] == pod)
     if pod_open + risk > prof["pod_cap_pct"] + 1e-9:
@@ -263,8 +271,9 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     # 6. prop: all open stops hit at once plus this one must stay above the floors
     if prof.get("worst_case_daily"):
         fl = limits().get("floors") or {}
-        worst = acct["equity"] - (desk_open + risk) / 100 * acct["balance"]
-        for name in ("day", "kill"):
+        # open profit may be given back before the stops are hit, so start from the lower of balance and equity
+        worst = min(acct["equity"], acct["balance"]) - (desk_open + risk) / 100 * acct["balance"]
+        for name in ("day", "week", "kill"):
             if name in fl and worst <= fl[name]:
                 return no(f"worst case {worst:.2f} would breach the {name} floor {fl[name]:.2f}")
 

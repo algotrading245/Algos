@@ -143,6 +143,57 @@ def test_limit_entry_fills_later(b, cfg):
     assert tk["status"] == "open" and tk["fill"] == 1.099
 
 
+def test_a_failed_partial_close_is_tried_again(b, cfg, monkeypatch):
+    backdate_phase(30)
+    tid = approved(targets=[[1.1010, 0.5], [1.1050, 0.5]])
+    executor.run(b, cfg)
+    real = b.close_position
+    monkeypatch.setattr(b, "close_position", lambda *a, **k: {"ok": False, "comment": "requote"})
+    b.set_price("EURUSD", 1.1011, 1.1012)
+    executor.run(b, cfg)
+    assert get(tid).get("targets_done", 0) == 0 and b.positions()[0]["volume"] == 0.04
+    monkeypatch.setattr(b, "close_position", real)
+    executor.run(b, cfg)
+    assert get(tid)["targets_done"] == 1 and b.positions()[0]["volume"] == 0.02
+
+
+def test_a_failed_read_settles_nothing(b, cfg, monkeypatch):
+    tid = approved()
+    executor.run(b, cfg)
+    monkeypatch.setattr(b, "positions", lambda: None)
+    executor.run(b, cfg)
+    assert get(tid)["status"] == "open"
+
+
+def test_close_request_on_a_pending_order_cancels_it(b, cfg):
+    tid = approved(entry={"type": "limit", "price": 1.0990})
+    executor.run(b, cfg)
+    tickets.update(tid, close_request="thesis broken")
+    executor.run(b, cfg)
+    assert get(tid)["status"] == "cancelled" and not b.orders()
+
+
+def test_flatten_goes_on_after_one_failure(b, cfg, monkeypatch):
+    approved()
+    approved(pod="systematic")
+    executor.run(b, cfg)
+    assert len(b.positions()) == 2
+    first, real = b.positions()[0]["ticket"], b.close_position
+    monkeypatch.setattr(b, "close_position",
+                        lambda t, *a, **k: {"ok": False, "comment": "busy"} if t == first else real(t, *a, **k))
+    risk_gate.kill("owner test", by="owner")
+    executor.run(b, cfg)
+    assert [p["ticket"] for p in b.positions()] == [first]
+
+
+def test_a_missing_profile_stops_the_pass(b, cfg):
+    r = paths.risk()
+    r["active"] = "no_such_profile"
+    paths.write_json(paths.RISK, r)
+    s = executor.run(b, cfg)
+    assert not s["ok"] and "missing" in s["why"]
+
+
 def test_no_account():
     from desk import broker
     s = executor.run(broker.DryBroker("terminal closed"))

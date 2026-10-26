@@ -135,7 +135,10 @@ def view(args):
         if what == "account":
             return b.account()
         if what == "positions":
-            return [p for p in b.positions()]
+            pos = b.positions()
+            if pos is None:
+                raise Refused("the terminal did not return positions; try again")
+            return pos
         if what == "quote":
             real = b.resolve(args[1])
             if not real:

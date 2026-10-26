@@ -1,8 +1,9 @@
+import datetime as dt
 import json
 
 from conftest import backdate_phase, set_now, ticket
 
-from desk import paths, risk_gate, tickets
+from desk import clocks, paths, risk_gate, tickets
 
 
 def tk(**over):
@@ -191,7 +192,50 @@ def test_a_new_account_starts_its_own_lines():
     risk_gate.update_limits({"balance": 15000.0, "equity": 15000.0, "company": "A", "kind": "demo"}, prof)
     s = risk_gate.update_limits({"balance": 10000.0, "equity": 10000.0, "company": "B", "kind": "demo"}, prof)
     assert "halt" not in s and s["peak"] == 10000.0 and s["floors"]["day"] == 9700
-    assert s["record"] == {"account": "B/demo", "peak": 10000.0, "max_dd_pct": 0.0, "since": s["record"]["since"]}
+    assert s["record"] == {"account": "B/demo/None", "peak": 10000.0, "max_dd_pct": 0.0,
+                           "since": s["record"]["since"]}
+
+
+def test_a_new_profile_starts_its_own_lines():
+    _, prof = risk_gate.profile()
+    acct = {"balance": 10000.0, "equity": 10000.0, "company": "B", "kind": "demo"}
+    risk_gate.update_limits(acct, prof, name="demo_10k")
+    risk_gate.update_limits(dict(acct, equity=9690.0), prof, name="demo_10k")
+    assert risk_gate.halted().startswith("day halt")
+    s = risk_gate.update_limits(dict(acct, balance=9690.0, equity=9690.0), prof, name="prop_10k")
+    assert "halt" not in s and s["peak"] == 9690.0 and s["record"]["account"] == "B/demo/prop_10k"
+
+
+def test_a_halt_is_never_downgraded():
+    _, prof = risk_gate.profile()
+    risk_gate.update_limits({"balance": 10000.0, "equity": 10000.0}, prof)
+    s = risk_gate.update_limits({"balance": 10000.0, "equity": 9390.0}, prof)  # under the 6% week line
+    assert s["halt"]["level"] == "week"
+    s = risk_gate.update_limits({"balance": 10000.0, "equity": 9690.0}, prof)  # a milder day breach
+    assert s["halt"]["level"] == "week"
+
+
+def test_a_week_halt_waits_for_the_owner():
+    _, prof = risk_gate.profile()
+    t0 = clocks.now()
+    risk_gate.update_limits({"balance": 10000.0, "equity": 10000.0}, prof, t0)
+    risk_gate.update_limits({"balance": 10000.0, "equity": 9390.0}, prof, t0)
+    s = risk_gate.update_limits({"balance": 9390.0, "equity": 9390.0}, prof, t0 + dt.timedelta(days=7))
+    assert s["halt"]["level"] == "week"  # DESIGN §9: stop until the owner reviews, not until Monday
+    risk_gate.resume("owner")
+    assert risk_gate.halted() is None
+
+
+def test_add_to_must_be_the_same_instrument_and_pod(b, cfg):
+    seed("EURUSD", pod="fxmacro", risk_now=0.06)
+    other = seed("GBPUSD", pod="fxmacro", risk_now=0)
+    assert "already holds EURUSD" in risk_gate.check(tk(add_to=other), b, cfg)["why"]
+
+
+def test_an_empty_profile_is_refused(b, cfg):
+    use_profile("no_such_profile")
+    g = risk_gate.check(tk(), b, cfg)
+    assert not g["ok"]
 
 
 def test_day_halt_clears_next_day(monkeypatch):

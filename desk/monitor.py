@@ -6,7 +6,7 @@ python -m desk.monitor        run the check now and print what it finds
 """
 import datetime as dt
 
-from desk import clocks, executor, journal, paths, phase, risk_gate, tickets
+from desk import clocks, executor, journal, news, paths, phase, risk_gate, tickets
 
 FILE = paths.STATE / "monitor.json"
 ALERT = paths.INBOX / "ALERT.md"
@@ -33,18 +33,24 @@ def check(b, cfg, summary=None, t=None):
 
     state = tickets.fold()
     open_tk = {v.get("position"): v for v in state.values() if v.get("status") == "open"}
-    for p in b.positions():
+    pos = b.positions()
+    if pos is None:
+        add("alert", "the desk terminal did not return its positions")
+    for p in pos or []:
         if not executor.desk_magic(p.get("magic"), cfg):
             continue
         if not p.get("sl"):
             add("alert", f"position {p['ticket']} {p['symbol']} has no server-side stop")
         if p["ticket"] not in open_tk:
             add("warn", f"desk position {p['ticket']} {p['symbol']} has no open ticket")
-    pos_ids = {p["ticket"] for p in b.positions()}
+    pos_ids = {p["ticket"] for p in pos or []}
     for pid, tk in open_tk.items():
         upd = dt.datetime.fromisoformat(tk["updated"])
-        if pid not in pos_ids and t - upd > executor.SETTLE_WAIT + dt.timedelta(minutes=5):
+        if pos is not None and pid not in pos_ids and t - upd > executor.SETTLE_WAIT + dt.timedelta(minutes=5):
             add("warn", f"ticket {tk['id']} is open but its position {pid} is gone and not settled")
+    cal = news.stale(t)
+    if cal:
+        add("alert", f"{cal}: every new entry is blocked until the calendar fetch works")
 
     halt = risk_gate.halted()
     if halt:

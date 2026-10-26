@@ -12,6 +12,7 @@ from desk import clocks, journal, paths
 FILE = paths.STATE / "calendar.json"
 INDEX_CCY = {"US500": ["USD"], "US100": ["USD"], "GER40": ["EUR"], "JP225": ["JPY"], "WTI": ["USD"],
              "BTCUSD": ["USD"], "ETHUSD": ["USD"]}
+STALE = dt.timedelta(hours=48)  # fetched daily with retries; two missed days means the feed is down
 
 
 def currencies(instrument):
@@ -61,9 +62,24 @@ def events(start=None, end=None):
     return out
 
 
-def blocking(instrument, t=None, window_min=2):
-    """The high-impact event within window_min minutes of t for this instrument's currencies, or None."""
+def stale(t=None):
+    """Why the calendar cannot be trusted (missing, or no good fetch for STALE), or None."""
     t = t or clocks.now()
+    got = paths.read_json(FILE, {}).get("fetched")
+    if not got:
+        return "no calendar fetched yet"
+    if t - dt.datetime.fromisoformat(got) > STALE:
+        return f"calendar stale (last fetch {got})"
+    return None
+
+
+def blocking(instrument, t=None, window_min=2):
+    """The high-impact event within window_min minutes of t for this instrument's currencies, or None.
+    With no trustworthy calendar every instrument is blocked: the news rule cannot be checked blind."""
+    t = t or clocks.now()
+    why = stale(t)
+    if why:
+        return {"ccy": "ALL", "title": why, "t": t.isoformat(timespec="seconds")}
     w = dt.timedelta(minutes=window_min)
     ccy = currencies(instrument)
     for e in events(t - w, t + w):

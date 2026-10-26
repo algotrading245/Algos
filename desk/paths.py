@@ -6,6 +6,7 @@ logs/desk/       runtime state, run transcripts, the KILL file (out of git)
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +38,15 @@ def write_json(path, obj):
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(obj, f, indent=1, default=str)
-    os.replace(tmp, path)
+    for i in range(3):  # Windows refuses the replace while a reader (the dashboard, an editor) holds the file
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if i == 2:
+                os.unlink(tmp)
+                raise
+            time.sleep(0.2)
 
 
 def append_jsonl(path, obj):
