@@ -1345,3 +1345,5 @@
 {"date": "2026-10-26", "kind": "paper", "title": "Heston-Korajczyk-Sadka intraday patterns", "link": "https://ar5iv.arxiv.org/html/1005.3535", "read": "unverified", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "arXiv q-fin.TR recent listing (Oct 2026): LOB, crypto, electricity, market making; nothing on gold/FX/index days", "link": "https://arxiv.org/list/q-fin.TR/recent", "read": "unverified", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "Fed FEDS notes Aug-Oct 2026 list: macro notes, no tradeable rule", "link": "https://www.federalreserve.gov/econres/notes/feds-notes/default.htm", "read": "unverified", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "arXiv q-fin.TR newest 40 via API (2610.*): LOB/crypto/options only", "link": "http://export.arxiv.org/api/query?search_query=cat:q-fin.TR&sortBy=submittedDate&sortOrder=descending&max_results=40", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "VP-MACD for US equity indices (Lin et al, arXiv 2604.26063): daily long-only MACD, trend family", "link": "https://arxiv.org/abs/2604.26063", "read": "in full", "specs": []}
