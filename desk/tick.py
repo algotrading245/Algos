@@ -12,7 +12,7 @@ import datetime as dt
 import subprocess
 import traceback
 
-from desk import broker, clocks, executor, jobs, journal, monitor, mutex, news, paths, phase, tickets, triggers
+from desk import broker, clocks, executor, jobs, journal, monitor, mutex, news, paths, phase, systematic, tickets, triggers
 
 SCHEDULE = paths.STATE / "schedule.json"
 HEARTBEAT = paths.STATE / "heartbeat.json"
@@ -114,6 +114,10 @@ def once():
         summary, ran, woke = {"ok": False, "why": getattr(b, "why", "")}, [], {}
         try:
             if b.mode != "dry":
+                try:  # the legs' new tickets go out in this same pass
+                    systematic.run(b, cfg, t)
+                except Exception as e:
+                    journal.log("tick_error", where="systematic", why=f"{type(e).__name__}: {e}")
                 try:
                     summary = executor.run(b, cfg, t)
                 except Exception as e:

@@ -1,0 +1,96 @@
+{
+ "name": "grid",
+ "markets": [
+  "AUDCAD"
+ ],
+ "tf": "H1",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 20000,
+ "needs": [],
+ "defaults": {
+  "months": 5,
+  "step": 1.0,
+  "levels": 4
+ },
+ "card": "AUDCAD H1 grid (tools/backtest_hydra.py `grid`). Distance from the 5-month average of log closes, in steps of one\nmonthly sigma (40-month window): one equal-size level opens against the move at each step out (up to 4), each closes\nwhen the price is back a step inside it, the first at the average. At 5 steps the whole grid stops out and waits until\nthe price is back within half a step. The grid's full stop-out costs one unit of the edge's risk.",
+ "backtest": {
+  "AUDCAD": {
+   "params": {
+    "months": 5,
+    "step": 1.0,
+    "levels": 4
+   },
+   "from": null,
+   "to": null,
+   "trades": 63,
+   "pf": 1.59,
+   "win": 0.746,
+   "avg_r": 0.023,
+   "total_r": 1.46,
+   "max_dd_r": 1.05,
+   "first": "2012-04-24",
+   "last": "2025-09-09",
+   "by_year": {
+    "2012": {
+     "trades": 3,
+     "r": 0.28
+    },
+    "2013": {
+     "trades": 6,
+     "r": -0.64
+    },
+    "2014": {
+     "trades": 5,
+     "r": 0.2
+    },
+    "2015": {
+     "trades": 7,
+     "r": 0.61
+    },
+    "2016": {
+     "trades": 4,
+     "r": 0.19
+    },
+    "2017": {
+     "trades": 4,
+     "r": 0.28
+    },
+    "2018": {
+     "trades": 5,
+     "r": 0.43
+    },
+    "2019": {
+     "trades": 2,
+     "r": -0.04
+    },
+    "2020": {
+     "trades": 10,
+     "r": -0.78
+    },
+    "2021": {
+     "trades": 2,
+     "r": 0.03
+    },
+    "2022": {
+     "trades": 6,
+     "r": 0.4
+    },
+    "2023": {
+     "trades": 3,
+     "r": 0.09
+    },
+    "2024": {
+     "trades": 3,
+     "r": 0.21
+    },
+    "2025": {
+     "trades": 3,
+     "r": 0.2
+    }
+   },
+   "run": "2026-10-26T14:31:31+00:00"
+  }
+ },
+ "live": {}
+}

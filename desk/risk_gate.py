@@ -226,7 +226,9 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     if len(same) >= prof.get("max_per_instrument", 3):
         return no(f"{ins} already has {len(same)} desk positions")
     mine = [v for v in same if v["pod"] == pod]
-    if mine:
+    slots = pod == "systematic" and tk.get("edge") and all(
+        v.get("edge") == tk["edge"] and int(v.get("slot") or 0) != int(tk.get("slot") or 0) for v in mine)
+    if mine and not slots:  # a systematic grid holds one position per level (slot) of the same edge
         add = tk.get("add_to")
         base = state.get(add) if add else None
         if not base or base.get("status") != "open" or exposure(base) > 0:

@@ -14,7 +14,8 @@ from desk import clocks, journal, paths
 
 FILE = Path(os.environ.get("AURUM_DESK_TICKETS", paths.DESK / "tickets.jsonl"))
 FIELDS = ("pod", "instrument", "side", "entry", "stop", "targets", "risk_pct", "time_stop", "thesis", "invalidation",
-          "evidence", "edge", "confidence", "cites", "expires", "trail", "breakeven_at", "arm", "add_to")
+          "evidence", "edge", "confidence", "cites", "expires", "trail", "breakeven_at", "arm", "add_to",
+          "slot")
 LIVE = ("proposed", "approved", "placed", "open")
 
 
