@@ -56,6 +56,21 @@ def risk_scale(prof, ph=None):
     return scale
 
 
+ALLOC = paths.STATE / "alloc.json"  # written weekly by the scorekeeper
+
+
 def pods_active(cfg, ph=None):
+    """Pods this phase admits, less any the scorekeeper paused (below the shadow benchmark 6 weeks running)."""
     ph = current() if ph is None else ph
-    return [p for p, v in cfg.get("pods", {}).items() if ph >= v.get("phase", 1)]
+    paused = set(paths.read_json(ALLOC, {}).get("paused") or [])
+    return [p for p, v in cfg.get("pods", {}).items() if ph >= v.get("phase", 1) and p not in paused]
+
+
+def tilt(pod):
+    """The competition's risk multiplier for a pod: its share over its base share, held to 0.5-1.5 (1 before the
+    first weekly allocation)."""
+    a = paths.read_json(ALLOC, {})
+    share, base = (a.get("shares") or {}).get(pod), (a.get("base") or {}).get(pod)
+    if share is None or not base:
+        return 1.0
+    return min(1.5, max(0.5, share / base))

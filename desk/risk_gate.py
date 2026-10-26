@@ -4,7 +4,7 @@ An agent can propose and the head trader can approve, but only check() turns a t
   1. halts      KILL file, daily / weekly loss stop, drawdown kill (logs/desk/state/limits.json)
   2. ticket     fields valid, pod active in this phase, pod owns the instrument, profile allows it
   3. market     symbol tradable, fresh price, spread under spread_mult x normal, no high-impact news inside the window
-  4. risk       asked risk capped at per_trade_pct, new-edge cap, x the phase scale
+  4. risk       asked risk x the pod's competition tilt, capped at per_trade_pct and the new-edge cap, x the phase scale
   5. book       pod, desk, group and per-instrument limits; netting (never both sides of one instrument); adds only
                 to a ticket already at breakeven
   6. prop       weekend cutoff, every open stop hit at once must leave the daily and max-loss floors intact
@@ -51,6 +51,13 @@ def update_limits(acct, prof, t=None):
             s.pop("halt")
     s["peak"] = max(s.get("peak", eq), eq)
     s["equity"], s["balance"] = eq, bal
+    # the live gate's drawdown record: never reset by resume, only when the account changes
+    rec, who = s.get("record") or {}, f"{acct.get('company')}/{acct.get('kind')}"
+    if rec.get("account") != who:
+        rec = {"account": who, "peak": eq, "max_dd_pct": 0.0, "since": t.isoformat(timespec="seconds")}
+    rec["peak"] = max(rec["peak"], eq)
+    rec["max_dd_pct"] = round(max(rec["max_dd_pct"], (rec["peak"] - eq) / rec["peak"] * 100 if rec["peak"] else 0), 3)
+    s["record"] = rec
     fl = floors(s, prof)
     s["floors"] = fl
     if s.get("halt", {}).get("level") != "kill":
@@ -208,13 +215,14 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
 
     # 4. risk
     asked = float(tk.get("risk_pct") or prof["per_trade_pct"])
-    risk = min(asked, prof["per_trade_pct"])
+    ceiling = prof["per_trade_pct"]
     key = edge_key(tk)
     n = edge_trades(key, state)
     if n < prof.get("new_edge_trades", 20):
-        risk = min(risk, prof["new_edge_cap_pct"])
+        ceiling = min(ceiling, prof["new_edge_cap_pct"])
     scale = phase.risk_scale(prof, ph)
-    risk *= scale
+    # the competition tilts a pod's risk by its share, but never past the per-trade or new-edge cap
+    risk = min(asked * phase.tilt(pod), ceiling) * scale
     if risk <= 0:
         return no(f"phase {ph} trades no risk")
 

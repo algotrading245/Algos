@@ -51,7 +51,7 @@ def _out(obj):
 def _ticket_brief(v):
     keep = ("id", "status", "pod", "instrument", "side", "entry", "stop", "targets", "risk_pct", "confidence", "edge",
             "position", "fill", "volume", "sl", "tp", "risk_now", "why", "waiting", "closing", "close_request",
-            "created", "updated", "time_stop", "pnl", "r", "close_reason")
+            "created", "updated", "time_stop", "pnl", "R", "reason")
     return {k: v[k] for k in keep if k in v}
 
 
@@ -273,7 +273,8 @@ COMMANDS = {"status": lambda a: status(), "view": view, "ticket": ticket, "trigg
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     if not argv or argv[0] not in COMMANDS:
-        print(__doc__)
+        extras = sys.modules.get("desk.extras")
+        print(__doc__ + (extras.__doc__ if extras else ""))
         return 2
     try:
         _out(COMMANDS[argv[0]](argv[1:]))
@@ -289,9 +290,11 @@ def register(name, fn):
 
 
 if __name__ == "__main__":
+    # run through desk.cli, not this __main__ copy, so the commands extras registers are the ones main sees
+    from desk import cli as _cli
     try:
         from desk import extras  # noqa: F401  the Phase 1-2 commands register themselves
     except ImportError as e:
         if getattr(e, "name", "") != "desk.extras":
             raise
-    sys.exit(main())
+    sys.exit(_cli.main())

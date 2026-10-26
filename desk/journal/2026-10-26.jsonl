@@ -34,3 +34,10 @@
 {"t": "2026-10-26T14:36:39+00:00", "kind": "sandbox", "by": "code", "edge": "morning", "params": {"move": 0.015, "hours": 2, "k": 3.0}, "start": null, "end": null, "results": {"EURJPY": {"trades": 415, "pf": 1.88, "total_r": 31.09, "max_dd_r": 2.17}}}
 {"t": "2026-10-26T14:36:39+00:00", "kind": "sandbox", "by": "code", "edge": "noise", "params": {"open": [16, 30], "look": 14, "exit": [23, 0], "vm": null, "stop_vol": 3.0}, "start": null, "end": null, "results": {"US100": {"trades": 3663, "pf": 1.15, "total_r": 27.12, "max_dd_r": 5.97}}}
 {"t": "2026-10-26T14:36:39+00:00", "kind": "sandbox", "by": "code", "edge": "rsi2_reversion", "params": {"lo": 10, "hi": 90, "k": 2.5, "hold": 5}, "start": null, "end": null, "results": {"EURUSD": {"trades": 232, "pf": 0.99, "total_r": -0.28, "max_dd_r": 5.93}}}
+{"t": "2026-10-26T19:26:40+00:00", "kind": "live_gate", "by": "code", "passed": false, "verdict": "not started: the desk has not traded a demo yet"}
+{"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "systematic", "v": 1, "why": "starter playbook"}
+{"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "fxmacro", "v": 1, "why": "starter playbook"}
+{"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "metals", "v": 1, "why": "starter playbook"}
+{"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "indices", "v": 1, "why": "starter playbook"}
+{"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "event", "v": 1, "why": "starter playbook"}
+{"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "crypto", "v": 1, "why": "starter playbook"}
