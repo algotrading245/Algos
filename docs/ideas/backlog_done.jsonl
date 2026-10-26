@@ -226,3 +226,7 @@
 {"id": "bis_wp_fx_swap_basis", "status": "dropped", "result": "CIP basis data is not free; policy_gap_eurusd style (macro FX) failed halves", "closed": "2026-10-26"}
 {"id": "bis_wp_2026_list", "status": "dropped", "result": "bis.org/wpapers/ returns 404; web search surfaced only Krohn-Mueller-Whelan FX fixings (Bank of Canada WP 2021-48), already in sources.jsonl and covered by the fix/cross/quartet legs", "closed": "2026-10-26"}
 {"id": "ecb_wp_2026_list", "status": "dropped", "result": "searched 2026-10-26: Fanta IES WP 23/2025 is an event study 2008-2016 with no strategy; Breedon-Ranaldo already rejected (tod_eurusd, -0.30 from 2018)", "closed": "2026-10-26"}
+{"id": "bl_0dte_intraday_gamma_indices", "status": "dropped", "result": "Baltussen et al. JFE 2021 read pp1-12: sample to 2020, no post-2020/0DTE test, last-30-min momentum is the noise leg family (rejected)", "closed": "2026-10-26"}
+{"id": "bl_lee_mykland_jump_fade", "status": "dropped", "result": "no post-2018 evidence: only Ficura 2019 (FX 15m-1h), futures and 1-day not significant", "closed": "2026-10-26"}
+{"id": "bl_ml_meta_label_grid_audcad", "status": "dropped", "result": "duplicate of queued ml_regime_grid_audcad", "closed": "2026-10-26"}
+{"id": "bl_currency_strength_basket_fx", "status": "dropped", "result": "FX xsmom/currency momentum failed the halves gate before (carry/trend FX styles)", "closed": "2026-10-26"}
