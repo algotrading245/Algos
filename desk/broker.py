@@ -92,7 +92,8 @@ class MT5Broker(Broker):
         if not Path(term).exists():
             self.why = f"desk terminal not installed: {term}"
             return
-        if not mt5.initialize(path=term, portable=cfg["terminal"].get("portable", True), timeout=60000):
+        # 20 s: a terminal with no account logged in never answers (IPC timeout), and the clock runs every minute
+        if not mt5.initialize(path=term, portable=cfg["terminal"].get("portable", True), timeout=20000):
             self.why = f"initialize failed: {mt5.last_error()}"
             return
         info = mt5.terminal_info()

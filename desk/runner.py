@@ -156,14 +156,17 @@ def run_agent(role, job, cfg):
 
 
 def alert(text, t):
-    """A monitor run whose summary has a line starting ALERT goes to the journal and to reports/ALERT.md for the owner."""
+    """A monitor run whose summary has a line starting ALERT goes to the journal and to inbox/ALERT.md for the owner,
+    newest first, the same file the code check writes."""
     lines = [ln.strip() for ln in text.splitlines() if ln.strip().upper().startswith("ALERT")]
     if not lines:
         return []
     journal.log("alert", lines=lines)
-    paths.REPORTS.mkdir(parents=True, exist_ok=True)
-    with open(paths.REPORTS / "ALERT.md", "a", encoding="utf-8") as f:
-        f.write(f"\n## {t.isoformat(timespec='minutes')}\n" + "\n".join(f"- {ln}" for ln in lines) + "\n")
+    f = paths.INBOX / "ALERT.md"
+    paths.INBOX.mkdir(parents=True, exist_ok=True)
+    old = f.read_text(encoding="utf-8") if f.exists() else ""
+    new = f"# Monitor agent {t.isoformat(timespec='minutes')}\n\n" + "\n".join(f"- {ln}" for ln in lines)
+    f.write_text(new + "\n\n" + old[:20000], encoding="utf-8")
     return lines
 
 

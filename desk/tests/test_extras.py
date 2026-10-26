@@ -302,7 +302,7 @@ def test_monitor_alert_lines_reach_the_owner(monkeypatch, cfg):
     monkeypatch.setattr(runner, "call", lambda *a: {"ok": True, "tokens": 10,
                                                     "result": "all fine\nALERT: terminal disconnected\nalert: dd 4%"})
     assert runner.run_agent("monitor", {"id": "j1", "kind": "monitor"}, cfg) == "ok"
-    text = (paths.REPORTS / "ALERT.md").read_text(encoding="utf-8")
+    text = (paths.INBOX / "ALERT.md").read_text(encoding="utf-8")
     assert "terminal disconnected" in text and "dd 4%" in text and "all fine" not in text
 
 

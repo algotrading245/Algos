@@ -41,3 +41,5 @@
 {"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "indices", "v": 1, "why": "starter playbook"}
 {"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "event", "v": 1, "why": "starter playbook"}
 {"t": "2026-10-26T19:40:31+00:00", "kind": "playbook_edit", "by": "owner", "pod": "crypto", "v": 1, "why": "starter playbook"}
+{"t": "2026-10-26T19:44:59+00:00", "kind": "calendar", "by": "code", "events": 23}
+{"t": "2026-10-26T19:44:59+00:00", "kind": "monitor", "by": "code", "issues": 0, "new": 0}
