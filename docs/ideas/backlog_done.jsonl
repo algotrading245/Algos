@@ -230,3 +230,8 @@
 {"id": "bl_lee_mykland_jump_fade", "status": "dropped", "result": "no post-2018 evidence: only Ficura 2019 (FX 15m-1h), futures and 1-day not significant", "closed": "2026-10-26"}
 {"id": "bl_ml_meta_label_grid_audcad", "status": "dropped", "result": "duplicate of queued ml_regime_grid_audcad", "closed": "2026-10-26"}
 {"id": "bl_currency_strength_basket_fx", "status": "dropped", "result": "FX xsmom/currency momentum failed the halves gate before (carry/trend FX styles)", "closed": "2026-10-26"}
+{"id": "bl_ramadan_seasonal_fx_gold", "status": "dropped", "result": "read search results: Baur 1980-2010 monthly gold (Sep/Nov), autumn effect, arXiv 2003.11027; all in-sample monthly stats, no costed post-2018 table; Bartsch 2018 finds none beats buy-and-hold after snooping", "closed": "2026-10-26"}
+{"id": "bl_tax_loss_ndx_january", "status": "dropped", "result": "NBER w1011 is 1982; search found only 1926-2013 small-cap studies, effect weak for value-weighted large caps, no 2018+ NDX/SPX test", "closed": "2026-10-26"}
+{"id": "bl_eurusd_ecb_press_conf_drift", "status": "dropped", "result": "earlier finders found news-only evidence; FX macro event style failed halves; no different mechanism", "closed": "2026-10-26"}
+{"id": "bl_london_close_reversal_eurusd", "status": "dropped", "result": "Krohn-Mueller-Whelan fix reversal already in sources (swp2021-48) and rejected as fx_fixings_clock (~2bp gross vs cost); fix/cross legs already hold the window; BIS slides 404", "closed": "2026-10-26"}
+{"id": "bl_us_open_10et_option_cut_fx", "status": "dropped", "result": "NY cut covered once before; Quantpedia index page has no specific rule with post-2018 numbers", "closed": "2026-10-26"}
