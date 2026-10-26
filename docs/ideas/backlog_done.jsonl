@@ -221,3 +221,8 @@
 {"id": "lucey_gold_asian_session", "status": "dropped", "result": "no post-publication evidence; web search found only broker session descriptions", "closed": "2026-10-26"}
 {"id": "earnings_season_us100", "status": "dropped", "result": "no post-publication index-level evidence: Frazzini-Lamont is stock-level, Ogneva-Xia-Ye sample ends 2018", "closed": "2026-10-26"}
 {"id": "arxiv_qfin_pm_oct2026", "status": "dropped", "result": "read Oct 2026 listing (2610.31074, 30564, 27751, 24544, 24558, 23749 etc): portfolio-optimisation/LLM papers, no FX/gold/index rule", "closed": "2026-10-26"}
+{"id": "gu_hobbs_vix_overnight", "status": "dropped", "result": "overnight drift family rejected several times (index_legs_funded: halves 0.73/0.48, DSR 0.033; costs/swap); a VIX filter adds a trial with no published OOS evidence", "closed": "2026-10-26"}
+{"id": "aqr_library_time_series", "status": "dropped", "result": "Value and Momentum Everywhere: monthly horizon, data from 1972-2011 with no post-publication table; value/real-exchange-rate style failed halves already", "closed": "2026-10-26"}
+{"id": "bis_wp_fx_swap_basis", "status": "dropped", "result": "CIP basis data is not free; policy_gap_eurusd style (macro FX) failed halves", "closed": "2026-10-26"}
+{"id": "bis_wp_2026_list", "status": "dropped", "result": "bis.org/wpapers/ returns 404; web search surfaced only Krohn-Mueller-Whelan FX fixings (Bank of Canada WP 2021-48), already in sources.jsonl and covered by the fix/cross/quartet legs", "closed": "2026-10-26"}
+{"id": "ecb_wp_2026_list", "status": "dropped", "result": "searched 2026-10-26: Fanta IES WP 23/2025 is an event study 2008-2016 with no strategy; Breedon-Ranaldo already rejected (tod_eurusd, -0.30 from 2018)", "closed": "2026-10-26"}
