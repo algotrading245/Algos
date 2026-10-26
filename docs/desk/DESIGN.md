@@ -154,5 +154,5 @@ on this PC or on the VPS. Until a VPS exists, the demo runs here under a keeper-
 
 ## 13. The honest risk
 AI judgment trading is unproven, and most discretionary traders lose after costs. The shadow benchmark and the 8-week live
-gate exist to find that out on the demo, cheaply, before real money is at risk. If the AI pods do not beat the control
-pod, the desk falls back to the systematic pod and the research bridge.
+gate exist to find that out on the demo, cheaply, before real money is at risk. If the AI pods do not beat the shadow
+benchmark, the desk falls back to the systematic pod and the research bridge.
