@@ -44,7 +44,7 @@
   "metals": {"index": 2, "base_share": 0.15, "phase": 2, "owns": ["XAUUSD", "XAGUSD", "WTI"]},
   "indices": {"index": 3, "base_share": 0.15, "phase": 2, "owns": ["US500", "US100", "GER40", "JP225"]},
   "event": {"index": 4, "base_share": 0.15, "phase": 2, "owns": []},
-  "crypto": {"index": 5, "base_share": 0.10, "phase": 2, "enabled": false, "owns": ["BTCUSD", "ETHUSD"]}
+  "crypto": {"index": 5, "base_share": 0.10, "phase": 2, "owns": ["BTCUSD", "ETHUSD"]}
  },
  "magic_base": 730000,
  "budgets": {
