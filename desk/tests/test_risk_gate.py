@@ -186,6 +186,14 @@ def test_halts():
     assert risk_gate.halted() is None and risk_gate.limits()["peak"] == 9990.0
 
 
+def test_a_new_account_starts_its_own_lines():
+    _, prof = risk_gate.profile()
+    risk_gate.update_limits({"balance": 15000.0, "equity": 15000.0, "company": "A", "kind": "demo"}, prof)
+    s = risk_gate.update_limits({"balance": 10000.0, "equity": 10000.0, "company": "B", "kind": "demo"}, prof)
+    assert "halt" not in s and s["peak"] == 10000.0 and s["floors"]["day"] == 9700
+    assert s["record"] == {"account": "B/demo", "peak": 10000.0, "max_dd_pct": 0.0, "since": s["record"]["since"]}
+
+
 def test_day_halt_clears_next_day(monkeypatch):
     _, prof = risk_gate.profile()
     risk_gate.update_limits({"balance": 10000.0, "equity": 10000.0}, prof)

@@ -41,6 +41,14 @@ def update_limits(acct, prof, t=None):
     s = limits()
     day, week = clocks.trading_day(t).isoformat(), clocks.week_key(t)
     bal, eq = acct["balance"], acct["equity"]
+    who = f"{acct.get('company')}/{acct.get('kind')}"
+    if s.get("account") != who:
+        # a new account starts its own lines: the old peak and day/week marks belong to the old balance
+        for k in ("day", "week", "peak", "day_balance", "day_equity", "week_equity"):
+            s.pop(k, None)
+        if s.get("halt", {}).get("level") in ("day", "week"):
+            s.pop("halt")
+        s["account"] = who
     if s.get("day") != day:
         s.update(day=day, day_balance=bal, day_equity=eq)
         if s.get("halt", {}).get("level") == "day":
@@ -52,7 +60,7 @@ def update_limits(acct, prof, t=None):
     s["peak"] = max(s.get("peak", eq), eq)
     s["equity"], s["balance"] = eq, bal
     # the live gate's drawdown record: never reset by resume, only when the account changes
-    rec, who = s.get("record") or {}, f"{acct.get('company')}/{acct.get('kind')}"
+    rec = s.get("record") or {}
     if rec.get("account") != who:
         rec = {"account": who, "peak": eq, "max_dd_pct": 0.0, "since": t.isoformat(timespec="seconds")}
     rec["peak"] = max(rec["peak"], eq)
