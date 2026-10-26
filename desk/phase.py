@@ -60,10 +60,12 @@ ALLOC = paths.STATE / "alloc.json"  # written weekly by the scorekeeper
 
 
 def pods_active(cfg, ph=None):
-    """Pods this phase admits, less any the scorekeeper paused (below the shadow benchmark 6 weeks running)."""
+    """Pods this phase admits, less any switched off in config ("enabled": false, e.g. crypto on a broker without
+    crypto) and any the scorekeeper paused (below the shadow benchmark 6 weeks running)."""
     ph = current() if ph is None else ph
     paused = set(paths.read_json(ALLOC, {}).get("paused") or [])
-    return [p for p, v in cfg.get("pods", {}).items() if ph >= v.get("phase", 1) and p not in paused]
+    return [p for p, v in cfg.get("pods", {}).items()
+            if ph >= v.get("phase", 1) and v.get("enabled", True) and p not in paused]
 
 
 def tilt(pod):

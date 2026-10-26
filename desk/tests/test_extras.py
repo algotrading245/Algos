@@ -279,6 +279,12 @@ def test_bridge_sends_each_edge_once(monkeypatch, tmp_path):
 
 # ---- the live gate -----------------------------------------------------------------------------------------------------
 
+def test_a_disabled_pod_is_never_active():
+    from desk import phase
+    cfg = {"pods": {"fxmacro": {"phase": 1}, "crypto": {"phase": 2, "enabled": False}}}
+    assert phase.pods_active(cfg, 3) == ["fxmacro"]
+
+
 def test_live_gate_not_started_before_phase_3():
     g = live_gate.evaluate(state={})
     assert not g["passed"]

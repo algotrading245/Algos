@@ -24,10 +24,10 @@
   "NZDCAD": {"broker": ["NZDCAD"], "hist": "NZDCAD", "cost": 0.00025, "class": "fx"},
   "XAUUSD": {"broker": ["XAUUSD", "GOLD"], "hist": "XAUUSD", "cost": 0.25, "class": "metal"},
   "XAGUSD": {"broker": ["XAGUSD", "SILVER"], "hist": "XAGUSD", "cost": 0.03, "class": "metal"},
-  "WTI": {"broker": ["XTIUSD", "USOIL", "WTI", "SpotCrude", "CL"], "hist": "WTIUSD", "cost": 0.04, "class": "energy"},
+  "WTI": {"broker": ["XTIUSD", "USOIL", "USOUSD", "WTI", "SpotCrude", "CL"], "hist": "WTIUSD", "cost": 0.04, "class": "energy"},
   "US500": {"broker": ["US500", "SP500", "SPX500", "US500.cash", "USA500"], "hist": "SPXUSD", "cost": 0.6, "class": "index"},
   "US100": {"broker": ["US100", "USTEC", "NAS100", "NDX100", "US100.cash", "USA100"], "hist": "NSXUSD", "cost": 1.8, "class": "index"},
-  "GER40": {"broker": ["GER40", "DE40", "DAX40", "GER40.cash", "GERMANY40"], "hist": "GRXEUR", "cost": 1.5, "class": "index"},
+  "GER40": {"broker": ["GER40", "DE40", "DAX40", "GER40.cash", "GERMANY40", "GER30"], "hist": "GRXEUR", "cost": 1.5, "class": "index"},
   "JP225": {"broker": ["JP225", "JPN225", "NIKKEI225", "JP225.cash", "JAPAN225"], "hist": "JPXJPY", "cost": 10.0, "class": "index"},
   "BTCUSD": {"broker": ["BTCUSD", "BITCOIN"], "hist": null, "cost": 30.0, "class": "crypto"},
   "ETHUSD": {"broker": ["ETHUSD", "ETHEREUM"], "hist": null, "cost": 2.5, "class": "crypto"}
@@ -44,7 +44,7 @@
   "metals": {"index": 2, "base_share": 0.15, "phase": 2, "owns": ["XAUUSD", "XAGUSD", "WTI"]},
   "indices": {"index": 3, "base_share": 0.15, "phase": 2, "owns": ["US500", "US100", "GER40", "JP225"]},
   "event": {"index": 4, "base_share": 0.15, "phase": 2, "owns": []},
-  "crypto": {"index": 5, "base_share": 0.10, "phase": 2, "owns": ["BTCUSD", "ETHUSD"]}
+  "crypto": {"index": 5, "base_share": 0.10, "phase": 2, "enabled": false, "owns": ["BTCUSD", "ETHUSD"]}
  },
  "magic_base": 730000,
  "budgets": {
