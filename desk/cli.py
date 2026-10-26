@@ -32,7 +32,8 @@ class Refused(Exception):
 
 
 def role():
-    return os.environ.get("AURUM_DESK_ROLE", "")
+    # an agent (AURUM_AGENT is set by the runner and the autopilot) that blanks its role is still not the owner
+    return os.environ.get("AURUM_DESK_ROLE") or ("agent" if os.environ.get("AURUM_AGENT") else "")
 
 
 def _pod_role(cfg):

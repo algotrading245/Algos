@@ -1,0 +1,110 @@
+{
+ "name": "fix",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "AUDUSD",
+  "USDCAD",
+  "USDCHF"
+ ],
+ "tf": "M5",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 300,
+ "needs": [
+  "spx_d1"
+ ],
+ "defaults": {
+  "pre": 120,
+  "post": 60,
+  "k": 3.0
+ },
+ "card": "Month-end London 4pm fix. On the last weekday of the month, if the S&P is up month to date, foreign holders of US\nstocks sell dollars to rebalance their hedges into the fix: sell USD for the two hours before it, then buy it back for\nthe hour after (the move unwinds). Down month: the mirror. Stop 3 ATR (two-hour scale).",
+ "backtest": {
+  "EURUSD": {
+   "params": {
+    "pre": 120,
+    "post": 60,
+    "k": 3.0
+   },
+   "from": null,
+   "to": null,
+   "trades": 343,
+   "pf": 1.36,
+   "win": 0.563,
+   "avg_r": 0.026,
+   "total_r": 9.03,
+   "max_dd_r": 4.85,
+   "first": "2010-12-31",
+   "last": "2025-09-30",
+   "by_year": {
+    "2010": {
+     "trades": 2,
+     "r": 0.6
+    },
+    "2011": {
+     "trades": 24,
+     "r": 0.82
+    },
+    "2012": {
+     "trades": 24,
+     "r": -0.65
+    },
+    "2013": {
+     "trades": 24,
+     "r": 2.47
+    },
+    "2014": {
+     "trades": 24,
+     "r": 0.28
+    },
+    "2015": {
+     "trades": 24,
+     "r": 1.67
+    },
+    "2016": {
+     "trades": 24,
+     "r": -0.43
+    },
+    "2017": {
+     "trades": 24,
+     "r": 2.42
+    },
+    "2018": {
+     "trades": 24,
+     "r": 1.09
+    },
+    "2019": {
+     "trades": 24,
+     "r": 0.58
+    },
+    "2020": {
+     "trades": 22,
+     "r": 1.88
+    },
+    "2021": {
+     "trades": 22,
+     "r": -2.33
+    },
+    "2022": {
+     "trades": 24,
+     "r": -1.35
+    },
+    "2023": {
+     "trades": 15,
+     "r": 0.17
+    },
+    "2024": {
+     "trades": 24,
+     "r": 0.3
+    },
+    "2025": {
+     "trades": 18,
+     "r": 1.54
+    }
+   },
+   "run": "2026-10-26T21:06:47+00:00"
+  }
+ },
+ "live": {}
+}

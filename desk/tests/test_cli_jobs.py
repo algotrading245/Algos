@@ -146,6 +146,10 @@ def test_resume_is_owner_only_and_any_role_can_kill(capsys, monkeypatch):
     code, out = run_cli(capsys, "resume")
     assert code == 1 and "only the owner" in out["refused"]
     monkeypatch.delenv("AURUM_DESK_ROLE")
+    monkeypatch.setenv("AURUM_AGENT", "1")  # an agent with its role blanked is still not the owner
+    code, out = run_cli(capsys, "resume")
+    assert code == 1 and "only the owner" in out["refused"]
+    monkeypatch.delenv("AURUM_AGENT")
     code, out = run_cli(capsys, "resume")
     assert code == 0 and out["halt"] is None
 
