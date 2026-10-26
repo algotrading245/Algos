@@ -1347,3 +1347,6 @@
 {"date": "2026-10-26", "kind": "paper", "title": "Fed FEDS notes Aug-Oct 2026 list: macro notes, no tradeable rule", "link": "https://www.federalreserve.gov/econres/notes/feds-notes/default.htm", "read": "unverified", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "arXiv q-fin.TR newest 40 via API (2610.*): LOB/crypto/options only", "link": "http://export.arxiv.org/api/query?search_query=cat:q-fin.TR&sortBy=submittedDate&sortOrder=descending&max_results=40", "read": "in full", "specs": []}
 {"date": "2026-10-26", "kind": "paper", "title": "VP-MACD for US equity indices (Lin et al, arXiv 2604.26063): daily long-only MACD, trend family", "link": "https://arxiv.org/abs/2604.26063", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "Post-ECB Announcement Drift (Valentin) - PDF 403, equities", "link": "https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf", "read": "unverified", "specs": []}
+{"date": "2026-10-26", "kind": "paper", "title": "AQR research page 2026-10", "link": "https://www.aqr.com/Insights/Research", "read": "in full", "specs": []}
+{"date": "2026-10-26", "kind": "prebuilt", "title": "MQL5 Monday Dip EA index mean reversion D1 (no backtest or forward result)", "link": "https://www.mql5.com/en/code/78343", "read": "in full", "specs": []}
