@@ -144,8 +144,17 @@ class MT5Broker(Broker):
         s = self.mt5.symbol_info(sym)
         if s is None:
             return None
-        return {"digits": s.digits, "point": s.point, "tick_size": s.trade_tick_size or s.point,
-                "tick_value": s.trade_tick_value_loss or s.trade_tick_value, "vol_min": s.volume_min,
+        size = s.trade_tick_size or s.point
+        value = s.trade_tick_value_loss or s.trade_tick_value
+        px = s.ask or s.bid
+        if px:
+            # some servers misreport tick_value (FundingPips: gold 100x, silver 10x, oil 1000x too small); the
+            # server's own profit for 1000 ticks is what it books, so the larger of the two stands
+            p = self.mt5.order_calc_profit(self.mt5.ORDER_TYPE_BUY, sym, 1.0, px, px - 1000 * size)
+            if p is not None and p < 0:
+                value = max(value, -p / 1000)
+        return {"digits": s.digits, "point": s.point, "tick_size": size,
+                "tick_value": value, "vol_min": s.volume_min,
                 "vol_max": s.volume_max, "vol_step": s.volume_step, "stops_level": s.trade_stops_level,
                 "freeze_level": s.trade_freeze_level, "contract_size": s.trade_contract_size,
                 "trade_mode": s.trade_mode, "filling": s.filling_mode, "spread_pts": s.spread}
