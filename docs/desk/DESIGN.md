@@ -16,14 +16,53 @@ their agents and tasks. The desk only reads from it.
 2. Every order goes through the risk gate (code) and carries a server-side stop from the moment it is placed.
 3. Hard limits live in `desk/risk.json`. Only the owner edits that file.
 4. Demo first. Live money only after the live gate (section 9) and the owner's yes in chat.
-5. A control pod that runs only tested edges, with no AI judgment per trade, is the benchmark. Every other pod is scored
-   against it.
-6. Every ticket states a thesis and an invalidation, so each trade can be scored after it closes.
+5. Every pod may use any edge in the library (section 3a), on any market and with any parameters, or build its own.
+   Edges are not restricted; risk is (section 9).
+6. Everything is logged (section 3b). Every ticket states a thesis and an invalidation, so each trade can be scored
+   after it closes.
+7. A shadow benchmark (the library's tested edges traded on paper, with no AI judgment and no capital) runs beside the
+   desk. It restricts nothing; it shows whether the agents' judgment adds value.
+
+## 3a. The edge library (`desk/edges/`)
+- Every edge we have, wrapped behind one interface, `signal(instrument, timeframe, params, bars) -> entries, stops,
+  targets`: the 10 gated legs, the AurumHydra and AurumFunded logic, the near-misses, the rejected research specs,
+  and textbook strategies (breakouts, mean reversion, trend, carry, session and calendar rules, and more).
+- Each edge has a card: what it does, its backtest by market, and its live desk record by market and regime, updated
+  daily.
+- A pod can build a new edge: it writes the code in `desk/edges/new/`, runs the desk sandbox (a quick backtest at real
+  costs on the history before the holdout) and gets a card. It can trade the edge right away. The sandbox informs; it
+  is not the research gate.
+- Sizing by evidence (in the risk gate): an edge with fewer than 20 live desk trades trades at 0.25% risk at most,
+  then the normal per-trade cap applies. This limits size, not use. The owner can drop it in `risk.json`.
+
+## 3b. The record (`desk/journal/`)
+- Append-only, one file a day: every agent run (model, inputs, tool calls, sources read, output, tokens), every view,
+  ticket, approval and rejection, every risk-gate decision, every order, fill, modification and close, every edge
+  signal, every sandbox run, and every change to a playbook or `risk.json`.
+- Full run transcripts stay out of git (`logs/desk/runs/`); the daily journal and summaries are committed nightly.
+- Any day can be replayed: what each agent saw, what it decided and why, and what happened next.
+
+## 3c. How the agents get better with time
+The models' weights do not change, so the desk learns through what it remembers and how it is instructed:
+- **Trade memory**: every closed trade is stored with a snapshot of its context (volatility, trend, session, the news,
+  the other pods' views), its thesis and its result. Before writing a ticket a pod pulls the 20 most similar past
+  setups and their results.
+- **Edge-by-regime scores**: live results per edge, market and regime, shrunk toward the backtest while the sample is
+  small, so 5 lucky trades do not look like an edge.
+- **Calibration**: each pod sees how often its confidence-4 and confidence-5 calls actually won, and sizes by that.
+- **Shadow trades**: rejected tickets and edge signals no pod took are tracked on paper, so the desk learns what it
+  missed and what each rejection saved or cost.
+- **Living playbooks**: each pod has `desk/playbooks/<pod>.md`. The debrief writes lessons daily; every Saturday the
+  head trader folds the lessons that held into the playbooks, as versioned edits. When a playbook version does worse
+  than the one before it over 4 weeks, it is rolled back.
+- **Edge evolution**: pods propose variants of edges that work for them (other markets, filters, exits), test them in
+  the sandbox, run them in the shadow book, then trade them.
 
 ## 3. The team
 | Role | What it is | Model | Wakes | Job |
 |---|---|---|---|---|
-| Control pod | code | none (Haiku for the daily note) | on bar close | runs the gated legs and edges from `research/` on the desk account |
+| Systematic pod | agent | Sonnet | briefs, own triggers | picks edges from the library and the markets and parameters to run them on, across all markets |
+| Shadow benchmark | code | none | on bar close | the tested edges on paper, no capital, for comparison only |
 | FX macro pod | agent | Sonnet | briefs, own triggers | G10 majors and crosses, days to weeks: rates, central banks, the calendar |
 | Metals and energy pod | agent | Sonnet | briefs, own triggers | gold, silver, oil: real yields, USD, positioning (COT), term structure |
 | Indices pod | agent | Sonnet | briefs, own triggers | US500, US100, GER40, JP225: sessions, macro data, earnings season |
@@ -33,7 +72,7 @@ their agents and tasks. The desk only reads from it.
 | Risk gate | code | none | every ticket, every minute | applies `risk.json`, can reject or close, owns the kill switch |
 | Executor | code | none | every minute | places orders through the MT5 Python API (MetaTrader5 5.0.6090 is installed), manages stops, targets, trails and time stops, reconciles |
 | Desk monitor | agent | Haiku | hourly | terminal up, positions match tickets, limits, P&L; raises ALERT |
-| Scorekeeper | code + Haiku note | Haiku | daily | P&L, R-multiples and hit rate per pod, against the control pod |
+| Scorekeeper | code + Haiku note | Haiku | daily | P&L, R-multiples and hit rate per pod, against the shadow benchmark |
 | Debrief | agent | Sonnet | after the NY close | scores each closed trade's thesis, writes lessons, proposes proven patterns to research |
 
 Markets: everything the desk broker lists that passes the liquidity rule (spread under its 20-day median times 2,
@@ -54,7 +93,7 @@ Each pod has two budgets: risk (percent of equity it may have at risk) and token
 scorekeeper ranks the pods and the head trader moves both budgets:
 - Score: net P&L per unit of risk over the last 4 weeks, after costs. Below 20 trades a pod keeps its base budget.
 - Floor 10% and cap 30% of the desk's budget per pod; at most 10 points moved a week.
-- A pod below the control pod for 6 weeks in a row is paused, and its brief is rewritten before it restarts.
+- A pod below the shadow benchmark for 6 weeks in a row is paused, and its playbook is rewritten before it restarts.
 - The pipeline roles (head trader, risk gate, executor, monitor, scorekeeper, debrief) have fixed budgets. They
   do not compete.
 
@@ -77,7 +116,7 @@ confidence (1-5), status, head_trader (approved | rejected, why), result (filled
 The debrief tags a pattern that won repeatedly, for example "London breakout after an Asia range under 0.4 ATR".
 Once it has 30 or more closed trades, the debrief writes it to `docs/ideas/queue.jsonl` with source "desk". From
 there the existing builder and gate test it on all the data before the holdout. A pattern that passes can become an
-edge for the control pod or a leg in the EAs.
+library edge with a research card, or a leg in the EAs.
 
 ## 9. Hard limits (`desk/risk.json`, owner-only) and the live gate
 - Per trade at most 0.5% of equity at risk; per pod at most its budget (2% cap); the desk at most 5% open risk.
@@ -89,16 +128,16 @@ edge for the control pod or a leg in the EAs.
 - Kill switch: the file `logs/desk/KILL` or a word in chat. It closes everything and turns the executor off.
 
 Live gate, all of these on the demo: 8 weeks, at least 100 desk trades, net profit factor 1.2 or more after costs,
-maximum drawdown 8% or less, no limit breach from a code fault, and the AI pods together beating the control pod on
+maximum drawdown 8% or less, no limit breach from a code fault, and the AI pods together beating the shadow benchmark on
 P&L per unit of risk. Then live on capital the owner sets, at half risk for the first month.
 
 ## 10. Build plan
 - **Phase 0, week 1: the plumbing.** The `desk/` folder, a demo account on the desk terminal, the executor, the risk
   gate, the desk clock, the kill switch and the logs. Tested with hand-written tickets, including every limit.
-- **Phase 1, weeks 2-3.** The control pod, FX macro, the head trader, the monitor and the scorekeeper, on the demo at
+- **Phase 1, weeks 2-3.** The edge library (first 15 edges), the journal, the systematic pod, FX macro, the head trader, the monitor and the scorekeeper, on the demo at
   quarter risk.
 - **Phase 2, weeks 4-5.** Metals, indices and event pods; the board; the debrief and the research bridge; the weekly
-  reallocation. Crypto if the broker lists it.
+  reallocation; trade memory, calibration, shadow trades and the living playbooks. Crypto if the broker lists it.
 - **Phase 3, weeks 6-13.** The full desk on the demo, toward the live gate.
 - **Phase 4.** Live, on the owner's yes.
 
@@ -114,6 +153,6 @@ on this PC or on the VPS. Until a VPS exists, the demo runs here under a keeper-
 3. Later: the live account and its capital.
 
 ## 13. The honest risk
-AI judgment trading is unproven, and most discretionary traders lose after costs. The control pod and the 8-week live
+AI judgment trading is unproven, and most discretionary traders lose after costs. The shadow benchmark and the 8-week live
 gate exist to find that out on the demo, cheaply, before real money is at risk. If the AI pods do not beat the control
-pod, the desk falls back to the control pod plus the research bridge.
+pod, the desk falls back to the systematic pod and the research bridge.
