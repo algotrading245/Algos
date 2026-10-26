@@ -92,6 +92,13 @@ function Get-FinderWhy {
     # scout, a run works the leads that are open; it scouts again only when none is open.
     $today = (Get-Date).ToString("yyyy-MM-dd")
     $scouted = (Test-Path $FinderScoutDay) -and ((Get-Content $FinderScoutDay -Raw).Trim() -eq $today)
+    # With no open lead the daily limit still holds (owner 2026-10-26): 19 empty scouts ran in one day, each after the
+    # 30-minute backoff. A new steer.md (written after the day's scout) lifts it, since it names new targets.
+    if ($open -eq 0 -and $scouted) {
+        $steer = Join-Path $Repo "docs\ideas\steer.md"
+        $newSteer = (Test-Path $steer) -and (Test-Path $FinderScoutDay) -and ((Get-Item $steer).LastWriteTime -gt (Get-Item $FinderScoutDay).LastWriteTime)
+        if (-not $newSteer) { Write-Log "relay" "finder idle: 0 open leads, today's scout done, no new steer"; return $null }
+    }
     $mode = if ($open -eq 0 -or ($open -lt 10 -and -not $scouted)) { "MODE: scout" } else { "MODE: normal" }
     if ($mode -eq "MODE: scout" -and -not $DryRun) { Set-Content -Path $FinderScoutDay -Value $today -Encoding ascii }
     return "queue low ($waiting waiting): $open open lead(s), $mode"
