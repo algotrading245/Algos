@@ -61,8 +61,8 @@ each finished piece of work.
   `Legs.mqh`/`Inputs.mqh` change before any Hydra job. The early-close finding is proposed as a lesson
   (decisions.jsonl, 2026-10-25T22:57); the reviewer has not checked it yet. Earlier VRP history (j16, v1.13-v1.15
   reviews) is in git history of this file.
-- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.39 and Funded 1.10 in
-  the repo, `#property version`, doctor 2026-10-24). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
+- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.41 and Funded 1.15 in
+  the repo, `#property version`, doctor 2026-10-26; the demo still runs Funded 1.10). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
   (AurumBreakout, AurumNoise, AurumFix and others); they are not used.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
