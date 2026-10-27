@@ -93,6 +93,33 @@ def summary(res):
             "breach_funded": fb[p].mean() if p.any() else None, "payout_6m": pay[p].mean() if p.any() else None}
 
 
+def curve(x100, sd, raw):
+    """The bar for the edge factory: pass odds under the firm's rules by the Sharpe the book keeps live, each at its best
+    size with challenge breach under 5%, and the legs that Sharpe takes at today's average leg."""
+    full = x100.mean() / x100.std() * np.sqrt(252)
+    dl, ml = RULES["firm 5/10"]
+    out = ["## The bar: pass odds by live Sharpe (firm 5/10, best size with breach under 5%)", "",
+           f"Legs needed: equal risk, pairs near uncorrelated, so Sharpe grows with the square root of the leg count; "
+           f"today's {full:.2f} from 10 legs at 50% edge is {full * 0.5:.2f}.", "",
+           "| live Sharpe | vol | pass 6m | pass 12m | median days | breach | payout 6m % | legs at 50% edge |",
+           "|---|---|---|---|---|---|---|---|"]
+    for target in (1.0, 1.4, 1.8, 2.2, 2.6, 3.0):
+        edge = target / full
+        best = None
+        for v in VOLS:
+            s = summary(run((raw - x100.mean() * (1 - edge)) * v / sd, dl, ml))
+            if s["breach_challenge"] < 0.05 and (best is None or s["pass_6m"] > best[1]["pass_6m"]):
+                best = (v, s)
+        legs = 10 * (target / (full * 0.5)) ** 2
+        if best is None:
+            out.append(f"| {target:.1f} | none | - | - | - | - | - | {legs:.0f} |")
+            continue
+        v, s = best
+        out.append(f"| {target:.1f} | {v}% | {s['pass_6m']:.0%} | {s['pass_12m']:.0%} | {s['median_days'] or '-'} | "
+                   f"{s['breach_challenge']:.1%} | {(s['payout_6m'] or 0):.1f}% | {legs:.0f} |")
+    return out + [""]
+
+
 def main():
     x, legs = book()
     x100 = x.to_numpy() * 100
@@ -132,6 +159,7 @@ def main():
         lines.append(f"| {rule} | {edge:.0%} | {v}% | {s['pass_6m']:.0%} | {s['median_days']} | "
                      f"{s['breach_challenge']:.1%} | {(s['payout_6m'] or 0):.1f}% |" if score >= 0 else
                      f"| {rule} | {edge:.0%} | none | - | - | - | - |")
+    lines += curve(x100, sd, raw)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
