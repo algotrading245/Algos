@@ -25,12 +25,23 @@ EDGES = {}
 
 
 def edge(name, markets, tf, pod="systematic", kind="leg", bars=300, needs=(), defaults=None, card=""):
-    """Register an edge. `bars` is how many closed bars it needs live; `needs` lists ctx frames (e.g. "spx_d1")."""
+    """Register an edge. `bars` is how many closed bars it needs live; `needs` lists the other markets' bars it reads,
+    each as ctx["SYM_TF"] (e.g. "XAUUSD_D1", "US500_H1"; "spx_d1" is US500 D1)."""
     def deco(fn):
         EDGES[name] = {"name": name, "markets": list(markets), "tf": tf, "pod": pod, "kind": kind, "bars": bars,
                        "needs": list(needs), "defaults": dict(defaults or {}), "card": card.strip(), "fn": fn}
         return fn
     return deco
+
+
+def need(key):
+    """The (instrument, timeframe) behind a `needs` key."""
+    if key == "spx_d1":
+        return "US500", "D1"
+    sym, _, tf = key.rpartition("_")
+    if not sym or tf not in broker.TF_MIN:
+        raise ValueError(f"needs {key}: write SYM_TF with TF one of {', '.join(broker.TF_MIN)}, e.g. XAUUSD_D1")
+    return sym, tf
 
 
 def get(name):

@@ -49,6 +49,32 @@ def test_entry_becomes_an_armed_ticket_once(b, cfg, leg):
     assert len(tickets.live()) == 1
 
 
+def test_a_leg_trades_as_the_pod_that_armed_it(b, cfg, leg):
+    paths.write_json(systematic.FILE, {"armed": [{"edge": "t_leg", "market": "EURUSD", "params": {},
+                                                  "risk_pct": 0.25, "pod": "fxmacro"}]})
+    b.bar_frames[("EURUSD", "H1")] = frame()
+    leg["sigs"] = [base.sig(0, "buy", 1.095, "test long", slot=0)]
+    systematic.run(b, cfg, clocks.now())
+    tk = list(tickets.live().values())[0]
+    assert tk["pod"] == "fxmacro" and tk["arm"] and tk["status"] == "approved"
+    leg["sigs"] = [base.close_sig(0, "out", slot=0)]
+    b.bar_frames[("EURUSD", "H1")] = frame(41)
+    systematic.run(b, cfg, clocks.now())
+    assert tickets.fold()[tk["id"]]["status"] == "cancelled"
+
+
+def test_needs_reads_any_market(b, cfg, monkeypatch):
+    assert base.need("spx_d1") == ("US500", "D1") and base.need("XAUUSD_H4") == ("XAUUSD", "H4")
+    with pytest.raises(ValueError):
+        base.need("XAUUSD_D2")
+    e = {"needs": ["XAUUSD_D1"], "bars": 40}
+    monkeypatch.setattr(b, "resolve", lambda s: s)
+    b.bar_frames[("XAUUSD", "D1")] = frame(5, px=2000.0)
+    assert len(systematic.context(b, e, "EURUSD")["XAUUSD_D1"]) == 5
+    monkeypatch.setattr(base, "hist_bars", lambda sym, tf, cfg=None: (sym, tf))
+    assert sandbox.context(e, "EURUSD")["XAUUSD_D1"] == ("XAUUSD", "D1")
+
+
 def test_exit_rule_closes_open_and_cancels_unplaced(b, cfg, leg):
     t = clocks.now()
     b.bar_frames[("EURUSD", "H1")] = frame()
@@ -77,7 +103,7 @@ def test_benchmarks_cannot_be_armed():
     with pytest.raises(ValueError):
         systematic.arm("donchian_trend", "EURUSD")
     armed = systematic.arm("grid", "AUDCAD", {"step": 1.2})
-    assert {"edge": "grid", "market": "AUDCAD", "params": {"step": 1.2}, "risk_pct": 0.25} in armed
+    assert {"edge": "grid", "market": "AUDCAD", "params": {"step": 1.2}, "risk_pct": 0.25, "pod": "systematic"} in armed
     assert all(a["edge"] != "grid" for a in systematic.disarm("grid"))
 
 
@@ -88,7 +114,7 @@ def test_default_armed_legs_exist_and_are_legs():
 
 
 def gate_tk(**over):
-    t = ticket(pod="systematic", edge="grid", **over)
+    t = ticket(pod="systematic", edge="grid", arm=True, **over)
     t.setdefault("entry", {"type": "market"})
     t.setdefault("targets", [])
     return t

@@ -31,7 +31,7 @@ python -m desk.cli memory similar TICKET | calibration [POD] | lessons [POD] [N]
 python -m desk.cli playbook show POD | log POD
 python -m desk.cli edge list | describe NAME | score NAME
 python -m desk.cli edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
-python -m desk.cli edge arm NAME MARKET [key=value ...] [risk=PCT] | edge disarm NAME [MARKET]   (systematic pod only)
+python -m desk.cli edge arm NAME MARKET [key=value ...] [risk=PCT] | edge disarm NAME [MARKET]   (your own markets)
 python -m desk.cli ticket approve|reject ID "why"    (head trader only)
 python -m desk.cli playbook edit POD FILE "why"      (head trader only)
 python -m desk.cli memory lesson POD "text" [ticket=ID]   (debrief only)

@@ -1,4 +1,4 @@
-"""The systematic pod: plain code that trades the edge library's armed legs (DESIGN.md section 5, pod 1). No model.
+"""The armed legs: plain code that trades every pod's armed edges (DESIGN.md section 5, pod 1). No model.
 
 Every clock tick, for each armed (edge, market): fetch the broker's last closed bars, run the edge, and act on a
 signal decided on the last closed bar only, the same function the sandbox backtests. An entry becomes an armed ticket
@@ -7,8 +7,9 @@ signal decided on the last closed bar only, the same function the sandbox backte
 The shadow benchmark runs here too: the five textbook edges on paper over the broker's live bars since the desk's
 day 0, so the pods have a plain rule-based book to beat (DESIGN.md section 13). Nothing of it reaches the broker.
 
-Armed legs live in logs/desk/state/systematic.json {"armed": [{edge, market, params, risk_pct}], "seen": {..}};
-without one the defaults below arm every leg on the market where its sandbox run was positive after costs.
+Armed legs live in logs/desk/state/systematic.json {"armed": [{edge, market, params, risk_pct, pod}], "seen": {..}};
+without one the defaults below arm every leg on the market where its sandbox run was positive after costs. A leg
+trades as the pod that armed it (the systematic pod when none is named), and only while that pod is active.
 """
 import datetime as dt
 
@@ -46,47 +47,50 @@ def state():
     return s
 
 
-def arm(edge, market, params=None, risk_pct=RISK_PCT):
-    """Arm (or re-arm with new params) one leg on one market."""
+def arm(edge, market, params=None, risk_pct=RISK_PCT, pod=POD):
+    """Arm (or re-arm with new params) one leg on one market, traded as `pod`."""
     e = edges.get(edge)
     if e["kind"] == "benchmark":
         raise ValueError(f"{edge} is a benchmark edge: it trades on paper only")
     s = state()
     s["armed"] = [a for a in s["armed"] if (a["edge"], a["market"]) != (edge, market)]
-    s["armed"].append({"edge": edge, "market": market, "params": params or {}, "risk_pct": float(risk_pct)})
+    s["armed"].append({"edge": edge, "market": market, "params": params or {}, "risk_pct": float(risk_pct),
+                       "pod": pod})
     paths.write_json(FILE, s)
-    journal.log("systematic_arm", edge=edge, market=market, params=params or {}, risk_pct=risk_pct)
+    journal.log("systematic_arm", edge=edge, market=market, params=params or {}, risk_pct=risk_pct, pod=pod)
     return s["armed"]
 
 
-def disarm(edge, market=None):
+def disarm(edge, market=None, pod=None):
+    """Disarm a leg on one market or all; with `pod`, only the legs that pod armed."""
     s = state()
-    s["armed"] = [a for a in s["armed"] if not (a["edge"] == edge and market in (None, a["market"]))]
+    s["armed"] = [a for a in s["armed"] if not (a["edge"] == edge and market in (None, a["market"])
+                                                and pod in (None, a.get("pod", POD)))]
     paths.write_json(FILE, s)
-    journal.log("systematic_disarm", edge=edge, market=market)
+    journal.log("systematic_disarm", edge=edge, market=market, pod=pod)
     return s["armed"]
 
 
 def context(b, e, market):
     ctx = {"market": market}
-    if "spx_d1" in e["needs"]:
-        sym = b.resolve("US500")
-        ctx["spx_d1"] = b.bars(sym, "D1", 300) if sym else None
+    for k in e["needs"]:
+        sym = b.resolve(base.need(k)[0])
+        ctx[k] = b.bars(sym, base.need(k)[1], max(300, e["bars"])) if sym else None
     return ctx
 
 
-def _mine(live, edge, market, slot):
-    return [v for v in live.values() if v.get("pod") == POD and v.get("edge") == edge
-            and v.get("instrument") == market and int(v.get("slot") or 0) == slot]
+def _mine(live, a, slot):
+    return [v for v in live.values() if v.get("pod") == a.get("pod", POD) and v.get("edge") == a["edge"]
+            and v.get("instrument") == a["market"] and int(v.get("slot") or 0) == slot]
 
 
 def _close(live, a, s, t):
     acted = []
-    for v in _mine(live, a["edge"], a["market"], s["slot"]):
+    for v in _mine(live, a, s["slot"]):
         if v["status"] in ("placed", "open"):
             tickets.update(v["id"], close_request=s["why"])
         else:
-            tickets.cancel(v["id"], f"edge exit before entry: {s['why']}", by=POD)
+            tickets.cancel(v["id"], f"edge exit before entry: {s['why']}", by=a.get("pod", POD))
         acted.append(v["id"])
     if acted:
         journal.log("systematic_exit", edge=a["edge"], market=a["market"], slot=s["slot"], tickets=acted, why=s["why"])
@@ -94,9 +98,9 @@ def _close(live, a, s, t):
 
 
 def _enter(live, a, e, s, t):
-    if _mine(live, a["edge"], a["market"], s["slot"]):
+    if _mine(live, a, s["slot"]):
         return None  # one position per slot, as in the sandbox
-    tk = {"pod": POD, "instrument": a["market"], "side": s["side"], "stop": s["stop"], "targets": s["targets"],
+    tk = {"pod": a.get("pod", POD), "instrument": a["market"], "side": s["side"], "stop": s["stop"], "targets": s["targets"],
           "risk_pct": round(float(a.get("risk_pct", RISK_PCT)) * s.get("weight", 1.0), 4),
           "thesis": f"{a['edge']}: {s['why']}", "invalidation": f"stop {s['stop']:.5g}", "edge": a["edge"],
           "slot": s["slot"], "arm": True, "expires": (t + ENTRY_TTL).isoformat(timespec="seconds"),
@@ -113,13 +117,16 @@ def _enter(live, a, e, s, t):
 
 def run(b, cfg, t):
     """One pass over the armed legs. Returns {"edge market": [actions]} for the legs that acted."""
-    if POD not in phase.pods_active(cfg, phase.current()):
+    active = phase.pods_active(cfg, phase.current())
+    if not active:
         return {}
     st = state()
     live = tickets.live()
     out = {}
     for a in st["armed"]:
         key = f"{a['edge']} {a['market']}"
+        if a.get("pod", POD) not in active:
+            continue
         try:
             e = edges.get(a["edge"])
             sym = b.resolve(a["market"])
@@ -150,7 +157,8 @@ def run(b, cfg, t):
             journal.log("tick_error", where="systematic", leg=key, why=f"{type(err).__name__}: {err}")
     paths.write_json(FILE, st)
     try:
-        shadow(b, cfg, t)
+        if POD in active:
+            shadow(b, cfg, t)
     except Exception as err:  # noqa: BLE001
         journal.log("tick_error", where="shadow", why=f"{type(err).__name__}: {err}")
     return out

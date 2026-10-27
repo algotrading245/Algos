@@ -133,7 +133,7 @@ def test_arm_needs_a_passing_card(armable):
     with pytest.raises(cli.Refused, match="not"):
         arm("n=5")
     out = arm("risk=0.1")
-    assert out["armed"] == [{"edge": "t_leg", "market": "EURUSD", "params": {}, "risk_pct": 0.1}]
+    assert out["armed"] == [{"edge": "t_leg", "market": "EURUSD", "params": {}, "risk_pct": 0.1, "pod": "systematic"}]
 
 
 def test_arm_with_params_matching_the_card(armable):
@@ -142,13 +142,26 @@ def test_arm_with_params_matching_the_card(armable):
     assert extras.edge(["disarm", "t_leg"])["armed"] == []
 
 
-def test_only_systematic_or_owner_arms(armable, monkeypatch):
+def test_a_pod_arms_on_its_own_markets(armable, monkeypatch):
     armable()
-    monkeypatch.setenv("AURUM_DESK_ROLE", "fxmacro")
-    with pytest.raises(cli.Refused, match="only the systematic pod"):
+    monkeypatch.setenv("AURUM_DESK_ROLE", "head-trader")
+    with pytest.raises(cli.Refused, match="only a pod or the owner"):
         arm()
+    monkeypatch.setenv("AURUM_DESK_ROLE", "metals")
+    with pytest.raises(cli.Refused, match="its own markets"):
+        arm()
+    monkeypatch.setenv("AURUM_DESK_ROLE", "fxmacro")
+    assert arm()["armed"][0]["pod"] == "fxmacro"
+    monkeypatch.setenv("AURUM_DESK_ROLE", "systematic")
+    with pytest.raises(cli.Refused, match="already armed by fxmacro"):
+        arm()
+    monkeypatch.setenv("AURUM_DESK_ROLE", "indices")
+    assert len(extras.edge(["disarm", "t_leg"])["armed"]) == 1  # not its leg
     monkeypatch.setenv("AURUM_DESK_ROLE", "")
-    assert arm()["ok"]
+    with pytest.raises(cli.Refused, match="its own markets"):
+        arm("pod=metals")  # the owner names the pod; that pod still trades only its markets
+    assert arm()["armed"][0]["pod"] == "systematic"  # the owner may move a leg to another pod
+    assert extras.edge(["disarm", "t_leg"])["armed"] == []
 
 
 # ---- playbooks ---------------------------------------------------------------------------------------------------------

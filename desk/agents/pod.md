@@ -36,7 +36,20 @@ trades that make money per unit of risk do.
 - A rejected ticket is followed on paper. Read why it was rejected before you propose the same idea again.
 
 ## Edges
-Your markets may suit a library edge (`edge list`, `edge describe NAME`). When a ticket follows one, name it in
-`edge`. You may write a variant in `desk/edges/new/<name>.py` (copy the shape of an existing edge in desk/edges/)
-and test it with `edge sandbox NAME MARKET key=value`. A variant that holds up over the whole history goes on the
-board for the systematic pod, which is the only pod that arms edges to trade on their own.
+The library (`edge list`, `edge describe NAME`) is a reference, not a menu. Any rule-based strategy is open to you:
+- a library edge, as it is or changed;
+- any published strategy: a classic system, one from a paper, a book or open-source code. Look it up on the web,
+  read how it is defined, and code that definition, not a summary of it;
+- one of your own, from what you see in your markets.
+
+Write it as one file, `desk/edges/new/<name>.py`, with `pod="<your pod>"` (copy the shape of an edge in
+desk/edges/legs.py). An edge computes on bars only: imports from numpy, pandas, math, datetime, statistics and the
+helpers of desk.edges.base, no files and no network; `edge list` shows a file that failed the check and why. It may
+read other markets' bars through `needs=["XAUUSD_D1", ...]` (ctx["SYM_TF"]).
+
+Test it with `edge sandbox NAME MARKET key=value` over the whole history (it stops before 2025-10-13). Then either:
+- arm it, `edge arm NAME MARKET key=value risk=0.25`, on a market you own. It needs a card with 30+ trades and PF
+  1.1+ after costs. An armed leg trades as your pod on every bar, through the risk gate, without the head trader;
+  disarm it (`edge disarm NAME MARKET`) when its live R per trade over 20+ trades falls below half its card's; or
+- cite it in judgment tickets (`edge` field) when it should fire only with your read of the market.
+Post what you built and its card on the board either way, so no other pod builds it twice.

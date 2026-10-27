@@ -63,8 +63,10 @@ def build(role, job=None):
         out.append(_section("Your lessons", memory.lessons(role)))
         out.append(_section("Your calibration (confidence -> trades, hit rate, avg R)",
                             memory.calibration(role, state)))
+        armed = systematic.state()["armed"]
+        out.append(_section("Armed legs" if role == systematic.POD else "Your armed legs",
+                            armed if role == systematic.POD else [a for a in armed if a.get("pod") == role]))
         if role == systematic.POD:
-            out.append(_section("Armed legs", systematic.state()["armed"]))
             out.append(_section("Shadow benchmark (the tested edges on paper since day 0)", _shadow()))
     elif role == HEAD:
         rows = []

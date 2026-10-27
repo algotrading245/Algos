@@ -138,8 +138,8 @@ def _cut(df, start, end):
 
 def context(e, market, cfg=None):
     ctx = {"market": market}
-    if "spx_d1" in e["needs"]:
-        ctx["spx_d1"] = base.hist_bars("US500", "D1", cfg)
+    for k in e["needs"]:
+        ctx[k] = base.hist_bars(*base.need(k), cfg)
     return ctx
 
 

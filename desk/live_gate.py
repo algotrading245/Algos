@@ -34,7 +34,7 @@ def evaluate(t=None, state=None):
     p3 = _phase3_start()
     since = p3.isoformat() if p3 else None
     closed = [v for v in tickets.by_status("closed", state) if since and v.get("updated", "") >= since]
-    ai = [v for v in closed if v.get("pod") != systematic.POD and v.get("R") is not None]
+    ai = [v for v in closed if v.get("pod") != systematic.POD and not v.get("arm") and v.get("R") is not None]
     ai_r = round(sum(float(v["R"]) for v in ai) / len(ai), 3) if ai else None
     shadow = scorekeeper.shadow_r_per_trade()
     weeks = round((t - p3).days / 7, 1) if p3 and t > p3 else 0.0

@@ -9,8 +9,9 @@ playbook edit POD FILE "why"                       the head trader or the owner
 playbook rollback POD V "why"                      the head trader or the owner
 edge list | describe NAME | score NAME
 edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
-edge arm NAME MARKET [key=value ...] [risk=PCT]    the systematic pod or the owner; needs a passing sandbox run
-edge disarm NAME [MARKET]
+edge arm NAME MARKET [key=value ...] [risk=PCT]    any pod on a market it owns (systematic: any market), or the
+                                                   owner [pod=POD]; needs a passing sandbox run
+edge disarm NAME [MARKET]                          a pod disarms its own legs; systematic and the owner any leg
 scores                                            the scorekeeper's last scores and the pod allocation
 live-gate                                          the live gate, evaluated now (it also writes reports/live_gate.md)
 """
@@ -20,7 +21,7 @@ from desk import cli, live_gate, memory, paths, playbooks, scorekeeper, tickets
 from desk.cli import HEAD, Refused
 
 EDITORS = (HEAD, "")  # the head trader, or the owner (no role)
-ARM_MIN_TRADES, ARM_MIN_PF = 30, 1.1  # a leg's own sandbox run, after costs, before the systematic pod may arm it
+ARM_MIN_TRADES, ARM_MIN_PF = 30, 1.1  # a leg's own sandbox run, after costs, before any pod may arm it
 
 
 def _kv_split(args):
@@ -145,15 +146,26 @@ def edge(args):
 def _arm(op, e, args):
     """Arm a leg only on the evidence of its own sandbox card: same market, same params, enough trades, PF after costs."""
     from desk import sandbox, systematic
-    if cli.role() not in (systematic.POD, ""):
-        raise Refused("only the systematic pod or the owner arms or disarms a leg")
+    cfg = paths.config()
+    role = cli.role()
+    if role and role not in cfg.get("pods", {}):
+        raise Refused("only a pod or the owner arms or disarms a leg")
     pos, kv = _kv_split(args)
+    pod = _pod(kv.pop("pod", systematic.POD), cfg) if not role else role
     name = pos[0]
     market = pos[1] if len(pos) > 1 else None
     if op == "disarm":
-        return {"ok": True, "armed": systematic.disarm(name, market)}
+        return {"ok": True, "armed": systematic.disarm(name, market, None if role in ("", systematic.POD) else role)}
     if not market:
         raise Refused("edge arm NAME MARKET [key=value ...] [risk=PCT]")
+    owns = cfg["pods"][pod].get("owns", [])
+    if pod != systematic.POD and market not in owns:
+        raise Refused(f"{pod} arms legs only on its own markets ({', '.join(owns) or 'none'}), not {market}")
+    other = [a.get("pod", systematic.POD) for a in systematic.state()["armed"]
+             if (a["edge"], a["market"]) == (name, market) and a.get("pod", systematic.POD) != pod]
+    if other and role:
+        raise Refused(f"{name} on {market} is already armed by {other[0]}: the same signal twice is one leg twice "
+                      "the size")
     risk = float(kv.pop("risk", systematic.RISK_PCT))
     params = sandbox.parse([name, market] + [f"{k}={v}" for k, v in kv.items()])[2]
     want = dict(e["defaults"]) | (params or {})
@@ -168,7 +180,7 @@ def _arm(op, e, args):
         raise Refused(f"{name} on {market}: {run.get('trades')} trades, PF {run.get('pf')} after costs; arming needs "
                       f"{ARM_MIN_TRADES}+ trades and PF {ARM_MIN_PF}+")
     try:
-        return {"ok": True, "armed": systematic.arm(name, market, params, risk)}
+        return {"ok": True, "armed": systematic.arm(name, market, params, risk, pod)}
     except ValueError as err:
         raise Refused(str(err))
 
