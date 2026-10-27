@@ -560,3 +560,4 @@
 {"id": "paper_driesprong_oil_predicts_index", "when": "2026-10-27T11:11:50", "verdict": "FAIL at halves"}
 {"id": "ml_cross_skip_fix_overlap", "when": "2026-10-28T00:09:08", "verdict": "FAIL at corr"}
 {"id": "ml_metalabel_quartet_skip", "when": "2026-10-28T00:15:26", "verdict": "FAIL at corr"}
+{"id": "paper_huang_gold_platinum_us500", "when": "2026-10-28T00:23:12", "verdict": "FAIL at halves"}
