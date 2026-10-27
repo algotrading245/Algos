@@ -303,7 +303,8 @@ def manage(b, cfg, state=None, t=None):
         base = min(acct.get("balance", 0), acct.get("equity", 0)) or None
         if loss is not None and base:
             rn = round(loss / base * 100, 4)
-            if abs(rn - float(tk.get("risk_now") or 0)) > 1e-4 or p.get("sl") != tk.get("sl"):
+            # 0.01 points (about $1 on 10k): finer moves are equity drift and would journal every minute
+            if abs(rn - float(tk.get("risk_now") or 0)) >= 0.01 or p.get("sl") != tk.get("sl"):
                 tickets.update(tid, risk_now=rn, sl=p.get("sl"), volume=p["volume"])
     return acts
 

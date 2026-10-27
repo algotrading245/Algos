@@ -17,6 +17,10 @@ executor places it with a server-side stop and manages it, the clock wakes you. 
 Every command prints JSON. A refusal comes back as `{"ok": false, "refused": "..."}` with the reason: read it, fix
 the cause, and do not retry the same thing.
 
+Run one plain command per Bash call, exactly as written below. A shell loop (`for ...; do`), a pipe (`| head`, `| tr`),
+a redirect or another program is refused by the session's permissions, and the whole call is lost. For several
+markets, make several calls.
+
 ```
 python -m desk.cli status
 python -m desk.cli view account | positions | tickets [--all] | quote SYM | bars SYM TF [N] | calendar [HOURS]
