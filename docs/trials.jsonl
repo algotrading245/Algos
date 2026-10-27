@@ -557,3 +557,4 @@
 {"id": "grain_harvest_short", "when": "2026-10-27T11:03:45", "verdict": "FAIL at book"}
 {"id": "paper_driesprong_oil_predicts_index", "when": "2026-10-27T11:05:29", "verdict": "FAIL at book"}
 {"id": "chen_rogoff_rossi_fx_commod", "when": "2026-10-27T11:07:29", "verdict": "FAIL at halves"}
+{"id": "paper_driesprong_oil_predicts_index", "when": "2026-10-27T11:11:50", "verdict": "FAIL at halves"}
