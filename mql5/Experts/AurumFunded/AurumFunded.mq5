@@ -41,10 +41,11 @@
 //|   InpGoldStopPct of equity, for when the terminal is down; every |
 //|   other leg already has one.                                     |
 //| - Clock: the times assume a server clock of New York + 7 hours.  |
-//|   With InpEuClock the server follows European summer time, and   |
+//|   Live, a server clock that is not where it should be stops the  |
+//|   day's trading. In the tester, which cannot measure the clock,  |
+//|   InpEuClock says the server follows European summer time, and   |
 //|   on the days the two differ (about three weeks a year) nothing  |
-//|   is traded. Live, a server clock that is not where it should be |
-//|   also stops the day's trading.                                  |
+//|   is traded.                                                     |
 //| Backtest of the leg set on daily results 2010-2026               |
 //| (tools/backtest_prop.py; a day that dips and recovers is not     |
 //| seen, so these are upper bounds): Sharpe 3.0, 2.7 before 2018    |
@@ -90,6 +91,11 @@
 //| its P/L, for tools/demo_check.py. The clock skip stays: the      |
 //| tester skips the same days, so the demo matches the test.        |
 //| (decision 2026-10-27)                                            |
+//| v1.17: live, only the measured server clock stops a day; the     |
+//| InpEuClock skip acts in the tester only, and is off by default.  |
+//| FTMO's server stayed GMT+3 through Europe's 10-25 change, so the |
+//| skip paused the demo for nothing (owner 2026-10-27). Live trades |
+//| on the skipped days have no tester match.                        |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -98,7 +104,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.16"
+#property version   "1.17"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
@@ -144,7 +150,7 @@ input datetime InpPropFastStart = 0;     // ... day the challenge was bought, co
 input int    InpPropFastDays    = 189;   // ... trading days in which both phases are aimed for
 input double InpPropCoast       = 0.1;   // Size multiple while the target is reached and trading days are missing
 input int    InpPropResetHHMM   = 100;   // The firm's day starts at this server time (FTMO: midnight CE(S)T = 01:00)
-input bool   InpEuClock         = true;  // Server clock follows European summer time (false = New York + 7 hours all year)
+input bool   InpEuClock         = false; // Tester only: server clock follows European summer time (false = New York + 7 hours all year)
 input double InpGoldStopPct     = 2.5;   // Broker stop of a gold unit: its loss in % of equity (0 = none)
 input int    InpPropRound       = 1;     // Number of the phase; a new number starts a new count
 
@@ -265,15 +271,17 @@ bool ClockOk()
   {
    datetime today=DayOf(TimeCurrent());
    string why="";
-   if(InpEuClock && EuSummer(today)!=UsSummer(today))
-      why="European and US summer time differ";
+   if(MQLInfoInteger(MQL_TESTER))
+     {
+      if(InpEuClock && EuSummer(today)!=UsSummer(today))
+         why="European and US summer time differ";
+     }
    else
-      if(!MQLInfoInteger(MQL_TESTER))
-        {
-         double hours=(double)(TimeTradeServer()-TimeGMT())/3600.0;
-         if(MathAbs(hours-(2+UsSummer(today)))>0.34)
-            why=StringFormat("the server clock is %.1f hours ahead of GMT, %d expected",hours,2+UsSummer(today));
-        }
+     {
+      double hours=(double)(TimeTradeServer()-TimeGMT())/3600.0;
+      if(MathAbs(hours-(2+UsSummer(today)))>0.34)
+         why=StringFormat("the server clock is %.1f hours ahead of GMT, %d expected",hours,2+UsSummer(today));
+     }
    if(why=="")
       return(true);
    if(g_propNote!=today)

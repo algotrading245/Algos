@@ -283,3 +283,15 @@ The owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.
 - Effect: with `InpEuClock=false`, the live check expects the server at GMT + 2 + US summer = GMT+3, which matches. The demo can trade from the next session instead of waiting for 11-01.
 - Restart: owner hold, then release. The keeper relaunched T16 with `/config:t16_attach.ini`.
 - Still open: the other FTMO presets (and the funded account's) keep `InpEuClock=true`. They would pause the same way from 03-14 to 03-28 2027 unless the EA default changes.
+
+## 2026-10-27 20:10 - AurumFunded 1.17 built (owner request)
+
+- 1.17: live, only the measured server clock (TimeTradeServer - TimeGMT against New York + 7) stops a day. The InpEuClock skip now acts only in the tester and defaults to false. This fixes every preset, the funded ones and the 2027-03-14..03-28 gap included, without editing any .set file.
+- Compiled 0 errors, 0 warnings. Tester behaviour is unchanged: tester runs set InpEuClock=true explicitly.
+- T16 still runs 1.16 on the nyclock preset, which behaves the same live. 1.17 loads at the next restart. It was not forced because a US100.cash 0.07 buy is open (deal #547910787, 19:59:58).
+- Live trades on the European/US gap days have no matching tester trades.
+
+## 2026-10-27 20:20 - 1.17 review: PASS, one known risk
+
+- Reviewer: PASS. The live clock check passes on FTMO GMT+3 for 10-26..10-31 and 2027-03-14..03-27, and on GMT+2 from 11-02. LondonOffset is right on gap days.
+- Known risk: InpPropResetHHMM=100 is fixed. On gap days FTMO's CET midnight is 02:00 server, so the EA's firm day starts 1 hour early. The day-stop start level and the day count can be off by that hour's P/L. Our 3% day stop leaves 2% of room under the firm's 5%. This applies until 11-01, and again 2027-03-14..03-28.
