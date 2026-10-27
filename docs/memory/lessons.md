@@ -126,3 +126,11 @@ What the project learned the hard way, so no run repeats it. At most 40. Rules:
     a void arm stops before any sweep. Evidence: `research/hydra_size_cap3.out.txt` lines 143, 171-175 (legs peak 0.128
     per unit of size, binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0); run 2 `research/hydra_size_cap2.py`
     (s_dyn <= 2.9). (2026-10-19)
+21. **A multi-day leg in AurumFunded is also closed by the book-wide `CloseEverything()` (day stop, open-loss stop,
+    final stop or target, clock check, drawdown halt); a leg-alone Python model leaves those exits out.** Model a
+    multi-day leg with the book's exits before queuing its tester job. In j17, 14 of the VRP leg's 26 trades closed
+    off their own exit time and lost 972.60, and the other 12 made 972.91, so the leg netted +0.31 against a model of
+    about +260. Spot those closes by their off-schedule time: every exit in the report has an empty comment except
+    "sl" and "end of test". Evidence: `backtests/2026-10-25_2049_AurumFunded_vrp2_on/AurumFunded_vrp2_on.htm`;
+    `mql5/Include/Aurum/Legs.mqh:2454` (callers :309, :2514; `AurumFunded.mq5:390-403`);
+    `research/vrp_gap_equity_indices.py:36-77` (no stops). Reviewer-checked. (2026-10-27)

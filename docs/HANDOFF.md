@@ -50,6 +50,11 @@ each finished piece of work.
 
 ## Current state
 
+- **Demo trading again on the New York clock preset (judge 2026-10-27 20:00).** The first order after the switch was
+  a US100.cash noise buy of 0.07 lots, logged at 29647.28 and filled at 29647.08, with a broker stop at 28496.13 in
+  the journal. `tools/demo_check.py` reports ok. Lesson 21 is now in lessons.md: the risk layer's `CloseEverything()`
+  also closes multi-day legs, so they must be modelled with the book's exits (j17).
+
 - **VRP leg (variant_vrp_gap_equity_indices): rejected, judge 2026-10-25 23:00 on j17.** AurumFunded v1.15 at
   InpVrpMult 0.5, 2024.01-2025.09, 10k, 1:33. The VIX file source worked (5,253 closes, last 2025.10.10, a VIX line
   every Monday). The leg's 26 trades (magic +30/+31) netted +0.31 USD against the model's +2.6% (about +260), which is
