@@ -86,6 +86,10 @@
 //| Mondays trade), stale-VIX limit 3 weekdays, VIX from the broker  |
 //| symbol or else the file vixcls.csv in the common Files folder    |
 //| (InpVrpVixFile), source and VIX level logged each Monday.        |
+//| v1.16: each closing deal of the EA's magics is printed live with |
+//| its P/L, for tools/demo_check.py. The clock skip stays: the      |
+//| tester skips the same days, so the demo matches the test.        |
+//| (decision 2026-10-27)                                            |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -94,7 +98,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.15"
+#property version   "1.16"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

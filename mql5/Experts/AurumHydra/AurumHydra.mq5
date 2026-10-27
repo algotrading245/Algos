@@ -133,10 +133,12 @@
 //| all and pauses to the next day (InpDayLossPct).                  |
 //| v1.41: the breakout rounds its lots to the nearest step, not     |
 //| down, so a size of a few steps no longer skips the widest stops. |
+//| v1.42: each closing deal of the EA's magics is printed live with |
+//| its P/L, for tools/demo_check.py.                                |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.41"
+#property version   "1.42"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

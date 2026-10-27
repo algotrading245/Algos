@@ -13,6 +13,7 @@
                                       "Read",
                                       "Grep",
                                       "Glob",
+                                      "Read(~/.claude/projects/*/*/tool-results/**)",
                                       "Agent",
                                       "TodoWrite",
                                       "ToolSearch",
@@ -111,6 +112,7 @@
                                       "PowerShell(\u0026 powershell -ExecutionPolicy Bypass -File tools/*)"
                                   ],
                         "deny":  [
+                                     "Edit(./docs/demo_log.md)",
                                      "Bash(*git push*--force*)",
                                      "Bash(*git push* -f*)",
                                      "Bash(*git push*+*)",

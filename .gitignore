@@ -38,3 +38,23 @@ research/*.pkl
 
 # Compiled EAs: built by tools/autopilot/compile.ps1 next to the source, never committed (owner 2026-10-25).
 *.ex5
+
+# Fetched source data, rebuilt by the fetch scripts (owner 2026-10-27). ftmo_spread also holds rows past the holdout.
+marketdata/cot/
+marketdata/fomc/
+marketdata/fred/
+marketdata/ftmo_spread/
+marketdata/crypto/*.csv
+# research/gold_eur_residual.py caches its downloads here
+research/_cache_*.csv
+
+# The desk's runtime state (owner 2026-10-27): the journal, board, tickets and inbox change every minute
+desk/board.jsonl
+desk/inbox/
+desk/tickets.jsonl
+desk/journal/*.jsonl
+desk/reports/prop_odds.md
+
+# Chat-session month-by-month tester sweeps of 10-17 and 10-18, kept local; their findings are in HANDOFF and results.md
+backtests/2026-10-17_*/
+backtests/2026-10-18_*/

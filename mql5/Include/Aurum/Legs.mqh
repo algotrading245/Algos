@@ -2767,11 +2767,29 @@ input double InpTesterCommMult  = 1.0;   // Commission the tester charges is mul
 
 // A test in dollars charges the cent symbols' commission in dollars, a hundred times the live cent account's.
 // In the tester only, the part of each deal's commission above InpTesterCommMult times it is paid back.
+// Outside the tester, each closing deal of the EA's own magics is printed with its P/L, for tools/demo_check.py.
 void OnTradeTransaction(const MqlTradeTransaction &trans,const MqlTradeRequest &request,const MqlTradeResult &result)
   {
    static double owed=0;
-   if(InpTesterCommMult>=1.0 || InpTesterCommMult<0 || !MQLInfoInteger(MQL_TESTER) ||
-      trans.type!=TRADE_TRANSACTION_DEAL_ADD || !HistoryDealSelect(trans.deal))
+   if(trans.type!=TRADE_TRANSACTION_DEAL_ADD || !HistoryDealSelect(trans.deal))
+      return;
+   if(!MQLInfoInteger(MQL_TESTER))
+     {
+      long entry=HistoryDealGetInteger(trans.deal,DEAL_ENTRY);
+      long magic=HistoryDealGetInteger(trans.deal,DEAL_MAGIC);
+      if((entry!=DEAL_ENTRY_OUT && entry!=DEAL_ENTRY_INOUT && entry!=DEAL_ENTRY_OUT_BY) ||
+         magic<InpMagic || magic>InpMagic+31)
+         return;
+      double pl=HistoryDealGetDouble(trans.deal,DEAL_PROFIT)+HistoryDealGetDouble(trans.deal,DEAL_SWAP)+
+                HistoryDealGetDouble(trans.deal,DEAL_COMMISSION)+HistoryDealGetDouble(trans.deal,DEAL_FEE);
+      string sym=HistoryDealGetString(trans.deal,DEAL_SYMBOL);
+      PrintFormat("%s: closed %s magic %I64d %g at %s, P/L %.2f %s",AURUM_NAME,sym,magic,
+                  HistoryDealGetDouble(trans.deal,DEAL_VOLUME),
+                  DoubleToString(HistoryDealGetDouble(trans.deal,DEAL_PRICE),(int)SymbolInfoInteger(sym,SYMBOL_DIGITS)),
+                  pl,AccountInfoString(ACCOUNT_CURRENCY));
+      return;
+     }
+   if(InpTesterCommMult>=1.0 || InpTesterCommMult<0)
       return;
    double c=HistoryDealGetDouble(trans.deal,DEAL_COMMISSION);
    if(c>=0)

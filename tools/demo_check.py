@@ -7,7 +7,8 @@ plus the trade lines of the journal.  The monitor agent turns this into an entry
 
 Read-only: it opens log files and nothing else.  Lines with "login", "authoriz" or "account" are dropped, and every
 run of six or more digits (the login, tickets) becomes <num>, before anything is printed or stored (2026-10-25: the
-trade lines were dropped whole before, so the journal never showed a deal).
+trade lines were dropped whole before, so the journal never showed a deal).  From Funded 1.16 and Hydra 1.42 the EA
+prints each closing deal with its P/L; those lines give the day's closes and closed P/L.
 """
 import argparse
 import json
@@ -18,8 +19,9 @@ from pathlib import Path
 
 DATA = Path.home() / "AppData" / "Roaming" / "MetaQuotes" / "Terminal" / "66FB7F5B174F9C3B2A690C49FF012FEB"
 PRIVATE = re.compile(r"login|authoriz|account", re.I)
-DIGITS = re.compile(r"(?<![.\d])\d{6,}")                          # not the decimals of a price
+DIGITS = re.compile(r"(?<![.\d])\d{6,}(?![.\d])")                 # integers only: a price or P/L keeps its digits
 LEVERAGE = re.compile(r"account leverage 1:\d+")                    # the EA's daily leverage line may pass (HANDOFF (8))
+CLOSED = re.compile(r"closed (\S+) magic \S+ ([\d.]+) at (\S+), P/L (-?[\d.]+) (\w+)")
 LEGS = ("session", "dip", "bell", "Tokyo", "midday", "fast", "grid", "hold", "fix", "stock-fall", "Tokyo-morning",
         "after-holiday", "breakout", "noise")
 ALERTS = {
@@ -68,6 +70,7 @@ def check(day):
         if re.search(r"deal #", l):
             by_sec.setdefault(second(l), []).append(l)
     orders = Counter()
+    closes = []
     found = {k: [] for k in (*ALERTS, *EVENTS, "duplicate_close", "done_reported_failed")}
     for l in experts:
         msg = l.split("\t")[-1]
@@ -79,6 +82,11 @@ def check(day):
         if dealt and re.search(r"retcode 10009", msg):
             found["done_reported_failed"].append(msg)               # 10009 is "done": the order filled (journal deal)
             continue
+        c = CLOSED.search(msg)
+        if c:
+            closes.append({"symbol": c.group(1), "lots": float(c.group(2)), "price": c.group(3),
+                           "pl": float(c.group(4)), "currency": c.group(5)})
+            continue
         for k, rx in {**ALERTS, **EVENTS}.items():
             if rx.search(msg):
                 found[k].append(msg)
@@ -87,7 +95,8 @@ def check(day):
     deals = [l.split("\t")[-1] for l in journal if re.search(r"deal #|order #", l)]
     alert = any(found[k] for k in ALERTS)
     return {"day": day.isoformat(), "alert": alert, "experts_lines": len(experts), "orders_by_leg": dict(orders),
-            "journal_trade_lines": len(deals), **{k: v[-10:] for k, v in found.items()},
+            "journal_trade_lines": len(deals), "closes": closes,
+            "pl_of_day": round(sum(c["pl"] for c in closes), 2) if closes else None, **{k: v[-10:] for k, v in found.items()},
             "last_lines": [l.split("\t")[-1] for l in experts[-5:]],
             "logs_found": [p.name for p in (DATA / "MQL5" / "Logs" / f"{stamp}.log", DATA / "logs" / f"{stamp}.log")
                            if p.exists()]}
@@ -105,6 +114,10 @@ if __name__ == "__main__":
         print(f"{res['day']}: {'ALERT' if res['alert'] else 'ok'}; logs {res['logs_found'] or 'none'}; "
               f"{res['experts_lines']} EA lines, orders {res['orders_by_leg'] or 'none'}, "
               f"{res['journal_trade_lines']} journal trade lines")
+        if res["closes"]:
+            print(f"  closed P/L {res['pl_of_day']} {res['closes'][0]['currency']} over {len(res['closes'])} closes")
+        for c in res["closes"]:
+            print(f"  close: {c['symbol']} {c['lots']} at {c['price']}, P/L {c['pl']} {c['currency']}")
         for k in (*ALERTS, *EVENTS, "duplicate_close", "done_reported_failed"):
             for m in res[k]:
                 print(f"  {k}: {m}")

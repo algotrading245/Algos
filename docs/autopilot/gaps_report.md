@@ -8,6 +8,27 @@ demo will not trade this week: the EA's summer-time guard is on until the US clo
 - Nothing needed an agent fix. The queue parses and has no duplicate ids. Every data item is done. HANDOFF:53-65 agrees
   with the logs, and the version line from the 10-26 doctor run is still right (Hydra 1.41, Funded 1.15).
 
+## Owner session 2026-10-27 (Opus)
+- **2 kept by design.** The DST guard stays: the demo pauses until the US change on 11-01. Funded 1.16 says so in the
+  code, and the monitor logs it without an ALERT.
+- **3 fixed.** The monitor writes `docs/demo_log_entry.md` and runs `tools/demo_log_append.py`, which only appends.
+  `Edit(./docs/demo_log.md)` is denied, and the 10-26 rewrap is undone.
+- **4 fixed.** Hydra 1.42 and Funded 1.16 compile with 0 errors and 0 warnings (compile.ps1 17:56, 5255 and
+  5842 ms). The reviewer's verdict was PASS once demo_check stopped masking 6+ digit prices and P/L and the close
+  line printed its volume with %g.
+- **5 fixed.** Both EAs now print each closing deal with its P/L, and `demo_check.py` reports `closes` and `pl_of_day`.
+  The demo terminal still runs Funded 1.10, so these lines start only after the owner updates it.
+- **6 already fixed** in 8efc7c7. `demo_check.py --day 2026-10-23` now reads `ok`: a 10036 or 10013 close in the same second as a journal deal counts as `duplicate_close`, not as an ALERT.
+- **7 fixed.** `Read(~/.claude/projects/*/*/tool-results/**)` is allowed in the autopilot settings.
+- **8 explained.** It was a power loss, not a pause. The laptop lost mains power at 00:00:15 on 10-25 and shut down
+  unexpectedly. It crashed again at 00:18, rebooted at 00:49 (Kernel-Power 41), slept and woke on battery, and hit
+  Critical Battery at 03:03. The autopilot resumed at 03:02. No PAUSE file was written, and the only update was
+  Defender's. Keep the PC on mains, with a plan that never sleeps.
+- **9 cleaned.** The temp scripts had already run and their rows are in `sources.jsonl` and `backlog_done.jsonl`.
+  They are deleted, along with the `.new` placeholders and `research/_cache_*.csv`. `.gitignore` now covers the
+  desk's runtime state, the fetched data and the 10-17/10-18 chat tester sweeps. The gate verdicts in `docs/gates/`
+  are committed.
+
 ## Open, for Opus
 1. **Budget over its line, skip does nothing.** `budget.py status` 06:00: week from 10-23 18:00 is $127.33 of $100
    (fraction 1.273, skip true), 610 runs. By day: 10-24 $57.61, 10-25 $43.01, 10-26 $11.06, 10-27 $0.13.
