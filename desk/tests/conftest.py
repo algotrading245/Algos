@@ -46,7 +46,8 @@ def clean(monkeypatch):
     for f in (tickets.FILE, paths.KILL, TMP / "board.jsonl"):
         if Path(f).exists():
             Path(f).unlink()
-    shutil.copy(ROOT / "desk" / "risk.json", paths.RISK)
+    # the owner's profiles, but the tests' baseline is demo_10k whatever the owner has active
+    paths.write_json(paths.RISK, {**paths.read_json(ROOT / "desk" / "risk.json", {}), "active": "demo_10k"})
     monkeypatch.setattr(risk_gate.spreads, "check", lambda *a, **k: (True, ""))
     monkeypatch.setattr(risk_gate.news, "blocking", lambda *a, **k: None)
     phase.start("demo")
