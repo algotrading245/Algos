@@ -55,6 +55,9 @@ def build(role, job=None):
                                                       "halt", "account")}))
     out.append(_section("Live tickets", st["live_tickets"]))
     if role in paths.config().get("pods", {}):
+        owns = paths.config()["pods"][role].get("owns") or []
+        if owns:
+            out.append(_section("Your markets: one board note each, with instrument= set", owns))
         out.append(_section("The board (last 30 posts)", memory.board(30)))
         out.append(_section("Calendar, next 24 hours", [{k: v for k, v in e.items() if k != "time"}
                                                        for e in news.upcoming(24, t)]))

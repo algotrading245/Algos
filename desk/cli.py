@@ -5,8 +5,8 @@ propose, cancel and close only its own tickets and set only its own triggers; on
 runs with no role) approves; only the owner resumes after a kill. Orders are never sent here: the clock does that.
 
 python -m desk.cli status
-python -m desk.cli view account|positions|tickets [--all]|quote SYM|bars SYM TF [N]|calendar [HOURS]|triggers [POD]
-                        |journal [KIND] [DAYS]|limits|config
+python -m desk.cli view account|positions|tickets [--all]|quote SYM [SYM ...]|bars SYM [SYM ...] TF [N]
+                        |calendar [HOURS]|triggers [POD]|journal [KIND] [DAYS]|limits|config
 python -m desk.cli ticket new '<json>' | @file.json
 python -m desk.cli ticket approve|reject ID "why"
 python -m desk.cli ticket cancel|close ID "why"
@@ -16,6 +16,7 @@ python -m desk.cli trigger add POD KIND "why" key=value ...   (above/below: inst
 python -m desk.cli trigger remove ID
 python -m desk.cli kill "why"                            close everything now; the desk stays stopped
 python -m desk.cli resume                                owner only
+python -m desk.cli alert ack "why"                       owner only: archives inbox/ALERT.md once dealt with
 """
 import datetime as dt
 import json
@@ -81,23 +82,46 @@ def _broker():
     return b
 
 
-def _bars(sym, tf, n):
+TIMEFRAMES = ("M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1", "MN1")
+
+
+def _bars(b, sym, tf, n):
     from desk import broker as bk
-    b = _broker()
-    try:
-        real = b.resolve(sym)
-        if not real:
-            raise Refused(f"{sym} not offered by this broker")
-        df = b.bars(real, tf, int(n))
-        if df is None:
-            return []
-        rows = []
-        for r in df.itertuples():
-            rows.append({"t": bk.server_epoch_to_utc(int(r.time)).isoformat(timespec="minutes"), "o": r.open,
-                         "h": r.high, "l": r.low, "c": r.close, "spread": int(r.spread)})
-        return rows
-    finally:
-        b.shutdown()
+    real = b.resolve(sym)
+    if not real:
+        raise Refused(f"{sym} not offered by this broker")
+    df = b.bars(real, tf, int(n))
+    if df is None:
+        return []
+    rows = []
+    for r in df.itertuples():
+        rows.append({"t": bk.server_epoch_to_utc(int(r.time)).isoformat(timespec="minutes"), "o": r.open,
+                     "h": r.high, "l": r.low, "c": r.close, "spread": int(r.spread)})
+    return rows
+
+
+def _quote(b, sym):
+    real = b.resolve(sym)
+    if not real:
+        raise Refused(f"{sym} not offered by this broker")
+    tk, spec = b.tick(real), b.spec(real)
+    return {"symbol": real, "bid": tk and tk["bid"], "ask": tk and tk["ask"],
+            "time": tk and tk["time"].isoformat(timespec="seconds"), "digits": spec and spec["digits"],
+            "spread_pts": spec and spec["spread_pts"]}
+
+
+def _each(syms, fn):
+    """One market gives its answer; several give {SYM: answer}, a refused one {SYM: {"refused": why}} (owner
+    2026-10-27: a pod asked for three markets in one call and the shell loop it wrote was refused)."""
+    if len(syms) == 1:
+        return fn(syms[0])
+    out = {}
+    for s in syms:
+        try:
+            out[s] = fn(s)
+        except Refused as e:
+            out[s] = {"refused": str(e)}
+    return out
 
 
 def view(args):
@@ -127,9 +151,15 @@ def view(args):
         name, prof = risk_gate.profile()
         return {"profile": name, "risk": prof, "pods": cfg["pods"], "instruments": sorted(cfg["instruments"])}
     if what == "bars":
-        if len(args) < 3:
-            raise Refused("view bars SYM TF [N]")
-        return _bars(args[1], args[2].upper(), min(int(args[3]) if len(args) > 3 else 100, 1000))
+        at = next((i for i, a in enumerate(args) if i > 1 and a.upper() in TIMEFRAMES), None)
+        if at is None:
+            raise Refused("view bars SYM [SYM ...] TF [N]")
+        syms, tf = args[1:at], args[at].upper()
+        n = min(int(args[at + 1]) if len(args) > at + 1 else 100, 1000)
+    elif what == "quote":
+        syms = args[1:]
+        if not syms:
+            raise Refused("view quote SYM [SYM ...]")
     b = _broker()
     try:
         if what == "account":
@@ -140,13 +170,9 @@ def view(args):
                 raise Refused("the terminal did not return positions; try again")
             return pos
         if what == "quote":
-            real = b.resolve(args[1])
-            if not real:
-                raise Refused(f"{args[1]} not offered by this broker")
-            tk, spec = b.tick(real), b.spec(real)
-            return {"symbol": real, "bid": tk and tk["bid"], "ask": tk and tk["ask"],
-                    "time": tk and tk["time"].isoformat(timespec="seconds"), "digits": spec and spec["digits"],
-                    "spread_pts": spec and spec["spread_pts"]}
+            return _each(syms, lambda s: _quote(b, s))
+        if what == "bars":
+            return _each(syms, lambda s: _bars(b, s, tf, n))
     finally:
         b.shutdown()
     raise Refused(f"unknown view {what}")
@@ -270,8 +296,30 @@ def resume(_args):
     return {"ok": True, "halt": risk_gate.halted()}
 
 
+def alert(args):
+    """alert ack "why": the owner has dealt with inbox/ALERT.md. The file moves to logs/desk/state/alerts/ with the
+    why on top, and the ack is journaled, so the dashboard stops showing old alerts (owner 2026-10-27)."""
+    if not args or args[0] != "ack" or not " ".join(args[1:]).strip():
+        raise Refused('alert ack "why": say what was done about it')
+    if not _owner():
+        raise Refused("only the owner acknowledges alerts")
+    why = " ".join(args[1:]).strip()
+    f = paths.INBOX / "ALERT.md"
+    if not f.exists():
+        return {"ok": True, "archived": None, "note": "no open alert"}
+    t = clocks.now()
+    text = f.read_text(encoding="utf-8")
+    dest = paths.STATE / "alerts" / f"ALERT_{t:%Y-%m-%d_%H%M%S}.md"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(f"Acknowledged {t.isoformat(timespec='seconds')} by the owner: {why}\n\n{text}", encoding="utf-8")
+    f.unlink()
+    titles = [ln[2:].strip() for ln in text.splitlines() if ln.startswith("# ")]
+    journal.log("alert_ack", why=why, alerts=titles, archived=str(dest))
+    return {"ok": True, "acknowledged": titles, "archived": str(dest)}
+
+
 COMMANDS = {"status": lambda a: status(), "view": view, "ticket": ticket, "trigger": trigger, "kill": kill,
-            "resume": resume}
+            "resume": resume, "alert": alert}
 
 
 def main(argv=None):

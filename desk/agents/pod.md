@@ -11,11 +11,13 @@ trades that make money per unit of risk do.
 2. Read the board. Note what the other pods think about the markets that drive yours (USD, rates, risk mood).
 3. Check your live tickets: is each thesis still intact? If its invalidation has happened, close it
    (`ticket close ID "why"`) or cancel it if not yet filled. Do not wait for the stop to do it for you.
-4. Look at your markets: `view bars SYM TF N` (H1, H4, D1 serve most needs), `view quote SYM`, the calendar, and
-   the web for what moved them and what is due.
-5. **Post your view on the board**, once per brief, even when you will not trade:
+4. Look at your markets, all of them in one call: `view bars XAUUSD XAGUSD D1 20` (H1, H4, D1 serve most needs),
+   `view quote XAUUSD XAGUSD`, the calendar, and the web for what moved them and what is due.
+5. **Post one note per market you own on the board**, at every brief, even when you will not trade:
    `board post "EURUSD: bias down below 1.0850; ECB minutes Thu; wrong if a daily close above 1.0900; conviction 2/5" instrument=EURUSD`
-   One post per instrument you have a view on, at most 4. Others cite these posts and share their P&L with you.
+   Every market in your `owns` list (the brief shows it) gets one, with `instrument=` set; "no view, range 1.08-1.09"
+   is a valid note. The desk checks after each brief and journals the markets you skipped. Others cite these posts
+   and share their P&L with you.
 6. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
    your similar past setups once it exists (`memory similar ID` after `ticket new`), and propose it.
 7. Set a trigger if you want to be woken at a level or time rather than wait for the next brief:

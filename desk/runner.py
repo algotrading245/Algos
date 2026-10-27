@@ -139,7 +139,7 @@ def call(role, model, prompt, turns, minutes, job):
     r = paths.read_json(jobs.RUNNER, {})
     r.pop("agent_pid", None)
     paths.write_json(jobs.RUNNER, r)
-    usage, result, err = {}, "", False
+    usage, result, err, denied = {}, "", False, []
     for line in out.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             ev = json.loads(line)
@@ -147,10 +147,19 @@ def call(role, model, prompt, turns, minutes, job):
             continue
         if ev.get("type") == "result":
             usage, result, err = ev.get("usage") or {}, ev.get("result") or "", bool(ev.get("is_error"))
+            denied = [_denial(d) for d in ev.get("permission_denials") or []]
     if code is None:
-        return {"ok": False, "tokens": weighted(usage), "result": result, "why": f"timeout after {minutes} min"}
+        return {"ok": False, "tokens": weighted(usage), "result": result, "why": f"timeout after {minutes} min",
+                "denied": denied}
     return {"ok": code == 0 and not err, "tokens": weighted(usage), "result": result,
-            "why": "" if code == 0 and not err else f"exit {code}"}
+            "why": "" if code == 0 and not err else f"exit {code}", "denied": denied}
+
+
+def _denial(d):
+    """A permission denial from the result event, as one short line: the tool and its command or path."""
+    inp = d.get("tool_input") or {}
+    what = inp.get("command") or inp.get("file_path") or inp.get("pattern") or inp.get("url") or json.dumps(inp)
+    return f"{d.get('tool_name', '?')}: {' '.join(str(what).split())[:200]}"
 
 
 def run_agent(role, job, cfg):
@@ -167,12 +176,23 @@ def run_agent(role, job, cfg):
     except Exception as e:  # a missing claude.exe or a broken prompt fails the run, not the runner
         res = {"ok": False, "tokens": 0, "result": "", "why": f"{type(e).__name__}: {e}"}
     add_spend(role, res.get("tokens", 0), cfg)
+    denied = res.get("denied") or []
     journal.log("agent_run", job=job["id"], kind=job["kind"], role=role, model=model, ok=res["ok"],
                 tokens=res.get("tokens", 0), seconds=round((clocks.now() - t0).total_seconds()),
-                why=res.get("why", ""), result=(res.get("result") or "")[:500])
+                why=res.get("why", ""), result=(res.get("result") or "")[:500], denied=len(denied))
+    if denied:
+        refused(role, job, denied, t0)
     if role == "monitor":
         alert(res.get("result") or "", t0)
     return "ok" if res["ok"] else "failed"
+
+
+def _to_inbox(title, lines):
+    f = paths.INBOX / "ALERT.md"
+    paths.INBOX.mkdir(parents=True, exist_ok=True)
+    old = f.read_text(encoding="utf-8") if f.exists() else ""
+    new = f"# {title}\n\n" + "\n".join(f"- {ln}" for ln in lines)
+    f.write_text(new + "\n\n" + old[:20000], encoding="utf-8")
 
 
 def alert(text, t):
@@ -182,12 +202,16 @@ def alert(text, t):
     if not lines:
         return []
     journal.log("alert", lines=lines)
-    f = paths.INBOX / "ALERT.md"
-    paths.INBOX.mkdir(parents=True, exist_ok=True)
-    old = f.read_text(encoding="utf-8") if f.exists() else ""
-    new = f"# Monitor agent {t.isoformat(timespec='minutes')}\n\n" + "\n".join(f"- {ln}" for ln in lines)
-    f.write_text(new + "\n\n" + old[:20000], encoding="utf-8")
+    _to_inbox(f"Monitor agent {t.isoformat(timespec='minutes')}", lines)
     return lines
+
+
+def refused(role, job, denied, t):
+    """Commands the session's permissions refused: each one is a turn the agent lost, and usually a gap in guide.md
+    (owner 2026-10-27). Journaled, and put in front of the owner in inbox/ALERT.md."""
+    journal.log("refused_commands", job=job["id"], role=role, n=len(denied), commands=denied[:10])
+    _to_inbox(f"Refused commands {t.isoformat(timespec='minutes')} ({role}, job {job['id']})",
+              [f"WARN {len(denied)} command(s) refused by the session's permissions"] + denied[:10])
 
 
 def _with_head(roles, job, cfg):
@@ -198,12 +222,28 @@ def _with_head(roles, job, cfg):
     return out
 
 
+def missing_notes(job, pods, since, cfg):
+    """The markets each pod owns but left without a board note since the brief began (owner 2026-10-27). A pod
+    whose run was skipped or failed is not counted. Journaled; returns {pod: [markets]}."""
+    from desk import memory
+    posted = {(r.get("pod"), r.get("instrument")) for r in memory.board(10 ** 6) if r.get("t", "") >= since}
+    out = {}
+    for pod in pods:
+        miss = [m for m in cfg["pods"].get(pod, {}).get("owns") or [] if (pod, m) not in posted]
+        if miss:
+            out[pod] = miss
+            journal.log("missing_notes", job=job["id"], pod=pod, markets=miss)
+    return out
+
+
 def run_job(job, cfg):
     kind = job["kind"]
     jobs.mark(job["id"], "started")
     try:
         if kind == "brief":
-            res = _with_head(job.get("pods") or [], job, cfg)
+            pods, since = job.get("pods") or [], clocks.now().isoformat(timespec="seconds")
+            res = _with_head(pods, job, cfg)
+            missing_notes(job, [p for p, r in zip(pods, res) if r == "ok"], since, cfg)
         elif kind == "wake":
             res = _with_head([job["pod"]], job, cfg)
         elif kind == "debrief":

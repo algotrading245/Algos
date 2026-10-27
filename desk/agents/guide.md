@@ -19,12 +19,12 @@ the cause, and do not retry the same thing.
 
 Run one plain command per Bash call, exactly as written below. A shell loop (`for ...; do`), a pipe (`| head`, `| tr`),
 a redirect or another program is refused by the session's permissions, and the whole call is lost. For several
-markets, make several calls.
+markets, name them all in one call: `view quote XAUUSD XAGUSD WTI` or `view bars US500 US100 GER40 D1 6`.
 
 ```
 python -m desk.cli status
-python -m desk.cli view account | positions | tickets [--all] | quote SYM | bars SYM TF [N] | calendar [HOURS]
-                   | triggers [POD] | journal [KIND] [DAYS] | limits | config
+python -m desk.cli view account | positions | tickets [--all] | quote SYM [SYM ...] | bars SYM [SYM ...] TF [N]
+                   | calendar [HOURS] | triggers [POD] | journal [KIND] [DAYS] | limits | config
 python -m desk.cli ticket new '<json>'   (or @logs/desk/drafts/<file>.json)
 python -m desk.cli ticket cancel|close ID "why"
 python -m desk.cli ticket stop ID PRICE "why"        tighter only

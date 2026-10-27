@@ -154,6 +154,34 @@ def test_resume_is_owner_only_and_any_role_can_kill(capsys, monkeypatch):
     assert code == 0 and out["halt"] is None
 
 
+def test_view_quote_takes_several_markets(capsys, monkeypatch, b):
+    b.shutdown = lambda: None
+    monkeypatch.setattr(cli, "_broker", lambda: b)
+    code, out = run_cli(capsys, "view", "quote", "EURUSD")
+    assert code == 0 and out["symbol"] == "EURUSD" and out["bid"] == 1.1
+    code, out = run_cli(capsys, "view", "quote", "EURUSD", "XAUUSD")
+    assert code == 0 and out["EURUSD"]["ask"] == 1.1001 and "not offered" in out["XAUUSD"]["refused"]
+    code, out = run_cli(capsys, "view", "bars", "EURUSD", "XAUUSD")
+    assert code == 1 and "TF" in out["refused"]
+
+
+def test_alert_ack_is_owner_only_and_archives(capsys, monkeypatch):
+    f = paths.INBOX / "ALERT.md"
+    f.write_text("# Desk alert 2026-10-21 13:00 UTC\n\n- clock stalled\n", encoding="utf-8")
+    code, out = run_cli(capsys, "alert", "ack")
+    assert code == 1 and "say what was done" in out["refused"]
+    monkeypatch.setenv("AURUM_DESK_ROLE", "monitor")
+    code, out = run_cli(capsys, "alert", "ack", "fixed")
+    assert code == 1 and "only the owner" in out["refused"] and f.exists()
+    monkeypatch.delenv("AURUM_DESK_ROLE")
+    code, out = run_cli(capsys, "alert", "ack", "clock", "restarted")
+    assert code == 0 and out["acknowledged"] == ["Desk alert 2026-10-21 13:00 UTC"] and not f.exists()
+    archived = (paths.STATE / "alerts").glob("ALERT_*.md")
+    assert "by the owner: clock restarted" in next(archived).read_text(encoding="utf-8")
+    code, out = run_cli(capsys, "alert", "ack", "again")
+    assert code == 0 and out["archived"] is None
+
+
 def test_pod_sets_only_its_own_triggers(capsys, monkeypatch):
     monkeypatch.setenv("AURUM_DESK_ROLE", "fxmacro")
     code, out = run_cli(capsys, "trigger", "add", "systematic", "above", "x", "instrument=EURUSD", "level=1.2")

@@ -164,6 +164,15 @@ def test_a_pod_arms_on_its_own_markets(armable, monkeypatch):
     assert extras.edge(["disarm", "t_leg"])["armed"] == []
 
 
+def test_arm_refused_when_the_broker_spread_beats_the_cost(armable):
+    armable()
+    paths.write_json(paths.STATE / "spreads.json", {"EURUSD": {"day": "2026-10-21", "med": {"all": 0.0002}}})
+    with pytest.raises(cli.Refused, match="raises the cost first"):
+        arm()
+    paths.write_json(paths.STATE / "spreads.json", {"EURUSD": {"day": "2026-10-21", "med": {"all": 0.00005}}})
+    assert arm()["armed"][0]["market"] == "EURUSD"
+
+
 # ---- playbooks ---------------------------------------------------------------------------------------------------------
 
 def closed(pod, R, updated, n=1, **kw):
@@ -351,6 +360,28 @@ def test_monitor_alert_lines_reach_the_owner(monkeypatch, cfg):
     assert runner.run_agent("monitor", {"id": "j1", "kind": "monitor"}, cfg) == "ok"
     text = (paths.INBOX / "ALERT.md").read_text(encoding="utf-8")
     assert "terminal disconnected" in text and "dd 4%" in text and "all fine" not in text
+
+
+def test_refused_commands_reach_the_owner(monkeypatch, cfg):
+    denied = [{"tool_name": "Bash", "tool_input": {"command": "for s in A B; do\n  echo $s; done"}},
+              {"tool_name": "Read", "tool_input": {"file_path": "C:/secret.txt"}}]
+    monkeypatch.setattr(runner, "call", lambda *a: {"ok": True, "tokens": 10, "result": "done",
+                                                    "denied": [runner._denial(d) for d in denied]})
+    assert runner.run_agent("fxmacro", {"id": "j1", "kind": "brief"}, cfg) == "ok"
+    text = (paths.INBOX / "ALERT.md").read_text(encoding="utf-8")
+    assert "2 command(s) refused" in text and "Bash: for s in A B; do echo $s; done" in text
+    assert "Read: C:/secret.txt" in text
+
+
+def test_missing_notes_per_owned_market(monkeypatch, cfg):
+    from desk import memory
+    monkeypatch.setitem(cfg["pods"]["metals"], "owns", ["XAUUSD", "XAGUSD"])
+    since = clocks.now().isoformat(timespec="seconds")
+    memory.post("metals", "gold holds the range", "XAUUSD")
+    memory.post("fxmacro", "silver too", "XAGUSD")  # another pod's note does not count
+    assert runner.missing_notes({"id": "j1"}, ["metals"], since, cfg) == {"metals": ["XAGUSD"]}
+    memory.post("metals", "silver lags gold", "XAGUSD")
+    assert runner.missing_notes({"id": "j1"}, ["metals"], since, cfg) == {}
 
 
 def test_prompt_has_guide_pod_and_role(monkeypatch):

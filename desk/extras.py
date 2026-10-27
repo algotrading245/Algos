@@ -179,10 +179,28 @@ def _arm(op, e, args):
     if (run.get("trades") or 0) < ARM_MIN_TRADES or (run.get("pf") or 0) < ARM_MIN_PF:
         raise Refused(f"{name} on {market}: {run.get('trades')} trades, PF {run.get('pf')} after costs; arming needs "
                       f"{ARM_MIN_TRADES}+ trades and PF {ARM_MIN_PF}+")
+    over = _spread_over_cost(market, cfg)
+    if over:
+        raise Refused(f"{market}'s normal broker spread {over[0]:.6g} is above its cost in config.json ({over[1]:.6g}), "
+                      "so the card's costs are too low: the owner raises the cost first, then re-run the sandbox")
     try:
         return {"ok": True, "armed": systematic.arm(name, market, params, risk, pod)}
     except ValueError as err:
         raise Refused(str(err))
+
+
+def _spread_over_cost(market, cfg):
+    """(normal spread, cost) when the broker's all-day median spread (spreads.json, the risk gate's daily table) is
+    above the instrument's cost in config.json, which every sandbox card is costed at (owner 2026-10-27); else None."""
+    from desk import spreads
+    ins = cfg["instruments"].get(market, {})
+    names = ins.get("broker") or []
+    cache = paths.read_json(spreads.FILE, {})
+    for n in [market, *([names] if isinstance(names, str) else names)]:
+        med = ((cache.get(n) or {}).get("med") or {}).get("all")
+        if med and ins.get("cost") is not None and med > ins["cost"]:
+            return med, ins["cost"]
+    return None
 
 
 def scores(_args):
