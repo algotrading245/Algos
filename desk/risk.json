@@ -1,6 +1,6 @@
 {
  "_note": "Owner-only. Agents cannot edit this file (desk/agents/settings.json denies it). Change 'active' to switch profiles; the risk gate reads it on every check.",
- "active": "demo_10k",
+ "active": "prop_10k",
  "profiles": {
   "demo_10k": {
    "kind": "demo",

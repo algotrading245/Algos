@@ -291,6 +291,20 @@ def test_live_gate_not_started_before_phase_3():
     assert g["verdict"].startswith("not started")
 
 
+def test_start_all_opens_phase_3_now_and_the_gate_counts_from_it():
+    from desk import phase
+    from conftest import backdate_phase
+    backdate_phase(1)
+    assert phase.current("demo") == 1
+    s = phase.start_all("owner: start everything now")
+    assert phase.current("demo") == 3 and not s.get("live_day0")
+    assert phase.start_all("again")["phase3_at"] == s["phase3_at"]  # the first start stands
+    assert live_gate._phase3_start() == dt.datetime.fromisoformat(s["phase3_at"])
+    g = live_gate.evaluate(state={})
+    assert g["verdict"] == "running" and g["checks"]["weeks"]["have"] == 0.0
+    assert phase.state().get("live_day0") is None
+
+
 def test_live_gate_flags_a_failed_stop(monkeypatch):
     from conftest import backdate_phase
     backdate_phase(90)

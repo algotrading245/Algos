@@ -193,7 +193,13 @@ def _phase(st):
     out = {"day0": d0, "phase": st.get("phase") if isinstance(st, dict) else None, "day": phase.days_in(),
            "profile": st.get("profile") if isinstance(st, dict) else None,
            "risk_scale": st.get("risk_scale") if isinstance(st, dict) else None, "live_day0": s.get("live_day0")}
-    if d0:
+    if d0 and s.get("phase3_at"):
+        out["steps"] = [{"phase": 1, "from": dt.datetime.fromisoformat(d0).date().isoformat(),
+                         "what": "systematic + fxmacro at 0.25x, normal rules"},
+                        {"phase": 3, "from": phase.phase3_start(s).date().isoformat(),
+                         "what": "owner started everything: all pods, 1.0x, prop-firm rules, the live gate counting"},
+                        {"phase": 4, "from": None, "what": "live, only on the owner's yes"}]
+    elif d0:
         t0 = dt.datetime.fromisoformat(d0)
         out["steps"] = [{"phase": 1, "from": t0.date().isoformat(), "what": "systematic + fxmacro at 0.25x, normal rules"},
                         {"phase": 2, "from": (t0 + dt.timedelta(days=14)).date().isoformat(),

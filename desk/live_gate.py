@@ -20,10 +20,7 @@ REPORT = paths.REPORTS / "live_gate.md"
 
 
 def _phase3_start(s=None):
-    s = phase.state() if s is None else s
-    if not s.get("day0"):
-        return None
-    return dt.datetime.fromisoformat(s["day0"]) + dt.timedelta(days=28)
+    return phase.phase3_start(s)
 
 
 def _pf(pnls):

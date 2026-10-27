@@ -4,6 +4,7 @@ Phase 1, days 0-13: systematic and FX macro pods, quarter risk.
 Phase 2, days 14-27: all pods, half risk.
 Phase 3, day 28 on: the full desk, full risk; the 8-week live gate counts from here.
 Phase 4: live, only when risk.json allows it (the owner's yes); half risk the first month.
+The owner can open phase 3 early (start_all): phase.json then keeps "phase3_at", and the live gate counts from it.
 """
 import datetime as dt
 
@@ -43,7 +44,30 @@ def current(account_kind=None):
     d = days_in(s)
     if d is None:
         return 0
+    if s.get("phase3_at") and clocks.now() >= dt.datetime.fromisoformat(s["phase3_at"]):
+        return 3
     return 1 if d < 14 else 2 if d < 28 else 3
+
+
+def start_all(why):
+    """The owner's call to skip the ramp: phase 3 (all pods, full risk) from now. Never opens phase 4."""
+    s = state()
+    if not s.get("day0"):
+        raise ValueError("no demo account seen yet: day 0 is not set")
+    if not s.get("phase3_at"):
+        s.update(phase3_at=clocks.now().isoformat(timespec="seconds"), phase3_why=why)
+        paths.write_json(FILE, s)
+    return s
+
+
+def phase3_start(s=None):
+    """When phase 3 began or will begin: the owner's early start, else day 28."""
+    s = state() if s is None else s
+    if not s.get("day0"):
+        return None
+    if s.get("phase3_at"):
+        return dt.datetime.fromisoformat(s["phase3_at"])
+    return dt.datetime.fromisoformat(s["day0"]) + dt.timedelta(days=28)
 
 
 def risk_scale(prof, ph=None):
