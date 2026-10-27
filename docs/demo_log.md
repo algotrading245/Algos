@@ -275,3 +275,11 @@ The owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.
 - **Experts log at 19:26:43:** account leverage 1:100; "no trading today, European and US summer time differ". The DST guard keeps it flat until the US clock change on 11-01.
 - **Positions before the restart:** none. The 00:49 sync showed 0 positions and 0 orders.
 - **Preset:** unchanged, AurumFunded_FTMO_phase1_legs.set.
+
+## 2026-10-27 19:55 - T16 on the New York clock preset (owner)
+
+- Change: T16 now loads `AurumFunded_FTMO_phase1_legs_nyclock.set`, a copy of phase1_legs.set with only `InpEuClock=false`. `tools/autopilot/t16_attach.ini` points at it. Funded 1.16 is unchanged and no existing .set file was edited.
+- Why: 1.16 stayed flat with "no trading today, European and US summer time differ" after Europe changed its clocks on 10-25. FTMO's server stays at New York + 7 hours (GMT+3) all year. The T16 journal showed GMT+3 both before the change (10-19: 14:54 CEST local = 15:54 server) and after it (10-26: 22:01 GMT+1 local = 00:01 server). The legs are built around that offset, so the pause was blocking nothing.
+- Effect: with `InpEuClock=false`, the live check expects the server at GMT + 2 + US summer = GMT+3, which matches. The demo can trade from the next session instead of waiting for 11-01.
+- Restart: owner hold, then release. The keeper relaunched T16 with `/config:t16_attach.ini`.
+- Still open: the other FTMO presets (and the funded account's) keep `InpEuClock=true`. They would pause the same way from 03-14 to 03-28 2027 unless the EA default changes.
