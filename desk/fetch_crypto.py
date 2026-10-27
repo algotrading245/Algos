@@ -7,6 +7,7 @@ Resumable: months already downloaded sit in marketdata/histdata/raw/crypto/ and 
     python -m desk.fetch_crypto [BTCUSD ETHUSD]
 """
 import datetime as dt
+import gzip
 import io
 import sys
 import urllib.error
@@ -73,21 +74,27 @@ def to_server(utc_epoch):
 
 
 def fetch(sym):
+    """One month at a time into the file, so memory stays at one month's bars."""
     pair, start = PAIRS[sym]
-    parts = []
-    for span, stamp in _spans(start):
-        data = _get(URL.format(span=span, pair=pair, stamp=stamp), RAW / f"{pair}-1m-{stamp}.zip")
-        if data:
-            parts.append(_frame(data))
-    df = pd.concat(parts).drop_duplicates("time").sort_values("time").reset_index(drop=True)
-    df["time"] = to_server(df["time"])
-    df = df[df["time"] < base.HOLDOUT_EPOCH]
     out = base.HIST / f"{sym}_M1.csv.gz"
     part = base.HIST / f"{sym}_M1.part"
-    df.to_csv(part, index=False, compression="gzip")
+    rows, first, last = 0, None, -1
+    with gzip.open(part, "wt", newline="") as f:
+        for span, stamp in _spans(start):
+            data = _get(URL.format(span=span, pair=pair, stamp=stamp), RAW / f"{pair}-1m-{stamp}.zip")
+            if not data:
+                continue
+            df = _frame(data).drop_duplicates("time").sort_values("time")
+            df["time"] = to_server(df["time"])
+            df = df[(df["time"] > last) & (df["time"] < base.HOLDOUT_EPOCH)]
+            if df.empty:
+                continue
+            df.to_csv(f, index=False, header=first is None)
+            first = df["time"].iloc[0] if first is None else first
+            last, rows = df["time"].iloc[-1], rows + len(df)
     part.replace(out)  # the sandbox never reads a half-written file
-    return {"sym": sym, "rows": len(df), "from": str(pd.to_datetime(df["time"].iloc[0], unit="s")),
-            "to": str(pd.to_datetime(df["time"].iloc[-1], unit="s")), "file": str(out)}
+    return {"sym": sym, "rows": rows, "from": str(pd.to_datetime(first, unit="s")),
+            "to": str(pd.to_datetime(last, unit="s")), "file": str(out)}
 
 
 if __name__ == "__main__":
