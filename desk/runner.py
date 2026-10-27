@@ -9,7 +9,8 @@ queue is empty. A job becomes agent runs like this:
   scorekeeper  scorekeeper.daily() (code), then a short scorekeeper note
   monitor      the monitor
 Each run's prompt is agents/guide.md + the role's prompt + brief.build(role, job). A role whose daily token budget is
-spent is skipped (why "budget"). Transcripts go to logs/desk/runs/<job>_<role>.jsonl.
+spent is skipped (why "budget"); the pods share one pool, and each pod also has its own slice of it that follows the
+competition's shares (pod_budget). Transcripts go to logs/desk/runs/<job>_<role>.jsonl.
 
 python -m desk.runner drain
 python -m desk.runner once ROLE [KIND]     one run now, for testing a prompt by hand
@@ -22,7 +23,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from desk import brief, clocks, journal, jobs, mutex, paths
+from desk import brief, clocks, journal, jobs, mutex, paths, phase
 
 AGENTS = paths.DESK / "agents"
 SETTINGS = AGENTS / "settings.json"
@@ -44,8 +45,8 @@ def weighted(usage):
                + 0.1 * u.get("cache_read_input_tokens", 0))
 
 
-def spent(role, cfg, t=None):
-    return paths.read_json(BUDGET, {}).get(clocks.trading_day(t).isoformat(), {}).get(group(role, cfg), 0)
+def spent(role, cfg, t=None, key=None):
+    return paths.read_json(BUDGET, {}).get(clocks.trading_day(t).isoformat(), {}).get(key or group(role, cfg), 0)
 
 
 def add_spend(role, tokens, cfg, t=None):
@@ -53,13 +54,32 @@ def add_spend(role, tokens, cfg, t=None):
     cutoff = (day - dt.timedelta(days=14)).isoformat()
     b = {d: v for d, v in paths.read_json(BUDGET, {}).items() if d >= cutoff}
     g = b.setdefault(day.isoformat(), {})
-    g[group(role, cfg)] = g.get(group(role, cfg), 0) + int(tokens)
+    for k in {group(role, cfg), role}:
+        g[k] = g.get(k, 0) + int(tokens)
     paths.write_json(BUDGET, b)
+
+
+def pod_budget(pod, cfg):
+    """A pod's own daily tokens: the pods' pool split by the competition's shares among the pods trading now (base
+    shares before the first weekly allocation), so a pod that scores well gets more tokens and one that scores badly
+    fewer; a paused pod gets none."""
+    pool = cfg.get("budgets", {}).get("pod")
+    if pool is None:
+        return None
+    shares = paths.read_json(phase.ALLOC, {}).get("shares") or {}
+    share = lambda p: shares.get(p, cfg["pods"].get(p, {}).get("base_share", 0))
+    total = sum(share(p) for p in phase.pods_active(cfg)) or share(pod) or 1
+    return int(pool * share(pod) / total)
 
 
 def over_budget(role, cfg, t=None):
     limit = cfg.get("budgets", {}).get(group(role, cfg))
-    return limit is not None and spent(role, cfg, t) >= limit
+    if limit is not None and spent(role, cfg, t) >= limit:
+        return True
+    if role in cfg.get("pods", {}):
+        own = pod_budget(role, cfg)
+        return own is not None and spent(role, cfg, t, key=role) >= own
+    return False
 
 
 def prompt_for(role, job):

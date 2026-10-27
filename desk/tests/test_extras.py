@@ -316,3 +316,15 @@ def test_prompt_has_guide_pod_and_role(monkeypatch):
     p = runner.prompt_for("fxmacro", {"id": "j1", "kind": "brief", "pods": ["fxmacro"]})
     assert "what every agent on it reads first" in p and "# You are a pod" in p and '"kind": "brief"' in p
     assert "# You are a pod" not in runner.prompt_for("monitor", {"id": "j2", "kind": "monitor"})
+
+
+def test_pod_tokens_follow_the_competition(cfg):
+    pool = cfg["budgets"]["pod"]
+    base = runner.pod_budget("systematic", cfg)
+    assert base == int(pool * .25 / .45) and runner.pod_budget("fxmacro", cfg) == int(pool * .20 / .45)
+    paths.write_json(paths.STATE / "alloc.json", {"shares": {"systematic": .30, "fxmacro": .10}, "paused": []})
+    assert runner.pod_budget("systematic", cfg) > base and runner.pod_budget("fxmacro", cfg) == int(pool * .25)
+    runner.add_spend("fxmacro", runner.pod_budget("fxmacro", cfg), cfg)
+    assert runner.over_budget("fxmacro", cfg) and not runner.over_budget("systematic", cfg)
+    paths.write_json(paths.STATE / "alloc.json", {"shares": {"systematic": .30, "fxmacro": 0}, "paused": ["fxmacro"]})
+    assert runner.pod_budget("fxmacro", cfg) == 0
