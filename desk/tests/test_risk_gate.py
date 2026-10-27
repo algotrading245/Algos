@@ -117,6 +117,55 @@ def test_group_cap(b, cfg):
     assert risk_gate.check(tk(), b, cfg)["why"].startswith("group USD cap")
 
 
+def test_pod_stop_halves_then_stops(b, cfg):
+    backdate_phase(30)
+    # fxmacro: 0.20 of 10k x 3 = 6,000 allocation; halves at 180 lost this month, stops at 300
+    def lost(*pnls):
+        return {f"c{i}": {"id": f"c{i}", "status": "closed", "pod": "fxmacro", "pnl": p, "edge": "old",
+                          "updated": u} for i, (p, u) in enumerate(pnls)}
+    assert risk_gate.check(tk(), b, cfg, state=lost((-150, "2026-10-05T10:00")))["volume"] == 0.04
+    assert risk_gate.check(tk(), b, cfg, state=lost((-200, "2026-10-05T10:00")))["volume"] == 0.02
+    g = risk_gate.check(tk(), b, cfg, state=lost((-250, "2026-10-05T10:00"), (-60, "2026-10-20T10:00")))
+    assert g["why"].startswith("pod stop: fxmacro lost 310.00")
+    assert risk_gate.check(tk(), b, cfg, state=lost((-500, "2026-09-29T10:00")))["volume"] == 0.04  # last month
+    g = risk_gate.check(tk(pod="systematic"), b, cfg, state=lost((-500, "2026-10-05T10:00")))
+    assert g["ok"]  # another pod's loss is not this pod's
+
+
+def test_net_usd_cap(b, cfg):
+    backdate_phase(30)
+    assert risk_gate.usd_sign("EURUSD", "buy") == -1 and risk_gate.usd_sign("USDJPY", "buy") == 1
+    assert risk_gate.usd_sign("XAUUSD", "sell") == 1 and risk_gate.usd_sign("US500", "buy") == 0
+    assert risk_gate.usd_sign("EURGBP", "buy") == 0 and risk_gate.usd_sign("BTCUSD", "buy") == 0
+    # short USD through gold and silver, outside the USD group: 2.9% net against a 0.6 x 5% = 3% cap
+    seed("XAUUSD", pod="metals", risk_now=1.9)
+    seed("XAGUSD", pod="indices", risk_now=1.0)
+    assert risk_gate.check(tk(), b, cfg)["why"].startswith("net USD cap")
+    assert risk_gate.check(tk(side="sell", stop=1.105), b, cfg)["ok"]  # cutting the net is always allowed
+
+
+def test_event_pod_only_after_a_release(b, cfg, monkeypatch):
+    backdate_phase(30)
+    seen = {}
+
+    def events(start, end):
+        seen["win"] = (start, end)
+        return rows
+    monkeypatch.setattr(risk_gate.news, "events", events)
+    rows = [{"ccy": "JPY", "title": "BoJ", "t": "2026-10-21T13:00"}]
+    g = risk_gate.check(tk(pod="event"), b, cfg)
+    assert g["why"].startswith("event pod: no EUR/USD release between 15 and 240 min ago")
+    assert seen["win"] == (clocks.now() - dt.timedelta(minutes=240), clocks.now() - dt.timedelta(minutes=15))
+    rows = [{"ccy": "USD", "title": "Retail sales", "t": "2026-10-21T12:30"}]
+    assert risk_gate.check(tk(pod="event"), b, cfg)["ok"]
+    # the release window itself is blocked at least min_delay either side, whatever the profile's news window
+    calls = []
+    monkeypatch.setattr(risk_gate.news, "blocking", lambda ins, t, win: calls.append(win))
+    risk_gate.check(tk(pod="event"), b, cfg)
+    risk_gate.check(tk(), b, cfg)
+    assert calls == [15, 2]
+
+
 def test_placed_tickets_count_as_open(b, cfg):
     backdate_phase(30)
     seed("GBPUSD", pod="fxmacro", risk_now=1.9, status="placed")
@@ -156,9 +205,12 @@ def test_live_account_refused(b, cfg):
 
 
 def test_prop_rules(b, cfg, monkeypatch):
-    use_profile("prop_10k")
+    use_profile("prop_5k")
     g = risk_gate.check(tk(pod="systematic", instrument="BTCUSD", stop=1.0), b, cfg)
     assert "crypto not allowed" in g["why"]
+    use_profile("prop_10k")  # FundingPips allows crypto (owner 2026-10-27)
+    g = risk_gate.check(tk(pod="systematic", instrument="BTCUSD", stop=1.0), b, cfg)
+    assert "not offered by this broker" in g["why"]
     set_now(monkeypatch, "2026-10-23T19:30:00")  # Friday 15:30 New York
     assert "weekend cutoff" in risk_gate.check(tk(), b, cfg)["why"]
 
@@ -167,7 +219,7 @@ def test_prop_worst_case_floor(b, cfg):
     use_profile("prop_10k")
     _, prof = risk_gate.profile()
     risk_gate.update_limits({"balance": 10000.0, "equity": 10000.0}, prof)
-    b.balance = 9720.0
+    b.balance = 9620.0  # day floor 9,600 (4%): 30 open + this one would cross it
     seed("GBPUSD", pod="systematic", risk_now=0.3)
     g = risk_gate.check(tk(), b, cfg)
     assert "would breach the day floor" in g["why"]
@@ -252,6 +304,6 @@ def test_prop_floors():
     r = paths.risk()
     prof = r["profiles"]["prop_10k"]
     fl = risk_gate.floors({"day_balance": 10200, "day_equity": 10100, "peak": 10300, "week_equity": 10000}, prof)
-    assert fl["day"] == 10200 - 300  # 3% of the initial balance below the day's start
-    assert abs(fl["kill"] - max(10300 * 0.93, 9200)) < 1e-6
+    assert fl["day"] == 10200 - 400  # 4% of the initial balance below the day's start
+    assert abs(fl["kill"] - max(10300 * 0.93, 9100)) < 1e-6
     assert abs(fl["week"] - 9500) < 1e-6

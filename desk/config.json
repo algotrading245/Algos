@@ -38,6 +38,12 @@
   "gold": ["XAUUSD", "XAGUSD"],
   "us_indices": ["US500", "US100"]
  },
+ "limits": {
+  "_note": "Soft desk limits the risk gate applies on top of risk.json (owner 2026-10-27). pod_stop: a pod's month-to-date realised loss against its allocation (share x balance x alloc_mult) halves its risk at halve_pct and stops it at pause_pct until the month turns. net_usd: the desk's net USD exposure (XXXUSD and USDXXX legs, metals included) may not pass share_of_desk x desk_open_pct. event_pod: it trades only min_delay_min to max_after_min after a high-impact release for its instrument's currencies.",
+  "pod_stop": {"halve_pct": 3.0, "pause_pct": 5.0, "alloc_mult": 3.0},
+  "net_usd": {"share_of_desk": 0.6},
+  "event_pod": {"min_delay_min": 15, "max_after_min": 240}
+ },
  "pods": {
   "systematic": {"index": 0, "base_share": 0.25, "phase": 1, "owns": []},
   "fxmacro": {"index": 1, "base_share": 0.20, "phase": 1, "owns": ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD", "EURJPY", "GBPJPY", "AUDJPY", "CADJPY", "NZDJPY", "EURGBP", "EURCHF", "EURAUD", "AUDCAD", "AUDNZD", "GBPCHF", "NZDCAD"]},

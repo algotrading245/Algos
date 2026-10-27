@@ -256,6 +256,20 @@ def test_allocation_moves_at_most_a_step():
     assert raw["fxmacro"] == pytest.approx(0.2 + scorekeeper.STEP)
 
 
+def test_score_is_what_a_pod_adds_shrunk_for_a_small_sample():
+    # 0.5 R a trade against the rest's 0.1: +0.4, times 20 / (20 + 20)
+    assert scorekeeper.score({"trades": 20, "R_per_trade": 0.5}, [0.1] * 50) == pytest.approx(0.2)
+    assert scorekeeper.score({"trades": 180, "R_per_trade": 0.5}, [0.1] * 50) == pytest.approx(0.36)
+    assert scorekeeper.score({"trades": 0, "R_per_trade": 0.0}, [1.0]) == 0.0
+    assert scorekeeper.score({"trades": 20, "R_per_trade": 0.5}, []) == pytest.approx(0.25)
+    # a pod that only matches the desk earns nothing, whatever its raw R a trade
+    assert scorekeeper.score({"trades": 40, "R_per_trade": 0.3}, [0.3] * 40) == 0.0
+    sc = _sc(fxmacro=(40, 0.3), metals=(40, 0.3))
+    sc["pods"]["fxmacro"]["score"], sc["pods"]["metals"]["score"] = 0.2, -0.2
+    s = scorekeeper.allocate(sc, {}, _cfg())["shares"]
+    assert s["fxmacro"] > 0.2 and s["metals"] < 0.15
+
+
 def test_pod_below_shadow_six_weeks_is_paused():
     prev = {"weeks_below_shadow": {"metals": scorekeeper.PAUSE_WEEKS - 1}}
     a = scorekeeper.allocate(_sc(shadow=0.2, metals=(30, 0.1), fxmacro=(30, 0.5)), prev, _cfg())

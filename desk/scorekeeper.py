@@ -1,9 +1,10 @@
 """The scorekeeper (DESIGN.md sections 5 and 9): scores, the pod competition and the research bridge, all in code.
 
-daily()   scores every pod over the last 4 weeks into state/scores.json and reports/scores_<date>.md, and follows each
+daily()   scores every pod over the last 8 weeks into state/scores.json and reports/scores_<date>.md, and follows each
           rejected ticket on paper (state/rejected_shadow.json) so the head trader's vetoes are scored too.
 weekly()  daily(), then the allocation (state/alloc.json): a pod with fewer than 20 trades keeps its base share; the
-          rest move toward base x max(0.25, 1 + R per trade), at most 10 points a week, inside 10-30%. A pod below the
+          rest move toward base x max(0.25, 1 + score), the score being its R a trade over the rest of the desk's,
+          times n / (n + 20), at most 10 points a week, inside 10-30%. A pod below the
           shadow benchmark 6 weeks running is paused until its playbook is rewritten. Then playbooks.check() for each
           pod, and the research bridge: an (edge, instrument) with 30+ closed trades and positive R goes once to
           docs/ideas/queue.jsonl with source "desk".
@@ -16,8 +17,9 @@ from collections import defaultdict
 
 from desk import clocks, journal, memory, paths, playbooks, systematic, tickets
 
-WINDOW = dt.timedelta(weeks=4)
+WINDOW = dt.timedelta(weeks=8)
 MIN_TRADES = 20       # below this a pod keeps its base share and is not judged against the shadow
+SHRINK = 20           # a pod's edge over the rest of the desk is pulled toward 0 by n / (n + SHRINK)
 FLOOR, CAP, STEP = 0.10, 0.30, 0.10
 PAUSE_WEEKS = 6
 CITE_SHARE = 0.25
@@ -78,6 +80,16 @@ def stats(pod, start, end, state=None, board=None):
     return _stats(rs, [v for v in rows if v.get("pod") == pod])
 
 
+def score(s, rest):
+    """What a pod adds to the desk: its R a trade over the rest of the desk's (rest: their R values), shrunk toward 0
+    by n / (n + SHRINK) so a short lucky run moves its share little."""
+    n = s["trades"]
+    if not n:
+        return 0.0
+    other = sum(rest) / len(rest) if rest else 0.0
+    return round((s["R_per_trade"] - other) * n / (n + SHRINK), 3)
+
+
 def shadow_r_per_trade(s=None):
     s = paths.read_json(systematic.SHADOW, {}) if s is None else s
     n = r = 0
@@ -94,8 +106,10 @@ def scores(t=None, state=None):
     start, end = (t - WINDOW).isoformat(), t.isoformat()
     board = memory.board(10 ** 9)
     pods = {p: stats(p, start, end, state, board) for p in paths.config().get("pods", {})}
-    desk = _stats([float(v["R"]) for v in sorted(_closed(state, start, end), key=lambda v: v.get("updated", ""))],
-                  _closed(state, start, end))
+    rows = _closed(state, start, end)
+    desk = _stats([float(v["R"]) for v in sorted(rows, key=lambda v: v.get("updated", ""))], rows)
+    for p, s in pods.items():
+        s["score"] = score(s, [float(v["R"]) for v in rows if v.get("pod") != p])
     return {"t": t.isoformat(timespec="seconds"), "window": [start[:10], end[:10]], "pods": pods, "desk": desk,
             "shadow_r_per_trade": shadow_r_per_trade(),
             "rejected": _rejected_summary(paths.read_json(REJECTED, {}))}
@@ -110,10 +124,11 @@ def _rejected_summary(rej):
 def _report(sc):
     lines = [f"# Desk scores, {sc['window'][0]} to {sc['window'][1]}", "",
              f"Shadow benchmark: {sc['shadow_r_per_trade']} R a trade.", "",
-             "| pod | trades | total R | R/trade | PF | hit | max DD R | P&L |", "|---|---|---|---|---|---|---|---|"]
+             "| pod | trades | total R | R/trade | adds (shrunk) | PF | hit | max DD R | P&L |",
+             "|---|---|---|---|---|---|---|---|---|"]
     for p, s in list(sc["pods"].items()) + [("desk", sc["desk"])]:
-        lines.append(f"| {p} | {s['trades']} | {s['total_R']} | {s['R_per_trade']} | {s['pf']} | {s['hit']} | "
-                     f"{s['max_dd_R']} | {s['pnl']} |")
+        lines.append(f"| {p} | {s['trades']} | {s['total_R']} | {s['R_per_trade']} | {s.get('score', '-')} | "
+                     f"{s['pf']} | {s['hit']} | {s['max_dd_R']} | {s['pnl']} |")
     r = sc["rejected"]
     lines += ["", f"Rejected tickets followed on paper: {r['followed']}, which would have made {r['would_have_made_R']} R "
                   f"({r['pending']} still open)."]
@@ -256,7 +271,8 @@ def allocate(sc, prev, cfg):
     for p in pods:
         s = sc["pods"].get(p) or {}
         b = base[p]
-        want = b if s.get("trades", 0) < MIN_TRADES else b * max(0.25, 1 + s["R_per_trade"])
+        # judged on what it adds over the rest of the desk, shrunk for a small sample (raw R a trade if unscored)
+        want = b if s.get("trades", 0) < MIN_TRADES else b * max(0.25, 1 + s.get("score", s["R_per_trade"]))
         was = last.get(p, b)
         target[p] = min(was + STEP, max(was - STEP, want))
     for p in paused:
