@@ -295,3 +295,14 @@ The owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.
 
 - Reviewer: PASS. The live clock check passes on FTMO GMT+3 for 10-26..10-31 and 2027-03-14..03-27, and on GMT+2 from 11-02. LondonOffset is right on gap days.
 - Known risk: InpPropResetHHMM=100 is fixed. On gap days FTMO's CET midnight is 02:00 server, so the EA's firm day starts 1 hour early. The day-stop start level and the day count can be off by that hour's P/L. Our 3% day stop leaves 2% of room under the firm's 5%. This applies until 11-01, and again 2027-03-14..03-28.
+
+## 2026-10-27 (Tuesday), 23:15 check (monitor): no ALERT
+
+Checked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, orders noise 1, 4 journal trade lines, one skip (bell). The Terminal 16 experts log is two daily log files for the same date. No day stop, final stop or margin error logged.
+
+- **Trades per leg:** noise 1 (buy 0.07 US100.cash at 29647.28, bands 29624.22 / 29053.87, closed at 29652.88). Bell 0 (skipped: "bell move -1.11 is below 1.5 x average 2.91, no trade today"). No midday, breakout, Tokyo, fix or other leg lines today.
+- **Closes and P/L of the day:** 1 close, US100.cash 0.07 lots at 29652.88, P/L 0.37 EUR. P/L of the day 0.37 EUR (demo_check `pl_of_day`).
+- **Account:** the firm-day line for 2026.10.28 logs day start 10001.34, day stop 9701.34, highest day start 10043.55, final stop 9150.00 (static). Account leverage logged as 1:100. No margin error logged.
+- **Slippage:** the log gives fill and close prices only, not the quote at signal time, so the slippage on the fill is not logged. The judge check at 20:04 recorded the fill 0.2 pt better than the logged price. The tester pairing is not run for demo days, so no tester comparison.
+- **Trades without a broker stop:** none. The judge check (decisions.jsonl, 2026-10-27 20:04) records the broker stop on this US100 buy.
+- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.
