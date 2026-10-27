@@ -1,16 +1,16 @@
-# Live gate, 2026-10-26
+# Live gate, 2026-10-27
 
-**not started: phase 3 begins 2026-11-23**
+**running**
 
-Counted from 2026-11-23.
+Counted from 2026-10-27.
 
 | check | need | have | ok |
 |---|---|---|---|
 | weeks | 8 | 0.0 | no |
-| trades | 100 | 0 | no |
-| profit_factor | 1.2 | None | no |
-| max_drawdown_pct | 8.0 | 0.0 | yes |
+| trades | 100 | 2 | no |
+| profit_factor | 1.2 | inf | yes |
+| max_drawdown_pct | 8.0 | 0.178 | yes |
 | code_faults | 0 | 0 | yes |
-| ai_beats_shadow | > None R a trade | None | no |
+| ai_beats_shadow | > -0.36 R a trade | 0.053 | yes |
 
 The gate only reports. Live money needs the owner's yes and their edit of desk/risk.json.
