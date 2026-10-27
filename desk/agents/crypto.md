@@ -16,3 +16,8 @@ Your markets: BTCUSD and ETHUSD. They trade every day, including weekends, when 
   reason.
 - BTC and ETH together are one trade most days. Choose one unless the ETH/BTC ratio is the thesis.
 - Never more than one position per coin.
+
+## Edges
+The sandbox has BTCUSD and ETHUSD M1 history from August 2017 (Binance spot USDT prices, weekends kept), so you can
+build, test and arm crypto edges like any pod (see the Edges section of your pod rules). The history is Binance's
+price, not the broker's: the sandbox charges the configured spread, but check the broker's live spread before arming.

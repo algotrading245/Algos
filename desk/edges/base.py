@@ -66,9 +66,11 @@ def run(name, df, params=None, ctx=None):
 # ---- history --------------------------------------------------------------------------------------------------------
 
 def hist_bars(sym, tf, cfg=None):
-    """History bars for a desk instrument, cut before the holdout, weekends dropped. Cached in logs/desk/cache."""
+    """History bars for a desk instrument, cut before the holdout, weekends dropped (crypto trades them, so keeps
+    them). Cached in logs/desk/cache."""
     cfg = cfg or paths.config()
-    h = cfg["instruments"].get(sym, {}).get("hist") if sym in cfg["instruments"] else sym
+    ins = cfg["instruments"].get(sym, {})
+    h = ins.get("hist") if sym in cfg["instruments"] else sym
     if not h:
         raise ValueError(f"no history file for {sym}")
     src = HIST / f"{h}_M1.csv.gz"
@@ -80,7 +82,8 @@ def hist_bars(sym, tf, cfg=None):
     m1 = pd.read_csv(src, dtype={"time": "int64", "open": "float64", "high": "float64", "low": "float64",
                                  "close": "float64"})
     m1 = m1[m1["time"] < HOLDOUT_EPOCH]
-    m1 = m1[weekday(m1["time"].values) < 5]
+    if ins.get("class") != "crypto":
+        m1 = m1[weekday(m1["time"].values) < 5]
     secs = broker.TF_MIN[tf] * 60
     if secs == 60:
         out = m1.reset_index(drop=True)

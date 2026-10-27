@@ -29,8 +29,8 @@
   "US100": {"broker": ["US100", "USTEC", "NAS100", "NDX100", "US100.cash", "USA100"], "hist": "NSXUSD", "cost": 1.8, "class": "index"},
   "GER40": {"broker": ["GER40", "DE40", "DAX40", "GER40.cash", "GERMANY40", "GER30"], "hist": "GRXEUR", "cost": 1.5, "class": "index"},
   "JP225": {"broker": ["JP225", "JPN225", "NIKKEI225", "JP225.cash", "JAPAN225"], "hist": "JPXJPY", "cost": 10.0, "class": "index"},
-  "BTCUSD": {"broker": ["BTCUSD", "BITCOIN"], "hist": null, "cost": 30.0, "class": "crypto"},
-  "ETHUSD": {"broker": ["ETHUSD", "ETHEREUM"], "hist": null, "cost": 2.5, "class": "crypto"}
+  "BTCUSD": {"broker": ["BTCUSD", "BITCOIN"], "hist": "BTCUSD", "cost": 30.0, "class": "crypto"},
+  "ETHUSD": {"broker": ["ETHUSD", "ETHEREUM"], "hist": "ETHUSD", "cost": 2.5, "class": "crypto"}
  },
  "groups": {
   "USD": ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD"],
