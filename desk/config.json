@@ -25,7 +25,7 @@
   "XAUUSD": {"broker": ["XAUUSD", "GOLD"], "hist": "XAUUSD", "cost": 0.25, "class": "metal"},
   "XAGUSD": {"broker": ["XAGUSD", "SILVER"], "hist": "XAGUSD", "cost": 0.03, "class": "metal"},
   "WTI": {"broker": ["XTIUSD", "USOIL", "USOUSD", "WTI", "SpotCrude", "CL"], "hist": "WTIUSD", "cost": 0.04, "class": "energy"},
-  "US500": {"broker": ["US500", "SP500", "SPX500", "US500.cash", "USA500"], "hist": "SPXUSD", "cost": 0.6, "class": "index"},
+  "US500": {"broker": ["US500", "SP500", "SPX500", "US500.cash", "USA500"], "hist": "SPXUSD", "cost": 1.5, "class": "index"},
   "US100": {"broker": ["US100", "USTEC", "NAS100", "NDX100", "US100.cash", "USA100"], "hist": "NSXUSD", "cost": 1.8, "class": "index"},
   "GER40": {"broker": ["GER40", "DE40", "DAX40", "GER40.cash", "GERMANY40", "GER30"], "hist": "GRXEUR", "cost": 1.5, "class": "index"},
   "JP225": {"broker": ["JP225", "JPN225", "NIKKEI225", "JP225.cash", "JAPAN225"], "hist": "JPXJPY", "cost": 10.0, "class": "index"},

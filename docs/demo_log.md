@@ -264,3 +264,14 @@ No entry: the demo window was closed (Saturday 00:00 to Sunday 18:00), so no tra
 - **Trades without a broker stop:** none (no orders).
 - **Odd:** only the summer-time note. Worth a look if the demo should trade every weekday.
 - **Fidelity:** docs/fidelity/2026-10-23.md exists, so no fidelity week is due today.
+
+## 2026-10-27 19:26 — demo EA updated to Funded 1.16 (owner request)
+
+The owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.
+
+- **How:** Terminal 16 was closed gracefully under a short owner hold (`terminal.ps1 -Hold -By owner -Hours 0.25`), then released. The keeper restarted it at 19:26 with `t16_attach.ini`, because the saved chart had no AurumFunded.
+- **Journal:** "16 inputs read from expert 'AurumFunded\AurumFunded' set file ... AurumFunded_FTMO_phase1_legs.set"; "expert AurumFunded (XAUUSD,M15) loaded successfully" at 19:26:40.
+- **Build:** AurumFunded.ex5 compiled 2026-10-27 17:56 (1.16, 0 errors, 0 warnings, reviewer PASS in docs/autopilot/gaps_report.md).
+- **Experts log at 19:26:43:** account leverage 1:100; "no trading today, European and US summer time differ". The DST guard keeps it flat until the US clock change on 11-01.
+- **Positions before the restart:** none. The 00:49 sync showed 0 positions and 0 orders.
+- **Preset:** unchanged, AurumFunded_FTMO_phase1_legs.set.
