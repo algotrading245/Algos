@@ -563,3 +563,5 @@
 {"id": "paper_huang_gold_platinum_us500", "when": "2026-10-28T00:23:12", "verdict": "FAIL at halves"}
 {"id": "commod_skew_ls", "when": "2026-10-28T12:07:27", "verdict": "FAIL at halves"}
 {"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:09:46", "verdict": "PASS"}
+{"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:28:15", "verdict": "FAIL at belief"}
+{"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:28:30", "verdict": "PASS"}
