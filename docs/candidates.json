@@ -4880,9 +4880,9 @@
   {
    "id": "prebuilt_dual_thrust_four_indices_ew",
    "name": "prebuilt_dual_thrust_four_indices_ew",
-   "status": "tester",
+   "status": "integrated",
    "job": "j18",
-   "reason": "gates PASS (rerun 2026-10-28 with the EA's 01:15 open rule, fix_dual_thrust_dax_open): halves 0.64/0.95, 1.5x 0.61, corr book +0.07 / noise leg +0.26, book 2018+ 3.11->3.26, DSR 1.0. Belief now by published source only: market Sharpe SPX 0.48, NSX 0.68, JPX 0.79, GRXEUR -0.04 (3/4, no longer 4/4). Built into AurumFunded v1.18 (InpDualMult, off by default, magics +32..+35); tester job j18.",
+   "reason": "j18 tester PASS (judge 2026-10-28 13:40): on-off +1,766 USD on 10k (2024.01-2025.09); the leg's own index closes add +7.3% of the running balance (on 15.28% minus off 7.98%, research/j18_by_symbol.py) against the Python's +5.45% at size 0.5, profitable on all four indices (US100 +340, US500 +296, JP225 +328, GER40 +148); relative equity DD 6.91% -> 7.59%, return/DD 19.4 -> 20.0; months positive 18 -> 17 (2025-03 +8 -> -109). Leg stays off by default (InpDualMult 0), on only in AurumFunded_FTMO_phase1_dual.set. Earlier: gates PASS (rerun 2026-10-28 with the EA's 01:15 open rule, fix_dual_thrust_dax_open): halves 0.64/0.95, 1.5x 0.61, corr book +0.07 / noise leg +0.26, book 2018+ 3.11->3.26, DSR 1.0. Belief now by published source only: market Sharpe SPX 0.48, NSX 0.68, JPX 0.79, GRXEUR -0.04 (3/4, no longer 4/4). Built into AurumFunded v1.18 (InpDualMult, off by default, magics +32..+35); tester job j18.",
    "step": 2,
    "gates": {
     "id": "prebuilt_dual_thrust_four_indices_ew",

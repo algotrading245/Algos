@@ -149,3 +149,4 @@ committed).
 | 2026-10-28 12:33 | judge | demo check (EURUSD midday sell 12:30) | ok: 0.45 lots at 1.11267 (log 1.11266), broker stop 1.11465, no ALERT; j18 still running |
 | 2026-10-28 12:45 | tester | Collected j18 off run, started the on run | j18 running |
 | 2026-10-28 13:27 | tester | Collected j18 (AurumFunded dual1): net +15,182 (+152%), 3046.0 trades, PF 1.6, equity DD 7.59% | j18 done, needs judging |
+| 2026-10-28 13:40 | judge | j18 Dual Thrust four-index leg (AurumFunded v1.18) | PASS: on-off +1,766 USD, leg +7.3% of balance vs Python +5.45%, rel. equity DD 6.91->7.59%; candidate integrated, leg off by default |

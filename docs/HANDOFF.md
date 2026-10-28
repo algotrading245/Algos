@@ -51,15 +51,22 @@ each finished piece of work.
 
 ## Current state
 
-- **Dual Thrust four-index leg (prebuilt_dual_thrust_four_indices_ew): EA review clean, j18 running (judge
-  2026-10-28 12:25).** The leg is in AurumFunded v1.18, off by default (InpDualMult 0). Its magics are +32 to +35, for
-  US500, US100, GER40 and JP225. The reviewer found no blocker in the EA. There is one research finding: the Python
-  took the DAX open as the first GRXEUR bar at or after 01:00, and that bar is at 09:00 server in 2018, 2021, 2022,
-  most of 2023 and half of 2020. So the 2018+ half partly measures a session the EA skips (it needs a bar by 01:15).
-  Fix item `fix_dual_thrust_dax_open` reruns the gates with the EA's rule. The candidate is integrated only if both
-  j18 and that rerun pass. Judge j18 against about +5.5% (+550 USD), not +600, because the window ends 2025-09-30.
-  Minor, already in the EA before this change: `PropDays` (AurumFunded.mq5:317) counts magics only up to +25, so
-  the breakout, noise, VRP and Dual legs do not count toward InpPropMinDays (an optional part of the fix item).
+- **Dual Thrust four-index leg (prebuilt_dual_thrust_four_indices_ew): j18 PASS, integrated (judge 2026-10-28
+  13:40).** The leg is in AurumFunded v1.18 and stays off by default (InpDualMult 0). It is switched on (0.25) only in
+  its own tester preset, `AurumFunded_FTMO_phase1_dual.set` with the j18 compare_set. **For the owner:** the demo EA
+  is unchanged, and adding the leg to the demo preset is your call. Results for 2024.01-2025.09 on 10k at 1:33:
+  - Turning the leg on adds +1,766 USD (+134.2% -> +151.8%). The index trades themselves add +7.3% of the running
+    balance (on 15.28% minus off 7.98%, `research/j18_by_symbol.py`). The Python model gives +5.45% at size 0.5.
+  - All four indices made money: US100 +340, JP225 +328, US500 +296, GER40 +148 USD.
+  - The relative equity drawdown rose from 6.91% to 7.59%, and return per unit of drawdown went from 19.4 to 20.0.
+  - Profitable months fell from 18 to 17: March 2025 went from +8 to -109 USD.
+  - The gate rerun (`fix_dual_thrust_dax_open`, using the EA's 01:15 open) passes only through the published source,
+    with GER40 at Sharpe -0.04.
+  - **Tool note (tools/ is not agent-editable):** `tester_step.py` writes the "Max equity drawdown" row of summary.md
+    from the absolute-maximum line. Its % is the drawdown at the largest dollar loss, not the largest relative one,
+    so j18 off shows 4.16% where the relative maximum is 6.91%. Use `eq_dd_rel`.
+  - `PropDays` (AurumFunded.mq5:317) still counts magics only up to +25, so the breakout, noise, VRP and Dual legs
+    do not count toward InpPropMinDays.
 
 - **Demo trading again on the New York clock preset (judge 2026-10-27 20:00).** The first order after the switch was
   a US100.cash noise buy of 0.07 lots, logged at 29647.28 and filled at 29647.08, with a broker stop at 28496.13 in
