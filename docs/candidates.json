@@ -4882,23 +4882,23 @@
    "name": "prebuilt_dual_thrust_four_indices_ew",
    "status": "tester",
    "job": "j18",
-   "reason": "gates PASS: halves 0.64/0.98, 1.5x 0.60, corr book +0.07 / noise leg +0.26, 4/4 markets, book 2018+ 3.11->3.26, DSR 1.0. Built into AurumFunded v1.18 (InpDualMult, off by default, magics +32..+35); tester job j18.",
+   "reason": "gates PASS (rerun 2026-10-28 with the EA's 01:15 open rule, fix_dual_thrust_dax_open): halves 0.64/0.95, 1.5x 0.61, corr book +0.07 / noise leg +0.26, book 2018+ 3.11->3.26, DSR 1.0. Belief now by published source only: market Sharpe SPX 0.48, NSX 0.68, JPX 0.79, GRXEUR -0.04 (3/4, no longer 4/4). Built into AurumFunded v1.18 (InpDualMult, off by default, magics +32..+35); tester job j18.",
    "step": 2,
    "gates": {
     "id": "prebuilt_dual_thrust_four_indices_ew",
-    "when": "2026-10-28T12:09:46",
+    "when": "2026-10-28T12:28:30",
     "verdict": "PASS",
     "gates": [
      {
       "gate": "halves",
       "pass": true,
-      "figure": "0.64 / 0.98 (to 2017 / from 2018)",
+      "figure": "0.64 / 0.95 (to 2017 / from 2018)",
       "rule": ">= 0.2 each half"
      },
      {
       "gate": "costs",
       "pass": true,
-      "figure": "0.60",
+      "figure": "0.61",
       "rule": "> 0.0 at 1.5x cost"
      },
      {
@@ -4910,7 +4910,7 @@
      {
       "gate": "belief",
       "pass": true,
-      "figure": "4/4 markets profitable",
+      "figure": "published https://github.com/je-suis-tm/quant-trading",
       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
      },
      {
@@ -4922,17 +4922,18 @@
      {
       "gate": "dsr",
       "pass": true,
-      "figure": "1.000 (book, N=26792, luck bar 1.00)",
+      "figure": "1.000 (book, N=26794, luck bar 1.00)",
       "rule": ">= 0.9"
      }
     ],
     "replaces": [],
-    "published": null,
+    "published": "https://github.com/je-suis-tm/quant-trading",
     "profitable_months_2018": [
      0.777,
-     0.798
+     0.819
     ]
-   }
+   },
+   "published": "https://github.com/je-suis-tm/quant-trading"
   }
  ],
  "rejected": [

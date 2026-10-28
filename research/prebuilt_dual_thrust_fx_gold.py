@@ -16,6 +16,7 @@ M = 'marketdata/histdata/'
 SPR = {'EURUSD': 0.8e-4, 'USDJPY': 1.2e-4, 'XAUUSD': 3.0e-4, 'SPXUSD': 1.5e-4, 'NSXUSD': 1.5e-4}
 N, K1, K2 = 4, 0.5, 0.5
 START_MIN, END_MIN = 60, 22 * 60
+MAXOPEN = None  # minutes of day; None = no skip (original runs)
 
 
 def load(sym):
@@ -42,6 +43,8 @@ def sim(sym, d):
     for t, w in gi:
         if t not in rng.index or not np.isfinite(rng[t]) or not np.isfinite(sd[t]) or len(w) < 120:
             continue
+        if MAXOPEN is not None and w.index[0].hour * 60 + w.index[0].minute > MAXOPEN:
+            continue  # EA needs a bar by 01:15 (Legs.mqh:2497), else it skips the day
         o = w.open.iloc[0]
         up, dn = o + K1 * rng[t], o - K2 * rng[t]
         H, L, C = w.high.to_numpy(), w.low.to_numpy(), w.close.to_numpy()

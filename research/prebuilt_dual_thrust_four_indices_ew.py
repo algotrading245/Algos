@@ -8,6 +8,7 @@ import holdout
 import prebuilt_dual_thrust_fx_gold as dt
 
 dt.K1, dt.K2 = 0.3, 0.7
+dt.MAXOPEN = 75  # skip days whose first bar is after 01:15, as the EA does (fix_dual_thrust_dax_open)
 SPR = {'SPXUSD': 1.5e-4, 'NSXUSD': 1.5e-4, 'GRXEUR': 2.0e-4, 'JPXJPY': 3.0e-4}
 sharpe = dt.sharpe
 
