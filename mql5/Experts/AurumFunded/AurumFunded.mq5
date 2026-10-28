@@ -96,6 +96,10 @@
 //| FTMO's server stayed GMT+3 through Europe's 10-25 change, so the |
 //| skip paused the demo for nothing (owner 2026-10-27). Live trades |
 //| on the skipped days have no tester match.                        |
+//| v1.18: Dual Thrust index leg (InpDualMult, off by default, magic |
+//| +32..+35: S&P 500, Nasdaq, DAX, Nikkei): 4-day range, buy at the |
+//| 01:00 open + 0.3 range, sell at open - 0.7 range, stop at the    |
+//| other level (reverses), flat 22:00. Size min(3, 10% / vol).      |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -104,7 +108,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.17"
+#property version   "1.18"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

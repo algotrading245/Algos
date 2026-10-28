@@ -1,0 +1,26 @@
+; AurumFunded v1.18 - FTMO funded-style run (no profit target) with the Dual Thrust index leg
+; (research/prebuilt_dual_thrust_four_indices_ew.py). The preset is the OFF run (InpDualMult=0); the on run adds
+; InpDualMult=0.25 (queue compare_set). Tester only until the judge has passed it. Symbol names are FTMO's.
+InpPropTargetPct=0.0
+InpPropRound=3
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275
+InpVrpMult=0.0
+InpDualMult=0.0
+InpDualDax=GER40.cash
+InpDualNikkei=JP225.cash
+InpDualKLong=0.3
+InpDualKShort=0.7
+InpDualMaxSpreadBp=5.0

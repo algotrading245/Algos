@@ -561,3 +561,5 @@
 {"id": "ml_cross_skip_fix_overlap", "when": "2026-10-28T00:09:08", "verdict": "FAIL at corr"}
 {"id": "ml_metalabel_quartet_skip", "when": "2026-10-28T00:15:26", "verdict": "FAIL at corr"}
 {"id": "paper_huang_gold_platinum_us500", "when": "2026-10-28T00:23:12", "verdict": "FAIL at halves"}
+{"id": "commod_skew_ls", "when": "2026-10-28T12:07:27", "verdict": "FAIL at halves"}
+{"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:09:46", "verdict": "PASS"}

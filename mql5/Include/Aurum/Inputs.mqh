@@ -232,6 +232,14 @@ input int    InpVrpEntrySec     = 600;   // No entry later than this after the s
 input double InpVrpMaxSpreadBp  = 3.0;   // No entry while the spread is above this, basis points of price
 input double InpVrpStopEqPct    = 5.0;   // Broker stop: loss in % of equity (not in the Python test)
 
+input group "Dual Thrust index breakout (S&P 500, Nasdaq, DAX, Nikkei; research/prebuilt_dual_thrust_four_indices_ew.py)"
+input double InpDualMult        = 0.0;   // Notional per index, multiple of min(3, 10% / annual volatility) x equity (0 = off; 0.25 = four indices at equal weight)
+input string InpDualDax         = "GER40.cash"; // DAX on the broker (check the name)
+input string InpDualNikkei      = "JP225.cash"; // Nikkei 225 on the broker (check the name)
+input double InpDualKLong       = 0.3;   // Buy at the day open + this x the 4-day range
+input double InpDualKShort      = 0.7;   // Sell at the day open - this x the 4-day range
+input double InpDualMaxSpreadBp = 5.0;   // No entry while the spread is above this, basis points of price
+
 input group "Fast leg (2-minute fade at the bell)"
 input double InpSnapRiskPct     = 0.0;   // Loss at the stop, % of balance (0 = off)
 input int    InpSnapLookMin     = 5;     // Move is measured over this many minutes (multiple of 5)

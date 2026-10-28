@@ -29,7 +29,11 @@ bool   AurumInputsBad();                                            // true: the
 #define VRP_HOLD_DAYS 10   // variance-premium hold in trading days (D1 bars of the index)
 #define VRP_MAGIC 30      // the variance-premium trades have magic InpMagic+30 (S&P 500) and InpMagic+31 (Nasdaq)
 #define NOISE_MAGIC 28    // the noise-area trades have magic InpMagic+28 (S&P 500) and InpMagic+29 (Nasdaq)
-#define NOISE_OPEN  990    // 9:30 New York in server minutes (the server is New York + 7)
+#define DUAL_MAGIC 32     // the Dual Thrust index trades have magic InpMagic+32 .. +35 (S&P 500, Nasdaq, DAX, Nikkei)
+#define DUAL_START 60     // day open: 01:00 server, after the 23:00-01:00 rollover
+#define DUAL_END   1320   // flat at 22:00 server
+#define DUAL_FLIPS 8      // most entries a day and index (the Python test has no limit; a run-away guard)
+#define NOISE_OPEN  990   // 9:30 New York in server minutes (the server is New York + 7)
 #define NOISE_CLOSE 1380   // 16:00 New York
 #define NOISE_N     12     // checks at 10:00, 10:30, ... 15:30 New York
 #define NOISE_DAYS  14     // sessions in the average move and the daily volatility
@@ -90,6 +94,12 @@ datetime g_noiseDay[2];    // day the bands below belong to
 bool     g_noiseReady[2];  // that day's bands are known
 int      g_noiseLast[2];   // last check dealt with that day
 double   g_noiseSig[2][NOISE_N],g_noiseHi[2],g_noiseLo[2],g_noiseLev[2],g_noiseVol[2];
+bool     g_dualOn=false;   // the Dual Thrust index leg has a size
+string   g_dualSym[4];     // S&P 500, Nasdaq, DAX, Nikkei, "" for one that is missing
+datetime g_dualDay[4];     // day the levels below belong to
+int      g_dualState[4];   // 0 = levels not yet made, 1 = ready, 2 = no trade today
+int      g_dualFlips[4];   // entries made today
+double   g_dualUp[4],g_dualDn[4],g_dualExpo[4];
 
 int HHMM(datetime t)
   {
@@ -2449,6 +2459,145 @@ void Vrp()
      }
   }
 
+// Levels of Dual Thrust index i for 'today' (research/prebuilt_dual_thrust_four_indices_ew.py): the range is
+// max(highest high - lowest close, highest close - lowest low) of the last 4 daily bars, the day open is the first M1
+// bar from 01:00, buy at open + 0.3 x range, sell at open - 0.7 x range. The size factor is min(3, 10% / annual
+// volatility of the last 60 daily closes). False when the history is short.
+bool DualPrepare(int i,datetime today)
+  {
+   string sym=g_dualSym[i];
+   MqlRates d[],m[];
+   int n=CopyRates(sym,PERIOD_D1,today-150*86400,today-1,d);
+   if(n<62)
+      return(false);
+   double hh=-1e300,ll=1e300,hc=-1e300,lc=1e300;
+   for(int k=n-4; k<n; k++)
+     {
+      hh=MathMax(hh,d[k].high);
+      ll=MathMin(ll,d[k].low);
+      hc=MathMax(hc,d[k].close);
+      lc=MathMin(lc,d[k].close);
+     }
+   double rng=MathMax(hh-lc,hc-ll);
+   double r[60],mean=0.0,var=0.0;
+   for(int k=0; k<60; k++)
+     {
+      double c0=d[n-61+k].close;
+      if(c0<=0)
+         return(false);
+      r[k]=d[n-60+k].close/c0-1.0;
+      mean+=r[k];
+     }
+   mean/=60.0;
+   for(int k=0; k<60; k++)
+      var+=(r[k]-mean)*(r[k]-mean);
+   double sd=MathSqrt(var/59.0);
+   if(rng<=0 || sd<=0)
+      return(false);
+   if(CopyRates(sym,PERIOD_M1,today+DUAL_START*60,today+DUAL_START*60+900,m)<1)
+      return(false);
+   if(m[0].time>today+DUAL_START*60+900 || m[0].open<=0)
+      return(false);
+   g_dualUp[i]=m[0].open+InpDualKLong*rng;
+   g_dualDn[i]=m[0].open-InpDualKShort*rng;
+   g_dualExpo[i]=MathMin(3.0,0.10/(sd*MathSqrt(252.0)));
+   return(true);
+  }
+
+// Dual Thrust daily-range breakout on four indices, flat at 22:00. Long above the upper level with the broker stop at the
+// lower level, short below the lower level with the stop at the upper one: a stop that is hit leaves the leg flat with
+// the price beyond the other level, so the next check reverses, as in the Python test. State is rebuilt from the
+// chart history after a restart; a restart late in the day with a level already passed skips the day.
+void Dual()
+  {
+   if(!g_dualOn)
+      return;
+   datetime now=TimeCurrent(),today=DayOf(now),opened;
+   int minute=(int)((now-today)/60);
+   MqlDateTime st;
+   TimeToStruct(today,st);
+   for(int i=0; i<4; i++)
+     {
+      string sym=g_dualSym[i];
+      if(sym=="")
+         continue;
+      long magic=InpMagic+DUAL_MAGIC+i;
+      double held=HeldLots(sym,magic,opened);
+      if(held>0 && (minute>=DUAL_END || DayOf(opened)!=today))
+        {
+         CloseAll(sym,magic);
+         continue;
+        }
+      if(g_dualDay[i]!=today)
+        {
+         g_dualDay[i]=today;
+         g_dualState[i]=0;
+         g_dualFlips[i]=0;
+        }
+      if(st.day_of_week<1 || st.day_of_week>5 || minute<DUAL_START+1 || minute>=DUAL_END || g_dualState[i]==2)
+         continue;
+      if(held>0)
+         continue;                 // the broker stop is the reversal level
+      if(g_dualState[i]==0)
+        {
+         if(!DualPrepare(i,today))
+           {
+            if(minute>DUAL_START+20)
+              {
+               g_dualState[i]=2;
+               PrintFormat(AURUM_NAME+": no Dual Thrust levels for %s today (history short or no bar after 01:00)",sym);
+              }
+            continue;
+           }
+         g_dualState[i]=1;
+         if(minute>DUAL_START+5 && !TradedSince(sym,magic,today))
+           {
+            // started late: if a level was already passed since the open, that entry is gone
+            double hi[],lo[];
+            if(CopyHigh(sym,PERIOD_M1,today+DUAL_START*60,now,hi)>0 && CopyLow(sym,PERIOD_M1,today+DUAL_START*60,now,lo)>0 &&
+               (hi[ArrayMaximum(hi)]>=g_dualUp[i] || lo[ArrayMinimum(lo)]<=g_dualDn[i]))
+              {
+               g_dualState[i]=2;
+               PrintFormat(AURUM_NAME+": %s passed a Dual Thrust level before the EA started, no trade today",sym);
+               continue;
+              }
+           }
+        }
+      MqlTick q;
+      if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0)
+         continue;
+      int dir=0;
+      if(q.ask>=g_dualUp[i])
+         dir=1;
+      else if(q.bid<=g_dualDn[i])
+         dir=-1;
+      if(dir==0)
+         continue;
+      if(g_dualFlips[i]>=DUAL_FLIPS)
+         continue;
+      if((q.ask-q.bid)/q.bid*1e4>InpDualMaxSpreadBp)
+         continue;                 // tried again on the next check
+      double px=(dir>0 ? q.ask : q.bid);
+      double lots=NotionalLots(sym,dir,px,SizeMult()*InpDualMult*g_dualExpo[i]);
+      if(lots<=0)
+        {
+         PrintFormat(AURUM_NAME+": balance too small for the minimum lot of %s, no Dual Thrust trade",sym);
+         g_dualState[i]=2;
+         continue;
+        }
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      double sl=NormalizeDouble(dir>0 ? g_dualDn[i] : g_dualUp[i],dg);
+      Prepare(sym,magic);
+      g_dualFlips[i]++;
+      bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" dual") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" dual"));
+      if(!Filled(ok))
+         PrintFormat(AURUM_NAME+": Dual Thrust order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+      else
+         PrintFormat(AURUM_NAME+": Dual Thrust %s %s %.2f lots at %.2f, levels %.2f / %.2f",sym,dir>0 ? "bought" : "sold",lots,
+                     FillPrice(px),g_dualUp[i],g_dualDn[i]);
+     }
+  }
+
 // Everything the EA does, called on every tick of the chart and once a second.
 // Closes every position of the EA. Returns false if a close failed.
 bool CloseEverything()
@@ -2485,6 +2634,10 @@ bool CloseEverything()
       for(int i=0; i<2; i++)
          if(g_vrpSym[i]!="")
             ok=CloseAll(g_vrpSym[i],InpMagic+VRP_MAGIC+i) && ok;
+   if(g_dualOn)
+      for(int i=0; i<4; i++)
+         if(g_dualSym[i]!="")
+            ok=CloseAll(g_dualSym[i],InpMagic+DUAL_MAGIC+i) && ok;
    return(ok);
   }
 
@@ -2532,6 +2685,7 @@ void Run()
    Noise();
    Drift();
    Vrp();
+   Dual();
   }
 
 //+------------------------------------------------------------------+
@@ -2565,6 +2719,7 @@ int OnInit()
       InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange ||
       InpVrpMult<0 || InpVrpHHMM<0 || InpVrpHHMM%100>59 || InpVrpHHMM>2350 || InpVrpEntrySec<1 || InpVrpMaxSpreadBp<=0 ||
       InpVrpStopEqPct<=0 || (InpVrpVix=="" && InpVrpVixFile=="") ||
+      InpDualMult<0 || InpDualKLong<=0 || InpDualKShort<=0 || InpDualMaxSpreadBp<=0 ||
       InpNoiseMult<0 || InpNoiseBandSpx<=0 || InpNoiseBandNdx<=0 || InpNoiseMaxSpreadBp<=0 || AurumInputsBad())
       return(INIT_PARAMETERS_INCORRECT);
    // InpTarget: the goal scale with the best chance of each multiple in tools/target_odds.py (21 weekdays, 70% of
@@ -2703,6 +2858,29 @@ int OnInit()
          g_vrpSym[i]="";
         }
      }
+   g_dualOn=(InpDualMult>0);
+   g_dualSym[0]=InpStocks;
+   g_dualSym[1]=InpNasdaq;
+   g_dualSym[2]=InpDualDax;
+   g_dualSym[3]=InpDualNikkei;
+   for(int i=0; i<4; i++)
+     {
+      g_dualDay[i]=0;
+      g_dualState[i]=0;
+      g_dualFlips[i]=0;
+      if(!g_dualOn)
+         continue;
+      if(SymbolSelect(g_dualSym[i],true))
+        {
+         iBars(g_dualSym[i],PERIOD_D1);
+         iBars(g_dualSym[i],PERIOD_M1);
+        }
+      else
+        {
+         PrintFormat(AURUM_NAME+": symbol %s is not available, the Dual Thrust leg leaves it out",g_dualSym[i]);
+         g_dualSym[i]="";
+        }
+     }
    if(g_driftOn &&!SymbolSelect(InpStocks,true))
      {
       PrintFormat(AURUM_NAME+": stock index %s is not available, the overnight-drift leg is off",InpStocks);
@@ -2778,7 +2956,7 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,const MqlTradeRequest &
       long entry=HistoryDealGetInteger(trans.deal,DEAL_ENTRY);
       long magic=HistoryDealGetInteger(trans.deal,DEAL_MAGIC);
       if((entry!=DEAL_ENTRY_OUT && entry!=DEAL_ENTRY_INOUT && entry!=DEAL_ENTRY_OUT_BY) ||
-         magic<InpMagic || magic>InpMagic+31)
+         magic<InpMagic || magic>InpMagic+35)
          return;
       double pl=HistoryDealGetDouble(trans.deal,DEAL_PROFIT)+HistoryDealGetDouble(trans.deal,DEAL_SWAP)+
                 HistoryDealGetDouble(trans.deal,DEAL_COMMISSION)+HistoryDealGetDouble(trans.deal,DEAL_FEE);

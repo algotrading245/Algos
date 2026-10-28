@@ -432,6 +432,25 @@
       "terminal": "C:\\MetaTrader 5 - Tester",
       "folder_on": "backtests\\2026-10-25_2049_AurumFunded_vrp2_on",
       "result": "FAIL: VRP leg trades net +0.31 USD vs model +260 (0%), equity DD 4.16 -> 5.99%, return/DD 32.2 -> 22.9; 14 of 26 trades closed early by CloseAll lost 972.60"
+    },
+    {
+      "id": "j18",
+      "expert": "AurumFunded",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_dual.set",
+      "deposit": 10000,
+      "leverage": 33,
+      "tag": "dual1",
+      "set": [],
+      "compare_set": [
+        "InpDualMult=0.25"
+      ],
+      "from": "2024.01.01",
+      "to": "2025.09.30",
+      "status": "queued",
+      "needs": null,
+      "expect": "Step 15 for AurumFunded v1.18 (Dual Thrust index leg, magics +32 S&P 500 / +33 Nasdaq / +34 GER40.cash / +35 JP225.cash). Preset = OFF run; compare_set adds InpDualMult=0.25 (ON run). Python (research/prebuilt_dual_thrust_four_indices_ew.py, four indices equal weight at size 1): +12.6% over 2024.01-2025.10 with annual vol 3.8% and max DD 2.3%; the preset runs it at SizeMult 0.5, so about +6% and 1.2% DD on 10k, i.e. about +600 USD, 67-87% of that in the tester (lesson 4). Rule: 4-day range, buy at 01:00 open + 0.3 x range, sell at open - 0.7 x range, broker stop at the opposite level (reverses), flat 22:00, several trades a day expected (reversals). Check the log shows the four symbols selected and 'Dual Thrust ... bought/sold' lines; if GER40.cash or JP225.cash is not on the tester server the log says the leg leaves it out (then judge on the two US indices). Differences from the Python: D1 bars of the broker, stop = reversal level, cap of 8 entries per day and index. Lesson 21: the book CloseEverything (day stop etc.) can close trades early; this leg is intraday so the effect is small, but check for off-schedule closes. Do not tune on this window."
     }
   ]
 }
