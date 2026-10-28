@@ -147,3 +147,4 @@ committed).
 | 2026-10-28 12:13 | tester | Started j18 (AurumFunded dual1_off) | j18 running in 2026-10-28_1213_AurumFunded_dual1_off |
 | 2026-10-28 12:25 | judge | review of AurumFunded v1.18 Dual Thrust leg (j18) | EA clean, j18 left running; research finding (DAX open 09:00 in 2018-23 data) -> fix_dual_thrust_dax_open queued; expect about +550 USD |
 | 2026-10-28 12:33 | judge | demo check (EURUSD midday sell 12:30) | ok: 0.45 lots at 1.11267 (log 1.11266), broker stop 1.11465, no ALERT; j18 still running |
+| 2026-10-28 12:45 | tester | Collected j18 off run, started the on run | j18 running |
