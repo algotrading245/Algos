@@ -150,3 +150,4 @@ committed).
 | 2026-10-28 12:45 | tester | Collected j18 off run, started the on run | j18 running |
 | 2026-10-28 13:27 | tester | Collected j18 (AurumFunded dual1): net +15,182 (+152%), 3046.0 trades, PF 1.6, equity DD 7.59% | j18 done, needs judging |
 | 2026-10-28 13:40 | judge | j18 Dual Thrust four-index leg (AurumFunded v1.18) | PASS: on-off +1,766 USD, leg +7.3% of balance vs Python +5.45%, rel. equity DD 6.91->7.59%; candidate integrated, leg off by default |
+| 2026-10-28 14:38 | judge | demo check (USDJPY breakout 14:32) | ok: sell stopped at 158.046 (stop 158.039), buy side fired same tick by design, broker stops on all orders, day P/L -40.64 EUR, no ALERT |
