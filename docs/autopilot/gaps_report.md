@@ -1,88 +1,66 @@
-# Gaps report - 2026-10-27 06:05 (doctor)
+# Gaps report - 2026-10-28 06:05 (doctor)
 
-Health: **amber**. The relay and keeper ran without a gap through 10-26 and 10-27. The queue is clean, and the finder
-now stops after its daily scout, so spend fell to $11 on 10-26. But the week's budget is at 1.273 of its line, and the
-demo will not trade this week: the EA's summer-time guard is on until the US clock change on 11-01.
+Health: **amber**. The demo trades again: Funded 1.16 on the New York clock preset, first close +0.37 EUR on 10-27.
+Relay and keeper show no gap. Still amber: two queue items are invisible to the builder, the finder is still refused
+reads of saved tool output, and the week's budget is at 1.34 of its line.
 
 ## Fixed this run
-- Nothing needed an agent fix. The queue parses and has no duplicate ids. Every data item is done. HANDOFF:53-65 agrees
-  with the logs, and the version line from the 10-26 doctor run is still right (Hydra 1.41, Funded 1.15).
-
-## Owner session 2026-10-27 (Opus)
-- **2 kept by design.** The DST guard stays: the demo pauses until the US change on 11-01. Funded 1.16 says so in the
-  code, and the monitor logs it without an ALERT.
-- **3 fixed.** The monitor writes `docs/demo_log_entry.md` and runs `tools/demo_log_append.py`, which only appends.
-  `Edit(./docs/demo_log.md)` is denied, and the 10-26 rewrap is undone.
-- **4 fixed.** Hydra 1.42 and Funded 1.16 compile with 0 errors and 0 warnings (compile.ps1 17:56, 5255 and
-  5842 ms). The reviewer's verdict was PASS once demo_check stopped masking 6+ digit prices and P/L and the close
-  line printed its volume with %g.
-- **5 fixed.** Both EAs now print each closing deal with its P/L, and `demo_check.py` reports `closes` and `pl_of_day`.
-  The demo terminal still runs Funded 1.10, so these lines start only after the owner updates it.
-- **6 already fixed** in 8efc7c7. `demo_check.py --day 2026-10-23` now reads `ok`: a 10036 or 10013 close in the same second as a journal deal counts as `duplicate_close`, not as an ALERT.
-- **7 fixed.** `Read(~/.claude/projects/*/*/tool-results/**)` is allowed in the autopilot settings.
-- **8 explained.** It was a power loss, not a pause. The laptop lost mains power at 00:00:15 on 10-25 and shut down
-  unexpectedly. It crashed again at 00:18, rebooted at 00:49 (Kernel-Power 41), slept and woke on battery, and hit
-  Critical Battery at 03:03. The autopilot resumed at 03:02. No PAUSE file was written, and the only update was
-  Defender's. Keep the PC on mains, with a plan that never sleeps.
-- **9 cleaned.** The temp scripts had already run and their rows are in `sources.jsonl` and `backlog_done.jsonl`.
-  They are deleted, along with the `.new` placeholders and `research/_cache_*.csv`. `.gitignore` now covers the
-  desk's runtime state, the fetched data and the 10-17/10-18 chat tester sweeps. The gate verdicts in `docs/gates/`
-  are committed.
+- **HANDOFF stale state.** Lines 46, 65-67, 69-70 and 101 said the demo runs Funded 1.10, the Hydra compile is open
+  and lesson 21 is unreviewed. They now say: demo on 1.16 and `..._nyclock.set` (demo_log 10-27 19:26, 19:55), Hydra
+  1.42 compile done (10-27 17:56), repo Hydra 1.42 / Funded 1.17 (`#property version`), lesson 21 reviewed.
+  Logged in decisions.jsonl at 2026-10-28T06:02.
 
 ## Open, for Opus
-1. **Budget over its line, skip does nothing.** `budget.py status` 06:00: week from 10-23 18:00 is $127.33 of $100
-   (fraction 1.273, skip true), 610 runs. By day: 10-24 $57.61, 10-25 $43.01, 10-26 $11.06, 10-27 $0.13.
-   It is no longer rising fast (see Watching), but skip still stops nothing. Owner: make skip stop a role, or raise the line.
-2. **The demo does not trade from 10-26 to 10-30.** `AurumFunded.mq5:264-265` `ClockOk()` stops all trading while
-   `EuSummer != UsSummer` (InpEuClock). demo_log 10-26 23:15: "no trading today, European and US summer time differ".
-   Europe changed clocks on 10-25 and the US changes on 11-01, so the out-of-sample demo loses a week, and it does the
-   same each March. Owner: decide whether to accept that or shift the leg times by one hour on those days.
-3. **The monitor rewrapped a past demo_log entry.** Its shell append was refused (`2026-10-26_agent-monitor.log` 23:17:11),
-   so it rewrote the whole file with Write. Commit 0611c40 rewrapped the 10-19 "Account currency is EUR" paragraph
-   (`docs/demo_log.md:37`; the words are unchanged). Fix: allow an append-only script for demo_log
-   (tools/autopilot/settings.json), and restore the 3-line wrap.
-4. **Hydra compile for the shared Legs.mqh/Inputs.mqh change** is still not done: HANDOFF:60, judge review 10-25
-   20:40 (runs.md:141). There is no compile log after that. Do it before any Hydra job.
-5. **Fidelity has no role and no P/L data.** `backtests/2026-10-25_1557_AurumFunded_fidelity_1019/` is still
-   untracked. demo_log 10-26 still says "P/L of the day: not logged". `demo_check.py:19` drops 6+ digit deal tickets.
-   Fix: give fidelity to the judge or the monitor, mask the digits, and have the EA log P/L and close lines.
-6. **demo_check false ALERT** for the 10-23 14:00 retcode 10036 duplicate close (demo_log:193, 224). Fix: skip a 10036
-   close when a closing deal falls in the same second.
-7. **Refused commands.** Finder Grep on `.claude/projects/.../tool-results` was denied again on 10-26 02:42, which
-   blocks full paper reads (lesson 15). Monitor append denied 10-26 23:17 (item 3). Fix: allow read-only Grep/Read of
-   tool-results.
-8. **Overnight pause and keeper restarts, 10-25 00:01-03:02:** still not explained, and not repeated on 10-26 or 10-27.
-   Owner: check the Windows update history for that night, and have the relay and keeper log who sets the pause file.
-9. **Uncommitted and stray files.** Modified: `dashboard/data.js`, `desk/journal/2026-10-26.jsonl`, `docs/book.json`,
-   `docs/candidates.md`, `docs/gaps.json`, `docs/ideas/near_miss.jsonl`. Untracked: 4 temp scripts
-   (`research/fetch/_append_done_tmp.py`, `_close_leads_tmp.py`, `close_leads_tmp.py`,
-   `research/fetch_tmp_close_leads.py`), `research/_cache_eur.csv`, `_cache_xau.csv`,
-   `docs/ideas/*.jsonl.new` (2), `docs/gates/paper_announcement_day_long_indices.json`, `desk/board.jsonl`,
-   `desk/inbox/`, `marketdata/` (cot, fomc, fred, ftmo_spread, crypto, candidates) and about 50 old `backtests/`.
-   Owner: commit the gate verdict and state files, delete the temp files, and decide on .gitignore.
-10. **Holdout rows on disk.** `marketdata/ftmo_spread/` EURUSD runs to 2026-07 (`data_ftmo_m1_spread_history`).
-    Trim the file, or cut any use at 2025-10-12 via tools/holdout.py.
-11. **Owner questions waiting:** (10) the XAUUSD chart has been on M1 since the 10-23 re-init; (a6) keep breakout in
-    the demo after it failed the belief gate (HANDOFF:200).
+1. **Two queue items at status "pending", so the builder never picks them up.** These are
+   `paper_fernandez_perez_commodity_skewness_ls` and `prebuilt_dual_thrust_four_indices_ew` (queue.jsonl, added
+   10-28). The relay only runs the builder for "new" or "testing" (`relay.ps1:20`), and finder.md:96 says "new". Since
+   00:46 the relay has logged only "finder idle". No decision line queued either one. They arrived uncommitted and were
+   swept into builder commit 1f7ff9c (00:09). The untracked `research/prebuilt_dual_thrust_basket_crosses.py` suggests
+   an outside session wrote them. Owner: set them to "new" if they are meant for the builder, or else drop them.
+2. **Tool-results reads still denied, after the 10-27 allow rule.** Finder Grep and Read were denied at 10-28 00:05:43
+   and 00:21:54, and builder Grep at 00:23:43 (`2026-10-28_agent-finder.log:36-37,108`, `_agent-builder.log:63`).
+   The paths are `C:\Users\...\.claude\projects\<proj>\<session>\tool-results\*.txt`. The rule likely misses the
+   Windows path form, and Grep is not covered at all. Without these reads, full paper reads (lesson 15) are blocked: the
+   finder closed 31 leads in 45 min, at least one on "a search summary" only (finder log line 211).
+3. **Budget over its line, and skip stops nothing.** Week from 10-23 18:00: $133.99 of $100 (1.34), 631 runs. Today so
+   far $4.37: finder 12 runs, builder 4. Owner: make skip stop a role, or raise the line.
+4. **Funded 1.17 known risk on gap days.** `InpPropResetHHMM=100` is fixed, so until 11-01 (and again 2027-03-14..28)
+   the EA's firm day starts 1 h before FTMO's (demo_log 10-27 20:20). The 3% day stop leaves 2% of room, so this is
+   low risk, but it sits in the funded presets. T16 still runs 1.16, and 1.17 loads at the next restart.
+5. **Fidelity has no role.** P/L is now logged (demo_log 10-27 23:15 `pl_of_day` 0.37), but
+   `backtests/2026-10-25_1557_AurumFunded_fidelity_1019/` is still untracked and no role owns weekly fidelity.
+6. **Stray and uncommitted files keep piling up.** Modified: `dashboard/data.js`, `docs/book.json`,
+   `docs/candidates.md`, `docs/gaps.json`, `docs/ideas/near_miss.jsonl`, `research/driesprong_oil_index.py`, 3
+   driesprong candidate CSVs, `desk/edges/cards/noise.json`. Untracked: about 35 `marketdata/candidates/*.csv`, 5
+   `desk/edges/cards/*.json`, `research/grain_harvest_seasonal.py`, `research/prebuilt_dual_thrust_basket_crosses.py`,
+   and the temp script `research/fetch/_close_leads_tmp.py` again (deleted on 10-27).
+7. **Holdout rows on disk:** `marketdata/ftmo_spread/EURUSD_M1.csv.gz` ran to 2026-07 at the 10-27 report. No trim
+   is recorded. Trim the file, or cut at 2025-10-12 through tools/holdout.py.
+8. **Owner questions waiting:** (10) the XAUUSD chart is on M1 since the 10-23 re-init; (a6) keep breakout in the demo
+   after it failed the belief gate (HANDOFF:200).
+9. **Judge used a refused shell form** (`find ... | head`, 10-27 20:04:35, `_agent-judge.log:13`). Minor. The run
+   still ended ok. The judge prompt could name the Grep or Glob tools for this.
 
-## Earlier items (10-26 report)
-- Item 2 (finder back-off too short): **fixed.** Since 10-26 12:25 the relay logs "finder idle: 0 open leads, today's
-  scout done, no new steer". On 10-27 there was one scout at 00:00, then idle every 5 min to 06:00 (`2026-10-27_relay.log`).
-- Item 3 (10-25 night pause): no repeat, still open as item 8.
-- Items 1, 4, 5, 6, 7, 8, 9, 10 are still open (now 1, 5, 6, 7, 9, 4, 11, 10).
+## Earlier items (10-27 report)
+- 1 budget: open (now 3). 2 demo DST pause: **fixed** by the owner (nyclock preset 19:55, Funded 1.17 20:10, demo
+  traded 10-27). 3 demo_log rewrap: **fixed** (append-only script). 4 Hydra compile: **fixed**, and HANDOFF is now
+  updated too. 5 fidelity and P/L: **P/L fixed**, the fidelity role is open (now 5). 6 false ALERT: **fixed**. 7
+  tool-results: **still denied** (now 2). 8 10-25 pause: **explained** (power loss). 9 strays: cleaned on 10-27, new
+  ones since (now 6). 10 holdout rows: open (now 7). 11 questions: open (now 8).
 
 ## Watching
-- Finder `empty_streak` **0** (`last-finder.json` 10-27 00:00, "scouted 0 leads", 1 run today). Owner's choice, no
-  brake. 21 scouts in a row have added 0 leads (decisions 10-26 to 10-27 00:00).
-- Agents: no failed runs, none timed out. Monitor ran 10-26 23:15 (Monday, ok). Portfolio ran 10-24 (Saturday, ok).
-  Judge last ran 10-25 22:58, builder 10-26 00:53, both exit 0 with nothing waiting. The last tester run was 10-18
-  (no job queued).
-- Scheduled tasks: relay ticks every 5 min with no gap over 10 min on 10-26 or 10-27. The keeper-steps log has about
-  1 step a minute (10-26: 1,432 tester_step lines; 10-27: 359 by 06:00). No `*_keeper.log` exists for 10-26 or 10-27,
-  so the keeper has not restarted since 10-25.
-- Queue: 85 lines, all parse, no duplicates, 73 rejected and 12 done, none at testing or tester. `data-tries.json`:
-  `data_ftmo_m1_spread_history` 3 (done, PARTIAL), others 1-2 (all done). No `tester-help.json` or `to-judge.json`.
-- Demo: last check-in 10-26 23:15, no ALERT, no trades (item 2). Leverage 1:100, day start 10000.97 EUR. Demo runs
-  1.10, repo Funded 1.15 (1.13-1.15 add the VRP leg, off by default).
-- Owner commits 10-27 00:30-01:20 started the "desk" (phase 3, all pods, full risk, prop_10k rules), with "live stays
-  off" (git log 87de223). This is outside the autopilot. Noted, not judged.
+- Finder `empty_streak` **1** (`last-finder.json` 10-28 00:46, "0 ideas queued", 12 runs today). Owner's choice, no
+  brake. The 00:00 scout found 31 leads. 3 were queued (all rejected by the builder) and the rest dropped by 00:46.
+  Then "finder idle" every 5 min to 06:00.
+- Agents: no failed or timed-out runs, and every end is exit 0. Several 1-2 min finder and builder runs show as
+  "ended at once" in the relay log, but each did its work (commits 2e58eb7-c40d1e7). Monitor ran Mon 10-26 and Tue
+  10-27 23:15 (ok). Portfolio last ran Sat 10-24 (next 10-31). Judge 10-27 20:00 (demo order ok). Tester last ran
+  10-18, with no job queued.
+- Scheduled tasks: relay ticks 10-27 00:01 to 10-28 06:00 with no gap over 15 min. The keeper log shows only the 2
+  owner holds on 10-27 (19:25, 19:51), each followed by a restart with Funded attached. There is no keeper log for
+  10-28, and keeper-steps is present.
+- Queue: 95 lines, all parse, no duplicate ids: 81 rejected, 12 done, 2 pending (item 1), none at testing or tester.
+  `data-tries.json`: `data_ftmo_m1_spread_history` 3 (done, PARTIAL), others 1-2 (all done). No `tester-help.json`
+  or `to-judge.json`. `demo-event.json` is from 10-27 20:00 (judged).
+- Demo: last check-in 10-27 23:15, no ALERT, 1 trade (noise US100 0.07, +0.37 EUR), bell skipped by rule. Leverage
+  1:100, firm-day start 10001.34. The demo runs 1.16 and the repo has Funded 1.17 / Hydra 1.42.

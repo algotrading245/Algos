@@ -43,8 +43,9 @@ each finished piece of work.
 - **Shared memory** in `docs/memory/` (mission, lessons, decisions.jsonl) goes into every prompt; agents search it
   before deciding and log every decision. Orchestrator run limit per idea: 3 (`runs` in `docs/candidates.json`),
   then drop, move on, or ask the owner.
-- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.10 since 2026-10-23 01:45,
-  keeper log; 1.06 from 2026-10-19 14:54 to then; `AurumFunded_FTMO_phase1_legs.set`, legs on since a3; attached on
+- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.16 since 2026-10-27 19:26,
+  on `AurumFunded_FTMO_phase1_legs_nyclock.set` since 19:54, demo_log 10-27; 1.10 from 10-23 01:45, 1.06 from
+  10-19 14:54; legs on since a3; attached on
   XAUUSD M15, re-initialised on M1 at 10-23 16:30, owner question (10)); the tester is its own install `C:\MetaTrader 5 - Tester`
   (owner login done 2026-10-18). Live page: `python tools/live_server.py` (127.0.0.1:8765).
 
@@ -62,12 +63,12 @@ each finished piece of work.
   from 32.2 to 22.9. 14 of the 26 trades were closed early by a CloseAll from the risk layer and lost 972.60. The 12
   that ran to their planned exit or to the end of the test made 972.91. The 50-seed control had already put it at the
   44th percentile of random longs. The leg stays in v1.15, off by default (InpVrpMult 0), so there is no fix item. Do
-  not use `AurumFunded_FTMO_phase1_vrp.set`. Still open from the v1.15 review: compile AurumHydra for the shared
-  `Legs.mqh`/`Inputs.mqh` change before any Hydra job. The early-close finding is proposed as a lesson
-  (decisions.jsonl, 2026-10-25T22:57); the reviewer has not checked it yet. Earlier VRP history (j16, v1.13-v1.15
+  not use `AurumFunded_FTMO_phase1_vrp.set`. The Hydra compile for the shared `Legs.mqh`/`Inputs.mqh` change is
+  done (Hydra 1.42, 0 errors, 0 warnings, 2026-10-27 17:56, gaps_report 10-27). The early-close finding is lesson 21
+  (reviewer-checked, 2026-10-27). Earlier VRP history (j16, v1.13-v1.15
   reviews) is in git history of this file.
-- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.41 and Funded 1.15 in
-  the repo, `#property version`, doctor 2026-10-26; the demo still runs Funded 1.10). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
+- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.42 and Funded 1.17 in
+  the repo, `#property version`, doctor 2026-10-28; the demo runs Funded 1.16, and 1.17 loads at its next restart). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
   (AurumBreakout, AurumNoise, AurumFix and others); they are not used.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
@@ -97,8 +98,8 @@ each finished piece of work.
   10-19 and 10-21 found no idea, so more researcher runs are unlikely to help until new data or a new route comes in
   (proposed tools change (5)). The noise path from SPXUSD/NSXUSD M1 is already in the goal model
   (`research/hydra_leverage_sens.py`). Fidelity is next, after the first demo week (Friday 2026-10-23). It runs
-  against j12-j14, because the demo account is at 1:100 with gold at 1:50. Since 2026-10-23 01:45 the demo runs
-  AurumFunded 1.10 with `AurumFunded_FTMO_phase1_legs.set` (keeper log 01:45:11 "Terminal 16: started, AurumFunded
+  against j12-j14, because the demo account is at 1:100 with gold at 1:50. From 2026-10-23 01:45 to 2026-10-27 19:26 the demo ran
+  AurumFunded 1.10 (now 1.16, see Terminals) with `AurumFunded_FTMO_phase1_legs.set` (keeper log 01:45:11 "Terminal 16: started, AurumFunded
   attached"; build compiled 2026-10-22 22:29, commit 2869c12; risk layer off by default, so it trades as 1.09). The
   deal-0 log fix, the late-breakout guard and the grid resend guard (1.07-1.09, below) are in it. Demo days 10-19 to
   10-22 ran 1.06 (doctor 2026-10-23).
