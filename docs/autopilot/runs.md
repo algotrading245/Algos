@@ -143,3 +143,4 @@ committed).
 | 2026-10-25 21:23 | tester | Collected j17 (AurumFunded vrp2): net +13,737 (+137%), 2301.0 trades, PF 1.61, equity DD 5.99% | j17 done, needs judging |
 | 2026-10-25 23:00 | judge | judge j17 (AurumFunded v1.15 VRP leg) | FAIL: VRP trades net +0.31 USD vs model +260 (0%), DD 4.16 to 5.99%, return/DD 32.2 to 22.9; vrp_gap_equity_indices rejected, leg off by default, no fix item |
 | 2026-10-27 20:05 | judge | demo check of first NY-clock order; pending lesson review | ok: US100 noise 0.07 lots with broker stop, no ALERT; lesson 21 (CloseEverything closes multi-day legs) added, reviewer-checked |
+| 2026-10-28 09:15 | judge | demo check (USDJPY breakout sell 09:11) | ok: 0.04 lots at 157.741, broker stop 158.039, no ALERT; nothing to judge |
