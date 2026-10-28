@@ -51,6 +51,16 @@ each finished piece of work.
 
 ## Current state
 
+- **Dual Thrust four-index leg (prebuilt_dual_thrust_four_indices_ew): EA review clean, j18 running (judge
+  2026-10-28 12:25).** The leg is in AurumFunded v1.18, off by default (InpDualMult 0). Its magics are +32 to +35, for
+  US500, US100, GER40 and JP225. The reviewer found no blocker in the EA. There is one research finding: the Python
+  took the DAX open as the first GRXEUR bar at or after 01:00, and that bar is at 09:00 server in 2018, 2021, 2022,
+  most of 2023 and half of 2020. So the 2018+ half partly measures a session the EA skips (it needs a bar by 01:15).
+  Fix item `fix_dual_thrust_dax_open` reruns the gates with the EA's rule. The candidate is integrated only if both
+  j18 and that rerun pass. Judge j18 against about +5.5% (+550 USD), not +600, because the window ends 2025-09-30.
+  Minor, already in the EA before this change: `PropDays` (AurumFunded.mq5:317) counts magics only up to +25, so
+  the breakout, noise, VRP and Dual legs do not count toward InpPropMinDays (an optional part of the fix item).
+
 - **Demo trading again on the New York clock preset (judge 2026-10-27 20:00).** The first order after the switch was
   a US100.cash noise buy of 0.07 lots, logged at 29647.28 and filled at 29647.08, with a broker stop at 28496.13 in
   the journal. `tools/demo_check.py` reports ok. Lesson 21 is now in lessons.md: the risk layer's `CloseEverything()`

@@ -145,3 +145,4 @@ committed).
 | 2026-10-27 20:05 | judge | demo check of first NY-clock order; pending lesson review | ok: US100 noise 0.07 lots with broker stop, no ALERT; lesson 21 (CloseEverything closes multi-day legs) added, reviewer-checked |
 | 2026-10-28 09:15 | judge | demo check (USDJPY breakout sell 09:11) | ok: 0.04 lots at 157.741, broker stop 158.039, no ALERT; nothing to judge |
 | 2026-10-28 12:13 | tester | Started j18 (AurumFunded dual1_off) | j18 running in 2026-10-28_1213_AurumFunded_dual1_off |
+| 2026-10-28 12:25 | judge | review of AurumFunded v1.18 Dual Thrust leg (j18) | EA clean, j18 left running; research finding (DAX open 09:00 in 2018-23 data) -> fix_dual_thrust_dax_open queued; expect about +550 USD |
