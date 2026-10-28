@@ -306,3 +306,14 @@ Checked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, order
 - **Slippage:** the log gives fill and close prices only, not the quote at signal time, so the slippage on the fill is not logged. The judge check at 20:04 recorded the fill 0.2 pt better than the logged price. The tester pairing is not run for demo days, so no tester comparison.
 - **Trades without a broker stop:** none. The judge check (decisions.jsonl, 2026-10-27 20:04) records the broker stop on this US100 buy.
 - **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.
+
+## 2026-10-28 (Wednesday), 23:15 check (monitor): no ALERT
+
+Checked by the monitor role. `tools/demo_check.py` reports ok, 9 EA lines, 11 journal trade lines, two daily log files for the date. No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.
+
+- **Trades per leg:** midday 1 (EURUSD sell 0.45). Other 2 (USDJPY breakout: sell 0.04 at 157.741 and buy 0.04 at 158.046 on the same tick, one entry per side, as the leg is built). No bell, noise, Tokyo, fix or Dual Thrust lines logged today.
+- **Closes and P/L of the day:** 3 closes, all in EUR, matching the 3 orders. EURUSD 0.45 at 1.11347, P/L -33.57. USDJPY 0.04 at 158.046, P/L -7.07 (the sell, stopped out). USDJPY 0.04 at 158.165, P/L +2.59. P/L of the day -38.05 EUR (demo_check `pl_of_day`).
+- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.29: day start 9962.10, day stop 9662.10, highest day start 10043.55, final stop 9150.00 (static).
+- **Slippage on fills:** EURUSD midday sell filled at 1.11267 against 1.11266 in the log, 0.1 pip worse (judge note 12:33). USDJPY sell stopped at 158.046 against a stop of 158.039, 0.7 pip (judge note 14:34). The log gives no quote at signal time, so further slippage is not logged.
+- **Trades without a broker stop:** none. The EURUSD order carried a stop at 1.11465 (judge note 12:33); the USDJPY orders carried stops at 158.039 (sell) and 157.748 (buy) (judge note 14:34).
+- **Odd:** nothing beyond the two-sided USDJPY breakout, which is the leg's design (separate magics, one entry per side per day).
