@@ -4818,6 +4818,64 @@
      0.766
     ]
    }
+  },
+  {
+   "id": "commod_skew_ls",
+   "name": "commod_skew_ls",
+   "status": "rejected",
+   "step": 2,
+   "reason": "gates: FAIL at halves. Gross no-swap Sharpe -0.08 (halves -0.23/+0.15): the paper's skew premium is absent in our 15 FTMO-set futures; FTMO CFD swap (about -49%/yr on this book) makes it far worse. research/commod_skew_ls.py",
+   "tag": "halves",
+   "published": "https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+   "gates": {
+    "id": "commod_skew_ls",
+    "when": "2026-10-28T12:07:27",
+    "verdict": "FAIL at halves",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": false,
+      "figure": "-1.31 / -2.78 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": false,
+      "figure": "-1.92",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book -0.03, max leg hold +0.07",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "published https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": false,
+      "figure": "book 2018+ 3.11 -> 2.48",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": false,
+      "figure": "0.047 (book, N=26791, luck bar 0.92)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": "https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+    "profitable_months_2018": [
+     0.777,
+     0.691
+    ]
+   }
   }
  ],
  "rejected": [
