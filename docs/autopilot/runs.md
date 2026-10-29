@@ -152,3 +152,4 @@ committed).
 | 2026-10-28 13:40 | judge | j18 Dual Thrust four-index leg (AurumFunded v1.18) | PASS: on-off +1,766 USD, leg +7.3% of balance vs Python +5.45%, rel. equity DD 6.91->7.59%; candidate integrated, leg off by default |
 | 2026-10-28 14:38 | judge | demo check (USDJPY breakout 14:32) | ok: sell stopped at 158.046 (stop 158.039), buy side fired same tick by design, broker stops on all orders, day P/L -40.64 EUR, no ALERT |
 | 2026-10-29 12:33 | judge | demo check (EURUSD midday sell 12:29) | ok: 0.21 lots at 1.11463 (journal fill same), broker stop 1.11659, smaller size after 10-28 loss is the designed loss-run factor, no ALERT; nothing to judge |
+| 2026-10-29 13:05 | judge | demo check (USDJPY breakout buy 13:04) | ok: 0.02 lots at 158.068 (range high 158.067), broker stop 157.602 at range low, smaller size after 10-28 loss, no ALERT; nothing to judge |
