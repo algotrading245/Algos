@@ -84,8 +84,9 @@ each finished piece of work.
   done (Hydra 1.42, 0 errors, 0 warnings, 2026-10-27 17:56, gaps_report 10-27). The early-close finding is lesson 21
   (reviewer-checked, 2026-10-27). Earlier VRP history (j16, v1.13-v1.15
   reviews) is in git history of this file.
-- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.42 and Funded 1.17 in
-  the repo, `#property version`, doctor 2026-10-28; the demo runs Funded 1.16, and 1.17 loads at its next restart). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
+- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.42 and Funded 1.18 in
+  the repo, `#property version`, doctor 2026-10-29; the demo runs Funded 1.16, and 1.18 loads at its next restart,
+  with the Dual Thrust leg off by default). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
   Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
   (AurumBreakout, AurumNoise, AurumFix and others); they are not used.
 - **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
