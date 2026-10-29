@@ -317,3 +317,14 @@ Checked by the monitor role. `tools/demo_check.py` reports ok, 9 EA lines, 11 jo
 - **Slippage on fills:** EURUSD midday sell filled at 1.11267 against 1.11266 in the log, 0.1 pip worse (judge note 12:33). USDJPY sell stopped at 158.046 against a stop of 158.039, 0.7 pip (judge note 14:34). The log gives no quote at signal time, so further slippage is not logged.
 - **Trades without a broker stop:** none. The EURUSD order carried a stop at 1.11465 (judge note 12:33); the USDJPY orders carried stops at 158.039 (sell) and 157.748 (buy) (judge note 14:34).
 - **Odd:** nothing beyond the two-sided USDJPY breakout, which is the leg's design (separate magics, one entry per side per day).
+
+## 2026-10-29 (Thursday), 23:15 check (monitor): no ALERT
+
+Checked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, 8 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.
+
+- **Trades per leg:** midday 1 (EURUSD sell 0.21 at 1.11463, broker stop 1.11659). Other 1 (USDJPY breakout buy 0.02 at 158.068, stop 157.602 at the range low). No bell, noise, Tokyo, fix or Dual Thrust orders. Bell skipped: "bell move +4.34 is below 1.5 x average 3.10, no trade today".
+- **Closes and P/L of the day:** 2 closes, both in EUR. EURUSD 0.21 at 1.11278, P/L +34.20. USDJPY 0.02 at 157.857, P/L -2.46. P/L of the day +31.74 EUR (demo_check `pl_of_day`).
+- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.30: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static).
+- **Slippage on fills:** EURUSD sell filled at 1.11463, the journal price, so 0 pips against the log. USDJPY buy filled at 158.068 against a range high of 158.067, 0.1 pip above (judge note 13:07). The log gives no quote at signal time, so further slippage is not logged.
+- **Trades without a broker stop:** none. Both entries carried a broker stop (judge notes 12:31 and 13:07).
+- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.
