@@ -565,3 +565,4 @@
 {"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:09:46", "verdict": "PASS"}
 {"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:28:15", "verdict": "FAIL at belief"}
 {"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:28:30", "verdict": "PASS"}
+{"id": "ml_jump_model_regime_long_indices", "when": "2026-10-31T00:17:26", "verdict": "PASS"}
