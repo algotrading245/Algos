@@ -153,3 +153,4 @@ committed).
 | 2026-10-28 14:38 | judge | demo check (USDJPY breakout 14:32) | ok: sell stopped at 158.046 (stop 158.039), buy side fired same tick by design, broker stops on all orders, day P/L -40.64 EUR, no ALERT |
 | 2026-10-29 12:33 | judge | demo check (EURUSD midday sell 12:29) | ok: 0.21 lots at 1.11463 (journal fill same), broker stop 1.11659, smaller size after 10-28 loss is the designed loss-run factor, no ALERT; nothing to judge |
 | 2026-10-29 13:05 | judge | demo check (USDJPY breakout buy 13:04) | ok: 0.02 lots at 158.068 (range high 158.067), broker stop 157.602 at range low, smaller size after 10-28 loss, no ALERT; nothing to judge |
+| 2026-10-30 17:04 | judge | demo check (fix leg 17:00: AUDUSD sell, USDCAD buy) | ok: both 0.01 lots with broker stops; 10 fix pairs skipped below the minimum lot on a flat stock month (weight ~0.03, designed), day P/L +45.58 EUR, no ALERT; nothing to judge |
