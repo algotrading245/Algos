@@ -342,3 +342,8 @@
 {"id": "sc_arxiv_qfin_st_2607", "gap": "venue crawl", "kind": "paper", "title": "arXiv q-fin.ST 2607 listing", "link": "https://arxiv.org/list/q-fin.ST/2607", "note": "", "status": "dropped", "added": "2026-10-30", "result": "WebFetch 404 on 2026-10-30"}
 {"id": "sc_quantpedia_commodities_p2", "gap": "venue crawl", "kind": "prebuilt", "title": "Quantpedia commodities p2", "link": "https://quantpedia.com/strategies-in-category/commodities/page/2/", "note": "", "status": "dropped", "added": "2026-10-30", "result": "WebFetch 404 on 2026-10-30"}
 {"id": "sc_feds_2026_markets", "gap": "venue crawl", "kind": "paper", "title": "FEDS 2026 list", "link": "https://www.federalreserve.gov/econres/feds/2026-feds-working-papers.htm", "note": "", "status": "dropped", "added": "2026-10-30", "result": "WebFetch 404 on 2026-10-30"}
+{"id": "sc_arxiv_qfin_pm_2608", "gap": "venue crawl", "status": "dropped", "added": "2026-10-30", "result": "arXiv q-fin.PM 2608 listing returned 404"}
+{"id": "sc_arxiv_qfin_pm_2606", "gap": "venue crawl", "status": "dropped", "added": "2026-10-30", "result": "arXiv q-fin.PM 2606 listing returned 404"}
+{"id": "sc_mql5_codebase_experts_p6", "gap": "venue crawl", "status": "dropped", "added": "2026-10-30", "result": "Read page: Monday Dip (rejected 0.18/0.05), GER40 coil and NR7 ORB already tested; rest guards, panels, utilities"}
+{"id": "sc_quantpedia_volatility_cat", "gap": "venue crawl", "status": "dropped", "added": "2026-10-30", "result": "URL returned 404"}
+{"id": "sc_aqr_alternative_thinking", "gap": "venue crawl", "status": "dropped", "added": "2026-10-30", "result": "Read list: Hold the Dip and Inflation Redux are trend following (stop list); rest allocation or stock ML"}

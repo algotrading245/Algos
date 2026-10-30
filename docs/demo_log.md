@@ -328,3 +328,10 @@ Checked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, 8 jou
 - **Slippage on fills:** EURUSD sell filled at 1.11463, the journal price, so 0 pips against the log. USDJPY buy filled at 158.068 against a range high of 158.067, 0.1 pip above (judge note 13:07). The log gives no quote at signal time, so further slippage is not logged.
 - **Trades without a broker stop:** none. Both entries carried a broker stop (judge notes 12:31 and 13:07).
 - **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.
+
+## 2026-10-30 (Friday), 17:45 change (owner): Dual Thrust leg on from the next start
+
+Owner asked to turn the Dual Thrust index leg on in the T16 demo. New preset `AurumFunded_FTMO_phase1_legs_nyclock_dual.set` (the nyclock preset plus InpDualMult=0.25, GER40.cash and JP225.cash, K 0.3 / 0.7, max spread 5 bp: the j18 on run), copied to T16's Presets; `tools/autopilot/t16_attach.ini` now loads it.
+
+- **Restart:** not done mid-session, as with 1.17: 4 trades were open at 17:36 (AUDUSD sell 0.01 and USDCAD buy 0.01 after the fix, US500.cash sell 0.63 and US100.cash sell 0.08 noise). A one-off script restarts T16 on Saturday 2026-10-31 00:30, after the Friday close, by the 10-27 method (owner hold, graceful close, release, the keeper starts T16 with t16_attach.ini), so 1.18 (already in the junctioned Experts folder) loads with the new preset.
+- **Watch from Monday:** first Dual Thrust orders on US500, US100, GER40 and JP225 (magics +32 to +35). PropDays counts magics only up to +25, so Dual-only days do not count as trading days. GER40 had a Sharpe of -0.04 on its own in the j18 run. 1.18 had no independent review and its compile log is not in the repo.

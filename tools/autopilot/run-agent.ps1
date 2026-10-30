@@ -324,9 +324,10 @@ $recent
     # A usage, session, quota or auth limit backs off this provider only, until the reset time the message names
     # (router.py backoff), and keeps the hand-over on this role so the next provider in the fallback order picks the
     # same work up (or, with none left, the relay goes code-only until one is back). Both CLIs word these differently;
-    # "session limit" is Claude's weekly/session cap, the rest are Qwen's API side. Only a failed or near-empty run
-    # counts, so a long report that merely mentions a rate limit does not trip it; stderr always counts.
-    $limitRx = '(?i)usage limit|rate limit|session limit|hit your limit|limit reached|limit will reset|quota|insufficient balance|invalid api key|incorrect api key|arrearage|access denied'
+    # "session limit" and "hit your (weekly) limit" are Claude's caps, the rest are Qwen's API side. Only a failed or
+    # near-empty run counts, so a long report that merely mentions a rate limit does not trip it; stderr always counts.
+    # "You've hit your weekly limit · resets 5pm (Europe/Berlin)" was missed on 2026-10-30 (202 builder retries).
+    $limitRx = '(?i)usage limit|rate limit|session limit|weekly limit|hit your (\w+ )?limit|limit reached|limit will reset|quota|insufficient balance|invalid api key|incorrect api key|arrearage|access denied'
     $limitText = if ($code -ne 0 -or $text.Trim().Length -lt 600) { "$text`n$($err.Result)" } else { "$($err.Result)" }
     if ($limitText -match $limitRx) {
         $limitHit = $true
