@@ -1372,3 +1372,4 @@
 {"date": "2026-10-30", "kind": "paper", "title": "Gervais Kaniel Mingelgrin high-volume return premium (search only)", "link": "https://rodneywhitecenter.wharton.upenn.edu/wp-content/uploads/2014/04/9901.pdf", "read": "unverified", "specs": []}
 {"date": "2026-10-30", "kind": "paper", "title": "Lo-MacKinlay 1988 Stock market prices do not follow random walks (variance ratio)", "link": "https://doi.org/10.1093/rfs/1.1.41", "read": "unverified", "specs": []}
 {"date": "2026-10-30", "kind": "paper", "title": "Karnaukh Ranaldo Soderlind Understanding FX liquidity", "link": "https://doi.org/10.1093/rfs/hhv043", "read": "unverified", "specs": []}
+{"date": "2026-10-30", "kind": "prebuilt", "title": "FxCraft Example EA - Bollinger Bands mean reversion (MQL5 CodeBase 78687)", "link": "https://www.mql5.com/en/code/78687", "read": "in full", "specs": []}
