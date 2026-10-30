@@ -4934,6 +4934,63 @@
     ]
    },
    "published": "https://github.com/je-suis-tm/quant-trading"
+  },
+  {
+   "id": "ml_jump_model_regime_long_indices",
+   "name": "ml_jump_model_regime_long_indices",
+   "status": "rejected",
+   "reason": "Gates PASS (book 3.11->3.33) but the ML baseline rule fails: the jump-model filter does not beat buy-and-hold on the same days (3000d window: 2018on Sharpe 0.53 vs 0.66; 1250d variant 0.42 vs 0.66, to2017 0.27 vs 0.87). The book gain is index beta, not the filter. The 3000d burn-in leaves no pre-2018 test days (first signal 2016-11). Evidence: research/ml_jump_model_regime_long_indices.py, marketdata/candidates/ml_jump_model_regime_long_indices.csv",
+   "step": 2,
+   "published": "https://arxiv.org/abs/2402.05272",
+   "gates": {
+    "id": "ml_jump_model_regime_long_indices",
+    "when": "2026-10-31T00:17:26",
+    "verdict": "PASS",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "0.72 / 0.61 (split at its middle 2021-05-07)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": true,
+      "figure": "0.66",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book -0.07, max leg fall +0.04",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "published https://arxiv.org/abs/2402.05272",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": true,
+      "figure": "book 2018+ 3.11 -> 3.33",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26795, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": "https://arxiv.org/abs/2402.05272",
+    "profitable_months_2018": [
+     0.777,
+     0.798
+    ]
+   }
   }
  ],
  "rejected": [
