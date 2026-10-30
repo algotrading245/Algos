@@ -61,8 +61,10 @@ loss limits).
 
 6. Write and edit files only with the Write and Edit tools: never heredocs, `>` redirects, `cat >` or `mkdir && ...`
    in Bash (the run refuses them). Commit only the files you changed, by name, with plain git, one command per Bash
-   call (no &&, ; or pipes, never `git -C`): `git add <files>`, `git commit -m "Builder: <id> <outcome>"`,
+   call (no &&, ; or pipes, never `git -C`): `git add <files>`, `git commit -m "Builder: <id> <outcome>" -- <files>`,
    `git push origin HEAD`. If the push fails, leave the commit local. Never commit .ex5 files, never `git add -A`.
+   The `-- <files>` (the same files) commits only those even when someone else has staged others (b5eda88 took the
+   owner's staged files); never a bare `git commit -m`.
 
 Rules: no live trading, no real money, no credentials or .env files, never edit tools/, .claude/ or .gitignore (write
 the request under "## For the owner" in `docs/HANDOFF.md` instead), never change the gate thresholds. One item per run;

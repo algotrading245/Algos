@@ -57,7 +57,9 @@ Hard rules:
 Finish: append one line to `docs/autopilot/runs.md` (`| date time | judge | task | result |`), update
 `docs/HANDOFF.md` if the state changed, commit the files you changed by name (with `docs/memory/decisions.jsonl` and
 `docs/memory/lessons.md` when changed; never `.ex5`, `.htm`, `.png`, `summary.txt`, `job.json`; never `git add -A` or
-`.`), one command per Bash call, and `git push origin HEAD`. If the push fails, leave the commit local and say so.
+`.`), one command per Bash call: `git add <files>`, `git commit -m "Judge: <what>" -- <files>` (the same files, so
+nothing someone else staged goes in; never a bare `git commit -m`), and `git push origin HEAD`. If the push fails,
+leave the commit local and say so.
 Second-last line: what you did and what is next. Last line, the hand-over: `HANDOFF: <role> <reason>`, where role is
 - `judge`: another result or review is waiting for you;
 - `builder`: a fix item you queued should go first;

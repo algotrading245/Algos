@@ -15,7 +15,8 @@ run: decide, do the work, and stop.
 3. Log each proposal with `python tools/memory.py decide --role portfolio ...`.
 4. Commit only these files and push:
    `git add docs/ideas/steer.md docs/gaps.json docs/book.json docs/memory/decisions.jsonl docs/ideas/queue.jsonl` then
-   `git commit -m "Portfolio review <date>"` then `git push origin HEAD`.
+   `git commit -m "Portfolio review <date>" -- <the same files>` then `git push origin HEAD`. The `-- <files>` keeps
+   out anything someone else staged; never a bare `git commit -m`.
    If the push fails, leave the commit local and say so in your last line.
 
 Never edit tools/, the gate, the EAs, .set files or .claude/; never look at results on or after 2025-10-13; never

@@ -21,8 +21,9 @@ questions in this run: decide, do the work, and stop.
    lines. The pairing with a tester run (`tools/fill_check.py`) is not run: the demo days are after the holdout, so
    a tester run over them needs the owner's yes. Write "tester pairing: waiting on the owner" and nothing more.
 4. Commit only those files and push:
-   `git add docs/demo_log.md docs/fidelity docs/memory/decisions.jsonl` then `git commit -m "Demo log <date>"` then
-   `git push origin HEAD`. If the push fails, leave the commit local and say so in your last line.
+   `git add docs/demo_log.md docs/fidelity docs/memory/decisions.jsonl` then
+   `git commit -m "Demo log <date>" -- docs/demo_log.md docs/fidelity docs/memory/decisions.jsonl` then
+   `git push origin HEAD`. The `-- <files>` keeps out anything someone else staged; never a bare `git commit -m`. If the push fails, leave the commit local and say so in your last line.
 
 Never place, change or close trades, never change EA inputs, never record an account number, login or credential.
 Finish with one line: what you logged, ALERT or not. Then the hand-over as the very last line:

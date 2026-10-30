@@ -305,10 +305,13 @@ $recent
     # Runs today, failed ones included (kept for reports).
     $day = (Get-Date).ToString("yyyy-MM-dd")
     $runs = if ($prev -and $prev.runs_day -eq $day) { [int]$prev.runs_today + 1 } else { 1 }
+    # Failed runs in a row; the relay pauses the role at 3 (2026-10-30: 206 failed builder starts on a limit
+    # message the pattern did not know).
+    $fails = if ($failed) { $(if ($prev -and $prev.fails_in_row) { [int]$prev.fails_in_row } else { 0 }) + 1 } else { 0 }
     @{ role = $Role; provider = $route.provider; model = $route.model; tier = $route.tier
        started = $started.ToString("s"); ended = (Get-Date).ToString("s"); exit = $code; timed_out = $timedOut
        next = $next; reason = $reason; idle = [bool]($idle -and -not $failed); failed = [bool]$failed
-       empty_streak = $streak; runs_day = $day; runs_today = $runs } |
+       empty_streak = $streak; fails_in_row = $fails; runs_day = $day; runs_today = $runs } |
         ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
     # Token budget (owner 2026-10-22): one line per run in logs\autopilot\usage.jsonl (budget.py reads the cost and
     # token counts from the events file); the relay skips the nice-to-have runs when the week's use is high.

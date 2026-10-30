@@ -21,6 +21,7 @@
 #   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
 #      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder run under 2
 #      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json).
+# A role whose last 3 runs failed (fails_in_row in last-<role>.json) is paused 2 hours after the last, then tried once.
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
 param([switch]$DryRun)
@@ -120,6 +121,7 @@ function Invoke-Prescreen {
 
 # A run that ended within 2 minutes (a limit, a fault) or failed is not started again in this tick, so nothing spins.
 $blocked = @()
+$FailPauseMin = 120
 while ($true) {
     if (Test-Path $Pause) { Write-Log "relay" "paused (logs\autopilot\PAUSE exists; the keeper log says when it was set)"; break }
     $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
@@ -178,6 +180,17 @@ while ($true) {
 
     if (-not $role) { if ($DryRun) { Write-Output "nothing due" }; break }
     if ($blocked -contains $role) { Write-Log "relay" "$role ended at once or failed in this tick: waiting for the next tick"; break }
+    # 3 failed runs in a row (fails_in_row, run-agent.ps1): the role waits $FailPauseMin minutes after the last one,
+    # then gets one try; a further failure pauses it again. Catches a limit message the limit pattern does not know.
+    $lr0 = Get-Last $role
+    if ($lr0 -and [int]$lr0.fails_in_row -ge 3 -and $lr0.ended) {
+        $until = ([datetime]$lr0.ended).AddMinutes($FailPauseMin)
+        if ($now -lt $until) {
+            $msg = "$role paused: $($lr0.fails_in_row) failed runs in a row, next try after $($until.ToString('s'))"
+            if ($DryRun) { Write-Output $msg } else { Write-Log "relay" $msg }
+            break
+        }
+    }
     if (-not $DryRun) {
         # Written before the agent starts, so an agent that fails cannot leave a stale hand-over behind.
         [ordered]@{ from = $role; next = "none"; due = $now.ToString("s"); reason = "started by the relay" } |

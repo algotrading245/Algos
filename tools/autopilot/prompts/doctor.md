@@ -6,8 +6,9 @@ decide, do the work, and stop.
 2. Log each fix with `python tools/memory.py decide --role doctor ...`.
 3. Commit only these files and push:
    `git add docs/autopilot/gaps_report.md` (and `docs/ideas/queue.jsonl`, `docs/HANDOFF.md` or
-   `docs/memory/decisions.jsonl` only when this run changed them), then `git commit -m "Doctor <date>: <verdict>"`,
-   then `git push origin HEAD`. If the push fails, leave the commit local and say so in your last line.
+   `docs/memory/decisions.jsonl` only when this run changed them), then
+   `git commit -m "Doctor <date>: <verdict>" -- <the same files>`, then `git push origin HEAD`. The `-- <files>` keeps
+   out anything someone else staged; never a bare `git commit -m`. If the push fails, leave the commit local and say so in your last line.
    Use plain `git ...` from the repo folder, one command per call (no `&&`, `;` or pipes).
 
 Never edit tools/, .claude/, the gate, the EAs or .set files; never start, stop or register tasks or processes; never

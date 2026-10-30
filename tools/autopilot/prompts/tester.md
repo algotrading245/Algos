@@ -36,7 +36,8 @@ account number or login, never commit `.htm`, `.png`, `summary.txt`, `job.json` 
 
 Finish: append one line to `docs/autopilot/runs.md` (`| date time | tester | what you did | result |`), commit the
 files you changed by name (`git add docs/autopilot/queue.json docs/autopilot/runs.md docs/memory/decisions.jsonl`
-plus any backtest files you wrote), `git commit -m "Tester: <job id> <what happened>"`, `git push origin HEAD`
+plus any backtest files you wrote), `git commit -m "Tester: <job id> <what happened>" -- <the same files>` (only
+those, even when someone else staged others; never a bare `git commit -m`), `git push origin HEAD`
 (if the push fails, leave it). Last line of your answer, the hand-over:
 `HANDOFF: judge <what you fixed>` when the queue can run again, or `HANDOFF: none <what the owner must do>`
 when the fix needs the owner.
