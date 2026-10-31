@@ -5223,6 +5223,64 @@
      0.766
     ]
    }
+  },
+  {
+   "id": "noise_gj",
+   "name": "noise_gj",
+   "status": "rejected",
+   "step": 2,
+   "reason": "FAIL at costs: half DAX (1.0bp) + half Nikkei (2.0bp), paper params VM1, Sharpe -0.05 at 1.5x (DAX 0.25->0.02, Nikkei 0.32->-0.03; Nikkei 2018+ 0.01 at 1x). Evidence research/noise_ger_jpn.py",
+   "tag": "costs",
+   "gates": {
+    "id": "noise_gj",
+    "when": "2026-10-31T10:52:56",
+    "verdict": "FAIL at costs",
+    "gates": [
+     {
+      "gate": "halves",
+      "pass": true,
+      "figure": "0.49 / 0.22 (to 2017 / from 2018)",
+      "rule": ">= 0.2 each half"
+     },
+     {
+      "gate": "costs",
+      "pass": false,
+      "figure": "-0.05",
+      "rule": "> 0.0 at 1.5x cost"
+     },
+     {
+      "gate": "corr",
+      "pass": true,
+      "figure": "book +0.04, max leg noise +0.07",
+      "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+     },
+     {
+      "gate": "belief",
+      "pass": true,
+      "figure": "4/4 markets profitable",
+      "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+     },
+     {
+      "gate": "book",
+      "pass": true,
+      "figure": "book 2018+ 3.11 -> 3.19",
+      "rule": "gain >= 0.03, equal risk, weights walk-forward"
+     },
+     {
+      "gate": "dsr",
+      "pass": true,
+      "figure": "1.000 (book, N=26816, luck bar 1.00)",
+      "rule": ">= 0.9"
+     }
+    ],
+    "replaces": [],
+    "published": null,
+    "profitable_months_2018": [
+     0.777,
+     0.766
+    ],
+    "reason": "FAIL at costs: half DAX (1.0bp) + half Nikkei (2.0bp), paper params VM1, Sharpe -0.05 at 1.5x (DAX 0.25->0.02, Nikkei 0.32->-0.03; Nikkei 2018+ 0.01 at 1x). Evidence research/noise_ger_jpn.py"
+   }
   }
  ],
  "rejected": [
