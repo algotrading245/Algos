@@ -296,6 +296,8 @@ $recent
     $lastFile = Join-Path $LogDir "last-$Role.json"
     $prev = if (Test-Path $lastFile) { try { Get-Content $lastFile -Raw | ConvertFrom-Json } catch { $null } }
     $failed = ($code -ne 0) -or ($text.Trim().Length -lt 80)
+    # Why, for the relay's log line (2026-10-31: "failed" was printed for runs that exited 0 and merely ended fast).
+    $failWhy = if ($timedOut) { "killed at the time limit" } elseif ($code -ne 0) { "exit $code" } elseif ($failed) { "exit 0 but under 80 characters of output" } else { "" }
     $idle = ($next -eq "none") -and ($reason -match '(?i)^\W*(idle|nothing|no alert)') -and
             ($reason -notmatch '(?i)\b(logged|done|fixed|built|added|wrote|queued|started)\b')
     $streak = if ($prev -and $prev.empty_streak) { [int]$prev.empty_streak } else { 0 }
@@ -310,7 +312,7 @@ $recent
     $fails = if ($failed) { $(if ($prev -and $prev.fails_in_row) { [int]$prev.fails_in_row } else { 0 }) + 1 } else { 0 }
     @{ role = $Role; provider = $route.provider; model = $route.model; tier = $route.tier
        started = $started.ToString("s"); ended = (Get-Date).ToString("s"); exit = $code; timed_out = $timedOut
-       next = $next; reason = $reason; idle = [bool]($idle -and -not $failed); failed = [bool]$failed
+       next = $next; reason = $reason; idle = [bool]($idle -and -not $failed); failed = [bool]$failed; fail_why = $failWhy
        empty_streak = $streak; fails_in_row = $fails; runs_day = $day; runs_today = $runs } |
         ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
     # Token budget (owner 2026-10-22): one line per run in logs\autopilot\usage.jsonl (budget.py reads the cost and

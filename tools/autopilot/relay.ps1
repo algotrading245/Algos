@@ -121,6 +121,7 @@ function Invoke-Prescreen {
 
 # A run that ended within 2 minutes (a limit, a fault) or failed is not started again in this tick, so nothing spins.
 $blocked = @()
+$blockWhy = @{}
 $FailPauseMin = 120
 while ($true) {
     if (Test-Path $Pause) { Write-Log "relay" "paused (logs\autopilot\PAUSE exists; the keeper log says when it was set)"; break }
@@ -179,7 +180,7 @@ while ($true) {
     else { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 
     if (-not $role) { if ($DryRun) { Write-Output "nothing due" }; break }
-    if ($blocked -contains $role) { Write-Log "relay" "$role ended at once or failed in this tick: waiting for the next tick"; break }
+    if ($blocked -contains $role) { Write-Log "relay" "$role $($blockWhy[$role]) in this tick: waiting for the next tick"; break }
     # 3 failed runs in a row (fails_in_row, run-agent.ps1): the role waits $FailPauseMin minutes after the last one,
     # then gets one try; a further failure pauses it again. Catches a limit message the limit pattern does not know.
     $lr0 = Get-Last $role
@@ -202,7 +203,13 @@ while ($true) {
     if ($DryRun) { break }
     $lr = Get-Last $role
     $short = ((Get-Date) - $t0).TotalMinutes -lt 2
-    if ((-not $lr) -or ($lr.failed -eq $true) -or $short) { $blocked += $role }
+    if ((-not $lr) -or ($lr.failed -eq $true) -or $short) {
+        $blocked += $role
+        # The reason comes from the run's own record (exit code, time limit), not from how fast it ended.
+        $blockWhy[$role] = if (-not $lr) { "left no run record" }
+                           elseif ($lr.failed -eq $true) { "failed ($(if ($lr.fail_why) { $lr.fail_why } else { "exit $($lr.exit)" }))" }
+                           else { "ended after $([int]((Get-Date) - $t0).TotalSeconds) s with exit $($lr.exit)" }
+    }
     if ($role -eq "finder" -and $short -and (Get-OpenLeads) -ge $leads0 -and (Get-QueueLines) -le $queue0) {
         $fbWhy = "run of $([int]((Get-Date) - $t0).TotalSeconds) s queued nothing and closed no lead ($leads0 open)"
         [ordered]@{ until = (Get-Date).AddMinutes(30).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8

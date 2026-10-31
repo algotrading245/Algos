@@ -235,6 +235,26 @@ def reset_time(text, minutes):
     return min(max(until, now + timedelta(minutes=5)), now + timedelta(days=7))
 
 
+WEEKLY = re.compile(r"(?i)weekly limit|hit your weekly")
+WEEKLY_HOURS = (PROBE_HOURS, PROBE_HOURS, 6, 12)   # wait at least this long after the 1st, 2nd, 3rd, 4th+ weekly hit
+
+
+def weekly_cap(prev, until, text):
+    """Retry cap after a weekly limit (2026-10-31): "resets 5pm" names no day, so each probe at 5pm could hit the
+    same weekly cap again. Weekly hits less than 24 h apart count up and space the probes 3, 3, 6, then 12 hours."""
+    now = datetime.now()
+    if not WEEKLY.search(text or ""):
+        return until, 0
+    hits = 1
+    try:
+        if prev and prev.get("weekly_hits") and now - datetime.fromisoformat(prev["set"]) < timedelta(hours=24):
+            hits = int(prev["weekly_hits"]) + 1
+    except (ValueError, TypeError, KeyError):
+        pass
+    floor = now + timedelta(hours=WEEKLY_HOURS[min(hits, len(WEEKLY_HOURS)) - 1])
+    return min(max(until, floor), now + timedelta(days=7)), hits
+
+
 def cmd_backoff(r, provider, minutes, reason, text, clear):
     b = read_backoff()
     if clear:
@@ -245,8 +265,9 @@ def cmd_backoff(r, provider, minutes, reason, text, clear):
             sys.exit(f"unknown provider '{provider}'")
         mins = minutes or int((r.get("fallback") or {}).get("backoff_minutes") or 60)
         until = reset_time(text, mins) if text else datetime.now() + timedelta(minutes=mins)
+        until, hits = weekly_cap(b.get(provider), until, f"{reason or ''} {text or ''}")
         b[provider] = {"until": until.isoformat(timespec="seconds"), "reason": (reason or "limit")[:160],
-                       "set": datetime.now().isoformat(timespec="seconds")}
+                       "set": datetime.now().isoformat(timespec="seconds"), "weekly_hits": hits}
         print(f"{provider}: backed off until {b[provider]['until']}")
     BACKOFF.parent.mkdir(parents=True, exist_ok=True)
     BACKOFF.write_text(json.dumps(b, indent=2) + "\n", encoding="utf-8")
