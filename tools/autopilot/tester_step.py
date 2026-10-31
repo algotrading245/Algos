@@ -300,13 +300,14 @@ def log_problems(folder):
 def run_lines(r):
     by_year = ", ".join(f"{y} {v:+,.0f}" for y, v in (r.get("by_year") or {}).items())
     wd = r.get("worst_day") or {}
-    dd = r.get("eq_dd_max_pct") or 0
+    # the relative drawdown (the deepest fall from a peak, as % of that peak) is the prop-rule measure
+    dd = r.get("eq_dd_rel_pct") or r.get("eq_dd_max_pct") or 0
     ret = r.get("return_pct")
     return [
         f"| Net profit | {r.get('net', 0):+,.2f} ({ret:+.1f}%) |" if ret is not None else f"| Net profit | {r.get('net')} |",
         f"| Trades / win rate | {r.get('trades')} / {r.get('win_rate')}% |",
         f"| Profit factor | {r.get('profit_factor')} |",
-        f"| Max equity drawdown | {dd}% |",
+        f"| Max equity drawdown (relative) | {dd}% |",
         f"| Worst day | {wd.get('day', '?')} {wd.get('pct', '?')}% |",
         f"| Return per unit of drawdown | {ret / dd:.1f} |" if ret is not None and dd else "| Return per unit of drawdown | n/a |",
         f"| By year | {by_year} |",

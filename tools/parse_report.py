@@ -45,7 +45,7 @@ def parse(text):
     if "won" in out:
         m = re.search(r"\(([\d.]+)%\)", out["won"])
         out["win_rate"] = float(m.group(1)) if m else None
-    for key in ("eq_dd_max", "bal_dd_max"):
+    for key in ("eq_dd_max", "bal_dd_max", "eq_dd_rel"):
         if key in out:
             m = re.search(r"([\d.]+)%", out[key])
             out[key + "_pct"] = float(m.group(1)) if m else None

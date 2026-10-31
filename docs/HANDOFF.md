@@ -235,7 +235,10 @@ each finished piece of work.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
-  `expected_tester`, e.g. PF < 0.8 on 20+ trades, or a fill or rule error); full verdict about 2027-01-19. The question
+  `expected_tester`, e.g. PF < 0.8 on 20+ trades, or a fill or rule error); full verdict about 2027-01-19.
+  Rechecked 2026-10-31: tools/book_sim.py keeps it in the book (status "tester") because it trades in the demo, and
+  the book should model what runs. The belief FAIL is a rule from after the approval, so it does not count against
+  it. The demo record decides. The question
   as it was asked: **Breakout fails the belief gate. Keep it in the demo or pull it?** The recheck ran
   the same parameters on 9 markets. 7 were profitable; AUDJPY (-0.32) and AUDUSD (-0.18 over the whole sample, about
   -0.4 for each from 2018) lost (`docs/gates/breakout.json`, `marketdata/candidates/breakout_markets.csv`). Every
@@ -301,6 +304,8 @@ each finished piece of work.
   (`Legs.mqh:1747-1772`) skipped the breakout side that was already traded, and the loss-run sizing comes from deal
   history. No leg reads the chart period (no `PERIOD_CURRENT` or `_Period` in `mql5/`). M15 is still the documented
   attach; switching back is the owner's choice.
+  **Closed 2026-10-31 (owner's session):** the restarts of 10-27 and 10-31 attach from `tools/autopilot/t16_attach.ini`
+  (`Symbol=XAUUSD`, `Period=M15`), so the chart is back on M15. The period does not matter in any case.
 
 - **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
   idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set

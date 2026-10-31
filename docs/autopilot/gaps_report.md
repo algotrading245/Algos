@@ -39,7 +39,8 @@ PropDays does not count its magics, 1.18 has no review, and today's demo log doe
 11. **Holdout rows on disk.** `marketdata/ftmo_spread/EURUSD_M1.csv.gz` runs to 2026-07. Suggest: cut it at 2025-10-12
     through tools/holdout.py.
 12. **Owner questions still waiting.** (10) XAUUSD chart on M1 since 10-23. (a6) Breakout stays in the demo though it
-    failed the belief gate.
+    failed the belief gate. **Closed 10-31:** (10) the restarts attach on M15 (t16_attach.ini); (a6) stays decided as
+    keep, frozen, with the interim check on 2026-11-22 (HANDOFF).
 13. **The summary.md drawdown row** shows the absolute max, not `eq_dd_rel` (`tester_step.py`).
 
 ## Earlier items (10-30 report)
