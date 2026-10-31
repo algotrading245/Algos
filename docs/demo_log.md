@@ -336,6 +336,13 @@ Owner asked to turn the Dual Thrust index leg on in the T16 demo. New preset `Au
 - **Restart:** not done mid-session, as with 1.17: 4 trades were open at 17:36 (AUDUSD sell 0.01 and USDCAD buy 0.01 after the fix, US500.cash sell 0.63 and US100.cash sell 0.08 noise). A one-off script restarts T16 on Saturday 2026-10-31 00:30, after the Friday close, by the 10-27 method (owner hold, graceful close, release, the keeper starts T16 with t16_attach.ini), so 1.18 (already in the junctioned Experts folder) loads with the new preset.
 - **Watch from Monday:** first Dual Thrust orders on US500, US100, GER40 and JP225 (magics +32 to +35). PropDays counts magics only up to +25, so Dual-only days do not count as trading days. GER40 had a Sharpe of -0.04 on its own in the j18 run. 1.18 had no independent review and its compile log is not in the repo.
 
+## 2026-10-31 (Saturday), 18:11 change (owner): AurumFunded 1.19 on T16
+
+Owner asked for the four should-fixes of the 1.18 review. 1.19: (1) Dual Thrust waits 10 s (GRID_WAIT) for a sent order to show among the positions before it may send again; (2) InpDualMaxRiskPct (default 1.0, not in any .set file) caps the loss at the broker stop per Dual trade at SizeMult() x 1% of balance, and below the minimum lot the market skips the day; (3) PropDays counts magics up to +35, so breakout, noise-area, VRP and Dual days count as trading days; (4) compile logs for 1.18 and 1.19 in the repo (0 errors, 0 warnings). Independent review: one blocker on the first draft (the cap ignored SizeMult), fixed before the deploy; commit 7d4306e.
+
+- **Restart:** market closed, 0 positions. Owner hold 18:09:45, T16 closed 18:10:00, released 18:10:02; keeper 18:10:59 "Terminal 16: started, AurumFunded attached". Journal 18:11:34: 23 inputs read from `AurumFunded_FTMO_phase1_legs_nyclock_dual.set`, "expert AurumFunded loaded successfully", 0 positions, 0 orders.
+- **Watch from Monday:** the cap is not in the Python test of prebuilt_dual_thrust_four_indices_ew, so on wide-range days the demo trades smaller than the gate figures; the judge should not compare capped demo days with the uncapped test. A position that takes more than 10 s to show can still be sent twice (bounded by DUAL_FLIPS), as with the grid. Check that none of the four indices prints "not available".
+
 ## 2026-10-30 (Friday), 23:15 check (monitor): no ALERT
 
 Checked by the monitor role. `tools/demo_check.py` reports ok, 30 EA lines, 36 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.
