@@ -48,12 +48,12 @@ OUT = ROOT / "docs" / "book.json"
 LOOKBACK, MIN_HISTORY, CAP = 252, 126, 0.25
 VOL_TARGET, VOL_LOOKBACK, LEVER_MAX = 0.20, 63, 2.0
 DD_HALF, DD_QUARTER = 0.10, 0.20
-IN_BOOK = ("tester", "demo", "live", "ea")
+IN_BOOK = ("tester", "integrated", "demo", "live", "ea")  # integrated: built into an EA that runs (Dual Thrust, 10-31)
 SPLIT = "2018-01-01"
 # A leg that repeats another gets a share of a leg's risk (owner 2026-10-24, steer.md): fix and cross correlate 0.61
 # and held 26% of the risk as two legs. Halving cross beat one shared budget in every period (2018+ 3.15 vs 3.05,
 # to 2017 2.40 vs 2.18; none 3.01).
-SCALE = {"cross": 0.5}
+SCALE = {"cross": 0.5, "fix": 0.5}  # fix halved 10-31 (steer.md); with integrated Dual Thrust 2018+ 3.11 -> 3.29, edge_70 2.24 -> 2.41
 ACCOUNT, SPLIT_SHARE = 100_000, 0.80
 
 
