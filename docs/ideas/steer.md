@@ -1,86 +1,55 @@
-# Steer - 2026-10-24 (weekly portfolio review; data to 2025-10-10)
+# Steer - 2026-10-31 (weekly portfolio review; data to 2025-10-10)
 
 ## The book (docs/book.json, docs/gaps.json)
-- Sharpe from 2018 **3.01** (risk layer on; 2.68 full) - profitable months **80%** from 2018 (19 losing of 94) - FTMO payout within 12 months **92%** (69% at edge 70).
-- 10 legs. No leg on EURUSD; no carry or volatility premium leg; 8 of 10 legs are intraday. Dollar pairs hold 36% of the risk (cap 35%).
+- Sharpe from 2018 **3.11** (risk layer on; 2.75 full) - profitable months **78%** from 2018 (21 losing of 94) - FTMO payout within 12 months **91%** (67% at edge 70).
+- 10 legs. No EURUSD leg, no carry or VRP leg, 8 of 10 legs intraday. Dollar pairs hold **35.3%** of the risk (cap 35%), USDJPY 25%.
+- **The book leaves out a passed leg.** prebuilt_dual_thrust_four_indices_ew has status "integrated" (j18 PASS, AurumFunded v1.18).
+  book_sim's IN_BOOK = tester/demo/live/ea, so it is not counted. With it: Sharpe from 2018 **3.26** (2.43 / 3.56 / 2.94 for
+  to-2017 / 2018-21 / 2022-25, against 2.42 / 3.40 / 2.79), profitable months 82%, worst month -7.9%. The owner should add
+  "integrated" to IN_BOOK in tools/book_sim.py (agents do not edit tools/). Gate 5 (book gain) probably uses the same baseline,
+  so it is checked against a book that is too weak until then.
 
-## Top 3 gaps, one example each (all untried: memory search found no test)
-1. **EURUSD, cross-asset, days to weeks.** Hau and Rey (2006), "Exchange rates, equity prices and capital flows"
-   (RFS; NBER w9398, not SSRN). Foreign equity that beats US equity gets rebalanced, so its currency weakens. Rule: when
-   DAX beat US500 by more than 1 sd over the last 20 days, short EUR against USD for 10 days, and the opposite when it lagged. Use the same
-   rule for USDJPY (Nikkei against US500) and EURJPY (DAX against Nikkei). Data: GRXEUR, JPXJPY, SPXUSD M1 in histdata.
-2. **US indices, days (4% of risk now).** Baltussen, van Bekkum and Da (2019), "Indexing and stock market serial
-   dependence around the world" (JFE): since the 2000s, daily index returns have turned negatively autocorrelated in
-   about 20 markets. Rule: after a down close, hold long to the next close (short after an up close, if the gates allow).
-   Run it on US500 and US100, and check belief on DAX and Nikkei with the same parameters. The cost is the spread plus one night's swap (~2.5 bp).
-   Not the same as their last-half-hour paper (noise-leg family).
-3. **FX, weeks+, not carry.** Ang and Chen (2010), "Yield curve predictors of foreign exchange returns": the
-   term-spread differential predicts monthly FX returns beyond the rate gap. Take the sign from the paper's tables after a full read.
-   Run it monthly on EURUSD, USDJPY, GBPUSD, AUDUSD and USDCAD, net of FTMO swaps. It needs one data item (below).
+## Top 3 gaps, one example each
+1. **The losing months (owner's target, 10-31), days horizon.** Split done this week (combine() weights, 21 losing months from 2018):
+   the loss is spread out: after 16%, hold 14%, morning 13%, grid 11%, breakout 11%, fall 10%, noise 9%, quartet 8%, fix 6%,
+   cross 2%. No leg or market drives them, so no single "hedge" exists. Any days leg with corr <= 0.1 lifts them.
+   Example: Etula, Rinne, Suominen and Vaittinen (2020), "Dash for cash: monthly market impact of institutional liquidity
+   needs" (RFS). Equities fall in the days before month-end payment dates and recover after. Take the **short** side of
+   the pre-payment window (fixes the swap problem the long totm_us had) on US500, US100, GER40, JPN225, 1-3 day hold, with
+   the window from the paper's tables after a full read. Not the same test as totm_us (long, turn-of-month, rejected).
+2. **US/EU/Asian indices, 4% of the risk (before Dual Thrust is counted).** Example: the noise leg's rule (Zarattini, Aziz
+   and Barbon 2024, "Beat the market", intraday momentum past the noise boundary) with **the same parameters** on GER40
+   and JPN225 (histdata GRXEUR, JPXJPY M1). The noise leg trades only the US pair, and lesson 12 says its S&P half is weak.
+   No test on DAX/Nikkei found in candidates.json. Leave the rollover out (lesson 9).
+3. **Weeks+ horizon (only hold).** No untried example this week: fx_value_rer (-0.10/-0.53), carry, TSMOM and Ang-Chen all
+   failed. Do not search for it until 1 and 2 are tested. EURUSD stays off the target list (owner 10-31, ~25 scans failed).
 
 ## Legs to recheck or cut (proposals for the owner; no edit made)
-- **fix + cross: give them one shared risk budget** (or halve cross). Their correlation is 0.61, but equal risk counts them as two
-  independent legs, worth 26% of the risk together. Book Sharpe from 2018 without cross: 3.21 (gaps.py). Recheck on the same
-  basis (book_sim, base 3.03): with fix+cross as one leg, 3.19. By period: to 2017 2.38->2.38, 2018-21 3.23->3.44, 2022-25
-  2.81->2.90. Halving cross gives 3.21 (2.43 / 3.47 / 2.92). Cutting cross alone also lifts every period, but it throws away
-  a leg with Sharpe 1.24. Cost: worst month -7.98% -> -8.62%; losing months stay at 19. It also brings the dollar pairs below the 35% cap.
-- fix alone (3.08 without it): mixed, +0.19 in 2018-21 and -0.06 in 2022-25. Keep it; the merge above covers it.
-- grid (3.04 without it: +0.08 / -0.01) and morning (3.04: -0.18 / +0.28): the gain does not hold in both halves. Keep both.
-- breakout is at the 25% cap but adds little (2.98 without it). Halving it costs 0.06, so keep it. Kept frozen (a6 decided 2026-10-25: keep, check 11-22).
-- Losing months: hold (26% of the loss), after (24%), morning (21%) and fall (19%) carry most of it. No single leg
-  drives them, and 2021-11 (-8.0%) and 2023-05 (-6.2%) were broad. A leg that offsets them has to be off-gold, off-intraday,
-  and earn when the gold trend reverses. Gaps 1 and 3 aim there.
-- Done 2026-10-24 (12006ad): gate 5 now uses the risk-layered book, the same baseline as book_sim and gaps.py
-  (3.11 from 2018 on 2026-10-25). Gate lines before that quote the raw 3.34.
+- **Halve fix as well: SCALE fix 0.5 next to cross 0.5** (one shared budget for the two fix-flow legs, corr 0.61).
+  book_sim, same base: from 2018 3.11 -> **3.17**. By period 2.42 -> 2.54, 3.40 -> 3.47, 2.79 -> 2.82, so the gain holds in both
+  halves and before 2018. Worst month -8.3% -> -8.0%, profitable months from 2018 77.7% -> 78.7%. It also brings the dollar
+  pairs under the 35% cap. Cross 0.25 alone gives 3.19 (2.44 / 3.48 / 2.88) but leaves fix full. Caveat: picked on the same
+  data as last week's cross halving; the gain is small. Recheck once Dual Thrust is counted.
+- cross (3.21 without it, +0.10): +0.11 / +0.09 in 2018-21 / 2022-25 but -0.01 before 2018. Halving it is already in SCALE.
+  Do not cut a Sharpe-1.24 leg; the fix 0.5 proposal covers most of it.
+- grid (3.18 without, +0.07): +0.05 / +0.09 from 2018 but -0.15 before 2018. Mixed: keep.
+- morning (3.18 without): -0.22 in 2018-21, +0.38 in 2022-25. Mixed: keep, recheck next week.
+- fix (3.14 without): +0.08 / -0.01 from 2018. Mixed: the scale proposal above is the safer form.
+- breakout at the 25% cap: 3.08 without it (-0.03 in total, -0.09 2018-21). Keep; frozen per owner a6, check 2026-11-22.
 
 ## Stop bringing
-- More carry, VRP or policy-gap variants. Each was tested once and failed the halves: fx_carry_g10_monthly_swapadj
-  (-0.11/-0.16), vrp_gap_timing_3mkts (-0.03/0.39), policy_gap_eurusd_weeks (0.12/-0.44), bsic_vix_vxv (0.66/-0.25).
-  Without options, volatility premium is not a reachable style. Leave it off the target list.
-- TSMOM and trend, time-series or cross-sectional (futures_tsmom rejected; hold covers gold). COT extremes (cot_contrarian, -0.04/0.28).
-- FX calendar, time-of-day and short reversal effects on the majors (dao_weekend_gap, totm_us, overreaction_fx,
-  breedon_ranaldo). Pre-FOMC/ECB drift. Month-end or fix flows (fix and cross already trade them).
-- Searches that return 0 ideas run after run (about 350 finder runs, 0 queued since 10-23). Take one of the 3 named papers to a full
-  read and the queue before searching again. Never drop a simple rule on 3+ markets for "no costed paper": the builder
-  measures the costs.
+- Carry, VRP, policy gap, FX value (fx_value_rer), TSMOM/trend of any kind, COT extremes.
+- FX calendar, time-of-day, fix/month-end flows on the majors; pre-FOMC/ECB drift; turn-of-month long (totm_us).
+- VIX-conditioned index reversals (nagel, jones_pyun: two rejections), Baltussen reversal (daily and last 30 min), index
+  pairs (thomakos), cross mean reversion/RSI (all near-miss themes closed), oil-to-index, commodity FX lead, opex week.
+- ML overlays on existing legs (meta-labels, regime gates, bandit/HRP weights, vol-managed sizing): 12+ rejected 10-25..31.
+- Searches that return 0 ideas. Take example 1 or 2 to a full read and the queue first.
 
 ## Data ready (marketdata/, out of git; research only to 2025-10-10)
-- 3-month interbank rates, monthly, fred/IR3TIB01{US,EZ,JP,GB,CA,AU,CH,NZ}M156N (common sample 2002-04 to 2025-10).
-- Policy rates, daily: fred/DFF, ECBDFR, IUDSOIA. Treasury 10-year: fred/DGS10 (1962 on).
-- FX spot, daily: fred/DEXUSEU (1999 on), DEXUSUK, DEXUSAL, DEXUSNZ, DEXJPUS, DEXCAUS, DEXSZUS (1971 on), with the FRED CPI files.
+- 3-month interbank rates, monthly, fred/IR3TIB01{US,EZ,JP,GB,CA,AU,CH,NZ}M156N (2002-04 to 2025-10).
+- Policy rates, daily: fred/DFF, ECBDFR, IUDSOIA. Treasury 10-year: fred/DGS10. 10-year yields, monthly: fred/IRLTLT01{US,EZ,JP,GB,AU,CA,DE}M156N.
+- FX spot, daily: fred/DEXUSEU, DEXUSUK, DEXUSAL, DEXUSNZ, DEXJPUS, DEXCAUS, DEXSZUS, with the FRED CPI files.
 - Implied vol: fred/GVZCLS, VIXCLS, EVZCLS (stops 2025-03-11); volidx/ (GVZ, OVX, MOVE, SKEW); vixidx/ (VIX, VIX3M, VVIX).
-- CFTC COT legacy futures-only, weekly: cot/{AUD,CAD,CHF,EUR,GBP,JPY,GOLD}.csv (done 2026-10-24).
+- CFTC COT legacy, weekly: cot/{AUD,CAD,CHF,EUR,GBP,JPY,GOLD}.csv.
 - Index M1 for gaps 1 and 2: histdata/SPXUSD, NSXUSD, GRXEUR (DAX), JPXJPY (Nikkei); daily futures in commod/ (ES, NQ, ZN, ZB, CL, GC).
-- 10-year yields, monthly: fred/IRLTLT01{US,EZ,JP,GB,AU,CA,DE}M156N (data_fred_long_yields_g6, done 2026-10-24).
-
-## Update 2026-10-25 (owner's session)
-- All 3 gap examples above were tested on 10-24 and failed the halves: paper_hau_rey_equity_fx_relative (-0.09/0.07),
-  paper_baltussen_mac5_index_reversal (-0.26/-0.18), paper_chen_tsang_relative_slope_fx (the Ang-Chen sibling,
-  -0.81/-0.14). The gaps are still open. Find a different mechanism for them; do not bring a variant of these 3.
-- The spec factory's textbook grid is off (tools/spec_factory.py ENABLED = False). Rule specs now come only from
-  sources read in full.
-
-## Steer update 2026-10-31 (owner's session): one target, the book's losing months
-Aim every run at this one gap until it is tested. Leave "a market without a leg" alone this week: EURUSD has had about
-25 rule scans and every one failed.
-
-- **The target:** a leg that makes money in the book's worst months from 2018. In docs/gaps.json losing_months_2018,
-  those are 2021-11 (-8.5%), 2023-05 (-6.2%), 2024-05 (-4.2%), 2024-07 (-3.8%), 2019-10, 2020-05 and 2020-12 (about
-  -3.5% each). It holds for days to weeks, not intraday (the book has 8 intraday legs and 1 days leg). It trades off
-  gold and off the dollar pairs: those carry 0.087 and 0.353 of the risk. Room is in EURUSD (0), US/EU indices (0.04)
-  and the non-yen crosses.
-- **First step, research only:** split the 7 months by leg, using the leg returns behind docs/book.json. Find which
-  legs lost and what moved in those months (gold reversal, USDJPY, index or volatility shocks). The mechanism you look
-  for is one that earns from that move. It must have a reason in a paper or documented source read in full. A pattern
-  found only in those 7 months does not count. The gate judges it on all months (halves, 1.5x costs, corr <= 0.30,
-  book +0.03), so a fit to 7 months fails there anyway.
-- **Costs that killed earlier tries:** a long index CFD held for days pays swap 6 nights a week. That swap killed
-  prebuilt_opex_week_indices (gross +0.2 to +0.7, net negative). Prefer the short side, FX with neutral swap, or holds
-  of 1-3 days on the indices.
-- **Not this:** anything under "Stop bringing" above (carry, VRP, policy gap, trend/TSMOM, COT, FX calendar and fix
-  flows, pre-FOMC/ECB drift). Also nothing already tried here: Driesprong oil-to-index, opex week, Treasury auction
-  cycle, gold-bond regime, the yield shock, Baltussen reversal, Chen-Rogoff commodity FX.
-- **Data ready:** see the list above. ES/NQ/ZN/ZB/CL/GC daily, VIX/VIX3M/VVIX/MOVE/SKEW/GVZ/OVX/EVZ, FRED rates and
-  yields, histdata SPX/NSX/GER/JPX M1. Research data runs only to 2025-10-10.
-- **Done means:** one idea queued with its source read in full, or a written note in the queue's result explaining why
-  this target has no mechanism. Do not return 0 ideas silently.
+- Gap 1 needs no new data (month-end calendar from the index files).
