@@ -20,6 +20,9 @@ questions in this run: decide, do the work, and stop.
    logged. Under the table: legs that never traded, legs that sent more than one order a day, and any day with no EA
    lines. The pairing with a tester run (`tools/fill_check.py`) is not run: the demo days are after the holdout, so
    a tester run over them needs the owner's yes. Write "tester pairing: waiting on the owner" and nothing more.
+   The one such run on disk, `backtests/2026-10-25_1557_AurumFunded_fidelity_1019/` (week 10-19, the retired
+   fidelity role's last run, preset `..._phase1_legs.set`), is yours: it stays local and uncommitted, you do not open
+   it, and it is the tester side for week 10-19 once the owner says yes.
 4. Commit only those files and push:
    `git add docs/demo_log.md docs/fidelity docs/memory/decisions.jsonl` then
    `git commit -m "Demo log <date>" -- docs/demo_log.md docs/fidelity docs/memory/decisions.jsonl` then

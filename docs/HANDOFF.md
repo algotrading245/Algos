@@ -196,7 +196,9 @@ each finished piece of work.
   on it is false: retcode 10009 is DONE, but the EA treats deal 0 as a failure (`Legs.mqh:1630`; FTMO's market
   execution reports the deal moments later). That fill is also a late-attach entry 22 pips past the range high, a
   restart artefact. Details are in `docs/demo_log.md` 2026-10-19 15:30. The monitor reports in `docs/demo_log.md`;
-  fidelity pairs demo fills with a tester run weekly.
+  fidelity pairs demo fills with a tester run weekly. **Role (2026-11-01):** the monitor owns the fidelity week and
+  the run `backtests/2026-10-25_1557_AurumFunded_fidelity_1019/` (local, uncommitted, unopened). Its pairing waits on
+  the owner's yes, since the demo days are after the holdout (`prompts/monitor.md` step 3).
   **10-20 (`docs/demo_log.md`):** 5 fills, each 1 order with no repeat: Tokyo USDJPY, breakout USDJPY, midday EURUSD,
   US500 and US100; the bell leg skipped. No day or final stop was hit. The ALERT is the same deal-0 false alarm (Tokyo
   fill). One unplanned restart at 04:13: the keeper itself restarted (cause unknown) and relaunched T16 with the attach
