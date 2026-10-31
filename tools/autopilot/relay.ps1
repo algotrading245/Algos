@@ -17,10 +17,12 @@
 #   7. A data item waiting: the finder writes its fetch script (ideas that need it are blocked until then). The
 #      script runs detached (fetch_runner.py step, every pass); the item is skipped while it runs, then the finder
 #      closes it.
+#   7b. A leg came into or left docs/book.json: the portfolio manager (also weekly, Saturday task).
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
 #   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
 #      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder run under 2
-#      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json).
+#      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json); 3 empty
+#      runs in a row back it off 24 hours (finder-empty.json), lifted early by a new steer.md.
 # A role whose last 3 runs failed (fails_in_row in last-<role>.json) is paused 2 hours after the last, then tried once.
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
@@ -57,6 +59,7 @@ function Get-DemoEvent {
 # Queue items at "tester" the judge has not reviewed yet (no "review" field).
 $FinderBackoff = Join-Path $LogDir "finder-backoff.json"
 $FinderScoutDay = Join-Path $LogDir "finder-scout-day"              # date of the day's scout run
+$FinderEmpty = Join-Path $LogDir "finder-empty.json"                # empty finder runs in a row
 function Get-OpenLeads {
     $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
     if (Test-Path $bl) { @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' }).Count } else { 0 }
@@ -83,8 +86,15 @@ function Get-FinderWhy {
     # waits 30 minutes before the next one (it re-ran every 5 minutes). A data item due is not held back.
     $fb = if (Test-Path $FinderBackoff) { try { Get-Content $FinderBackoff -Raw | ConvertFrom-Json } catch { $null } }
     if ($fb -and $fb.until -and ([datetime]$fb.until) -gt (Get-Date)) {
-        Write-Log "relay" "finder backed off until $($fb.until): $($fb.why)"
-        return $null
+        # A new steer.md lifts the 24-hour backoff (it names new targets); the 30-minute one just runs out.
+        $steer = Join-Path $Repo "docs\ideas\steer.md"
+        $lift = $fb.long -and (Test-Path $steer) -and ((Get-Item $steer).LastWriteTime -gt (Get-Item $FinderBackoff).LastWriteTime)
+        if (-not $lift) {
+            Write-Log "relay" "finder backed off until $($fb.until): $($fb.why)"
+            return $null
+        }
+        Write-Log "relay" "finder backoff lifted: steer.md is newer"
+        if (-not $DryRun) { Remove-Item $FinderBackoff -Force -ErrorAction SilentlyContinue }
     }
     $open = Get-OpenLeads
     # One job per run (owner 2026-10-24): a scout run only adds leads, a normal run only works them, so neither
@@ -103,6 +113,26 @@ function Get-FinderWhy {
     $mode = if ($open -eq 0 -or ($open -lt 10 -and -not $scouted)) { "MODE: scout" } else { "MODE: normal" }
     if ($mode -eq "MODE: scout" -and -not $DryRun) { Set-Content -Path $FinderScoutDay -Value $today -Encoding ascii }
     return "queue low ($waiting waiting): $open open lead(s), $mode"
+}
+
+# A book change (owner 2026-11-01): the legs in docs/book.json (book_sim.py) differ from those the last portfolio run
+# saw. Returns the change as text, or $null. The first sight of the book only records it; one run per 12 hours at most.
+$BookSeen = Join-Path $LogDir "book-legs.json"
+function Get-BookChange {
+    $bf = Join-Path $Repo "docs\book.json"
+    if (-not (Test-Path $bf)) { return $null }
+    $legs = try { @((Get-Content $bf -Raw -Encoding UTF8 | ConvertFrom-Json).legs.PSObject.Properties.Name | Sort-Object) } catch { @() }
+    if (-not $legs.Count) { return $null }
+    $seen = if (Test-Path $BookSeen) { try { @((Get-Content $BookSeen -Raw | ConvertFrom-Json).legs) } catch { $null } } else { $null }
+    # The weekly run already saw this book (it ended after book.json was written): record it, no extra run.
+    if ($null -eq $seen -or (Get-LastEnd "portfolio") -gt (Get-Item $bf).LastWriteTime) {
+        if (-not $DryRun) { [ordered]@{ legs = $legs; at = (Get-Date).ToString("s") } | ConvertTo-Json | Set-Content $BookSeen -Encoding UTF8 }
+        return $null
+    }
+    $added = @($legs | Where-Object { $seen -notcontains $_ }); $gone = @($seen | Where-Object { $legs -notcontains $_ })
+    if (-not ($added.Count + $gone.Count)) { return $null }
+    if (((Get-Date) - (Get-LastEnd "portfolio")).TotalHours -lt 12) { return $null }
+    return "book changed: $(if ($added.Count) { "+$($added -join ', +')" }) $(if ($gone.Count) { "-$($gone -join ', -')" })".Trim()
 }
 
 # The week's token budget (budget.py, owner 2026-10-22), read once a tick.
@@ -176,6 +206,14 @@ while ($true) {
         $role = "finder"; $why = "data item waiting: fetch it before the builder ($((Get-DataDue | ForEach-Object { $_.id }) -join ', '))"
         if (-not $DryRun) { Add-DataTry }
     }
+    # A leg came into or left the book: the portfolio manager rewrites steer.md now, not on Saturday.
+    elseif ($bc = Get-BookChange) {
+        $role = "portfolio"; $why = "$bc (between the weekly reviews)"
+        if (-not $DryRun) {
+            $legs = @((Get-Content (Join-Path $Repo "docs\book.json") -Raw -Encoding UTF8 | ConvertFrom-Json).legs.PSObject.Properties.Name | Sort-Object)
+            [ordered]@{ legs = $legs; at = (Get-Date).ToString("s") } | ConvertTo-Json | Set-Content $BookSeen -Encoding UTF8
+        }
+    }
     elseif ((Get-QueueWaiting) -gt 0 -and (Invoke-Prescreen) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
     else { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 
@@ -210,9 +248,24 @@ while ($true) {
                            elseif ($lr.failed -eq $true) { "failed ($(if ($lr.fail_why) { $lr.fail_why } else { "exit $($lr.exit)" }))" }
                            else { "ended after $([int]((Get-Date) - $t0).TotalSeconds) s with exit $($lr.exit)" }
     }
-    if ($role -eq "finder" -and $short -and (Get-OpenLeads) -ge $leads0 -and (Get-QueueLines) -le $queue0) {
-        $fbWhy = "run of $([int]((Get-Date) - $t0).TotalSeconds) s queued nothing and closed no lead ($leads0 open)"
-        [ordered]@{ until = (Get-Date).AddMinutes(30).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
-        Write-Log "relay" "finder backoff 30 min: $fbWhy"
+    if ($role -eq "finder") {
+        # Empty = the run changed neither the queue nor the open leads (a scout that adds leads is not empty).
+        # A data-item run (it writes a fetch script) is not counted.
+        $empty = ($why -like "queue low*") -and ((Get-OpenLeads) -eq $leads0) -and ((Get-QueueLines) -le $queue0)
+        $st = if (Test-Path $FinderEmpty) { try { Get-Content $FinderEmpty -Raw | ConvertFrom-Json } catch { $null } }
+        $n = if ($empty) { 1 + $(if ($st -and $st.streak) { [int]$st.streak } else { 0 }) } else { 0 }
+        # 3 empty runs in a row (owner 2026-11-01): 24 hours off, unless a new steer.md names new targets.
+        if ($n -ge 3) {
+            $fbWhy = "$n empty finder runs in a row ($leads0 open leads, queue unchanged)"
+            [ordered]@{ until = (Get-Date).AddHours(24).ToString("s"); why = $fbWhy; long = $true } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
+            Write-Log "relay" "finder backoff 24 h: $fbWhy"
+            $n = 0
+        }
+        elseif ($empty -and $short) {
+            $fbWhy = "run of $([int]((Get-Date) - $t0).TotalSeconds) s queued nothing and closed no lead ($leads0 open)"
+            [ordered]@{ until = (Get-Date).AddMinutes(30).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
+            Write-Log "relay" "finder backoff 30 min: $fbWhy"
+        }
+        [ordered]@{ streak = $n; at = (Get-Date).ToString("s") } | ConvertTo-Json | Set-Content $FinderEmpty -Encoding UTF8
     }
 }

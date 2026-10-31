@@ -1,5 +1,12 @@
 # Steer - 2026-10-31 (weekly portfolio review; data to 2025-10-10)
 
+> **Status 2026-11-01 (owner session):** gaps 1 and 2 are tested. Dash for cash was read in full and dropped (sample ends
+> 2013, -0.04%/day, below cost; backlog_done etula_dash_for_cash_short). Noise on GER40/JPN225 was rejected at costs
+> (paper_noise_area_ger40_jpn225, 1.5x Sharpe -0.05). So gap 3 is open now: a weeks+ swing leg on indices or gold, not
+> a repeat of the rejected carry (paper_fx_carry_g10_monthly_swapadj) or VRP (paper_vrp_gap_timing_3mkts,
+> variant_vrp_gap_equity_indices) tests. EURUSD stays off the list. Dual Thrust is now in book_sim (IN_BOOK has
+> "integrated"), and fix runs at SCALE 0.5 in AurumFunded 1.20 (not deployed yet).
+
 ## The book (docs/book.json, docs/gaps.json)
 - Sharpe from 2018 **3.11** (risk layer on; 2.75 full) - profitable months **78%** from 2018 (21 losing of 94) - FTMO payout within 12 months **91%** (67% at edge 70).
 - 10 legs. No EURUSD leg, no carry or VRP leg, 8 of 10 legs intraday. Dollar pairs hold **35.3%** of the risk (cap 35%), USDJPY 25%.

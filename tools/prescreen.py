@@ -5,7 +5,8 @@ spec format (docs/ideas/specs/README.md), e.g. {"rule": "meanrev", "symbols": ["
 "when": {"trend": "up"}} or {"symbols": ["XAUUSD"], "entry": ["03:00"], "hold": [2, 4]}. The relay runs this script
 before it starts a builder. For each "new" item with a screen and no "screened" mark, the engine tests the proxy at
 real costs (best variant picked before 2018, judged from 2018 to the holdout):
-  - a Sharpe under the gate's 0.2 in either half, or no variant with enough trades: the item is set to "rejected"
+  - a Sharpe under the gate's 0.2 in either half, not above 0 at 1.5x cost (gate 2), or no variant with enough
+    trades: the item is set to "rejected"
     with the figures in "result" (no builder run);
   - otherwise it is marked "screened" and waits for the builder as before.
 A proxy the engine cannot run (bad spec, missing data) only gets a note; the builder still takes the item.
@@ -25,7 +26,21 @@ sys.path.insert(0, str(ROOT / "tools"))
 QUEUE = ROOT / "docs" / "ideas" / "queue.jsonl"
 TRIALS = ROOT / "docs" / "trials.jsonl"                             # the DSR trial log (tools/gates.py)
 HALF_MIN = 0.2                                                      # the gate's Sharpe floor in each half
+STRESS_MIN = 0.0                                                    # gate 2: whole-sample Sharpe at 1.5x cost
 DRY = "--dry-run" in sys.argv
+
+
+def stress_sharpe(E, best):
+    """The best variant's whole-sample Sharpe at 1.5x cost (gate 2, tools/gates.py)."""
+    if not best:
+        return 0.0
+    if "gross" in best:                                             # rule specs: daily cost series
+        net = best["gross"] - 1.5 * best["costs"]
+    else:
+        g = best["g"]
+        on = ~E.np.isnan(g)
+        net = E.np.where(on, E.np.nan_to_num(g) - 1.5 * best["cost"], 0.0)
+    return E.sharpe(net)
 
 
 def todo(item):
@@ -63,10 +78,11 @@ def main():
         else:
             pre = (best or {}).get("sharpe_pre", 0.0)
             post = (best or {}).get("sharpe_post", 0.0)
-            fig = f"Sharpe pre-2018 {pre:.2f} / from 2018 {post:.2f} on {tried} variants"
-            if best is None or min(pre, post) < HALF_MIN:
+            st = stress_sharpe(E, best)
+            fig = f"Sharpe pre-2018 {pre:.2f} / from 2018 {post:.2f}, at 1.5x cost {st:.2f}, on {tried} variants"
+            if best is None or min(pre, post) < HALF_MIN or st <= STRESS_MIN:
                 it["status"] = "rejected"
-                it["result"] = f"prescreen: {note or fig} (simple-rule proxy, gate needs {HALF_MIN} in each half); no builder run"
+                it["result"] = f"prescreen: {note or fig} (simple-rule proxy, gate needs {HALF_MIN} in each half and > {STRESS_MIN} at 1.5x cost); no builder run"
                 it["screened"] = "fail"
                 print(f"{it['id']}: REJECTED, {note or fig}")
             else:

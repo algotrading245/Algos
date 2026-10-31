@@ -8,8 +8,11 @@ next one starts, so keep the queue fed with good ideas, not many weak ones.
    finding <source>" --provisional` (it keeps the chain moving if this run is cut off).
 2. Required every run, before anything else (2026-10-23: nine runs in a row skipped this and reported "nothing new"
    from old notes): run `python tools/gaps.py` and read what it prints (it also writes docs/gaps.json), and read
-   `docs/ideas/steer.md` when it exists (the portfolio manager's weekly aim). Lead with the biggest gap: a market,
-   style or holding period with no leg, or the book's losing months. Then read `docs/ideas/backlog.jsonl` (your open
+   `docs/ideas/steer.md` when it exists (the portfolio manager's weekly aim). **Steer's top open gap is your required
+   target** (owner 2026-11-01): the first gap in its "Top 3 gaps" that its status note or the queue does not show as
+   tested, and not "tried" (below). At least one lead you add, and the first lead you work, aims at it; name it in
+   the line before the hand-over ("steer target: <gap>, <what you did for it>"). Only when steer has no open gap, lead
+   with the biggest gap in gaps.py: a market, style or holding period with no leg, or the book's losing months. Then read `docs/ideas/backlog.jsonl` (your open
    leads, below; closed ones are in `backlog_done.jsonl`, never read it whole) and, only in a run that writes specs,
    `docs/ideas/specs/README.md`. Do not read the queue, `results.md` or `rejected_index.json` whole or by tail
    (token diet, owner 2026-10-24): use the Grep tool on them for what you need, e.g. on `docs/ideas/queue.jsonl` the
