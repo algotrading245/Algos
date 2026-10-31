@@ -58,3 +58,12 @@ desk/reports/prop_odds.md
 # Chat-session month-by-month tester sweeps of 10-17 and 10-18, kept local; their findings are in HANDOFF and results.md
 backtests/2026-10-17_*/
 backtests/2026-10-18_*/
+
+# Kept local (2026-11-01): holdout rows cut from fetched files, the desk's learned memory and intel state, the
+# fidelity tester run over demo days past the holdout, and the desk's tune and range reports
+marketdata/_quarantine_holdout/
+desk/memory/lessons.jsonl
+desk/memory/knowledge.jsonl
+desk/state/intel.json
+backtests/2026-10-25_1557_AurumFunded_fidelity_1019/
+desk/reports/range_hold_*.md
