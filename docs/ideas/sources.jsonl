@@ -1389,3 +1389,4 @@
 {"date": "2026-10-31", "kind": "prebuilt", "title": "Quantpedia paired switching", "link": "https://quantpedia.com/strategies/paired-switching", "read": "in full", "specs": []}
 {"date": "2026-10-31", "kind": "paper", "title": "Moreira and Muir, Volatility-Managed Portfolios", "link": "https://www.nber.org/papers/w22208", "read": "unverified", "specs": []}
 {"date": "2026-10-31", "kind": "prebuilt", "title": "QuantConnect: VIX Predicts Stock Index Returns (Giot)", "link": "https://www.quantconnect.com/learning/articles/investment-strategy-library/vix-predicts-stock-index-returns", "read": "in full", "specs": [], "note": "No reported results, no post-publication evidence; dropped."}
+{"date": "2026-10-31", "kind": "paper", "title": "Jones Pyun Wang: Implied Variance and Market Index Reversal", "link": "https://sjpyun.github.io/Rev.pdf", "read": "in full", "specs": []}
