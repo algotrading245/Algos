@@ -430,3 +430,4 @@
 {"id": "bis_wp_equity_liquidity_cycles", "status": "dropped", "added": "2026-10-31", "closed": "2026-10-31", "result": "leveraged-ETF rebalancing: Barbon et al, mechanism covered by noise leg (sources.jsonl line 604)"}
 {"id": "shrinking_windows_dash_cash_variant", "status": "dropped", "added": "2026-10-31", "closed": "2026-10-31", "result": "base paper Etula dropped today, no post-publication result"}
 {"id": "fed_ifdp_gold_dollar", "status": "dropped", "added": "2026-10-31", "closed": "2026-10-31", "result": "search returned broker NFP blogs only, no costed rule; FX macro signals failed"}
+{"id": "arxiv_qfinpm_2026_09", "status": "dropped", "added": "2026-10-31", "closed": "2026-10-31", "result": "listing URL 404 (q-fin.TR 2609 too); search gave Mesfin arXiv 2605.04004 and 2605.11423 (MNQ 2021-25, 14 intraday signal families, none passed OOS gates, already in sources); Chinese index lead-lag 2501.03171 is tick-level, not tradable at FTMO costs"}
