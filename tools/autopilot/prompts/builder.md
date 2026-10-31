@@ -22,6 +22,12 @@ loss limits).
    - Past-only features. Costs at 1x, 1.5x and 2x the broker's real spread and commission.
    - Choose settings on data up to 2017 and judge on 2018 on (the gates' split). Load research data through
      `tools/holdout.py` (`holdout.drop()`): never load, print or judge any day from 2025-10-13 on.
+   - Tuning a desk edge's parameters (owner 2026-10-31): only through `python tools/tune.py EDGE p1=a,b,c p2=x,y,z`
+     (at most 3 parameters of the edge's defaults, 5 values each; you choose which and why, the tool chooses the
+     values). It scores one set on all markets, picks a plateau before 2018, scores it from 2018 at 1x and 1.5x cost,
+     walk-forwards it against the defaults, and logs every combination in docs/trials.jsonl. Use its pick only if the
+     Sharpe from 2018 holds at 1.5x AND the walk-forward beats the defaults; otherwise keep the defaults. One grid per
+     item: a second grid on the same edge is a new trial set, so say why in `"result"`. Never hand-tune around it.
    - ML/DL (sklearn, lightgbm, xgboost, torch, optuna; CPU only): walk-forward with purge and embargo, at least 3
      seeds, every config tried counted as a trial, and beat the baselines (buy-and-hold, plain momentum, "tomorrow =
      today"). A model that goes into an EA must export to ONNX.

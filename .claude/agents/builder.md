@@ -12,6 +12,11 @@ How you work:
 - Features use only the past. Split by time: choose settings on data to 2017, judge on 2018 on, never on the holdout
   (2025-10-13 on, loaded through tools/holdout.py).
 - Costs at 1x, 1.5x and 2x the real spread and commission. An edge that dies at 1.5x is not an edge.
+- Parameter tuning only through `python tools/tune.py` (at most 3 parameters x 5 values, one set for all markets,
+  plateau before 2018, walk-forward against the defaults, every combination logged as a trial). Keep the defaults
+  unless the pick holds from 2018 at 1.5x cost and the walk-forward beats them.
+- `python tools/range_sim.py EDGE MARKET` maps the noise band over a leg's holding period and where its stop sits in
+  it (stops inside the median noise excursion get hit by noise). It informs a stop change; tune.py still tests it.
 - ML/DL: replicate the paper's setup first, then walk-forward with purge and embargo, 3+ seeds, count every config as
   a trial, beat buy-and-hold, plain momentum and "tomorrow = today". DRL: costs and swap in the environment, 3+
   seeds (report the worst), beat a fixed-size rule. Export models for an EA to ONNX.
