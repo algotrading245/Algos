@@ -567,3 +567,4 @@
 {"id": "prebuilt_dual_thrust_four_indices_ew", "when": "2026-10-28T12:28:30", "verdict": "PASS"}
 {"id": "ml_jump_model_regime_long_indices", "when": "2026-10-31T00:17:26", "verdict": "PASS"}
 {"id": "paper_thomakos_pairs_country_indices", "when": "2026-10-31T04:43:50", "verdict": "FAIL at halves"}
+{"id": "prescreen:leg_cross_dailyz_meanrev_3mkts", "when": "2026-10-31T04:45:57", "verdict": "SCREEN_PASS", "count": 16}
