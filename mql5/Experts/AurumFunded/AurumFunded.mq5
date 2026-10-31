@@ -103,6 +103,10 @@
 //| v1.19: Dual Thrust waits 10 s for a sent order to show before it |
 //| sends again, caps the loss at the stop (InpDualMaxRiskPct 1% of  |
 //| balance), and PropDays counts its magic numbers (review 10-31).  |
+//| v1.20: fix pairs risk 0.25% (half, book_sim 10-31) and round to |
+//| the nearest lot step (main pairs; crosses still round down), so  |
+//| 1-step trades stay and the half applies from 2 steps up; the skip|
+//| line gives the risk and the month.                               |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -111,7 +115,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.19"
+#property version   "1.20"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
@@ -130,6 +134,8 @@
 #define AURUM_MORN3 "CADJPY"
 #define AURUM_NASDAQ "US100.cash"
 #define AURUM_SIZEMULT 0.5
+#define AURUM_FIXRISK 0.25
+#define AURUM_FIXNEAREST true
 #define AURUM_GRIDRISK 0.0
 #define AURUM_HOLDVOL 0.0
 #define AURUM_MAXDD 0.0

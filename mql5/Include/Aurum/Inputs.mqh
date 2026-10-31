@@ -28,6 +28,12 @@
 #ifndef AURUM_HOLDVOL
 #define AURUM_HOLDVOL 10.7
 #endif
+#ifndef AURUM_FIXRISK
+#define AURUM_FIXRISK 0.5
+#endif
+#ifndef AURUM_FIXNEAREST
+#define AURUM_FIXNEAREST false
+#endif
 #ifndef AURUM_STOCKS
 #define AURUM_STOCKS "SP500.r"
 #endif
@@ -160,7 +166,7 @@ input double InpHoldBand        = 0.25;  // Resize only when the size is off by 
 input int    InpHoldHHMM        = 105;   // Checked once a day from this time, HHMM
 
 input group "Month-end fix (last weekday of the month, London 4pm)"
-input double InpFixRiskPct      = 0.5;   // Loss of one pair at its stop, % of balance (0 = off)
+input double InpFixRiskPct      = AURUM_FIXRISK; // Loss of one pair at its stop, % of balance (0 = off)
 input double InpFixScalePct     = 3.0;   // Stock move of the month at which a pair risks that much, % (0 = same size every month)
 input double InpFixCap          = 2.0;   // Largest multiple of that risk after a large stock move
 input string InpStocks          = AURUM_STOCKS; // Stock index the month's direction is read from

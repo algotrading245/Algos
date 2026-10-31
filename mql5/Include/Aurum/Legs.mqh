@@ -1345,11 +1345,14 @@ void Fix()
          if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0 || q.ask-q.bid>(cross ? InpCrossMaxSpread : InpFxMaxSpread)*point)
             continue;          // tried again until the entry time has run out
          double dist=MathMax(InpStopMult*sum/n*q.bid,SymbolInfoInteger(sym,SYMBOL_TRADE_STOPS_LEVEL)*point+q.ask-q.bid);
-         double lots=RiskLots(sym,side,side>0 ? q.ask : q.bid,dist,SizeMult()*MonthEndBoost()*risk*weight);
+         // nearest step (AurumFunded, main pairs only): with the halved risk, rounding down would skip every pair under 2 steps;
+         // the crosses keep rounding down so their risk stays capped at InpFixCrossRiskPct (review of 1.20)
+         bool nearest=(AURUM_FIXNEAREST && !cross);
+         double lots=RiskLots(sym,side,side>0 ? q.ask : q.bid,dist,SizeMult()*MonthEndBoost()*risk*weight,nearest);
          if(lots<=0)
            {
-            PrintFormat(AURUM_NAME+": balance too small for the minimum lot of %s at a stop of %s, no fix trade",
-                        sym,DoubleToString(dist,digits));
+            PrintFormat(AURUM_NAME+": %s at a stop of %s does not fit the fix risk (%.3f%% of balance at a stock move of %+.2f%%, lots %s), no fix trade",
+                        sym,DoubleToString(dist,digits),SizeMult()*MonthEndBoost()*risk*weight,100.0*mtd,nearest ? "rounded to the nearest step" : "rounded down");
             g_fixDone[w][i]=today;
             continue;
            }
