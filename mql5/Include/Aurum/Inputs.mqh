@@ -238,6 +238,13 @@ input int    InpVrpEntrySec     = 600;   // No entry later than this after the s
 input double InpVrpMaxSpreadBp  = 3.0;   // No entry while the spread is above this, basis points of price
 input double InpVrpStopEqPct    = 5.0;   // Broker stop: loss in % of equity (not in the Python test)
 
+input group "Month reversal (Graziani 2024; S&P 500 and Nasdaq, monthly; research/graziani_reversal.py)"
+input double InpGrzMult         = 0.0;   // Notional per index, multiple of min(3, 10% / annual volatility) x equity (0 = off; 0.5 = two indices at equal weight)
+input int    InpGrzHHMM         = 2230;  // Month-end check, entry and exit time, server HHMM (near the US close)
+input int    InpGrzEntrySec     = 600;   // No entry later than this after the start, seconds
+input double InpGrzMaxSpreadBp  = 3.0;   // No entry while the spread is above this, basis points of price
+input double InpGrzStopEqPct    = 5.0;   // Broker stop: loss in % of equity (not in the Python test)
+
 input group "Dual Thrust index breakout (S&P 500, Nasdaq, DAX, Nikkei; research/prebuilt_dual_thrust_four_indices_ew.py)"
 input double InpDualMult        = 0.0;   // Notional per index, multiple of min(3, 10% / annual volatility) x equity (0 = off; 0.25 = four indices at equal weight)
 input string InpDualDax         = "GER40.cash"; // DAX on the broker (check the name)

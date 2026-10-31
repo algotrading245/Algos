@@ -29,7 +29,8 @@ bool   AurumInputsBad();                                            // true: the
 #define VRP_HOLD_DAYS 10   // variance-premium hold in trading days (D1 bars of the index)
 #define VRP_MAGIC 30      // the variance-premium trades have magic InpMagic+30 (S&P 500) and InpMagic+31 (Nasdaq)
 #define NOISE_MAGIC 28    // the noise-area trades have magic InpMagic+28 (S&P 500) and InpMagic+29 (Nasdaq)
-#define DUAL_MAGIC 32     // the Dual Thrust index trades have magic InpMagic+32 .. +35 (S&P 500, Nasdaq, DAX, Nikkei)
+#define GRZ_MAGIC 36      // the month-reversal trades have magic InpMagic+36 (S&P 500) and InpMagic+37 (Nasdaq)
+#define DUAL_MAGIC 32    // the Dual Thrust index trades have magic InpMagic+32 .. +35 (S&P 500, Nasdaq, DAX, Nikkei)
 #define DUAL_START 60     // day open: 01:00 server, after the 23:00-01:00 rollover
 #define DUAL_END   1320   // flat at 22:00 server
 #define DUAL_FLIPS 8      // most entries a day and index (the Python test has no limit; a run-away guard)
@@ -94,6 +95,9 @@ datetime g_noiseDay[2];    // day the bands below belong to
 bool     g_noiseReady[2];  // that day's bands are known
 int      g_noiseLast[2];   // last check dealt with that day
 double   g_noiseSig[2][NOISE_N],g_noiseHi[2],g_noiseLo[2],g_noiseLev[2],g_noiseVol[2];
+bool     g_grzOn=false;    // the month-reversal leg has a size
+string   g_grzSym[2];      // S&P 500 and Nasdaq, "" for one that is missing
+datetime g_grzDone[2];     // per index: month-end day whose check has been dealt with
 bool     g_dualOn=false;   // the Dual Thrust index leg has a size
 string   g_dualSym[4];     // S&P 500, Nasdaq, DAX, Nikkei, "" for one that is missing
 datetime g_dualDay[4];     // day the levels below belong to
@@ -2463,6 +2467,150 @@ void Vrp()
      }
   }
 
+// Month reversal (Graziani 2024, research/graziani_reversal.py): on the last trading day of a month, near the US close,
+// if the index fell from the 4th-Friday close to now, buy it and hold to the last trading day of the next month, where
+// the same check decides whether to hold on. Python (US500 + US100, 2010-2025, 1x): Sharpe 0.52 / 0.64 by half, 0.47 at
+// 1.5x cost, about 40% of months. Size: notional of 10% a year volatility (60 days, at most 3x) x equity x SizeMult() x
+// InpGrzMult, fixed at the entry. The broker stop (InpGrzStopEqPct of equity) is not in the Python test.
+
+// True when 'day' is a weekday, the NYSE is open and the next NYSE trading day is in another month.
+bool GrzLastTradingDay(datetime day)
+  {
+   MqlDateTime s,n;
+   TimeToStruct(day,s);
+   if(s.day_of_week<1 || s.day_of_week>5 || NyseClosed(day))
+      return(false);
+   for(datetime d=day+86400; d<=day+10*86400; d+=86400)
+     {
+      TimeToStruct(d,n);
+      if(n.day_of_week<1 || n.day_of_week>5 || NyseClosed(d))
+         continue;
+      return(n.mon!=s.mon);
+     }
+   return(false);
+  }
+
+// Signal on the last trading day: the index is below its close of the month's 4th Friday. vol = annual volatility of
+// the last 60 daily closes. False when the history is short or today is not after that Friday.
+bool GrzSignal(string sym,bool &below,double &vol)
+  {
+   below=false;
+   vol=0.0;
+   datetime today=DayOf(TimeCurrent());
+   MqlDateTime s;
+   TimeToStruct(today,s);
+   datetime f4=Weekday(s.year,s.mon,5,4);
+   if(f4>=today)
+      return(f4==today);              // the 4th Friday itself or later in the month: return 0, no signal
+   int b=iBarShift(sym,PERIOD_D1,f4,false);
+   if(b<0 || iTime(sym,PERIOD_D1,b)<f4-3*86400)
+      return(false);
+   double c4=iClose(sym,PERIOD_D1,b);
+   MqlTick q;
+   if(c4<=0 || !SymbolInfoTick(sym,q) || q.bid<=0)
+      return(false);
+   double c[];
+   if(CopyClose(sym,PERIOD_D1,1,61,c)<61)
+      return(false);
+   double m=0.0,sd=0.0,r[60];
+   for(int j=0; j<60; j++)
+     {
+      if(c[j]<=0 || c[j+1]<=0)
+         return(false);
+      r[j]=MathLog(c[j+1]/c[j]);
+      m+=r[j];
+     }
+   m/=60.0;
+   for(int j=0; j<60; j++)
+      sd+=(r[j]-m)*(r[j]-m);
+   vol=MathSqrt(sd/59.0*252.0);
+   below=(q.bid<c4);
+   return(vol>0);
+  }
+
+void Grz()
+  {
+   if(!g_grzOn)
+      return;
+   datetime now=TimeCurrent(),today=DayOf(now),opened;
+   for(int i=0; i<2; i++)
+     {
+      string sym=g_grzSym[i];
+      if(sym=="")
+         continue;
+      long magic=InpMagic+GRZ_MAGIC+i;
+      bool held=(HeldLots(sym,magic,opened)>0);
+      datetime start=today+HHMMSec(InpGrzHHMM);
+      // Restart-safe: the position itself is the state. A hold older than 40 days missed its exit (EA off): close it.
+      if(held && today-DayOf(opened)>40*86400)
+        {
+         PrintFormat(AURUM_NAME+": month-reversal hold on %s older than 40 days, closing",sym);
+         CloseAll(sym,magic);
+         continue;
+        }
+      if(now<start || g_grzDone[i]==today || !GrzLastTradingDay(today))
+         continue;
+      if(DayOf(opened)==today && held)
+        {
+         g_grzDone[i]=today;   // opened today: nothing to decide
+         continue;
+        }
+      if(now-start>=InpGrzEntrySec)
+        {
+         g_grzDone[i]=today;
+         continue;
+        }
+      bool below=false;
+      double vol=0.0;
+      if(!GrzSignal(sym,below,vol))
+        {
+         PrintFormat(AURUM_NAME+": no month-reversal signal on %s (D1 history short, or no bar for the month's 4th Friday)",sym);
+         g_grzDone[i]=today;
+         continue;
+        }
+      if(held)
+        {
+         if(!below)
+            CloseAll(sym,magic);   // no new signal: the month's hold ends here
+         else
+            PrintFormat(AURUM_NAME+": month-reversal on %s signals again, the hold goes on",sym);
+         g_grzDone[i]=today;
+         continue;
+        }
+      if(!below)
+        {
+         g_grzDone[i]=today;
+         continue;
+        }
+      if(TradedSince(sym,magic,start))
+        {
+         g_grzDone[i]=today;
+         continue;
+        }
+      MqlTick q;
+      if(!SymbolInfoTick(sym,q) || q.bid<=0 || q.ask<=0 || (q.ask-q.bid)/q.bid*1e4>InpGrzMaxSpreadBp)
+         continue;                 // tried again until the entry time has run out
+      double mult=SizeMult()*InpGrzMult*MathMin(3.0,0.10/vol);
+      double lots=NotionalLots(sym,1,q.ask,mult);
+      if(lots<=0)
+        {
+         PrintFormat(AURUM_NAME+": balance too small for the minimum lot of %s, no month-reversal trade",sym);
+         g_grzDone[i]=today;
+         continue;
+        }
+      int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+      double sl=NormalizeDouble(q.ask*(1.0-MathMin(0.5,InpGrzStopEqPct/100.0/mult)),dg);
+      Prepare(sym,magic);
+      if(!Filled(g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" grz")))
+        {
+         PrintFormat(AURUM_NAME+": month-reversal order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+         continue;
+        }
+      PrintFormat(AURUM_NAME+": month-reversal, %s below its 4th-Friday close, bought %.2f at %.2f, stop %.2f",sym,lots,FillPrice(q.ask),sl);
+      g_grzDone[i]=today;
+     }
+  }
+
 // Levels of Dual Thrust index i for 'today' (research/prebuilt_dual_thrust_four_indices_ew.py): the range is
 // max(highest high - lowest close, highest close - lowest low) of the last 4 daily bars, the day open is the first M1
 // bar from 01:00, buy at open + 0.3 x range, sell at open - 0.7 x range. The size factor is min(3, 10% / annual
@@ -2667,6 +2815,10 @@ bool CloseEverything()
       for(int i=0; i<4; i++)
          if(g_dualSym[i]!="")
             ok=CloseAll(g_dualSym[i],InpMagic+DUAL_MAGIC+i) && ok;
+   if(g_grzOn)
+      for(int i=0; i<2; i++)
+         if(g_grzSym[i]!="")
+            ok=CloseAll(g_grzSym[i],InpMagic+GRZ_MAGIC+i) && ok;
    return(ok);
   }
 
@@ -2714,6 +2866,7 @@ void Run()
    Noise();
    Drift();
    Vrp();
+   Grz();
    Dual();
   }
 
@@ -2748,6 +2901,8 @@ int OnInit()
       InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange ||
       InpVrpMult<0 || InpVrpHHMM<0 || InpVrpHHMM%100>59 || InpVrpHHMM>2350 || InpVrpEntrySec<1 || InpVrpMaxSpreadBp<=0 ||
       InpVrpStopEqPct<=0 || (InpVrpVix=="" && InpVrpVixFile=="") ||
+      InpGrzMult<0 || InpGrzHHMM<0 || InpGrzHHMM%100>59 || InpGrzHHMM>2350 || InpGrzEntrySec<1 || InpGrzMaxSpreadBp<=0 ||
+      InpGrzStopEqPct<=0 ||
       InpDualMult<0 || InpDualKLong<=0 || InpDualKShort<=0 || InpDualMaxSpreadBp<=0 || InpDualMaxRiskPct<=0 ||
       InpNoiseMult<0 || InpNoiseBandSpx<=0 || InpNoiseBandNdx<=0 || InpNoiseMaxSpreadBp<=0 || AurumInputsBad())
       return(INIT_PARAMETERS_INCORRECT);
@@ -2885,6 +3040,22 @@ int OnInit()
         {
          PrintFormat(AURUM_NAME+": symbol %s is not available, the variance-premium leg leaves it out",g_vrpSym[i]);
          g_vrpSym[i]="";
+        }
+     }
+   g_grzOn=(InpGrzMult>0);
+   g_grzSym[0]=InpStocks;
+   g_grzSym[1]=InpNasdaq;
+   for(int i=0; i<2; i++)
+     {
+      g_grzDone[i]=0;
+      if(!g_grzOn)
+         continue;
+      if(SymbolSelect(g_grzSym[i],true))
+         iBars(g_grzSym[i],PERIOD_D1);
+      else
+        {
+         PrintFormat(AURUM_NAME+": symbol %s is not available, the month-reversal leg leaves it out",g_grzSym[i]);
+         g_grzSym[i]="";
         }
      }
    g_dualOn=(InpDualMult>0);

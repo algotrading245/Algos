@@ -107,6 +107,11 @@
 //| the nearest lot step (main pairs; crosses still round down), so  |
 //| 1-step trades stay and the half applies from 2 steps up; the skip|
 //| line gives the risk and the month.                               |
+//| v1.21: month-reversal leg (InpGrzMult, off by default, magic +36 |
+//| S&P 500 / +37 Nasdaq; Graziani 2024): last trading day of the    |
+//| month near the US close, buy if the index is below its 4th-Friday|
+//| close, hold to next month's last trading day (renew on a new     |
+//| signal). Size min(3, 10% / vol); broker stop 5% of equity.       |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -115,7 +120,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.20"
+#property version   "1.21"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
@@ -323,7 +328,7 @@ int PropDays()
       if(d==0 || HistoryDealGetInteger(d,DEAL_ENTRY)!=DEAL_ENTRY_IN)
          continue;
       long magic=HistoryDealGetInteger(d,DEAL_MAGIC);
-      if(magic<InpMagic || magic>InpMagic+DUAL_MAGIC+3)
+      if(magic<InpMagic || magic>InpMagic+GRZ_MAGIC+1)
          continue;
       datetime day=DayOf((datetime)HistoryDealGetInteger(d,DEAL_TIME)-HHMMSec(InpPropResetHHMM));
       if(day!=last)
