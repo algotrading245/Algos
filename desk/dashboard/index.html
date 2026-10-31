@@ -112,6 +112,7 @@ svg.spark{width:100%;height:90px;display:block}
   <section id="gate"></section>
   <section id="agents"></section>
   <section id="board"></section>
+  <section id="talk"></section>
   <section id="edges"></section>
   <section id="journal" class="span2"></section>
   <section id="killbox">
@@ -231,6 +232,28 @@ function renderNews(s) {
     `<div class="rows">${rows || '<div class="empty">Nothing in the next 48 hours.</div>'}</div>`;
 }
 
+function podIntel(q) {
+  if (!q || !q.level) return '';
+  const lv = q.level, w = q.work || {}, t = q.talk || {}, sh = q.share || {};
+  const pct = lv.next ? (q.xp - lv.floor) / (lv.next - lv.floor) : 1;
+  const sw = (q.strengths || []).slice(0, 1).map(x => `<span class="good">+ ${esc(x.what)}</span>`)
+    .concat((q.weaknesses || []).slice(0, 1).map(x => `<span class="bad">− ${esc(x.what)}</span>`)).join(' · ');
+  return `<div class="stats"><span>IQ <b>${q.iq}</b></span><span>Level <b>${lv.n} ${esc(lv.name)}</b></span><span>XP <b>${num(q.xp, 0)}</b>${lv.next ? ' / ' + num(lv.next, 0) : ''}</span>
+    <span>Coverage <b>${num((w.coverage ?? 0) * 100, 0)}%</b></span><span>Asked <b>${t.asked ?? 0}</b> Answered <b>${t.answered ?? 0}</b></span><span>Shared <b>${sh.shared ?? 0}</b> Endorsed <b>${sh.endorsed ?? 0}</b> Cited <b>${sh.cited ?? 0}</b></span></div>
+    <div class="tok">${bar(pct, '')}<span>${lv.next ? num(lv.next - q.xp, 0) + ' xp to next level' : 'top level'}</span></div>${sw ? `<div class="note">${sw}</div>` : ''}`;
+}
+
+function renderTalk(s) {
+  const t = Array.isArray(s.talk) ? s.talk : [], k = Array.isArray(s.knowledge) ? s.knowledge : [];
+  const ups = Array.isArray(s.level_ups) ? s.level_ups : [];
+  const line = m => `<div><div class="note"><span class="gold">${esc(m.pod || '')}</span> ${m.kind === 'reply' ? '↩ answered' : '? asked'} <span class="gold">${esc(m.to || '')}</span> · ${dhm(m.t)}${m.instrument ? ' · ' + esc(m.instrument) : ''} <span class="muted">${esc(m.id || '')}</span></div><div>${esc(m.text)}</div></div>`;
+  const kn = e => `<div><div class="note"><span class="gold">${esc(e.pod || '')}</span> shared · ${dhm(e.t)}${e.instrument ? ' · ' + esc(e.instrument) : ''}${(e.endorsed_by || []).length ? ' · <span class="good">endorsed by ' + e.endorsed_by.map(esc).join(', ') + '</span>' : ''}</div><div>${esc(e.text)}</div></div>`;
+  $('talk').innerHTML = hd('Desk talk · asks, answers, shared knowledge', `${t.length} messages · ${k.length} entries`) +
+    (ups.length ? `<div>${ups.map(u => `<span class="tag">${esc(u.pod)} reached ${esc(u.name)}</span>`).join(' ')}</div>` : '') +
+    `<div class="feed rows" style="max-height:220px">${t.map(line).join('') || '<div class="empty">No pod has asked another a question yet.</div>'}</div>` +
+    `<div class="note">Knowledge</div><div class="feed rows" style="max-height:220px">${k.map(kn).join('') || '<div class="empty">No shared knowledge yet.</div>'}</div>`;
+}
+
 function renderPods(s) {
   const pods = s.pods;
   if (!pods || bad(pods)) { $('pods').innerHTML = hd('Pods') + (pods ? errBox(pods) : ''); return; }
@@ -243,7 +266,7 @@ function renderPods(s) {
     return `<div class="pod"><div><span class="pill ${c}"><i></i>${esc(p.name)}</span><div class="note" style="margin-top:4px">${label}</div></div>
       <div class="meta"><div class="stats"><span>Share <b>${num((p.share ?? 0) * 100, 0)}%</b> <span class="muted">(base ${num((p.base_share ?? 0) * 100, 0)}%)</span></span><span>Tilt <b>${tilt === null ? '–' : num(tilt) + '×'}</b></span>
         <span>Trades <b>${sc.trades ?? 0}</b></span><span>R <b class="${cls(sc.total_R)}">${sgn(sc.total_R ?? 0)}</b></span><span>PF <b>${sc.pf === null || sc.pf === undefined ? '–' : num(sc.pf)}</b></span><span>Hit <b>${sc.hit === undefined || sc.hit === null ? '–' : num(sc.hit * 100, 0) + '%'}</b></span></div>
-        <div class="tok">${bar(tk.budget ? tk.spent / tk.budget : 0, tk.budget && tk.spent >= tk.budget ? '#FF9C80' : '')}<span>${num(tk.spent, 0)} / ${tk.budget === null || tk.budget === undefined ? '∞' : num(tk.budget, 0)} tok</span></div></div></div>`;
+        <div class="tok">${bar(tk.budget ? tk.spent / tk.budget : 0, tk.budget && tk.spent >= tk.budget ? '#FF9C80' : '')}<span>${num(tk.spent, 0)} / ${tk.budget === null || tk.budget === undefined ? '∞' : num(tk.budget, 0)} tok</span></div>${podIntel(p.intel)}</div></div>`;
   }).join('');
   $('pods').innerHTML = hd('Pods · the competition', al.week ? `allocation week ${esc(al.week)}` : 'base shares until the first weekly allocation') + rows +
     '<span class="note">Shares and token slices follow each pod\'s score every week; tilt scales its risk 0.5–1.5×.</span>';
@@ -321,7 +344,7 @@ function renderKill(s) {
   else if ($('killbtn').disabled && !killing) { $('killbtn').disabled = false; $('killbtn').textContent = 'Kill switch'; }
 }
 
-const R = [renderHeader, renderEquity, renderNeeds, renderPhase, renderPositions, renderNews, renderPods, renderBudgets, renderTickets, renderGate, renderAgents, renderBoard, renderEdges, renderJournal, renderKill];
+const R = [renderHeader, renderEquity, renderNeeds, renderPhase, renderPositions, renderNews, renderPods, renderBudgets, renderTickets, renderGate, renderAgents, renderBoard, renderTalk, renderEdges, renderJournal, renderKill];
 let busy = false, fails = 0;
 async function tick() {
   if (busy) return;

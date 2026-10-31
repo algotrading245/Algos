@@ -2,8 +2,15 @@
 
 board post "text" [instrument=SYM] [cites=b1,b2]   post as your pod (the owner posts as "owner")
 board read [N] [pod=POD]
+board ask POD|all "question" [instrument=SYM]      a question to another pod; it shows in that pod's brief
+board reply ASK_ID "answer"                        answer an ask; the asker sees it in its next brief
+board asks [POD]                                   the asks still open for a pod (yours by default)
 memory similar TICKET | calibration [POD] | lessons [POD] [N]
 memory lesson POD "text" [ticket=ID]               the debrief or the owner
+memory learn "text" [instrument=SYM] [share=desk|pod]   share what you learned; desk puts it in every pod's brief
+memory endorse KNOWLEDGE_ID                        vouch for another pod's entry (once each)
+memory knowledge [POD] [n=40]
+intel [POD]                                        a pod's intelligence profile, from its real record
 playbook show POD | log POD
 playbook edit POD FILE "why"                       the head trader or the owner
 playbook rollback POD V "why"                      the head trader or the owner
@@ -42,20 +49,42 @@ def _pod(name, cfg=None):
     return name
 
 
+def _talker():
+    who = cli.role() or "owner"
+    if who not in paths.config().get("pods", {}) and who not in (HEAD, "owner"):
+        raise Refused(f"role {who} does not post on the board")
+    return who
+
+
+def _mem(fn, *a):
+    try:
+        return fn(*a)
+    except ValueError as e:
+        raise Refused(str(e))
+
+
 def board(args):
     op = args[0] if args else "read"
     pos, kv = _kv_split(args[1:])
     if op == "post":
         if not pos:
             raise Refused('board post "text" [instrument=SYM] [cites=b1,b2]')
-        who = cli.role() or "owner"
-        if who not in paths.config().get("pods", {}) and who not in (HEAD, "owner"):
-            raise Refused(f"role {who} does not post on the board")
         cites = [c for c in kv.get("cites", "").split(",") if c]
-        return memory.post(who, " ".join(pos), kv.get("instrument"), cites)
+        return memory.post(_talker(), " ".join(pos), kv.get("instrument"), cites)
     if op == "read":
         return memory.board(int(pos[0]) if pos else 30, kv.get("pod"))
-    raise Refused("board post|read")
+    if op == "ask":
+        if len(pos) < 2:
+            raise Refused('board ask POD|all "question" [instrument=SYM]')
+        to = pos[0] if pos[0] in ("all", HEAD) else _pod(pos[0])
+        return _mem(memory.ask, _talker(), to, " ".join(pos[1:]), kv.get("instrument"))
+    if op == "reply":
+        if len(pos) < 2:
+            raise Refused('board reply ASK_ID "answer"')
+        return _mem(memory.reply, _talker(), pos[0], " ".join(pos[1:]))
+    if op == "asks":
+        return memory.open_asks(_pod(pos[0]) if pos else _talker())
+    raise Refused("board post|read|ask|reply|asks")
 
 
 def memory_cmd(args):
@@ -80,7 +109,22 @@ def memory_cmd(args):
         if len(pos) < 2:
             raise Refused('memory lesson POD "text" [ticket=ID]')
         return memory.add_lesson(_pod(pos[0]), " ".join(pos[1:]), kv.get("ticket"))
-    raise Refused("memory similar|calibration|lessons|lesson")
+    if op == "learn":
+        if not pos:
+            raise Refused('memory learn "what you learned" [instrument=SYM] [share=desk|pod]')
+        return _mem(memory.learn, _talker(), " ".join(pos), kv.get("instrument"), kv.get("share", "desk"))
+    if op == "endorse":
+        if not pos:
+            raise Refused("memory endorse KNOWLEDGE_ID")
+        return _mem(memory.endorse, _talker(), pos[0])
+    if op == "knowledge":
+        return memory.knowledge(_pod(pos[0]) if pos else None)[-int(kv.get("n", 40)):]
+    raise Refused("memory similar|calibration|lessons|lesson|learn|endorse|knowledge")
+
+
+def intel_cmd(args):
+    from desk import intel
+    return intel.profile(_pod(args[0])) if args else intel.all_profiles()
 
 
 def playbook(args):
@@ -212,5 +256,5 @@ def gate(_args):
 
 
 for _name, _fn in (("board", board), ("memory", memory_cmd), ("playbook", playbook), ("edge", edge),
-                   ("scores", scores), ("live-gate", gate)):
+                   ("scores", scores), ("live-gate", gate), ("intel", intel_cmd)):
     cli.register(_name, _fn)

@@ -125,7 +125,17 @@ class Live:
 
 # ---- the state the page shows ----------------------------------------------------------------------------------------
 
-def _pods(cfg, st):
+def _intel(cfg):
+    """state/intel.json, which the runner rewrites after every job; computed here when no job has run yet."""
+    from desk import intel
+    got = paths.read_json(intel.FILE, {}) or {}
+    if not got.get("pods"):
+        got = {"pods": intel.all_profiles(cfg), "talk": memory.talk(40), "knowledge": memory.knowledge()[-40:]}
+    return got
+
+
+def _pods(cfg, st, iq=None):
+    iq = iq or {}
     alloc = paths.read_json(phase.ALLOC, {}) or {}
     shares, paused = alloc.get("shares") or {}, set(alloc.get("paused") or [])
     sc = (paths.read_json(scorekeeper.SCORES, {}) or {}).get("pods", {})
@@ -136,7 +146,8 @@ def _pods(cfg, st):
                     "enabled": p.get("enabled", True), "paused": name in paused,
                     "base_share": p.get("base_share"), "share": shares.get(name, p.get("base_share")),
                     "tilt": _try(phase.tilt, name), "score": sc.get(name),
-                    "tokens": {"spent": runner.spent(name, cfg, key=name), "budget": runner.pod_budget(name, cfg)}})
+                    "tokens": {"spent": runner.spent(name, cfg, key=name), "budget": runner.pod_budget(name, cfg)},
+                    "intel": iq.get(name)})
     return out
 
 
@@ -282,8 +293,12 @@ class State:
             tk = tk if isinstance(tk, dict) and "error" not in tk else {}
             rows = _try(journal.recent, None, 2)
             rows = rows if isinstance(rows, list) else []
+            iq = _try(_intel, cfg)
+            iq = iq if isinstance(iq, dict) and "error" not in iq else {}
             self.slow = {
-                "pods": _try(_pods, cfg, st), "budgets": _try(_budgets, cfg),
+                "pods": _try(_pods, cfg, st, iq.get("pods")), "budgets": _try(_budgets, cfg),
+                "talk": (iq.get("talk") or [])[::-1], "knowledge": (iq.get("knowledge") or [])[::-1],
+                "level_ups": [r for r in rows if r.get("kind") == "level_up"][-10:][::-1],
                 "scores": _try(paths.read_json, scorekeeper.SCORES, {}),
                 "alloc": _try(paths.read_json, phase.ALLOC, {}),
                 "board": _try(lambda: memory.board(15)[::-1]),

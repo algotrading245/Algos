@@ -236,6 +236,27 @@ def missing_notes(job, pods, since, cfg):
     return out
 
 
+def unanswered_asks(job, pods):
+    """The asks a pod read in its brief and left unanswered (owner 2026-10-31). Journaled; returns {pod: [ask ids]}."""
+    from desk import memory
+    out = {}
+    for pod in pods:
+        ids = [r["id"] for r in memory.open_asks(pod) if r.get("to") == pod]
+        if ids:
+            out[pod] = ids
+            journal.log("unanswered_asks", job=job["id"], pod=pod, asks=ids)
+    return out
+
+
+def refresh_intel(cfg):
+    """Recompute every pod's profile after a job, so the dashboards and the next brief see the work just done."""
+    try:
+        from desk import intel
+        intel.write(cfg)
+    except Exception as e:
+        journal.log("intel_error", error=f"{type(e).__name__}: {e}")
+
+
 def run_job(job, cfg):
     kind = job["kind"]
     jobs.mark(job["id"], "started")
@@ -243,7 +264,9 @@ def run_job(job, cfg):
         if kind == "brief":
             pods, since = job.get("pods") or [], clocks.now().isoformat(timespec="seconds")
             res = _with_head(pods, job, cfg)
-            missing_notes(job, [p for p, r in zip(pods, res) if r == "ok"], since, cfg)
+            ran = [p for p, r in zip(pods, res) if r == "ok"]
+            missing_notes(job, ran, since, cfg)
+            unanswered_asks(job, ran)
         elif kind == "wake":
             res = _with_head([job["pod"]], job, cfg)
         elif kind == "debrief":
@@ -265,6 +288,8 @@ def run_job(job, cfg):
         journal.log("job_error", job=job["id"], kind=kind, error=f"{type(e).__name__}: {e}")
         jobs.mark(job["id"], "failed", why=f"{type(e).__name__}: {e}")
         return "failed"
+    finally:
+        refresh_intel(cfg)
     if res and all(r == "budget" for r in res):
         jobs.mark(job["id"], "skipped", why="budget")
         return "skipped"

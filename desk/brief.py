@@ -1,13 +1,14 @@
 """What an agent reads when it wakes (DESIGN.md sections 3c, 4 and 6): the desk's state, gathered by code, so an agent
 spends its turns on judgment instead of on looking things up.
 
-build(role, job) returns markdown. A pod sees the board, the calendar, its tickets and triggers, its lessons, its
-playbook and its calibration; the head trader also sees every proposed ticket with its 20 most similar past setups; the
-debrief sees the day's closed tickets; the monitor sees the issues the code found.
+build(role, job) returns markdown. A pod sees the board, the asks to it and the replies to its own, what other pods
+shared, its intelligence profile (desk/intel.py), the calendar, its tickets and triggers, its lessons, its playbook and
+its calibration; the head trader also sees every proposed ticket with its 20 most similar past setups and its pod's
+profile; the debrief sees the day's closed tickets; the monitor sees the issues the code found.
 """
 import json
 
-from desk import cli, journal, memory, news, paths, playbooks, systematic, tickets, triggers
+from desk import cli, intel, journal, memory, news, paths, playbooks, systematic, tickets, triggers
 
 HEAD = cli.HEAD
 
@@ -59,6 +60,15 @@ def build(role, job=None):
         if owns:
             out.append(_section("Your markets: one board note each, with instrument= set", owns))
         out.append(_section("The board (last 30 posts)", memory.board(30)))
+        out.append(_section("Questions for you from other pods: answer each with board reply ID",
+                            memory.open_asks(role)))
+        out.append(_section("Replies to your questions", memory.replies_for(role)))
+        out.append(_section("Knowledge other pods shared (most endorsed first; endorse what helped you)",
+                            memory.shared_with(role, owns)))
+        prof = intel.profile(role, state)
+        out.append(_section("Your intelligence profile: work on your weaknesses, lean on your strengths",
+                            {k: prof[k] for k in ("level", "iq", "xp", "trading", "strengths", "weaknesses",
+                                                  "work", "talk", "share")}))
         out.append(_section("Calendar, next 24 hours", [{k: v for k, v in e.items() if k != "time"}
                                                        for e in news.upcoming(24, t)]))
         out.append(_section(f"Your triggers ({role})", triggers.active(role)))
@@ -78,7 +88,9 @@ def build(role, job=None):
                                                          "invalidation": v.get("invalidation"),
                                                          "evidence": v.get("evidence"), "cites": v.get("cites")},
                          "similar": memory.similar(v, 20, state),
-                         "calibration": memory.calibration(v.get("pod"), state)})
+                         "calibration": memory.calibration(v.get("pod"), state),
+                         "pod_intel": {k: intel.profile(v.get("pod"), state)[k]
+                                       for k in ("iq", "trading", "strengths", "weaknesses")}})
         out.append(_section("Proposed tickets, each with its 20 most similar past setups", rows))
         out.append(_section("The board (last 30 posts)", memory.board(30)))
         out.append(_section("Shadow benchmark", _shadow()))

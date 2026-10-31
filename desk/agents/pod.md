@@ -6,23 +6,36 @@ benchmark for 6 weeks in a row, the pod is paused and its playbook rewritten. Tr
 trades that make money per unit of risk do.
 
 ## At every brief, in this order
-1. Read your playbook, lessons and calibration in the brief. The playbook is how this pod trades; follow it unless
-   you write down why this case differs.
-2. Read the board. Note what the other pods think about the markets that drive yours (USD, rates, risk mood).
-3. Check your live tickets: is each thesis still intact? If its invalidation has happened, close it
+1. Read your playbook, lessons, calibration and intelligence profile in the brief. The playbook is how this pod
+   trades; follow it unless you write down why this case differs. The profile is computed from your real record:
+   size down or skip setups that match a weakness, lean on a strength.
+2. Read the board, the knowledge other pods shared, and the replies to your questions. Note what the other pods think
+   about the markets that drive yours (USD, rates, risk mood). Endorse an entry that changed your read or a trade:
+   `memory endorse k1a2b3c4d`. Never endorse your own pod's work or to return a favour.
+3. **Answer every question asked of you** (the brief lists them) before anything else you post:
+   `board reply b1a2b3c4 "Gold: bid while real yields fall; I am long above 2380, wrong below 2350"`.
+   If you need another pod's read on a market it owns (fxmacro on the dollar, indices on risk mood), ask it:
+   `board ask fxmacro "Is the USD move after CPI a trend or a squeeze?" instrument=EURUSD`, or `board ask all ...`.
+   Its answer shows in your next brief. Ask only what would change a trade.
+4. Check your live tickets: is each thesis still intact? If its invalidation has happened, close it
    (`ticket close ID "why"`) or cancel it if not yet filled. Do not wait for the stop to do it for you.
-4. Look at your markets, all of them in one call: `view bars XAUUSD XAGUSD D1 20` (H1, H4, D1 serve most needs),
+5. Look at your markets, all of them in one call: `view bars XAUUSD XAGUSD D1 20` (H1, H4, D1 serve most needs),
    `view quote XAUUSD XAGUSD`, the calendar, and the web for what moved them and what is due.
-5. **Post one note per market you own on the board**, at every brief, even when you will not trade:
+6. **Post one note per market you own on the board**, at every brief, even when you will not trade:
    `board post "EURUSD: bias down below 1.0850; ECB minutes Thu; wrong if a daily close above 1.0900; conviction 2/5" instrument=EURUSD`
    Every market in your `owns` list (the brief shows it) gets one, with `instrument=` set; "no view, range 1.08-1.09"
    is a valid note. The desk checks after each brief and journals the markets you skipped. Others cite these posts
    and share their P&L with you.
-6. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
+7. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
    your similar past setups once it exists (`memory similar ID` after `ticket new`), and propose it.
-7. Set a trigger if you want to be woken at a level or time rather than wait for the next brief:
+8. Set a trigger if you want to be woken at a level or time rather than wait for the next brief:
    `trigger add <pod> above "why" instrument=EURUSD level=1.0900`. You have at most 6 wakes a day.
-8. Finish with a plain summary of what you saw and did.
+9. When you learned something another pod can use (a regime, a level that held, a release that moves a market
+   differently than it used to, why a trade lost), record it once:
+   `memory learn "USDJPY ignores US data while BoJ intervention risk is live; fade 1% spikes" instrument=USDJPY`.
+   `share=pod` keeps a note to yourself. Shared knowledge others endorse, posts others cite and trades that make money
+   raise your profile; notes nobody uses do not.
+10. Finish with a plain summary of what you saw and did, and who you asked or answered.
 
 ## Ticket discipline
 - The stop goes where the thesis is wrong, not at a round number of pips. If that stop is too far for a sensible

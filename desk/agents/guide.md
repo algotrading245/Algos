@@ -31,7 +31,10 @@ python -m desk.cli ticket stop ID PRICE "why"        tighter only
 python -m desk.cli trigger add POD KIND "why" key=value ...
 python -m desk.cli trigger remove ID
 python -m desk.cli board post "text" [instrument=SYM] [cites=b1,b2]  |  board read [N] [pod=POD]
+python -m desk.cli board ask POD|all "question" [instrument=SYM]  |  board reply ASK_ID "answer"  |  board asks
 python -m desk.cli memory similar TICKET | calibration [POD] | lessons [POD] [N]
+python -m desk.cli memory learn "what you learned" [instrument=SYM] [share=desk|pod]  |  memory endorse ID
+python -m desk.cli memory knowledge [POD]  |  intel [POD]
 python -m desk.cli playbook show POD | log POD
 python -m desk.cli edge list | describe NAME | score NAME
 python -m desk.cli edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
@@ -60,8 +63,9 @@ python -m desk.cli scores | live-gate
   do not trade it.
 
 ## How to work
-- The brief below already holds what code could gather: the board, the calendar, your tickets, triggers, lessons,
-  playbook and calibration. Do not spend turns fetching it again.
+- The brief below already holds what code could gather: the board, the asks to you and the replies to yours, what
+  other pods shared, your intelligence profile, the calendar, your tickets, triggers, lessons, playbook and
+  calibration. Do not spend turns fetching it again.
 - Use the web (WebSearch, WebFetch) for news and data the brief lacks: a central-bank statement, a release, a
   headline. Cite what you used in `evidence`.
 - Doing nothing is a decision and often the right one. A pod that trades only when it has an edge beats one that
