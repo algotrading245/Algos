@@ -438,3 +438,5 @@
 {"id": "aqr_time_series_momentum_intraday_hf", "status": "dropped", "added": "2026-10-31", "result": "AQR BAB needs a stock cross-section; trend/TSMOM on stop list"}
 {"id": "ger40_us_open_spillover", "status": "dropped", "added": "2026-10-31", "result": "market intraday momentum in all forms already rejected (candidates.md:1594); GER40 noise rule died at 1.5x cost"}
 {"id": "mql5_codebase_experts_indices", "status": "done", "added": "2026-10-31", "result": "opened listing; split into mql5_monday_dip_index_d1"}
+{"id": "ecb_wp_dax_opening", "status": "dropped", "added": "2026-10-31", "result": "2026-10-31: searched DAX/Nikkei first-to-last half-hour momentum; only Gao et al (S&P 1993-2013, FTSE/Euro Stoxx futures mentioned, no net CFD result, no post-2018 number); noise_gj on GER40/JPN225 died at 1.5x cost; market intraday momentum family rejected in all forms"}
+{"id": "mql5_monday_dip_index_d1", "status": "dropped", "added": "2026-10-31", "result": "2026-10-31: Quantified Strategies Turnaround Tuesday SPY: 212 trades, 0.3% per trade, 2.7% CAGR, no dated post-2018 result, no costs; index reversal on stop list; MQL5 page has no backtest"}
