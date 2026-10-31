@@ -59,3 +59,28 @@
   -0.81/-0.14). The gaps are still open. Find a different mechanism for them; do not bring a variant of these 3.
 - The spec factory's textbook grid is off (tools/spec_factory.py ENABLED = False). Rule specs now come only from
   sources read in full.
+
+## Steer update 2026-10-31 (owner's session): one target, the book's losing months
+Aim every run at this one gap until it is tested. Leave "a market without a leg" alone this week: EURUSD has had about
+25 rule scans and every one failed.
+
+- **The target:** a leg that makes money in the book's worst months from 2018. In docs/gaps.json losing_months_2018,
+  those are 2021-11 (-8.5%), 2023-05 (-6.2%), 2024-05 (-4.2%), 2024-07 (-3.8%), 2019-10, 2020-05 and 2020-12 (about
+  -3.5% each). It holds for days to weeks, not intraday (the book has 8 intraday legs and 1 days leg). It trades off
+  gold and off the dollar pairs: those carry 0.087 and 0.353 of the risk. Room is in EURUSD (0), US/EU indices (0.04)
+  and the non-yen crosses.
+- **First step, research only:** split the 7 months by leg, using the leg returns behind docs/book.json. Find which
+  legs lost and what moved in those months (gold reversal, USDJPY, index or volatility shocks). The mechanism you look
+  for is one that earns from that move. It must have a reason in a paper or documented source read in full. A pattern
+  found only in those 7 months does not count. The gate judges it on all months (halves, 1.5x costs, corr <= 0.30,
+  book +0.03), so a fit to 7 months fails there anyway.
+- **Costs that killed earlier tries:** a long index CFD held for days pays swap 6 nights a week. That swap killed
+  prebuilt_opex_week_indices (gross +0.2 to +0.7, net negative). Prefer the short side, FX with neutral swap, or holds
+  of 1-3 days on the indices.
+- **Not this:** anything under "Stop bringing" above (carry, VRP, policy gap, trend/TSMOM, COT, FX calendar and fix
+  flows, pre-FOMC/ECB drift). Also nothing already tried here: Driesprong oil-to-index, opex week, Treasury auction
+  cycle, gold-bond regime, the yield shock, Baltussen reversal, Chen-Rogoff commodity FX.
+- **Data ready:** see the list above. ES/NQ/ZN/ZB/CL/GC daily, VIX/VIX3M/VVIX/MOVE/SKEW/GVZ/OVX/EVZ, FRED rates and
+  yields, histdata SPX/NSX/GER/JPX M1. Research data runs only to 2025-10-10.
+- **Done means:** one idea queued with its source read in full, or a written note in the queue's result explaining why
+  this target has no mechanism. Do not return 0 ideas silently.
