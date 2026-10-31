@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurum Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#0E1115;--card:#151A21;--line:#29313C;--row:#222934;--track:#262E39;--dash:#333C49;
+  --text:#E7EBF0;--muted:#A3ADBA;--gold:#F5B544;--blue:#8CC2FF;--bar:#6CB2FF;
+  --good:#7FD6A4;--bad:#FF9C80;--warn:#F5C978;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45}
+a{color:var(--blue)}
+.wrap{max-width:1440px;margin:0 auto;padding:16px 16px 40px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand b{font-size:16px;font-weight:700;display:block}
+.sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.pill i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.p-run{background:#14273D;color:var(--blue)} .p-alert{background:#3A2E17;color:var(--warn)}
+.p-halt{background:#3A1A12;color:var(--bad)} .p-off{background:#222934;color:var(--muted)}
+.p-good{background:#15301F;color:var(--good)}
+.grid{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:span 2}}
+@media(min-width:1280px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.span3{grid-column:span 3}.span2{grid-column:span 2}}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.hd>span:first-child{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.hd>span+span{font-size:12px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)} .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .gold{color:var(--gold)}
+.big{font-family:var(--mono);font-size:36px;font-weight:500;line-height:1}
+.kv{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.kv b{color:var(--text);font-family:var(--mono);font-weight:500}
+.floor{display:grid;grid-template-columns:44px minmax(0,1fr) 84px;gap:10px;align-items:center}
+.floor span:first-child{font-size:13px;font-weight:600}
+.floor span:last-child{font-family:var(--mono);font-size:12px;text-align:right}
+.track{height:8px;border-radius:4px;background:var(--track);overflow:hidden}
+.track>div{height:100%;border-radius:4px;background:var(--bar)}
+.note{font-size:11px;color:var(--muted)}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:8px;background:#2A1611}
+.alert.WARN{background:#2A2414}
+.badge{flex:none;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--bad);color:#0E1115}
+.alert.WARN .badge{background:var(--warn)}
+.empty{padding:12px;color:var(--muted);border:1px dashed var(--dash);border-radius:8px}
+.line{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.line>span:first-child{color:var(--muted)} .line>span:last-child{font-family:var(--mono)}
+.rows>div{padding:7px 0;border-bottom:1px solid var(--row)} .rows>div:last-child{border-bottom:0}
+.news{display:grid;grid-template-columns:76px 40px minmax(0,1fr);gap:8px;align-items:baseline}
+.news span:first-child{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.news span:nth-child(2){font-weight:700;color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:6px;border-bottom:1px solid var(--row);vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+.scroll{overflow-x:auto}
+.pod{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--row)}
+.pod:last-child{border-bottom:0}
+.pod .meta{display:flex;flex-direction:column;gap:5px;min-width:0}
+.pod .stats{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.pod .stats b{color:var(--text);font-family:var(--mono);font-weight:500}
+.tok{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px;align-items:center;font-size:11px}
+.tok span{font-family:var(--mono);color:var(--muted);text-align:right}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:6px 0}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--dash);margin-top:4px}
+.step.done .dot{background:var(--muted);border-color:var(--muted)}
+.step.now .dot{background:var(--gold);border-color:var(--gold);box-shadow:0 0 0 4px #3A2E17}
+.step.now b{color:var(--gold)}
+.chk{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 20px;gap:8px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--row)}
+.chk span:nth-child(2),.chk span:nth-child(3){font-family:var(--mono);text-align:right}
+.feed{max-height:420px;overflow-y:auto}
+.jr{display:grid;grid-template-columns:62px 130px minmax(0,1fr);gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--row)}
+.jr span:first-child{font-family:var(--mono);color:var(--muted)}
+.jr span:nth-child(2){color:var(--gold);font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.jr span:last-child{color:var(--muted);word-break:break-word}
+svg.spark{width:100%;height:90px;display:block}
+.kill{display:flex;flex-direction:column;gap:10px}
+.kill input{background:#0E1115;border:1px solid var(--line);border-radius:8px;color:var(--text);font:inherit;padding:10px 12px;min-height:44px}
+.kill button{min-height:48px;border:1px solid #FF7A59;border-radius:10px;background:#2A1611;color:#FFB8A3;font:inherit;font-weight:600;cursor:pointer}
+.kill button.armed{background:#FF7A59;color:#0E1115}
+.kill button:disabled{opacity:.5;cursor:default}
+.err{color:var(--bad);font-size:12px}
+.tag{font-size:11px;padding:1px 6px;border-radius:4px;background:#222934;color:var(--muted);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none" stroke="#F5B544" stroke-width="2" aria-hidden="true"><path d="M4 22 L11 8 L16 17 L19 12 L24 22"/><path d="M3 24 H25"/></svg>
+    <div><b>Aurum Desk</b><span class="sub" id="clock">connecting…</span></div>
+  </div>
+  <span class="pill p-off" id="pill"><i></i>Connecting</span>
+</header>
+
+<div class="grid">
+  <section id="equity"></section>
+  <section id="needs"></section>
+  <section id="phase"></section>
+  <section id="positions" class="span2"></section>
+  <section id="news"></section>
+  <section id="pods" class="span2"></section>
+  <section id="budgets"></section>
+  <section id="tickets" class="span2"></section>
+  <section id="gate"></section>
+  <section id="agents"></section>
+  <section id="board"></section>
+  <section id="edges"></section>
+  <section id="journal" class="span2"></section>
+  <section id="killbox">
+    <div class="hd"><span>Kill switch</span><span id="killstate"></span></div>
+    <div class="kill">
+      <input id="killwhy" maxlength="200" placeholder="Why (optional)" aria-label="Why you are stopping the desk">
+      <button type="button" id="killbtn">Kill switch</button>
+      <span class="note" id="killnote">Closes every desk position on the clock's next pass and blocks new entries. Resume is yours only: <span class="mono">python -m desk.cli resume</span></span>
+    </div>
+  </section>
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = (v, d = 2) => (v === null || v === undefined || isNaN(v)) ? '–' : Number(v).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
+const sgn = (v, d = 2) => (v === null || v === undefined || isNaN(v)) ? '–' : (v > 0 ? '+' : '') + num(v, d);
+const cls = v => v > 0 ? 'good' : v < 0 ? 'bad' : '';
+const hm = t => { if (!t) return '–'; const d = new Date(t); return isNaN(d) ? esc(t) : d.toISOString().slice(11, 16); };
+const hms = t => { if (!t) return '–'; const d = new Date(t); return isNaN(d) ? esc(t) : d.toISOString().slice(11, 19); };
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const dhm = t => { const d = new Date(t); return isNaN(d) ? esc(t) : DAYS[d.getUTCDay()] + ' ' + d.toISOString().slice(11, 16); };
+const ago = t => { const s = (Date.now() - new Date(t)) / 1000; if (isNaN(s)) return '–'; if (s < 90) return Math.round(s) + 's'; if (s < 5400) return Math.round(s / 60) + 'm'; if (s < 172800) return Math.round(s / 3600) + 'h'; return Math.round(s / 86400) + 'd'; };
+const bad = x => x && typeof x === 'object' && !Array.isArray(x) && x.error;
+const errBox = x => `<span class="err">${esc(x.error)}</span>`;
+const hd = (a, b = '') => `<div class="hd"><span>${a}</span><span>${b}</span></div>`;
+const bar = (frac, color) => `<div class="track"><div style="width:${Math.max(0, Math.min(100, frac * 100)).toFixed(1)}%;${color ? 'background:' + color : ''}"></div></div>`;
+
+function spark(points, opts = {}) {
+  const ys = points.map(p => p[1]).filter(v => v !== null && !isNaN(v));
+  if (ys.length < 2) return `<div class="empty">${opts.empty || 'Not enough points yet.'}</div>`;
+  const W = 600, H = 90, lo = Math.min(...ys, opts.floor ?? Infinity), hi = Math.max(...ys);
+  const span = (hi - lo) || 1, x = i => (i / (ys.length - 1)) * W, y = v => H - 6 - ((v - lo) / span) * (H - 12);
+  const d = ys.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  const last = ys[ys.length - 1], col = opts.color || (last >= ys[0] ? '#7FD6A4' : '#FF9C80');
+  const zero = opts.zero && lo < 0 && hi > 0 ? `<line x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="#333C49" stroke-dasharray="4 4"/>` : '';
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(opts.label || 'chart')}">${zero}<path d="${d} L${W} ${H} L0 ${H} Z" fill="${col}" opacity=".08"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+function renderHeader(s) {
+  const st = s.status || {}, hb = st.heartbeat || {};
+  const age = hb.t ? (Date.now() - new Date(hb.t)) / 60000 : null;
+  const beat = age === null ? 'no beat' : age > 3 ? `beat ${ago(hb.t)} old` : hb.ok === false ? 'beat failed' : 'beat ok';
+  $('clock').textContent = `${hms(s.t)} UTC · ${beat} · ${s.live?.source === 'mt5' ? 'MT5 live' : 'from heartbeat'}`;
+  const needs = Array.isArray(s.needs_you) ? s.needs_you : [];
+  let p = ['p-run', 'Running'];
+  if (st.halt) p = ['p-halt', 'Halted'];
+  else if (needs.some(a => a.level !== 'WARN')) p = ['p-alert', 'Alert'];
+  $('pill').className = 'pill ' + p[0];
+  $('pill').innerHTML = '<i></i>' + p[1];
+  document.title = (st.halt ? '■ ' : needs.length ? '! ' : '') + 'Aurum Desk';
+}
+
+function renderEquity(s) {
+  const st = s.status || {}, L = bad(s.limits) ? {} : (s.limits || {}), acc = s.live?.account || st.account || {};
+  const eq = acc.equity ?? L.equity, bal = acc.balance ?? L.balance;
+  const rec = L.record || {}, peak = rec.peak ?? L.peak, fl = L.floors || st.account?.floors || {};
+  const dd = peak ? Math.max(0, (peak - eq) / peak * 100) : null;
+  const refs = {day: L.day_balance ?? L.day_equity, week: L.week_equity, kill: peak};
+  const rows = ['day', 'week', 'kill'].filter(k => fl[k] !== undefined && fl[k] !== null).map(k => {
+    const room = eq - fl[k], full = (refs[k] ?? bal) - fl[k];
+    const col = full > 0 && room / full < 0.34 ? '#FF9C80' : full > 0 && room / full < 0.67 ? '#F5C978' : '';
+    return `<div class="floor"><span>${k[0].toUpperCase() + k.slice(1)}</span>${bar(full > 0 ? room / full : 0, col)}<span>${num(room)}</span></div>`;
+  }).join('');
+  const ph = s.phase && !bad(s.phase) ? s.phase : {};
+  const series = (s.equity_series || []).slice(-1800);
+  $('equity').innerHTML = hd('Equity', `${esc(st.profile || '')} · day ${ph.day ?? st.phase_day ?? '–'} of 28`) +
+    `<div class="big">${num(eq)}</div>
+     <div class="kv"><span>Balance <b>${num(bal)}</b></span><span>Floating <b class="${cls(eq - bal)}">${sgn(eq - bal)}</b></span><span>Peak <b>${num(peak)}</b></span><span>DD <b>${dd === null ? '–' : num(dd) + '%'}</b></span>${acc.margin !== undefined ? `<span>Margin <b>${num(acc.margin)}</b></span>` : ''}</div>
+     ${rows || '<div class="empty">No floors yet: the clock writes them on its first pass.</div>'}
+     <span class="note">Room left before each floor (day ${num(fl.day, 0)} · week ${num(fl.week, 0)} · kill ${num(fl.kill, 0)})</span>
+     ${spark(series, {label: 'equity this session', empty: s.live?.source === 'mt5' ? 'Equity line starts filling now (one point a second).' : 'Equity line needs the desk terminal running: ' + esc(s.live?.why || '')})}`;
+}
+
+function renderNeeds(s) {
+  const st = s.status || {}, needs = Array.isArray(s.needs_you) ? s.needs_you : [];
+  const items = needs.map(a => `<div class="alert ${esc(a.level)}"><span class="badge">${esc(a.level)}</span><span>${esc(a.what)}</span></div>`).join('');
+  const mon = s.monitor && !bad(s.monitor) ? s.monitor : {};
+  $('needs').innerHTML = hd('Needs you', mon.t ? 'monitor ' + hm(mon.t) : '') +
+    (bad(s.needs_you) ? errBox(s.needs_you) : items || '<div class="empty">Nothing needs you.</div>') +
+    `<div class="line" style="padding-top:4px"><span>Live tickets</span><span>${(st.live_tickets || []).length}</span></div>
+     <div class="line"><span>Jobs waiting</span><span>${(st.jobs_pending || []).length}</span></div>
+     <div class="line"><span>Open positions</span><span>${Array.isArray(s.live?.positions) ? s.live.positions.length : '–'}</span></div>`;
+}
+
+function renderPhase(s) {
+  const ph = s.phase;
+  if (!ph || bad(ph)) { $('phase').innerHTML = hd('Phase') + (ph ? errBox(ph) : ''); return; }
+  const steps = (ph.steps || []).map(x => {
+    const state = x.phase < ph.phase ? 'done' : x.phase === ph.phase ? 'now' : '';
+    return `<div class="step ${state}"><span class="dot"></span><div><b>Phase ${x.phase}</b> <span class="muted mono">${x.from ? 'from ' + esc(x.from) : 'owner'}</span><div class="note">${esc(x.what)}</div></div></div>`;
+  }).join('');
+  $('phase').innerHTML = hd('Phase', `phase ${ph.phase ?? '–'} · ${ph.risk_scale ?? '–'}× · ${esc(ph.profile || '')}`) +
+    `<div class="steps">${steps || '<div class="empty">Phase clock not started.</div>'}</div>`;
+}
+
+function renderPositions(s) {
+  const pos = s.live?.positions, src = s.live?.source;
+  let body;
+  if (!Array.isArray(pos)) body = `<div class="empty">${src === 'mt5' ? 'Position read failed this second.' : 'Positions need the desk terminal: ' + esc(s.live?.why || 'not connected')}.</div>`;
+  else if (!pos.length) body = '<div class="empty">No open positions.</div>';
+  else {
+    const tot = pos.reduce((a, p) => a + (p.profit || 0), 0);
+    body = `<div class="scroll"><table><thead><tr><th>Symbol</th><th>Side</th><th class="n">Lots</th><th class="n">Open</th><th class="n">Now</th><th class="n">SL</th><th class="n">TP</th><th class="n">P/L</th><th>Ticket</th></tr></thead><tbody>` +
+      pos.map(p => `<tr><td><b>${esc(p.symbol)}</b></td><td class="${p.side === 'buy' ? 'good' : 'bad'}">${esc(p.side)}</td><td class="n">${num(p.volume)}</td><td class="n">${num(p.price_open, 5)}</td><td class="n">${num(p.price_current, 5)}</td><td class="n">${p.sl ? num(p.sl, 5) : '–'}</td><td class="n">${p.tp ? num(p.tp, 5) : '–'}</td><td class="n ${cls(p.profit)}">${sgn(p.profit)}</td><td class="mono muted">${esc(p.comment || p.ticket)}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td colspan="7" class="muted">Total floating</td><td class="n ${cls(tot)}">${sgn(tot)}</td><td></td></tr></tfoot></table></div>`;
+  }
+  $('positions').innerHTML = hd('Positions', src === 'mt5' ? 'live from MT5 · ' + hms(s.live.t) : 'MT5 not attached') + body;
+}
+
+function renderNews(s) {
+  const n = s.news;
+  if (!n || bad(n)) { $('news').innerHTML = hd('Next news') + (n ? errBox(n) : ''); return; }
+  const rows = (n.events || []).map(e => `<div class="news"><span>${dhm(e.t)}</span><span>${esc(e.ccy)}</span><span>${esc(e.title)}${e.forecast ? ` <span class="muted mono">f ${esc(e.forecast)}</span>` : ''}</span></div>`).join('');
+  $('news').innerHTML = hd('Next news', '48 h · high impact') + (n.stale ? `<div class="alert WARN"><span class="badge">WARN</span><span>${esc(n.stale)}</span></div>` : '') +
+    `<div class="rows">${rows || '<div class="empty">Nothing in the next 48 hours.</div>'}</div>`;
+}
+
+function renderPods(s) {
+  const pods = s.pods;
+  if (!pods || bad(pods)) { $('pods').innerHTML = hd('Pods') + (pods ? errBox(pods) : ''); return; }
+  const al = s.alloc && !bad(s.alloc) ? s.alloc : {};
+  const rows = pods.map(p => {
+    const c = p.paused ? 'p-halt' : p.active ? 'p-run' : 'p-off';
+    const label = p.paused ? 'paused' : p.active ? 'trading' : `opens phase ${p.opens_phase ?? '–'}`;
+    const sc = p.score || {}, tk = p.tokens || {};
+    const tilt = typeof p.tilt === 'number' ? p.tilt : null;
+    return `<div class="pod"><div><span class="pill ${c}"><i></i>${esc(p.name)}</span><div class="note" style="margin-top:4px">${label}</div></div>
+      <div class="meta"><div class="stats"><span>Share <b>${num((p.share ?? 0) * 100, 0)}%</b> <span class="muted">(base ${num((p.base_share ?? 0) * 100, 0)}%)</span></span><span>Tilt <b>${tilt === null ? '–' : num(tilt) + '×'}</b></span>
+        <span>Trades <b>${sc.trades ?? 0}</b></span><span>R <b class="${cls(sc.total_R)}">${sgn(sc.total_R ?? 0)}</b></span><span>PF <b>${sc.pf === null || sc.pf === undefined ? '–' : num(sc.pf)}</b></span><span>Hit <b>${sc.hit === undefined || sc.hit === null ? '–' : num(sc.hit * 100, 0) + '%'}</b></span></div>
+        <div class="tok">${bar(tk.budget ? tk.spent / tk.budget : 0, tk.budget && tk.spent >= tk.budget ? '#FF9C80' : '')}<span>${num(tk.spent, 0)} / ${tk.budget === null || tk.budget === undefined ? '∞' : num(tk.budget, 0)} tok</span></div></div></div>`;
+  }).join('');
+  $('pods').innerHTML = hd('Pods · the competition', al.week ? `allocation week ${esc(al.week)}` : 'base shares until the first weekly allocation') + rows +
+    '<span class="note">Shares and token slices follow each pod\'s score every week; tilt scales its risk 0.5–1.5×.</span>';
+}
+
+function renderBudgets(s) {
+  const b = s.budgets;
+  if (!b || bad(b)) { $('budgets').innerHTML = hd('Token budgets') + (b ? errBox(b) : ''); return; }
+  $('budgets').innerHTML = hd('Token budgets', 'today') + b.map(g => `<div class="tok" style="grid-template-columns:96px minmax(0,1fr) 130px;font-size:12px"><b style="font-weight:600">${esc(g.group)}</b>${bar(g.limit ? g.spent / g.limit : 0, g.limit && g.spent >= g.limit ? '#FF9C80' : '')}<span>${num(g.spent, 0)} / ${num(g.limit, 0)}</span></div>`).join('') +
+    '<span class="note">A role that spends its day\'s tokens is skipped until the next trading day.</span>';
+}
+
+function renderTickets(s) {
+  const t = s.tickets;
+  if (!t || bad(t)) { $('tickets').innerHTML = hd('Tickets') + (t ? errBox(t) : ''); return; }
+  const stc = {proposed: 'warn', approved: 'gold', placed: 'gold', open: 'good', closed: 'muted', rejected: 'bad', cancelled: 'muted', expired: 'muted'};
+  const body = t.length ? `<div class="scroll"><table><thead><tr><th>Updated</th><th>Pod</th><th>Trade</th><th>Status</th><th class="n">Risk</th><th class="n">R</th><th class="n">P/L</th><th>Thesis / why</th></tr></thead><tbody>` +
+    t.map(v => `<tr><td class="mono muted">${dhm(v.updated)}</td><td>${esc(v.pod)}</td><td><b>${esc(v.instrument)}</b> <span class="${v.side === 'buy' ? 'good' : 'bad'}">${esc(v.side)}</span></td><td class="${stc[v.status] || ''}">${esc(v.status)}</td><td class="n">${v.risk_pct ?? '–'}%</td><td class="n ${cls(v.R)}">${v.R === undefined || v.R === null ? '–' : sgn(v.R)}</td><td class="n ${cls(v.pnl)}">${v.pnl === undefined || v.pnl === null ? '–' : sgn(v.pnl)}</td><td class="muted" style="max-width:360px">${esc(v.thesis || v.why || '')}</td></tr>`).join('') + '</tbody></table></div>'
+    : '<div class="empty">No tickets yet. Pods propose them; the head trader approves; the risk gate sizes them.</div>';
+  const r = Array.isArray(s.r_series) ? s.r_series : [];
+  $('tickets').innerHTML = hd('Tickets', `${t.length} latest · closed R ${r.length ? sgn(r[r.length - 1][1]) : '0.00'}`) + body +
+    (r.length > 1 ? spark(r, {label: 'cumulative R', zero: true}) : '');
+}
+
+function renderGate(s) {
+  const g = s.live_gate;
+  if (!g || bad(g)) { $('gate').innerHTML = hd('Live gate') + (g ? errBox(g) : ''); return; }
+  const fmt = v => typeof v === 'number' ? num(v, Number.isInteger(v) ? 0 : 2) : esc(v ?? '–');
+  const rows = Object.entries(g.checks || {}).map(([k, c]) => `<div class="chk"><span>${esc(k.replace(/_/g, ' '))}</span><span class="muted">${fmt(c.need)}</span><span>${fmt(c.have)}</span><span class="${c.ok ? 'good' : 'bad'}">${c.ok ? '✓' : '✗'}</span></div>`).join('');
+  $('gate').innerHTML = hd('Live gate', g.passed ? '<span class="good">passed</span>' : 'not yet') +
+    `<div class="chk" style="color:var(--muted);font-size:11px"><span>CHECK</span><span>NEED</span><span>HAVE</span><span></span></div>${rows}<span class="note">${esc(g.verdict || '')} Counting from ${esc(g.since || 'phase 3')}. Live money only on your yes.</span>`;
+}
+
+function renderAgents(s) {
+  const r = s.runner && !bad(s.runner) ? s.runner : {}, rr = r.runner || {};
+  const busy = rr.pid && rr.role ? `<div class="line"><span>Running now</span><span class="gold">${esc(rr.role)} · ${esc(rr.job || '')}</span></div><div class="line"><span>Deadline</span><span>${hm(rr.deadline)}</span></div>` :
+    `<div class="line"><span>Runner</span><span>${rr.pid ? 'starting' : 'idle' + (rr.finished ? ' since ' + hm(rr.finished) : '')}</span></div>`;
+  const pend = (r.pending || []).map(j => `<span class="tag">${esc(j.kind)}${j.pod ? ' ' + esc(j.pod) : ''}</span>`).join(' ');
+  const runs = Array.isArray(s.agents) ? s.agents.slice(0, 10).map(a => `<div class="jr" style="grid-template-columns:52px 96px minmax(0,1fr)"><span>${hm(a.t)}</span><span>${esc(a.role)}</span><span>${a.kind === 'agent_skipped' ? '<span class="warn">skipped: ' + esc(a.why) + '</span>' : `<span class="${a.ok ? 'good' : 'bad'}">${a.ok ? 'ok' : 'failed'}</span> · ${num(a.tokens, 0)} tok · ${a.seconds ?? '–'}s${a.why ? ' · ' + esc(a.why) : ''}`}</span></div>`).join('') : '';
+  const sch = Array.isArray(s.schedule) ? s.schedule.map(x => `<span class="tag">${esc(x.name)} ${x.ran ? ago(x.ran) : 'never'}</span>`).join(' ') : '';
+  $('agents').innerHTML = hd('Agents', `${(r.pending || []).length} waiting`) + busy +
+    (pend ? `<div>${pend}</div>` : '') + `<div class="feed" style="max-height:260px">${runs || '<div class="empty">No agent runs in the last two days.</div>'}</div>` +
+    (sch ? `<div class="note">Last ran: </div><div style="display:flex;flex-wrap:wrap;gap:6px">${sch}</div>` : '');
+}
+
+function renderBoard(s) {
+  const b = s.board;
+  if (!b || bad(b)) { $('board').innerHTML = hd('Board') + (b ? errBox(b) : ''); return; }
+  $('board').innerHTML = hd('Board · what the agents tell each other', b.length + ' notes') +
+    `<div class="feed rows" style="max-height:340px">${b.map(n => `<div><div class="note"><span class="gold">${esc(n.pod || 'desk')}</span> · ${dhm(n.t)}${n.instrument ? ' · ' + esc(n.instrument) : ''}</div><div>${esc(n.text)}</div></div>`).join('') || '<div class="empty">The board is empty.</div>'}</div>`;
+}
+
+function renderEdges(s) {
+  const e = s.edges;
+  if (!e || bad(e)) { $('edges').innerHTML = hd('Systematic edges') + (e ? errBox(e) : ''); return; }
+  const armed = e.armed || [];
+  $('edges').innerHTML = hd('Systematic edges', `${armed.length} armed`) +
+    `<div style="display:flex;flex-wrap:wrap;gap:6px">${armed.map(a => `<span class="tag" title="${esc(JSON.stringify(a.params || {}))}">${esc(a.edge)} · ${esc(a.market)} · ${a.risk_pct}%</span>`).join('') || '<span class="muted">None armed.</span>'}</div>
+     <div class="line"><span>Shadow book R (every edge, no AI)</span><span class="${cls(e.shadow_total_r)}">${e.shadow_total_r === undefined || e.shadow_total_r === null ? '–' : sgn(e.shadow_total_r)}</span></div>
+     <span class="note">The shadow book is the baseline the AI desk has to beat for the live gate${e.shadow_since ? ', counting since ' + esc(String(e.shadow_since).slice(0, 10)) : ''}.</span>`;
+}
+
+const SKIP = new Set(['t', 'kind', 'v']);
+function renderJournal(s) {
+  const j = s.journal;
+  if (!Array.isArray(j)) { $('journal').innerHTML = hd('Journal') + (j ? errBox(j) : ''); return; }
+  const rows = j.map(r => `<div class="jr"><span>${hms(r.t)}</span><span>${esc(r.kind)}</span><span>${esc(Object.entries(r).filter(([k]) => !SKIP.has(k)).map(([k, v]) => k + '=' + (typeof v === 'object' ? JSON.stringify(v) : v)).join('  ')).slice(0, 400)}</span></div>`).join('');
+  $('journal').innerHTML = hd('Journal · everything the desk does', `last ${j.length}`) + `<div class="feed">${rows || '<div class="empty">Nothing logged yet.</div>'}</div>`;
+}
+
+function renderKill(s) {
+  const h = s.status?.halt;
+  $('killstate').innerHTML = h ? '<span class="bad">halted</span>' : 'armed for use';
+  if (h) { $('killbtn').disabled = true; $('killbtn').textContent = 'Desk halted'; $('killnote').innerHTML = `Halted: ${esc(typeof h === 'string' ? h : JSON.stringify(h))}. Resume is yours only: <span class="mono">python -m desk.cli resume</span>`; }
+  else if ($('killbtn').disabled && !killing) { $('killbtn').disabled = false; $('killbtn').textContent = 'Kill switch'; }
+}
+
+const R = [renderHeader, renderEquity, renderNeeds, renderPhase, renderPositions, renderNews, renderPods, renderBudgets, renderTickets, renderGate, renderAgents, renderBoard, renderEdges, renderJournal, renderKill];
+let busy = false, fails = 0;
+async function tick() {
+  if (busy) return;
+  busy = true;
+  try {
+    const r = await fetch('/api/state', {cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const s = await r.json();
+    fails = 0;
+    for (const f of R) { try { f(s); } catch (e) { console.error(f.name, e); } }
+  } catch (e) {
+    if (++fails > 2) { $('pill').className = 'pill p-halt'; $('pill').innerHTML = '<i></i>Offline'; $('clock').textContent = 'dashboard server not answering: ' + e.message; }
+  } finally { busy = false; }
+}
+
+let armed = null, killing = false;
+$('killbtn').addEventListener('click', async () => {
+  const b = $('killbtn');
+  if (!armed) {
+    b.classList.add('armed'); b.textContent = 'Press again within 5 s to stop the desk';
+    armed = setTimeout(() => { armed = null; b.classList.remove('armed'); b.textContent = 'Kill switch'; }, 5000);
+    return;
+  }
+  clearTimeout(armed); armed = null; killing = true; b.disabled = true; b.textContent = 'Stopping…';
+  try {
+    const r = await fetch('/api/kill', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Desk': 'kill'}, body: JSON.stringify({why: $('killwhy').value})});
+    const j = await r.json();
+    $('killnote').innerHTML = j.ok ? 'KILL file written. The clock closes every desk position on its next pass (within a minute).' : `<span class="err">Refused: ${esc(j.error)}</span>`;
+    if (!j.ok) { b.disabled = false; b.textContent = 'Kill switch'; }
+  } catch (e) { $('killnote').innerHTML = `<span class="err">Kill failed: ${esc(e.message)}. Use: python -m desk.cli kill "why"</span>`; b.disabled = false; b.textContent = 'Kill switch'; }
+  b.classList.remove('armed'); killing = false; tick();
+});
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

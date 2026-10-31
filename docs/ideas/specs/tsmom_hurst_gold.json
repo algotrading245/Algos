@@ -1,0 +1,26 @@
+{
+  "id": "tsmom_hurst_gold",
+  "title": "Time-series momentum on gold, 1/3/12-month lookbacks, monthly hold",
+  "source": "Hurst, Ooi & Pedersen (2017), A Century of Evidence on Trend-Following Investing, Journal of Portfolio Management 44(1)",
+  "link": "https://fairmodel.econ.yale.edu/ec439/hurst.pdf",
+  "read": "in full",
+  "why": "Same rule as tsmom_hurst_fx applied to XAUUSD, which the paper's commodity set includes. Overlaps the rejected 20-futures TSMOM test (research/futures_tsmom.py) on the gold leg; this is a single-symbol sign rule with the paper's monthly hold, not the volatility-sized basket",
+  "rule": "tsmom",
+  "symbols": [
+    "XAUUSD"
+  ],
+  "params": {
+    "lookback": [
+      21,
+      63,
+      252
+    ],
+    "hold": [
+      21
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T21:51:44"
+}

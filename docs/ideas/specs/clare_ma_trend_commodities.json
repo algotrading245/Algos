@@ -1,0 +1,31 @@
+{
+  "id": "clare_ma_trend_commodities",
+  "title": "Gold, silver and crude: long when price is above its 6, 7 or 12 month average, else flat",
+  "source": "Clare, Seaton, Smith & Thomas et al. (2014), commodity futures trend following and momentum, City University London working paper (Section 4.1, Tables 4 and 8)",
+  "link": "https://openaccess.city.ac.uk/id/eprint/17846/1/COMMODITY%20pAPER.pdf",
+  "read": "in full",
+  "why": "Paper: monthly trend following on DJ-UBS commodity indices, long when the price is above a 6-12 month moving average, otherwise cash. Long-only 7-month rule: annual excess return about 6.0%, Sharpe 0.76 (Table 4, Jan 1992-Jun 2011), lower drawdown than momentum; net of costs (Table 13). Approximations: the paper trades monthly on month-end prices, the engine uses daily closes with a 21-day hold; the paper's data are commodity indices, not the three CFDs here; the 6/7/12-month lengths are converted to 126/147/252 trading days.",
+  "rule": "ma_cross",
+  "symbols": [
+    "XAUUSD",
+    "XAGUSD",
+    "WTIUSD"
+  ],
+  "params": {
+    "fast": [
+      1
+    ],
+    "slow": [
+      126,
+      147,
+      252
+    ],
+    "hold": [
+      21
+    ]
+  },
+  "side": "long",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T01:39:31"
+}

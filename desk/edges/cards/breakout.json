@@ -1,0 +1,118 @@
+{
+ "name": "breakout",
+ "markets": [
+  "USDJPY"
+ ],
+ "tf": "M15",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 120,
+ "needs": [],
+ "defaults": {
+  "r_from": 60,
+  "r_to": 540,
+  "e_from": 600,
+  "e_to": 1080,
+  "exit": [
+   23,
+   0
+  ]
+ },
+ "card": "USDJPY Tokyo-range breakout. The range of 01:00-09:00 server time (Tokyo's session); the first close beyond it between\n10:00 and 18:00 enters that way, stop at the far side of the range. One trade a day; out at 23:00 server.",
+ "backtest": {
+  "USDJPY": {
+   "params": {
+    "r_from": 60,
+    "r_to": 540,
+    "e_from": 600,
+    "e_to": 1080,
+    "exit": [
+     23,
+     0
+    ]
+   },
+   "from": null,
+   "to": null,
+   "trades": 3747,
+   "pf": 1.1,
+   "win": 0.481,
+   "avg_r": 0.034,
+   "total_r": 126.51,
+   "max_dd_r": 32.02,
+   "first": "2009-01-02",
+   "last": "2025-10-10",
+   "by_year": {
+    "2009": {
+     "trades": 219,
+     "r": 1.25
+    },
+    "2010": {
+     "trades": 237,
+     "r": 18.88
+    },
+    "2011": {
+     "trades": 214,
+     "r": -23.66
+    },
+    "2012": {
+     "trades": 220,
+     "r": 9.41
+    },
+    "2013": {
+     "trades": 217,
+     "r": 34.65
+    },
+    "2014": {
+     "trades": 216,
+     "r": 24.62
+    },
+    "2015": {
+     "trades": 227,
+     "r": 9.68
+    },
+    "2016": {
+     "trades": 209,
+     "r": 1.35
+    },
+    "2017": {
+     "trades": 234,
+     "r": 1.57
+    },
+    "2018": {
+     "trades": 213,
+     "r": 5.97
+    },
+    "2019": {
+     "trades": 212,
+     "r": -9.25
+    },
+    "2020": {
+     "trades": 230,
+     "r": 19.81
+    },
+    "2021": {
+     "trades": 239,
+     "r": -2.53
+    },
+    "2022": {
+     "trades": 222,
+     "r": 14.8
+    },
+    "2023": {
+     "trades": 239,
+     "r": -6.02
+    },
+    "2024": {
+     "trades": 223,
+     "r": 13.5
+    },
+    "2025": {
+     "trades": 176,
+     "r": 12.5
+    }
+   },
+   "run": "2026-10-26T21:06:37+00:00"
+  }
+ },
+ "live": {}
+}

@@ -1,0 +1,124 @@
+{
+ "name": "after",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "AUDUSD",
+  "USDCAD",
+  "USDCHF"
+ ],
+ "tf": "M5",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 300,
+ "needs": [],
+ "defaults": {
+  "start": [
+   9,
+   5
+  ],
+  "end": [
+   15,
+   0
+  ],
+  "k": 3.0
+ },
+ "card": "The day after a US holiday. US desks come back to a backlog of dollar purchases: buy USD from 09:05 to 15:00 server\ntime (02:05 to 08:00 New York) on the first weekday after a federal holiday. Stop 3 ATR (two-hour scale).",
+ "backtest": {
+  "EURUSD": {
+   "params": {
+    "start": [
+     9,
+     5
+    ],
+    "end": [
+     15,
+     0
+    ],
+    "k": 3.0
+   },
+   "from": null,
+   "to": null,
+   "trades": 169,
+   "pf": 1.76,
+   "win": 0.592,
+   "avg_r": 0.173,
+   "total_r": 29.24,
+   "max_dd_r": 4.72,
+   "first": "2009-01-02",
+   "last": "2025-09-02",
+   "by_year": {
+    "2009": {
+     "trades": 10,
+     "r": -0.11
+    },
+    "2010": {
+     "trades": 10,
+     "r": 2.11
+    },
+    "2011": {
+     "trades": 10,
+     "r": -0.14
+    },
+    "2012": {
+     "trades": 9,
+     "r": 1.63
+    },
+    "2013": {
+     "trades": 9,
+     "r": 3.01
+    },
+    "2014": {
+     "trades": 10,
+     "r": 3.34
+    },
+    "2015": {
+     "trades": 10,
+     "r": 0.78
+    },
+    "2016": {
+     "trades": 10,
+     "r": -1.81
+    },
+    "2017": {
+     "trades": 10,
+     "r": 2.72
+    },
+    "2018": {
+     "trades": 10,
+     "r": 5.23
+    },
+    "2019": {
+     "trades": 10,
+     "r": 3.3
+    },
+    "2020": {
+     "trades": 10,
+     "r": -1.1
+    },
+    "2021": {
+     "trades": 11,
+     "r": -1.62
+    },
+    "2022": {
+     "trades": 11,
+     "r": 2.82
+    },
+    "2023": {
+     "trades": 11,
+     "r": 1.83
+    },
+    "2024": {
+     "trades": 11,
+     "r": 2.76
+    },
+    "2025": {
+     "trades": 7,
+     "r": 4.48
+    }
+   },
+   "run": "2026-10-26T21:06:15+00:00"
+  }
+ },
+ "live": {}
+}

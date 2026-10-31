@@ -1,0 +1,18 @@
+{
+  "id": "f_rsi_audusd",
+  "title": "rsi on AUDUSD",
+  "source": "spec factory grid: RSI extremes (Wilder 1978; Connors RSI-2), the engine's default parameters",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "rule": "rsi",
+  "symbols": [
+    "AUDUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "made": "2026-10-22",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T01:15:58"
+}

@@ -1,0 +1,121 @@
+{
+ "name": "noise",
+ "markets": [
+  "US100",
+  "US500"
+ ],
+ "tf": "M30",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 700,
+ "needs": [],
+ "defaults": {
+  "open": [
+   16,
+   30
+  ],
+  "look": 14,
+  "exit": [
+   23,
+   0
+  ],
+  "vm": null,
+  "stop_vol": 3.0
+ },
+ "card": "US index intraday momentum (Zarattini, Aziz, Barbon 2024; research/noise_area_index.py). sigma(time) = mean of\n|close/open - 1| at that half hour over the previous 14 days. Bands: max(open 9:30 NY, yesterday's 16:00 close) x\n(1 + vm sigma) and min(...) x (1 - vm sigma), vm 1.0 on US100, 1.5 on US500. Checked on each half-hour close from\n10:00 to 15:30 NY: long above the upper band, short below the lower. A long leaves when a check closes below max(upper\nband, the session's time-weighted average price), a short above min(lower band, TWAP), and may reverse at once.\nEverything out at 16:00 NY (23:00 server). Broker stop 3 daily vols from entry, so R sizes as the paper's vol target.",
+ "backtest": {
+  "US100": {
+   "params": {
+    "open": [
+     16,
+     30
+    ],
+    "look": 14,
+    "exit": [
+     23,
+     0
+    ],
+    "vm": null,
+    "stop_vol": 3.0
+   },
+   "from": null,
+   "to": null,
+   "trades": 3663,
+   "pf": 1.15,
+   "win": 0.393,
+   "avg_r": 0.007,
+   "total_r": 27.12,
+   "max_dd_r": 5.97,
+   "first": "2010-12-15",
+   "last": "2025-10-10",
+   "by_year": {
+    "2010": {
+     "trades": 12,
+     "r": -0.78
+    },
+    "2011": {
+     "trades": 271,
+     "r": 1.98
+    },
+    "2012": {
+     "trades": 254,
+     "r": 3.59
+    },
+    "2013": {
+     "trades": 266,
+     "r": -0.67
+    },
+    "2014": {
+     "trades": 265,
+     "r": 0.56
+    },
+    "2015": {
+     "trades": 244,
+     "r": 2.16
+    },
+    "2016": {
+     "trades": 287,
+     "r": -1.35
+    },
+    "2017": {
+     "trades": 243,
+     "r": 1.08
+    },
+    "2018": {
+     "trades": 251,
+     "r": 6.77
+    },
+    "2019": {
+     "trades": 254,
+     "r": 0.16
+    },
+    "2020": {
+     "trades": 230,
+     "r": 3.02
+    },
+    "2021": {
+     "trades": 237,
+     "r": 1.52
+    },
+    "2022": {
+     "trades": 274,
+     "r": 3.42
+    },
+    "2023": {
+     "trades": 122,
+     "r": 1.15
+    },
+    "2024": {
+     "trades": 251,
+     "r": 3.27
+    },
+    "2025": {
+     "trades": 202,
+     "r": 1.02
+    }
+   },
+   "run": "2026-10-26T21:06:52+00:00"
+  }
+ },
+ "live": {}
+}

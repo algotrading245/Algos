@@ -1,0 +1,1746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurum Research Control</title>
+<!-- Served by tools/live_server.py at http://127.0.0.1:8765/ . Reads /api/research, /api/job, /api/doc (read-only,
+     tools/research_api.py), /api/state and /stream (agent relay).  No external scripts, fonts or images. -->
+<style>
+:root{
+  --bg:#F5F7FB;--surface:#FFFFFF;--surface2:#F8FAFC;--text:#172033;--text2:#667085;--muted:#98A2B3;
+  --border:#E4E9F1;--border2:#D5DDE8;--gold:#D9A441;--gold-tx:#8A6117;--gold-bg:#FBF3E2;
+  --blue:#3978F6;--blue-bg:#EAF1FE;--cyan:#16A6C7;--cyan-bg:#E6F6FA;--teal:#0EAA91;--teal-bg:#E4F6F3;
+  --purple:#8B5CF6;--purple-bg:#F1ECFE;--indigo:#5B63E6;--indigo-bg:#EDEEFD;
+  --ok:#15966A;--ok-bg:#E5F5EE;--warn:#D99016;--warn-tx:#9A620A;--warn-bg:#FCF2E1;--err:#DC4C55;--err-bg:#FCE9EA;
+  --neutral:#718096;--neutral-bg:#EEF1F5;
+  --r:8px;--r-lg:12px;--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --shadow-lg:0 12px 32px rgba(16,24,40,.12),0 2px 6px rgba(16,24,40,.06);
+  --sans:Inter,"Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  --mono:"Cascadia Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --side:232px;color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:400 14px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--text2)}.faint{color:var(--muted)}
+.hide{display:none!important}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.i.sm{width:15px;height:15px}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:var(--side) minmax(0,1fr);height:100vh}
+.app.collapsed{--side:68px}
+.side{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0;transition:width .2s}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;height:64px}
+.brand .wm{font-weight:650;letter-spacing:.18em;font-size:15px;color:var(--gold-tx)}
+.brand svg{width:28px;height:28px;flex:none}
+.nav{padding:6px 10px;display:flex;flex-direction:column;gap:2px;overflow:auto;flex:1}
+.nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:var(--r);color:var(--text2);font-weight:500;position:relative;white-space:nowrap}
+.nav a:hover{background:var(--surface2);color:var(--text);text-decoration:none}
+.nav a.on{background:var(--gold-bg);color:var(--gold-tx)}
+.nav a.on::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
+.nav .cnt{margin-left:auto;background:var(--err);color:#fff;border-radius:99px;font-size:11px;font-weight:600;min-width:19px;height:19px;display:grid;place-items:center;padding:0 5px}
+.side-foot{padding:16px 18px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.55}
+.side-foot b{display:block;color:var(--gold-tx);letter-spacing:.16em;font-size:12px;margin-bottom:4px}
+.collapse-btn{margin:0 10px 10px;display:flex;align-items:center;gap:10px;padding:8px 12px;border:0;background:transparent;color:var(--muted);border-radius:var(--r);cursor:pointer}
+.collapse-btn:hover{background:var(--surface2);color:var(--text)}
+.app.collapsed .brand .wm,.app.collapsed .nav a span,.app.collapsed .side-foot,.app.collapsed .collapse-btn span{display:none}
+.app.collapsed .nav a{justify-content:center;padding:10px}
+.app.collapsed .nav .cnt{position:absolute;top:2px;right:4px;min-width:16px;height:16px;font-size:10px}
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{height:64px;flex:none;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.crumb{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.crumb span{color:var(--muted);font-weight:500}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:99px;font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.pill .d{width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.demo{background:var(--ok-bg);color:var(--ok);border-color:#BFE6D5}
+.pill.demo .short{display:none}
+.pill.conn{background:var(--neutral-bg);color:var(--neutral)}
+.pill.conn.live{background:var(--ok-bg);color:var(--ok)}
+.pill.conn.bad{background:var(--err-bg);color:var(--err)}
+.clock{color:var(--text2);font-size:13px;white-space:nowrap}
+.searchbtn{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px 0 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--muted);cursor:pointer;min-width:200px}
+.searchbtn:hover{border-color:var(--border2)}
+.searchbtn kbd{margin-left:auto;font:11px var(--mono);border:1px solid var(--border);border-radius:4px;padding:1px 5px;background:#fff}
+.iconbtn{position:relative;width:36px;height:36px;display:grid;place-items:center;border:1px solid transparent;background:transparent;border-radius:var(--r);cursor:pointer;color:var(--text2)}
+.iconbtn:hover{background:var(--surface2);color:var(--text)}
+.iconbtn .badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:99px;background:var(--blue);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px}
+.menu-btn{display:none}
+.content{flex:1;overflow:auto;padding:20px;min-height:0}
+.page{max-width:1680px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.page-h{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.page-h h1{font-size:20px;font-weight:650;margin:0;letter-spacing:-.01em}
+.page-h p{margin:2px 0 0;color:var(--text2);font-size:13px}
+.page-h .sp{flex:1}
+
+/* ---------- cards, generic ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.card-h h2{font-size:14px;font-weight:600;margin:0}
+.card-h .sp{flex:1}
+.card-h .link{font-size:12.5px;font-weight:500}
+.card-b{padding:14px 16px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi{padding:16px;display:flex;gap:14px;align-items:flex-start;cursor:pointer;transition:border-color .15s,box-shadow .15s;text-align:left;width:100%;font:inherit;color:inherit}
+.kpi:hover{border-color:var(--border2);box-shadow:var(--shadow-lg)}
+.kpi .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none}
+.kpi .lb{font-size:12.5px;color:var(--text2);font-weight:500}
+.kpi .v{font-size:24px;font-weight:650;letter-spacing:-.01em;line-height:1.25;margin-top:2px}
+.kpi .v small{font-size:13px;font-weight:500;color:var(--text2);margin-left:4px}
+.kpi .s{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.45}
+.kpi .tag{display:inline-block;font-size:10.5px;font-weight:600;color:var(--gold-tx);background:var(--gold-bg);border-radius:4px;padding:1px 6px;margin-top:6px}
+.kpi .body{flex:1;min-width:0}
+.ring{flex:none}
+.tone-gold{background:var(--gold-bg);color:var(--gold-tx)}.tone-blue{background:var(--blue-bg);color:var(--blue)}
+.tone-teal{background:var(--teal-bg);color:var(--teal)}.tone-purple{background:var(--purple-bg);color:var(--purple)}
+.tone-cyan{background:var(--cyan-bg);color:var(--cyan)}.tone-ok{background:var(--ok-bg);color:var(--ok)}
+.tone-warn{background:var(--warn-bg);color:var(--warn-tx)}.tone-err{background:var(--err-bg);color:var(--err)}
+.tone-neutral{background:var(--neutral-bg);color:var(--neutral)}.tone-indigo{background:var(--indigo-bg);color:var(--indigo)}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 9px 2px 7px;white-space:nowrap;line-height:1.5}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st.queued,.st.awaiting,.st.pending,.st.hold,.st.not_checked{background:var(--warn-bg);color:var(--warn-tx)}
+.st.running,.st.active{background:var(--blue-bg);color:var(--blue)}
+.st.done,.st.completed,.st.verified,.st.approved,.st.applied,.st.matched,.st.pass{background:var(--ok-bg);color:var(--ok)}
+.st.failed,.st.violated,.st.rejected,.st.invalid,.st.fail,.st.worse{background:var(--err-bg);color:var(--err)}
+.st.blocked,.st.idle,.st.unknown,.st.none{background:var(--neutral-bg);color:var(--neutral)}
+.st.running::before{animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.3}}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border);border-radius:99px;background:var(--surface);color:var(--text2);font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--border2);color:var(--text)}
+.chip[aria-pressed=true]{background:var(--blue-bg);border-color:#C9DBFC;color:var(--blue)}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--surface2);border-color:var(--border2)}
+.btn.pri{background:var(--text);border-color:var(--text);color:#fff}.btn.pri:hover{opacity:.88}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn.danger{color:var(--err);border-color:#F3C5C8}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r);padding:2px;background:var(--surface2)}
+.seg button{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--blue);box-shadow:0 1px 2px rgba(16,24,40,.1)}
+input.f,select.f{height:32px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);padding:0 10px;font-size:13px;min-width:0}
+input.f:focus,select.f:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.empty{padding:28px 16px;text-align:center;color:var(--text2);font-size:13px}
+.empty b{display:block;color:var(--text);font-weight:600;margin-bottom:4px;font-size:14px}
+.skel{background:linear-gradient(90deg,var(--surface2),#EEF2F7,var(--surface2));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:6px;height:14px;margin:8px 0}
+@keyframes sk{to{background-position:-200% 0}}
+.note{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;line-height:1.5}
+.note.warn{background:var(--warn-bg);border-color:#F1DDB5;color:var(--warn-tx)}
+.note.err{background:var(--err-bg);border-color:#F3C5C8;color:#A3333B}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;font-size:13px}
+.kv dt{color:var(--text2)}.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.kv.stack{grid-template-columns:1fr;gap:2px}.kv.stack dt{font-size:12px;margin-top:8px}.kv.stack dt:first-child{margin-top:0}
+.list{display:flex;flex-direction:column}
+.row{display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--surface2)}
+.row .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.row .t{font-weight:500;font-size:13px;line-height:1.4}
+.row .d{font-size:12px;color:var(--text2);line-height:1.45;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row .w{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap;text-align:right}
+.tbl-wrap{overflow:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-weight:600;font-size:12px;color:var(--text2);padding:9px 12px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;position:sticky;top:0;z-index:1}
+table.t td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t tbody tr{cursor:pointer}
+table.t tbody tr:hover td{background:var(--surface2)}
+table.t tbody tr.sel td{background:var(--blue-bg)}
+table.t td.r,table.t th.r{text-align:right}
+.pos{color:var(--ok)}.neg{color:var(--err)}
+
+/* ---------- overview layout ---------- */
+.ov-mid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}
+.ov-bot{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr) minmax(0,1.3fr);gap:16px}
+
+/* ---------- graph ---------- */
+.gcard{display:flex;flex-direction:column;overflow:hidden}
+.gbar{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.gbar .sp{flex:1}
+.gfilters{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface)}
+.gwrap{position:relative;flex:1;min-height:520px;background-color:#FBFCFE;background-image:radial-gradient(#DCE3EE 1px,transparent 1px);background-size:22px 22px;overflow:hidden;touch-action:none}
+.gwrap svg.g{position:absolute;inset:0;width:100%;height:100%;cursor:grab;user-select:none}
+.gwrap svg.g.panning{cursor:grabbing}
+.gzoom{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.gzoom button{width:34px;height:32px;border:0;border-bottom:1px solid var(--border);background:transparent;cursor:pointer;display:grid;place-items:center;color:var(--text2)}
+.gzoom button:last-child{border-bottom:0}.gzoom button:hover{background:var(--surface2);color:var(--text)}
+.minimap{position:absolute;left:12px;bottom:12px;width:180px;height:112px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);cursor:pointer}
+.legend{position:absolute;right:12px;bottom:12px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;font-size:11px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap;max-width:60%}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.tip{position:absolute;pointer-events:none;background:var(--text);color:#fff;font-size:12px;line-height:1.4;padding:6px 9px;border-radius:6px;max-width:280px;box-shadow:var(--shadow-lg);z-index:5;opacity:0;transition:opacity .1s}
+.tip.on{opacity:1}
+.tip b{font-weight:600}.tip span{color:#C9D2E0}
+g.n{cursor:pointer}
+g.n text{font-family:var(--sans);pointer-events:none}
+svg.g{--ls:1}
+g.n .lbl{font-size:calc(12px * var(--ls));font-weight:600;fill:var(--text)}
+g.n .sub{font-size:calc(10.5px * var(--ls));fill:var(--text2)}
+g.n .sml{font-size:calc(10px * var(--ls));fill:var(--text2)}
+g.n.wf .lbl,g.n.wf .sub,g.n.wf .sml{--ls:1}
+g.n.dim,path.e.dim{opacity:.18}
+g.n.hl .halo{opacity:1}
+g.n .halo{opacity:0;transition:opacity .15s}
+path.e{fill:none;stroke:#C6D0DE;stroke-width:1.2}
+svg.g.far g.n:not(.hl) text.lab{opacity:0}
+svg.g.far.hassel g.n:not(.dim) text.lab{opacity:1}
+svg.g g.n:hover text.lab{opacity:1}
+path.e.flow{stroke:#9FB4D6;stroke-width:1.8}
+path.e.hl{stroke:var(--blue);stroke-width:2.2;opacity:1}
+path.e.anim{stroke-dasharray:6 6;animation:dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-12}}
+.glist{flex:1;overflow:auto;min-height:520px}
+
+/* ---------- relay ---------- */
+.agent-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.agent-row .av{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.agent-row .nm{font-weight:600;font-size:13px}.agent-row .md{font-size:12px;color:var(--text2)}
+.agent-row .r{margin-left:auto;text-align:right;font-size:11.5px;color:var(--muted)}
+.handoff{font:12.5px var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;color:var(--text);overflow-wrap:anywhere}
+
+/* ---------- pipeline board ---------- */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;align-items:start}
+.col{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;min-height:120px}
+.col-h{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.col-h b{font-size:13px}.col-h small{color:var(--muted);font-size:11.5px}
+.col-h .n{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:0 8px}
+.col-b{padding:10px;display:flex;flex-direction:column;gap:10px}
+.ccard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;box-shadow:var(--shadow)}
+.ccard:hover{border-color:var(--border2)}
+.ccard.sel{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.ccard .nm{font-weight:600;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.ccard .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.ccard .ln{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.45}
+.tagx{font-size:11px;font-weight:600;border-radius:4px;padding:1px 6px;background:var(--neutral-bg);color:var(--text2)}
+
+/* ---------- inspector / overlays ---------- */
+.insp{position:fixed;top:64px;right:0;bottom:0;width:440px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:30;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s ease}
+.insp.on{transform:none}
+.insp.wide{width:640px}
+.insp-h{display:flex;gap:10px;align-items:flex-start;padding:16px;border-bottom:1px solid var(--border)}
+.insp-h .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
+.insp-h h3{margin:0;font-size:15px;font-weight:650;line-height:1.35;overflow-wrap:anywhere}
+.insp-h .ty{font-size:12px;color:var(--text2)}
+.insp-b{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.insp-b h4{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.insp-b p{margin:0;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.rel{display:flex;flex-direction:column;gap:4px}
+.rel button{display:flex;align-items:center;gap:8px;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:var(--r);padding:6px 9px;font-size:12.5px;cursor:pointer}
+.rel button:hover{background:var(--surface2)}
+.rel .dir{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.scrim{position:fixed;inset:0;background:rgba(23,32,51,.32);z-index:40;display:grid;place-items:start center;padding:8vh 16px 16px}
+.modal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:min(820px,100%);max-height:84vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.modal-h h3{margin:0;font-size:15px;font-weight:600;overflow-wrap:anywhere}
+.modal-b{overflow:auto;padding:16px 20px}
+.palette{width:min(640px,100%)}
+.palette input{border:0;border-bottom:1px solid var(--border);height:52px;padding:0 18px;font-size:15px;outline:none;width:100%}
+.palette .res{max-height:52vh;overflow:auto;padding:6px}
+.palette .it{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:var(--r);cursor:pointer;font-size:13px}
+.palette .it.on,.palette .it:hover{background:var(--blue-bg)}
+.palette .it small{margin-left:auto;color:var(--muted);font-size:11.5px}
+.md{font-size:13.5px;line-height:1.6;overflow-wrap:anywhere}
+.md h1{font-size:19px;margin:6px 0 10px}.md h2{font-size:16px;margin:18px 0 8px}.md h3{font-size:14px;margin:14px 0 6px}
+.md p{margin:8px 0}.md ul,.md ol{padding-left:22px;margin:6px 0}.md li{margin:3px 0}
+.md code{font:12.5px var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+.md pre{font:12px/1.5 var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px;overflow:auto;white-space:pre}
+.md table{border-collapse:collapse;font-size:12.5px;margin:8px 0;display:block;overflow:auto}
+.md th,.md td{border:1px solid var(--border);padding:5px 8px;text-align:left}.md th{background:var(--surface2)}
+.toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:min(380px,calc(100vw - 32px))}
+.toast{background:var(--text);color:#fff;border-radius:var(--r);padding:10px 14px;font-size:13px;box-shadow:var(--shadow-lg);animation:tin .2s;overflow-wrap:anywhere}
+.toast.err{background:#A3333B}.toast.ok{background:#0F7553}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}}
+.pop{position:absolute;top:56px;right:16px;width:min(360px,calc(100vw - 32px));z-index:35;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);max-height:60vh;overflow:auto}
+.feed{font-size:12.5px;max-height:520px;overflow:auto}
+.feed .ev{padding:7px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px}
+.feed .ev .k{flex:none;width:70px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
+.feed .ev .x{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.feed .ev.tool .x{font-family:var(--mono);font-size:12px;color:var(--blue)}
+.feed .ev.done .k{color:var(--ok)}
+.qf{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qf label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)}
+.qf .w{grid-column:1/-1}
+.bar-h{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;border:1px solid var(--border)}
+.bar-h i{display:block;height:100%;background:var(--gold)}
+.chart{width:100%;height:auto;display:block}
+.chart text{font:10.5px var(--sans);fill:var(--text2)}
+.split2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.split3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1280px){.ov-bot{grid-template-columns:1fr 1fr}.ov-bot>:last-child{grid-column:1/-1}}
+@media (max-width:1100px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ov-mid{grid-template-columns:1fr}
+  .split3{grid-template-columns:1fr 1fr}
+  .searchbtn{min-width:0}.searchbtn span,.searchbtn kbd{display:none}
+}
+@media (max-width:900px){
+  .app,.app.collapsed{grid-template-columns:1fr;--side:260px}
+  .side{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:50;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--shadow-lg)}
+  .app.drawer .side{transform:none}
+  .app.collapsed .brand .wm,.app.collapsed .nav a span,.app.collapsed .side-foot{display:revert}
+  .app.collapsed .nav a{justify-content:flex-start;padding:9px 12px}
+  .collapse-btn{display:none}
+  .menu-btn{display:grid}
+  .clock{display:none}
+  .ov-bot,.split2,.split3{grid-template-columns:1fr}
+  .ov-bot>:last-child{grid-column:auto}
+}
+@media (max-width:640px){
+  .top{padding:0 10px;gap:6px}
+  .content{padding:12px}
+  .kpis{grid-template-columns:1fr}
+  .pill.conn span.t{display:none}
+  .pill.demo{padding:0 9px;font-size:11px}
+  .crumb span,.crumb .home{display:none}
+  .pill.demo .long{display:none}.pill.demo .short{display:inline}
+  .searchbtn{border:0;background:transparent;padding:0 6px}
+  .gwrap,.glist{min-height:60vh}
+  .minimap{display:none}.legend{display:none}
+  .insp,.insp.wide{top:auto;left:0;width:100%;height:82vh;border-left:0;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(100%)}
+  .insp.on{transform:none}
+  .qf{grid-template-columns:1fr}
+  .row .w{display:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+.reduce *,.reduce *::before{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Main navigation">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 4 28h5.2L16 13.2 22.8 28H28L16 3Z" fill="#D9A441"/><path d="M11 23h10l-1.6-3.4h-6.8L11 23Z" fill="#8A6117"/></svg>
+      <span class="wm">AURUM</span>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <button class="collapse-btn" id="collapse" aria-label="Collapse sidebar"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>Collapse</span></button>
+    <div class="side-foot"><b>AURUM</b>Better strategies. Smarter decisions. Real results.</div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <button class="iconbtn menu-btn" id="menu" aria-label="Open navigation"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="crumb" id="crumb">AURUM <span>/ Research Control</span></div>
+      <div class="sp"></div>
+      <span class="clock num" id="clock"></span>
+      <span class="pill conn" id="conn" title="Live stream from the local server"><span class="d"></span><span class="t">Connecting</span></span>
+      <span class="pill demo" title="This dashboard cannot place trades. Going live is step 19, owner only (approval a2)."><span class="d"></span><span class="long">DEMO ONLY · NO LIVE TRADING</span><span class="short">DEMO · NO LIVE</span></span>
+      <button class="searchbtn" id="searchbtn" aria-label="Search"><svg class="i sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search…</span><kbd>Ctrl K</kbd></button>
+      <button class="iconbtn" id="bell" aria-label="Changes since this page opened"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="badge hide" id="belln">0</span></button>
+    </header>
+    <div class="pop hide" id="bellpop" role="dialog" aria-label="Changes"></div>
+    <main class="content" id="content" tabindex="-1"></main>
+  </div>
+</div>
+<aside class="insp" id="insp" aria-label="Details" aria-hidden="true"></aside>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="tip" id="tip" role="tooltip"></div>
+<script>
+"use strict";
+/* =====================================================================================================================
+   Aurum Research Control. Vanilla JS, no build step, no external requests.
+   Data: /api/research (files under docs/, derived figures from logs/), /api/job, /api/doc, /api/state + /stream.
+   Nothing on this page can place a trade or change an approval. The only writes are the live server's existing
+   owner controls (pause/resume, start an agent, release the T16 hold, queue a tester job), each behind a confirm.
+   ===================================================================================================================== */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const h=(strings,...vals)=>strings.reduce((a,s,i)=>a+s+(i<vals.length?(vals[i]&&vals[i].__raw!==undefined?vals[i].__raw:esc(vals[i])):""),"");
+const raw=s=>({__raw:s??""});
+const fmtPct=(v,d=2)=>v==null||isNaN(v)?"—":(v>0?"+":"")+Number(v).toFixed(d)+"%";
+const fmtNum=(v,d=0)=>v==null||isNaN(v)?"—":Number(v).toLocaleString("en-GB",{maximumFractionDigits:d,minimumFractionDigits:d});
+const clip=(s,n)=>{s=String(s??"");return s.length>n?s.slice(0,n-1)+"…":s};
+const cap=s=>String(s||"").charAt(0).toUpperCase()+String(s||"").slice(1);
+function when(iso){
+  if(!iso)return "—";
+  const d=new Date(String(iso).replace(" ","T"));
+  if(isNaN(d))return String(iso);
+  return d.toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false});
+}
+function ago(iso){
+  if(!iso)return "—";
+  const d=new Date(String(iso).replace(" ","T")); if(isNaN(d))return String(iso);
+  let s=(Date.now()-d)/1000, f=s<0?"in ":"", t=s<0?"":" ago"; s=Math.abs(s);
+  const v=s<60?Math.round(s)+" s":s<3600?Math.round(s/60)+" min":s<86400?(s/3600).toFixed(1)+" h":Math.round(s/86400)+" d";
+  return f+v+t;
+}
+const reduceMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches||document.documentElement.classList.contains("reduce");
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem("aurum."+k));localStorage.setItem("aurum."+k,JSON.stringify(v))}catch(e){return null}}
+
+/* ---------- icons (hand-drawn 24px line set) ---------- */
+const IP={
+  home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  graph:'<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M8.2 7.2 15.7 8M7 8.4l1.4 7.2M10.8 16.3l5.5-6.4"/>',
+  bot:'<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9 16.5h6"/>',
+  pipe:'<rect x="3" y="4" width="6" height="5" rx="1.2"/><rect x="15" y="4" width="6" height="5" rx="1.2"/><rect x="9" y="15" width="6" height="5" rx="1.2"/><path d="M9 6.5h6M18 9v3H12v3M6 9v3h6"/>',
+  beaker:'<path d="M9 3h6M10 3v6L4.5 18.5A1.6 1.6 0 0 0 6 21h12a1.6 1.6 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/>',
+  shield:'<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/>',
+  shieldok:'<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
+  log:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.8-5"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  code:'<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  db:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
+  activity:'<path d="M3 12h4l2.5-6 5 12 2.5-6h4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  box:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0V4ZM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9.5 17h5"/>',
+  trend:'<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  alert:'<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', minus:'<path d="M5 12h14"/>',
+  fit:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  reset:'<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/>',
+  play:'<path d="M7 5v14l11-7L7 5Z"/>', pause:'<path d="M8 5v14M16 5v14"/>',
+  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  route:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/>',
+  hex:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><circle cx="12" cy="12" r="3"/>',
+  dot:'<circle cx="12" cy="12" r="4"/>',
+  gate:'<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-7h6v7"/>',
+  lesson:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19a2 2 0 0 1 2-2h13"/>',
+  q:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/>',
+};
+const icon=(n,cls="")=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IP[n]||IP.dot}</svg>`;
+
+/* ---------- state ---------- */
+const S={
+  data:null, dataSig:"", dataErr:null, lastData:0,
+  live:null, conn:"connecting", lastState:0, es:null,
+  feed:[], evCount:0, changes:[], unseen:0,
+  sel:null, gmode:store("gmode")||"graph",
+  gf:{types:null,status:"all",q:"",hist:true},
+  page:"overview", route:{}, M:null,
+};
+const PAGES=[
+  ["overview","Overview","home"],["graph","Live Graph","graph"],["agents","Agents","bot"],
+  ["pipeline","Strategy Pipeline","pipe"],["jobs","Tester Jobs","beaker"],["routes","Prop Routes","route"],
+  ["decisions","Decision Log","log"],["approvals","Approvals","check"],["rules","Rules","shieldok"],["settings","Settings","gear"],
+];
+
+/* ---------- networking ---------- */
+async function getJSON(url){
+  const r=await fetch(url,{cache:"no-store"});
+  if(!r.ok)throw new Error(url+" HTTP "+r.status);
+  return r.json();
+}
+function sigOf(d){const c={...d};delete c.generated;delete c.sources;return JSON.stringify(c)}
+async function loadResearch(force){
+  try{
+    const d=await getJSON("/api/research");
+    S.dataErr=null; S.lastData=Date.now();
+    const sig=sigOf(d);
+    if(S.data)diffChanges(S.data,d);
+    const changed=sig!==S.dataSig||force;
+    S.data=d; S.dataSig=sig;
+    if(changed){S.M=buildModel(d);render()}
+    else renderTop();
+  }catch(e){
+    S.dataErr=String(e.message||e); renderTop();
+    if(!S.data)render();
+  }
+}
+function connect(){
+  if(!window.EventSource){S.conn="unsupported";renderTop();return}
+  const es=new EventSource("/stream"); S.es=es;
+  es.onopen=()=>{S.conn="live";renderTop()};
+  es.onerror=()=>{S.conn="disconnected";renderLive()};
+  es.addEventListener("state",m=>{
+    try{
+      const prev=S.live; S.live=JSON.parse(m.data); S.lastState=Date.now(); S.conn="live";
+      const js=j=>(j||[]).map(x=>x.id+x.status).join();
+      if(prev&&(js(prev.jobs)!==js(S.live.jobs)||JSON.stringify(prev.relay)!==JSON.stringify(S.live.relay)))loadResearch();
+      renderLive();
+    }catch(e){console.warn(e)}
+  });
+  es.onmessage=m=>{try{ingest(JSON.parse(m.data).batch||[])}catch(e){console.warn(e)}};
+}
+function ingest(batch){
+  for(const d of batch){
+    S.evCount++;
+    let txt=null,k=null;
+    if(d.k==="msg"){for(const p of d.parts||[]){
+      if(p.k==="text"){k="says";txt=p.s}else if(p.k==="tool"){k="tool";txt=p.name+"  "+clip(p.input,240)}
+      else if(p.k==="result"){k=p.err?"error":"result";txt=clip(p.s,240)} else if(p.k==="thinking"){k="thinking";txt=clip(p.s,300)}
+      if(txt!=null&&String(txt).trim())S.feed.push({k,role:d.role,run:d.run,t:d.t,s:txt});
+      txt=null;
+    }continue}
+    if(d.k==="init"){k="session";txt=`model ${d.model} · ${d.tools} tools`}
+    else if(d.k==="done"){k="done";txt=`${d.ok?"finished":"ended with error"} · ${d.turns??"?"} turns · ${((d.ms||0)/1000).toFixed(0)} s`}
+    else if(d.k==="sys"){k="system";txt=d.s}
+    if(txt!=null)S.feed.push({k,role:d.role,run:d.run,t:d.t,s:txt});
+  }
+  if(S.feed.length>400)S.feed.splice(0,S.feed.length-400);
+  renderFeed();
+}
+async function post(path,body){
+  try{
+    const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-Aurum":"1"},body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>({ok:false,msg:"HTTP "+r.status}));
+    toast(j.msg||("HTTP "+r.status),j.ok?"ok":"err");
+  }catch(e){toast(String(e),"err")}
+  loadResearch(true);
+}
+
+/* ---------- change notifications (diffs of real data only) ---------- */
+function diffChanges(a,b){
+  const add=(t,s,go)=>{S.changes.unshift({t,s,at:new Date().toISOString(),go});S.unseen++};
+  const ja=Object.fromEntries((a.jobs||[]).map(j=>[j.id,j.status]));
+  for(const j of b.jobs||[]){
+    if(!(j.id in ja))add("New tester job",`${j.id} ${j.expert||""} · ${j.status}`,"job:"+j.id);
+    else if(ja[j.id]!==j.status)add("Job status",`${j.id}: ${ja[j.id]} → ${j.status}`,"job:"+j.id);
+  }
+  const na=(a.decisions||[]).length,nb=(b.decisions||[]).length;
+  if(nb>na)for(const d of (b.decisions||[]).slice(0,nb-na))add(d.kind==="question"?"Open question":"New decision",`${d.role}: ${clip(d.decision,90)}`,"decision:"+d._line);
+  const aa=Object.fromEntries((a.approvals||[]).map(x=>[x.id,x.status]));
+  for(const x of b.approvals||[])if(aa[x.id]!==x.status)add("Approval",`${x.id}: ${aa[x.id]||"new"} → ${x.status}`,"approval:"+x.id);
+  if(S.changes.length>50)S.changes.length=50;
+}
+
+/* ---------- toasts, modal, confirm ---------- */
+function toast(msg,kind=""){
+  const t=document.createElement("div");t.className="toast "+kind;t.textContent=msg;$("#toasts").append(t);
+  setTimeout(()=>t.remove(),kind==="err"?8000:5000);
+}
+function modal(title,bodyHTML,opts={}){
+  const sc=document.createElement("div");sc.className="scrim";
+  sc.innerHTML=`<div class="modal ${opts.cls||""}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    ${opts.noHead?"":`<div class="modal-h"><h3>${esc(title)}</h3><span style="flex:1"></span>${opts.headExtra||""}<button class="iconbtn" data-close aria-label="Close">${icon("x")}</button></div>`}
+    <div class="modal-b">${bodyHTML}</div></div>`;
+  const prev=document.activeElement;
+  const close=()=>{sc.remove();document.removeEventListener("keydown",kd);prev&&prev.focus&&prev.focus()};
+  const kd=e=>{if(e.key==="Escape"){e.stopPropagation();close()}};
+  sc.addEventListener("click",e=>{if(e.target===sc||e.target.closest("[data-close]"))close()});
+  document.addEventListener("keydown",kd);
+  document.body.append(sc);
+  const f=sc.querySelector("input,button:not([data-close]),[tabindex]")||sc.querySelector("button");f&&f.focus();
+  return {el:sc,close};
+}
+function confirmDlg(title,text,okLabel,onOk,danger){
+  const m=modal(title,`<p style="margin:0 0 16px;font-size:13.5px;line-height:1.55">${text}</p>
+    <div class="actions" style="justify-content:flex-end"><button class="btn" data-close>Cancel</button>
+    <button class="btn ${danger?"danger":"pri"}" data-ok>${esc(okLabel)}</button></div>`);
+  m.el.querySelector("[data-ok]").onclick=()=>{m.close();onOk()};
+  m.el.querySelector("[data-ok]").focus();
+}
+
+/* ---------- markdown-lite for docs (input is escaped first) ---------- */
+function mdInline(s){
+  return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,"$1 <code>$2</code>");
+}
+function md(text){
+  const L=String(text||"").replace(/\r/g,"").split("\n");let o="",i=0;
+  while(i<L.length){
+    const l=L[i];
+    if(/^```/.test(l)){let b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;o+=`<pre>${esc(b.join("\n"))}</pre>`;continue}
+    const hm=l.match(/^(#{1,4})\s+(.*)/);if(hm){const n=Math.min(3,hm[1].length);o+=`<h${n}>${mdInline(hm[2])}</h${n}>`;i++;continue}
+    if(/^\|/.test(l)){let rows=[];while(i<L.length&&/^\|/.test(L[i]))rows.push(L[i++]);
+      rows=rows.filter(r=>!/^\|\s*:?-{2,}/.test(r)).map(r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim()));
+      o+="<table>"+rows.map((r,k)=>"<tr>"+r.map(c=>k?`<td>${mdInline(c)}</td>`:`<th>${mdInline(c)}</th>`).join("")+"</tr>").join("")+"</table>";continue}
+    if(/^\s*([-*]|\d+\.)\s+/.test(l)){const ol=/^\s*\d+\./.test(l);let it=[];
+      while(i<L.length&&(/^\s*([-*]|\d+\.)\s+/.test(L[i])||(/^\s{2,}\S/.test(L[i])&&it.length))){
+        if(/^\s*([-*]|\d+\.)\s+/.test(L[i]))it.push(L[i].replace(/^\s*([-*]|\d+\.)\s+/,""));else it[it.length-1]+=" "+L[i].trim();i++}
+      o+=(ol?"<ol>":"<ul>")+it.map(x=>`<li>${mdInline(x)}</li>`).join("")+(ol?"</ol>":"</ul>");continue}
+    if(!l.trim()){i++;continue}
+    let p=[];while(i<L.length&&L[i].trim()&&!/^(#{1,4}\s|\||```|\s*([-*]|\d+\.)\s)/.test(L[i]))p.push(L[i++]);
+    o+=`<p>${mdInline(p.join(" "))}</p>`;
+  }
+  return o;
+}
+async function openDoc(path,title){
+  const m=modal(title||path,`<div class="skel"></div><div class="skel" style="width:70%"></div><div class="skel" style="width:85%"></div>`,
+    {headExtra:`<span class="mono faint" style="margin-right:6px">${esc(path)}</span>`});
+  try{
+    const d=await getJSON("/api/doc?path="+encodeURIComponent(path));
+    const b=m.el.querySelector(".modal-b");
+    if(d.missing){b.innerHTML=`<div class="empty"><b>File not found</b>${esc(path)} does not exist (yet).</div>`;return}
+    let html;
+    if(/\.jsonl?$/.test(path)){let t=d.text;try{if(path.endsWith(".json"))t=JSON.stringify(JSON.parse(t),null,1)}catch(e){}html=`<div class="md"><pre>${esc(t)}</pre></div>`}
+    else html=`<div class="md">${md(d.text)}</div>`;
+    b.innerHTML=`<p class="faint" style="font-size:12px;margin:0 0 8px">Last modified ${esc(when(d.mtime))}${d.truncated?" · truncated":""} · read-only, credential-like text hidden</p>`+html;
+  }catch(e){m.el.querySelector(".modal-b").innerHTML=`<div class="empty"><b>Could not open this file</b>${esc(e.message)}. Only files under docs/ and backtest summaries are served.</div>`}
+}
+</script>
+<script>
+"use strict";
+/* =====================================================================================================================
+   Model: every entity on the page as a node, with edges only where the files record a relationship
+   (a candidate's step, a job's expert or candidate, a gate file's id, an agent's pipeline steps, a job id named in a
+   decision / lesson / approval, a route belonging to AurumFunded).
+   ===================================================================================================================== */
+const STAGES=[
+  {id:"research",label:"Find",desc:"prebuilt · papers · ML · DRL",steps:[1],icon:"doc",tone:"purple",color:"#8B5CF6",wf:[0,0]},
+  {id:"scanner",label:"Idea Engine",desc:"rule specs · trial count",steps:[],icon:"search",tone:"cyan",color:"#16A6C7",wf:[300,-170]},
+  {id:"prototype",label:"Python Prototype",desc:"model · 1x/1.5x/2x costs",steps:[],icon:"code",tone:"blue",color:"#3978F6",wf:[300,0]},
+  {id:"gates",label:"Validation Gates",desc:"halves · DSR · corr · goal",steps:[2],icon:"shieldok",tone:"teal",color:"#0EAA91",wf:[600,0]},
+  {id:"ea",label:"EA Library",desc:"Hydra / Funded · off by default",steps:[4],icon:"box",tone:"gold",color:"#D9A441",wf:[900,0]},
+  {id:"tester",label:"Strategy Tester",desc:"FTMO data · to 2025-09-30",steps:[3],icon:"beaker",tone:"blue",color:"#3978F6",wf:[900,260]},
+  {id:"fidelity",label:"Judge & Review",desc:"tester vs Python · reviewer",steps:[5],icon:"db",tone:"indigo",color:"#5B63E6",wf:[600,260]},
+  {id:"demo",label:"Demo Monitoring",desc:"FTMO demo · firm rules",steps:[],icon:"activity",tone:"teal",color:"#0EAA91",wf:[300,260]},
+  {id:"approval",label:"Owner Approval",desc:"a2 · owner only",steps:[],icon:"user",tone:"gold",color:"#D9A441",wf:[0,260]},
+  {id:"live",label:"Live",desc:"locked · owner only",steps:[],icon:"lock",tone:"neutral",color:"#718096",wf:[-280,260]},
+];
+const FLOW=[["research","scanner"],["scanner","gates"],["research","prototype"],["prototype","gates"],["gates","ea"],["ea","tester"],
+  ["tester","fidelity"],["fidelity","demo"],["demo","approval"],["approval","live"]];
+const TYPES={
+  stage:{label:"Pipeline stage",color:"#3978F6",icon:"pipe",tone:"blue"},
+  product:{label:"Product",color:"#D9A441",icon:"hex",tone:"gold"},
+  agent:{label:"Agent",color:"#5B63E6",icon:"bot",tone:"indigo"},
+  candidate:{label:"Candidate",color:"#8B5CF6",icon:"flag",tone:"purple"},
+  gate:{label:"Gate result",color:"#0EAA91",icon:"shieldok",tone:"teal"},
+  job:{label:"Tester job",color:"#3978F6",icon:"beaker",tone:"blue"},
+  idea:{label:"Idea write-up",color:"#A78BFA",icon:"bulb",tone:"purple"},
+  fidelity:{label:"Fidelity report",color:"#5B63E6",icon:"db",tone:"indigo"},
+  decision:{label:"Decision",color:"#718096",icon:"log",tone:"neutral"},
+  lesson:{label:"Lesson",color:"#C38A26",icon:"lesson",tone:"gold"},
+  approval:{label:"Approval",color:"#D99016",icon:"check",tone:"warn"},
+  demo:{label:"Demo log day",color:"#0EAA91",icon:"activity",tone:"teal"},
+  route:{label:"Prop route",color:"#16A6C7",icon:"route",tone:"cyan"},
+};
+const PRODUCTS=[
+  {id:"hydra",expert:"AurumHydra",label:"AurumHydra",desc:"$100 → $500 in a month",wf:[1180,-110]},
+  {id:"funded",expert:"AurumFunded",label:"AurumFunded",desc:"pass and keep a prop account",wf:[1180,110]},
+];
+const ROLE_ALIAS={"tester-operator":"tester"};
+const stepNum=s=>{const n=parseInt(String(s??"").split(/[-–]/)[0],10);return isNaN(n)?null:n};
+const stageOfStep=n=>n==null?null:(STAGES.find(s=>s.steps.includes(n))||null);
+const jobRefs=t=>[...new Set((String(t||"").match(/\bj\d{1,3}[a-z]?\b/g)||[]))];
+function stepsIn(text){
+  const out=new Set();const m=String(text||"").match(/(?:steps?|gates?)\s+([\d][\d\s,\-–and]*)/i);
+  if(!m)return out;
+  for(const part of m[1].split(/,|and/)){const r=part.trim().match(/^(\d+)(?:\s*[-–]\s*(\d+))?/);if(!r)continue;
+    const a=+r[1],b=r[2]?+r[2]:a;for(let i=a;i<=b&&i<=20;i++)out.add(i)}
+  return out;
+}
+function candStatus(c){
+  const v=String((c.gates||{}).verdict||"");
+  if(c.status==="rejected")return {cls:"rejected",text:"rejected",stopped:true,reason:clip((c.notes||c.summary||"").split(/(?<=\.)\s/)[0],160)};
+  if(/^FAIL/i.test(v))return {cls:"failed",text:"stopped · "+v.toLowerCase(),stopped:true,reason:v};
+  if(c.status==="live")return {cls:"active",text:"live"};
+  if(["testing","tester","demo"].includes(c.status))return {cls:"active",text:c.status};
+  return {cls:"idle",text:c.status||"unknown"};
+}
+function jobStatusCls(s){return {queued:"queued",running:"running",done:"done",failed:"failed",hold:"hold"}[s]||"unknown"}
+function hydraMonths(d){
+  // Latest finished AurumHydra month series on a 5x preset (no extra input overrides): share of months at >= 5x.
+  const groups={};
+  for(const j of d.jobs||[]){
+    if(j.expert!=="AurumHydra"||j.status!=="done"||!j.months||(j.set||[]).length||!/5x/i.test(j.preset||""))continue;
+    const rows=(j.result&&j.result.months)||[];if(!rows.length)continue;
+    (groups[j.preset]=groups[j.preset]||{preset:j.preset,jobs:[],rows:[],last:""});
+    const g=groups[j.preset];g.jobs.push(j.id);g.rows.push(...rows);g.last=[g.last,j.started||""].sort().pop();
+  }
+  const g=Object.values(groups).sort((a,b)=>a.last<b.last?1:-1)[0];
+  if(!g)return null;
+  return {...g,hit:g.rows.filter(r=>r.mult>=5).length,n:g.rows.length,median:median(g.rows.map(r=>r.mult))};
+}
+function median(a){if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
+function jobResultLine(j){
+  const r=j.result,o=j.result_on;
+  if(o&&o.return_pct!=null)return `off ${fmtPct(r&&r.return_pct)} / ${fmtNum(r&&r.eq_dd_pct,2)}% · on ${fmtPct(o.return_pct)} / ${fmtNum(o.eq_dd_pct,2)}%`;
+  if(r&&r.return_pct!=null)return `${fmtPct(r.return_pct)} · ${fmtNum(r.eq_dd_pct,2)}% eq DD`;
+  if(r&&r.months){const hit=r.months.filter(x=>x.mult>=5).length;return `${hit}/${r.months.length} months ≥5x · median ${fmtNum(median(r.months.map(x=>x.mult)),2)}x`}
+  return null;
+}
+
+function buildModel(d){
+  const nodes=new Map(),edges=[],ek=new Set();
+  const add=n=>{nodes.set(n.id,n);return n};
+  const link=(s,t,kind="member")=>{if(!nodes.has(s)||!nodes.has(t)||s===t)return;const k=s+">"+t;if(ek.has(k)||ek.has(t+">"+s))return;ek.add(k);edges.push({s,t,kind})};
+  const pipe=(d.pipeline&&d.pipeline.steps)||[];
+  const cands=d.candidates||[], jobs=d.jobs||[];
+  const anyRunning=jobs.some(j=>j.status==="running"), anyQueued=jobs.some(j=>j.status==="queued");
+  const a2=(d.approvals||[]).find(a=>a.id==="a2");
+  for(const s of STAGES){
+    const here=cands.filter(c=>s.steps.includes(stepNum(c.step))&&!candStatus(c).stopped);
+    let status="idle",stText="no active candidate";
+    if(s.id==="tester"){const r=jobs.filter(j=>j.status==="running").length,q=jobs.filter(j=>j.status==="queued").length;
+      status=r?"running":q?"queued":"idle";stText=r?`${r} running · ${q} queued`:q?`${q} queued`:"no job queued"}
+    else if(s.id==="approval"){status=a2&&a2.status==="pending"?"awaiting":a2?a2.status:"unknown";stText=a2?`a2 ${a2.status}`:"a2 not found"}
+    else if(s.id==="live"){status="blocked";stText="owner only · locked"}
+    else if(s.id==="scanner"){const t=d.trials;status="idle";stText=t?`${fmtNum(t.counted)} trials logged`:"trial log not found"}
+    else if(here.length){status="active";stText=`${here.length} candidate${here.length>1?"s":""}`}
+    const steps=s.steps.map(n=>pipe.find(p=>p.n===n)).filter(Boolean);
+    add({id:"stage:"+s.id,type:"stage",stage:s,label:s.label,sub:s.desc,status,stText,count:s.id==="tester"?jobs.filter(j=>j.status!=="done"&&j.status!=="failed").length:here.length,
+      steps,color:s.color,tone:s.tone,icon:s.icon,primary:true,r:30});
+  }
+  for(const [a,b] of FLOW)link("stage:"+a,"stage:"+b,"flow");
+  for(const p of PRODUCTS){
+    const js=jobs.filter(j=>j.expert===p.expert);
+    add({id:"prod:"+p.id,type:"product",label:p.label,sub:p.desc,product:p,status:js.some(j=>j.status==="running")?"running":js.some(j=>j.status==="queued")?"queued":"idle",
+      primary:true,r:24,color:"#D9A441",tone:"gold",icon:"hex"});
+    link("stage:ea","prod:"+p.id,"flow");link("prod:"+p.id,"stage:tester","flow");
+  }
+  // agents and the owner
+  for(const a of d.agents||[]){
+    const live=S.live&&S.live.agents&&S.live.agents[a.role];
+    add({id:"agent:"+a.role,type:"agent",label:a.label,sub:(a.model||"model not set")+" · "+a.kind,agent:a,
+      status:live&&live.live?"running":"idle",r:15,color:"#5B63E6",tone:"indigo",icon:"bot",updated:a.last&&a.last.ended});
+  }
+  add({id:"agent:owner",type:"agent",label:"Owner",sub:"step 19 · approvals",status:"idle",r:15,color:"#D9A441",tone:"gold",icon:"user",owner:true});
+  const roleSteps={};
+  for(const p of pipe){const r=ROLE_ALIAS[p.agent]||p.agent;(roleSteps[r]=roleSteps[r]||new Set()).add(p.n)}
+  for(const a of d.agents||[])for(const n of stepsIn(a.description))(roleSteps[a.role]=roleSteps[a.role]||new Set()).add(n);
+  for(const [r,set] of Object.entries(roleSteps)){
+    const id="agent:"+r;if(!nodes.has(id))continue;
+    for(const n of set){const st=stageOfStep(n);if(st)link(id,"stage:"+st.id)}
+  }
+  link("agent:finder","stage:scanner");link("agent:judge","stage:fidelity");
+  // candidates and gates
+  for(const c of cands){
+    const st=candStatus(c),n=stepNum(c.step),sg=stageOfStep(n);
+    const node=add({id:"cand:"+c.id,type:"candidate",label:clip(c.name||c.id,34),full:c.name||c.id,sub:`step ${c.step??"?"} · ${st.text}`,cand:c,step:n,
+      status:st.cls,stText:st.text,hist:!!st.stopped,r:8,color:TYPES.candidate.color,icon:"flag",tone:"purple"});
+    if(/^scan_/.test(c.id))link("stage:scanner",node.id);
+    if(sg)link("stage:"+sg.id,node.id);
+  }
+  for(const g of (d.docs&&d.docs.gates)||[]){
+    const cid=g.path.split("/").pop().replace(/\.json$/,"");
+    const c=cands.find(x=>x.id===cid);const v=c&&c.gates?c.gates.verdict:null;
+    add({id:"gate:"+cid,type:"gate",label:"gates · "+clip(cid,24),full:g.path,sub:v||"gate result",path:g.path,updated:g.mtime,
+      status:v?(/^PASS/i.test(v)?"pass":"fail"):"unknown",stText:v||"verdict not in ledger",hist:v&&!/^PASS/i.test(v),r:6,color:TYPES.gate.color,icon:"shieldok",tone:"teal"});
+    if(c)link("cand:"+cid,"gate:"+cid);else link("stage:gates","gate:"+cid);
+  }
+  // jobs
+  for(const j of jobs){
+    const node=add({id:"job:"+j.id,type:"job",label:j.id,full:`${j.id} · ${j.expert||""} ${j.symbol||""} ${j.period||""}`,sub:`${j.expert||"?"} · ${j.symbol||""} ${j.period||""}`,job:j,
+      status:jobStatusCls(j.status),stText:j.status,hist:j.status==="done"||j.status==="failed",r:j.status==="running"?9:7,color:TYPES.job.color,icon:"beaker",tone:"blue",
+      updated:j.started,path:(j.result&&j.result.summary)||null});
+    link("stage:tester",node.id);
+    const p=PRODUCTS.find(p=>p.expert===j.expert);if(p)link("prod:"+p.id,node.id);
+    if(j.candidate)link("cand:"+j.candidate,node.id);
+  }
+  // write-ups
+  for(const x of (d.docs&&d.docs.ideas)||[]){add({id:"idea:"+x.path,type:"idea",label:x.path.split("/").pop(),full:x.title,sub:x.title,path:x.path,updated:x.mtime,status:"idle",r:6,color:TYPES.idea.color,icon:"bulb",tone:"purple",hist:false});link("stage:research","idea:"+x.path)}
+  for(const x of (d.docs&&d.docs.fidelity)||[]){add({id:"fid:"+x.path,type:"fidelity",label:x.path.split("/").pop(),full:x.title,sub:x.title,path:x.path,updated:x.mtime,status:"idle",r:6,color:TYPES.fidelity.color,icon:"db",tone:"indigo"});link("stage:fidelity","fid:"+x.path)}
+  // decisions (newest 40 in the graph; all in the log)
+  (d.decisions||[]).filter(x=>!x.bad_line).slice(0,40).forEach(x=>{
+    const id="decision:"+x._line;
+    add({id,type:"decision",label:clip(x.decision,30),full:x.decision,sub:`${x.role} · ${x.kind}`,dec:x,updated:x.when,status:x.kind==="question"?"awaiting":"idle",
+      stText:x.kind,r:x.kind==="question"?8:5,color:x.kind==="question"?"#D99016":TYPES.decision.color,icon:x.kind==="question"?"q":"log",tone:"neutral",hist:false});
+    const role=String(x.role||"").toLowerCase();
+    link(nodes.has("agent:"+role)?"agent:"+role:"agent:judge",id);
+    for(const r of jobRefs(x.decision+" "+x.why+" "+x.evidence))link(id,"job:"+r);
+  });
+  for(const l of (d.lessons&&d.lessons.items)||[]){
+    const id="lesson:"+l.n;
+    add({id,type:"lesson",label:"L"+l.n+" · "+clip(l.title,26),full:l.title,sub:l.section,les:l,updated:l.date,status:"idle",r:5,color:TYPES.lesson.color,icon:"lesson",tone:"gold"});
+    link("agent:judge",id);for(const r of jobRefs(l.body))link(id,"job:"+r);
+  }
+  for(const a of d.approvals||[]){
+    const id="approval:"+a.id;
+    add({id,type:"approval",label:a.id+" · "+a.status,full:a.what,sub:clip(a.what,60),appr:a,updated:a.applied||a.approved||a.asked,status:a.status,stText:a.status,
+      r:a.status==="pending"?9:7,color:a.status==="pending"?"#D99016":"#15966A",icon:"check",tone:a.status==="pending"?"warn":"ok",hist:a.status==="applied"});
+    link("agent:owner",id);
+    for(const n of stepsIn(a.what)){const st=stageOfStep(n);if(st)link("stage:"+st.id,id)}
+    for(const r of jobRefs(a.what))link(id,"job:"+r);
+  }
+  link("agent:owner","stage:approval");
+  for(const day of (d.demo&&d.demo.days)||[]){add({id:"demo:"+day.date,type:"demo",label:"demo "+day.date,full:"Demo log "+day.date,sub:day.label,day,updated:day.date,status:"idle",r:6,color:TYPES.demo.color,icon:"activity",tone:"teal",path:"docs/demo_log.md"});link("stage:demo","demo:"+day.date)}
+  for(const [i,r] of (((d.prop_routes||{}).routes)||[]).entries()){
+    const id="route:"+i;add({id,type:"route",label:clip(r.route,26),full:r.route,sub:r.rules,route:r,status:/chosen/i.test(r.route)?"active":"idle",r:6,color:TYPES.route.color,icon:"route",tone:"cyan"});
+    link("prod:funded",id);
+  }
+  // adjacency
+  const adj=new Map([...nodes.keys()].map(k=>[k,{in:[],out:[]}]));
+  for(const e of edges){adj.get(e.s).out.push(e);adj.get(e.t).in.push(e)}
+  return {nodes,edges,adj,hydra:hydraMonths(d)};
+}
+
+/* =====================================================================================================================
+   Graph view: SVG, own force layout (Graph), serpentine node editor (Workflow), table (List).
+   Positions, zoom and pan survive data refreshes; only new nodes are placed.
+   ===================================================================================================================== */
+const G={pos:{graph:{},workflow:{}},view:{graph:null,workflow:null},host:null,svg:null,vp:null,size:[800,520],drag:null,pinch:null,nodeEls:new Map(),edgeEls:[]};
+function hash(s){let x=2166136261;for(const c of String(s))x=Math.imul(x^c.charCodeAt(0),16777619);return (x>>>0)/4294967295}
+function visibleNodes(){
+  const M=S.M;if(!M)return [];
+  const f=S.gf,q=f.q.trim().toLowerCase();
+  return [...M.nodes.values()].filter(n=>{
+    if(S.gmode==="workflow"&&!(n.type==="stage"||n.type==="product"))return false;
+    if(n.type!=="stage"&&f.types&&!f.types.has(n.type))return false;
+    if(!f.hist&&n.hist)return false;
+    if(f.status!=="all"&&n.type!=="stage"&&n.type!=="product"){
+      const grp={active:["running","active","awaiting","queued","pending"],done:["done","completed","pass","applied","approved"],failed:["failed","fail","rejected","violated"]}[f.status]||[];
+      if(!grp.includes(n.status))return false;
+    }
+    if(q&&n.type!=="stage"&&!(n.label+" "+(n.full||"")+" "+(n.sub||"")).toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function parentOf(id){
+  const M=S.M,a=M.adj.get(id);if(!a)return null;
+  const ins=a.in.map(e=>M.nodes.get(e.s)).filter(Boolean);
+  return (ins.find(n=>n.type==="stage")||ins.find(n=>n.type==="product")||ins.find(n=>n.type==="agent")||ins[0]||null);
+}
+function anchorOf(n){
+  const a=n.type==="stage"?n.stage.wf:n.type==="product"?n.product.wf:null;
+  if(!a)return null;
+  return S.gmode==="graph"?[a[0]*1.45,a[1]*1.6]:a;  // the organic view gets more room between stages
+}
+function layoutGraph(reset){
+  const P=G.pos.graph,M=S.M,vis=visibleNodes(),ids=new Set(vis.map(n=>n.id));
+  if(reset)for(const k in P)delete P[k];
+  const fresh=vis.filter(n=>!P[n.id]);
+  if(!fresh.length)return;
+  // seed: anchors for primaries, ring around the parent for the rest
+  const agentSlots={judge:[870,640],finder:[-160,-300],builder:[440,-300],reviewer:[870,-300],tester:[1560,560],monitor:[440,640],owner:[-140,640]};
+  for(const n of vis){
+    if(P[n.id])continue;
+    const a=anchorOf(n);
+    if(a){P[n.id]={x:a[0],y:a[1]};continue}
+    if(n.type==="agent"){const s=agentSlots[n.id.split(":")[1]]||[hash(n.id)*900,-260];P[n.id]={x:s[0],y:s[1]};continue}
+    const p=parentOf(n.id),pp=p&&(P[p.id]||(anchorOf(p)&&{x:anchorOf(p)[0],y:anchorOf(p)[1]}));
+    const ang=hash(n.id)*Math.PI*2,rad=70+hash(n.id+"r")*60;
+    P[n.id]=pp?{x:pp.x+Math.cos(ang)*rad,y:pp.y+Math.sin(ang)*rad}:{x:450+Math.cos(ang)*500,y:130+Math.sin(ang)*300};
+  }
+  const N=vis.map(n=>({n,p:P[n.id],vx:0,vy:0,fixed:!!anchorOf(n),isNew:fresh.includes(n)}));
+  const idx=new Map(N.map((o,i)=>[o.n.id,i]));
+  const E=M.edges.filter(e=>ids.has(e.s)&&ids.has(e.t)).map(e=>[idx.get(e.s),idx.get(e.t),e.kind]);
+  const iters=reset||fresh.length>10?320:120;
+  for(let it=0;it<iters;it++){
+    const alpha=1-it/iters;
+    for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++){
+      const a=N[i],b=N[j];let dx=b.p.x-a.p.x,dy=b.p.y-a.p.y,d2=dx*dx+dy*dy+0.01;
+      const minD=(a.n.r+b.n.r)*2.8+40;if(d2>250000)continue;
+      const f=Math.min(40,(minD*minD*1.1)/d2)*alpha*1.4,d=Math.sqrt(d2);dx/=d;dy/=d;
+      a.vx-=dx*f;a.vy-=dy*f;b.vx+=dx*f;b.vy+=dy*f;
+    }
+    for(const [i,j,k] of E){
+      const a=N[i],b=N[j],dx=b.p.x-a.p.x,dy=b.p.y-a.p.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+      const rest=k==="flow"?420:(a.n.primary||b.n.primary?110:90)+(a.n.r+b.n.r);
+      const f=(d-rest)*(k==="flow"?0.002:0.035)*alpha;
+      a.vx+=dx/d*f;a.vy+=dy/d*f;b.vx-=dx/d*f;b.vy-=dy/d*f;
+    }
+    for(const o of N){
+      if(o.fixed){const a=anchorOf(o.n);o.vx+=(a[0]-o.p.x)*0.2;o.vy+=(a[1]-o.p.y)*0.2}
+      if(!reset&&!o.isNew&&!o.fixed){o.vx*=0.2;o.vy*=0.2}
+      o.vx*=0.78;o.vy*=0.78;o.p.x+=Math.max(-30,Math.min(30,o.vx));o.p.y+=Math.max(-30,Math.min(30,o.vy));
+    }
+  }
+}
+function layoutWorkflow(){
+  const P=G.pos.workflow;
+  for(const n of visibleNodes())if(!P[n.id]){const a=anchorOf(n);P[n.id]={x:a?a[0]:0,y:a?a[1]:0}}
+}
+function bbox(ids){
+  const P=G.pos[S.gmode];let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const id of ids){const p=P[id];if(!p)continue;x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y)}
+  if(x0>x1)return [0,0,100,100];
+  const pad=S.gmode==="workflow"?[120,90]:[150,120];
+  return [x0-pad[0],y0-pad[1],x1+pad[0],y1+pad[1]+(S.gmode==="workflow"?60:20)];
+}
+function fitView(all){
+  // Graph mode fits the pipeline stages (secondary bubbles may sit past the edge; zoom out for all of them).
+  const vis=visibleNodes(),prim=vis.filter(n=>n.primary);
+  const ids=(S.gmode==="graph"&&!all&&prim.length?prim:vis).map(n=>n.id),[x0,y0,x1,y1]=bbox(ids),[w,h]=G.size;
+  const k=Math.max(0.25,Math.min(1.6,Math.min(w/(x1-x0),h/(y1-y0))));
+  G.view[S.gmode]={k,tx:(w-(x1-x0)*k)/2-x0*k,ty:(h-(y1-y0)*k)/2-y0*k};applyView();
+}
+function applyView(){
+  const v=G.view[S.gmode];if(!v||!G.vp)return;
+  G.vp.setAttribute("transform",`translate(${v.tx},${v.ty}) scale(${v.k})`);
+  G.svg.style.setProperty("--ls",Math.max(1,0.85/v.k).toFixed(3)); // labels keep a readable size when zoomed out
+  G.svg.classList.toggle("far",v.k<0.8);G.svg.classList.toggle("hassel",!!S.sel);
+  drawMinimap();
+}
+function edgePath(a,b,kind){
+  if(S.gmode==="workflow"){
+    const ax=a.x+92,bx=b.x-92;
+    if(Math.abs(a.y-b.y)<5&&bx>ax)return `M${ax},${a.y} C${ax+50},${a.y} ${bx-50},${b.y} ${bx},${b.y}`;
+    if(Math.abs(a.y-b.y)<5){const ax2=a.x-92,bx2=b.x+92;return `M${ax2},${a.y} C${ax2-50},${a.y} ${bx2+50},${b.y} ${bx2},${b.y}`}
+    if(b.x<a.x&&Math.abs(a.y-b.y)>=5){const ax4=a.x+92,bx4=b.x+92;return `M${ax4},${a.y} C${ax4+70},${a.y} ${bx4+110},${b.y} ${bx4},${b.y}`}
+    if(a.x===b.x)return `M${a.x+92},${a.y} C${a.x+190},${a.y} ${b.x+190},${b.y} ${b.x+92},${b.y}`;
+    const ax3=a.x+92,bx3=b.x-92;return `M${ax3},${a.y} C${ax3+90},${a.y} ${bx3-90},${b.y} ${bx3},${b.y}`;
+  }
+  const dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||1,bend=kind==="flow"?0.12:0.08;
+  const mx=(a.x+b.x)/2-dy*bend,my=(a.y+b.y)/2+dx*bend;
+  const rb=(S.M.nodes.get(b.id)||{}).r||6;
+  const ex=b.x-(b.x-mx)/Math.hypot(b.x-mx,b.y-my)*(rb+4),ey=b.y-(b.y-my)/Math.hypot(b.x-mx,b.y-my)*(rb+4);
+  return `M${a.x},${a.y} Q${mx},${my} ${kind==="flow"?ex:b.x},${kind==="flow"?ey:b.y}`;
+}
+const ST_COLOR={running:"#3978F6",active:"#3978F6",queued:"#D99016",awaiting:"#D99016",pending:"#D99016",hold:"#D99016",done:"#15966A",pass:"#15966A",approved:"#15966A",applied:"#15966A",failed:"#DC4C55",fail:"#DC4C55",rejected:"#DC4C55",blocked:"#718096",idle:"#98A2B3",unknown:"#98A2B3"};
+const ST_TEXT={running:"running",active:"active",queued:"queued",awaiting:"awaiting approval",blocked:"blocked",idle:"idle",unknown:"unknown"};
+function nodeSVG(n,p){
+  const sel=S.sel===n.id;
+  if(S.gmode==="workflow"){
+    const st=ST_COLOR[n.status]||"#98A2B3",w=184,hgt=62,bg=n.type==="product"?"#FFFBF2":"#FFFFFF";
+    const agents=n.type==="stage"?(S.M.adj.get(n.id).in.map(e=>S.M.nodes.get(e.s)).filter(x=>x&&x.type==="agent")):[];
+    const kids=(S.M.adj.get(n.id).out||[]).map(e=>S.M.nodes.get(e.t)).filter(x=>x&&x.type!=="stage"&&x.type!=="product"&&x.type!=="agent");
+    const cnt={};kids.forEach(k=>cnt[k.type]=(cnt[k.type]||0)+1);
+    const cs=Object.entries(cnt).map(([t,c])=>`${c} ${t}${c>1?"s":""}`).join(" · ");
+    const steps=n.steps&&n.steps.length?(n.steps.length>1?`steps ${n.steps[0].n}–${n.steps[n.steps.length-1].n}`:`step ${n.steps[0].n}`):(n.type==="product"?"EA":"side branch");
+    let s=`<g class="n wf" data-id="${esc(n.id)}" transform="translate(${p.x},${p.y})" tabindex="0" role="button" aria-label="${esc(n.label+", "+(n.stText||n.status))}">
+      <rect class="halo" x="${-w/2-5}" y="${-hgt/2-5}" width="${w+10}" height="${hgt+10}" rx="14" fill="none" stroke="${n.color}" stroke-opacity=".35" stroke-width="6" style="opacity:${sel?1:0}"/>
+      <rect x="${-w/2}" y="${-hgt/2}" width="${w}" height="${hgt}" rx="11" fill="${bg}" stroke="${sel?n.color:"#D5DDE8"}" stroke-width="${sel?2:1.2}"/>
+      <rect x="${-w/2+10}" y="-17" width="34" height="34" rx="8" fill="${n.color}" fill-opacity=".12"/>
+      <g transform="translate(${-w/2+17},-10) scale(.85)" stroke="${n.color}" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${IP[n.icon]||IP.dot}</g>
+      <text class="lbl" x="${-w/2+52}" y="-6">${esc(clip(n.label,18))}</text>
+      <text class="sml" x="${-w/2+52}" y="9">${esc(steps)}</text>
+      <circle cx="${w/2-12}" cy="${-hgt/2+12}" r="4" fill="${st}">${n.status==="running"&&!reduceMotion()?'<animate attributeName="opacity" values="1;.3;1" dur="1.4s" repeatCount="indefinite"/>':""}</circle>
+      <text class="sml" x="${-w/2+52}" y="22" fill="${st}" style="fill:${st}">${esc(clip(n.stText||ST_TEXT[n.status]||n.status,22))}</text>
+      <circle cx="${-w/2}" cy="0" r="5" fill="#fff" stroke="#9FB4D6" stroke-width="1.5"/><circle cx="${w/2}" cy="0" r="5" fill="#fff" stroke="#9FB4D6" stroke-width="1.5"/>
+      ${n.count?`<g transform="translate(${w/2-4},${-hgt/2-4})"><circle r="10" fill="${n.color}"/><text text-anchor="middle" y="3.5" style="font-size:10px;font-weight:700;fill:#fff">${n.count}</text></g>`:""}`;
+    agents.slice(0,3).forEach((a,i)=>{const x=-w/2+30+i*62;
+      s+=`<line x1="${x}" y1="${hgt/2}" x2="${x}" y2="${hgt/2+16}" stroke="#C6D0DE" stroke-dasharray="3 3"/><rect x="${x-5}" y="${hgt/2+16}" width="10" height="10" transform="rotate(45 ${x} ${hgt/2+21})" fill="#fff" stroke="${a.status==="running"?"#3978F6":"#9AA6B8"}" stroke-width="1.4"/>
+        <text class="sml" x="${x}" y="${hgt/2+40}" text-anchor="middle" style="font-size:9.5px">${esc(a.label.toLowerCase())}</text>`});
+    if(cs)s+=`<text class="sml" x="0" y="${hgt/2+(agents.length?56:18)}" text-anchor="middle" style="font-size:10px;fill:#98A2B3">${esc(cs)}</text>`;
+    return s+"</g>";
+  }
+  const r=n.r,st=ST_COLOR[n.status]||"#98A2B3",big=n.type==="stage"||n.type==="product";
+  let s=`<g class="n" data-id="${esc(n.id)}" transform="translate(${p.x},${p.y})" tabindex="0" role="button" aria-label="${esc(n.label+", "+TYPES[n.type].label+", "+(n.stText||n.status))}">
+    <circle class="halo" r="${r+(big?9:6)}" fill="${n.color}" fill-opacity=".14" stroke="${n.color}" stroke-opacity=".4" style="opacity:${sel?1:0}"/>`;
+  if(big){
+    s+=`<circle r="${r}" fill="${n.color}" fill-opacity="${n.type==="product"?.16:.10}" stroke="${n.color}" stroke-width="2"/>
+      <circle r="${r-6}" fill="#fff" fill-opacity=".7"/>
+      <g transform="translate(-11,-11) scale(.92)" stroke="${n.color}" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${IP[n.icon]||IP.dot}</g>
+      <circle cx="${r*.72}" cy="${-r*.72}" r="5" fill="${st}" stroke="#fff" stroke-width="1.5">${n.status==="running"&&!reduceMotion()?'<animate attributeName="opacity" values="1;.3;1" dur="1.4s" repeatCount="indefinite"/>':""}</circle>
+      <text class="lbl" y="${r+6}" dy="0.95em" text-anchor="middle">${esc(n.label.toUpperCase())}</text>
+      <text class="sub" y="${r+6}" dy="2.35em" text-anchor="middle">${esc(n.stText||n.sub)}</text>`;
+    if(n.count&&n.type==="stage")s+=`<g transform="translate(${-r*.8},${-r*.75})"><circle r="9" fill="#fff" stroke="${n.color}"/><text text-anchor="middle" y="3.5" style="font-size:10px;font-weight:700;fill:${n.color}">${n.count}</text></g>`;
+  }else if(n.type==="agent"){
+    s+=`<circle r="${r}" fill="#fff" stroke="${n.status==="running"?"#3978F6":n.color}" stroke-width="${n.status==="running"?2.4:1.5}"/>
+      <g transform="translate(-7.5,-7.5) scale(.62)" stroke="${n.color}" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IP[n.icon]}</g>
+      <text class="sml" y="${r+3}" dy="1em" text-anchor="middle" style="font-weight:600;fill:#344054">${esc(n.label)}</text>`;
+  }else{
+    s+=`<circle r="${r}" fill="${n.color}" fill-opacity="${n.hist?.45:.95}" stroke="#fff" stroke-width="1.5"/>`;
+    if(["running","failed","fail","awaiting","queued","rejected","pending"].includes(n.status))s+=`<circle r="${r+3}" fill="none" stroke="${st}" stroke-width="1.6"/>`;
+    s+=`<text class="sml lab" x="${r+5}" y="3.5">${esc(n.label)}</text>`;
+  }
+  return s+"</g>";
+}
+function renderGraphSVG(){
+  if(!G.svg||!S.M)return;
+  const vis=visibleNodes(),ids=new Set(vis.map(n=>n.id));
+  if(S.gmode==="graph")layoutGraph(false);else layoutWorkflow();
+  const P=G.pos[S.gmode];
+  const E=S.M.edges.filter(e=>ids.has(e.s)&&ids.has(e.t)&&(S.gmode==="graph"||e.kind==="flow"));
+  const running=new Set((S.data.jobs||[]).some(j=>j.status==="running")?["stage:ea>stage:tester","prod:hydra>stage:tester","prod:funded>stage:tester"].filter(k=>{
+    const pid=k.split(">")[0];return pid.startsWith("prod:")?(S.data.jobs||[]).some(j=>j.status==="running"&&("prod:"+(PRODUCTS.find(p=>p.expert===j.expert)||{}).id)===pid):false}):[]);
+  let es="";
+  E.forEach((e,i)=>{const a={...P[e.s],id:e.s},b={...P[e.t],id:e.t};
+    es+=`<path class="e ${e.kind}${running.has(e.s+">"+e.t)&&!reduceMotion()?" anim":""}" data-i="${i}" d="${edgePath(a,b,e.kind)}"${e.kind==="flow"?' marker-end="url(#arr)"':""}/>`});
+  let ns="";
+  // primaries last so they sit on top
+  const order=[...vis].sort((a,b)=>(a.primary?1:0)-(b.primary?1:0));
+  for(const n of order)ns+=nodeSVG(n,P[n.id]);
+  G.vp.innerHTML=`<g class="edges">${es}</g><g class="nodes">${ns}</g>`;
+  G.edgeList=E;G.edgeEls=$$("path.e",G.vp);
+  G.nodeEls=new Map($$("g.n",G.vp).map(el=>[el.dataset.id,el]));
+  applyHighlight();
+  if(!G.view[S.gmode])fitView();else applyView();
+  if(!vis.length)G.vp.innerHTML=`<text x="0" y="0" text-anchor="middle" style="font:13px var(--sans);fill:#667085">No entity matches these filters.</text>`;
+}
+function applyHighlight(){
+  if(!G.nodeEls)return;
+  if(G.svg)G.svg.classList.toggle("hassel",!!S.sel);
+  const id=S.sel&&G.nodeEls.has(S.sel)?S.sel:(S.sel&&S.gmode==="workflow"&&S.M.nodes.has(S.sel)?(parentOf(S.sel)||{}).id:null);
+  if(!id){G.nodeEls.forEach(el=>el.classList.remove("dim","hl"));G.edgeEls.forEach(el=>el.classList.remove("dim","hl"));return}
+  const keep=new Set([id]),hlE=new Set();
+  G.edgeList.forEach((e,i)=>{if(e.s===id||e.t===id){keep.add(e.s);keep.add(e.t);hlE.add(i)}});
+  // upstream flow path back to Research for a candidate / job / stage
+  const n=S.M.nodes.get(id);
+  let st=n&&n.type==="stage"?id:(n?((parentOf(id)||{}).type==="stage"?parentOf(id).id:null):null);
+  const seen=new Set();
+  while(st&&!seen.has(st)){seen.add(st);keep.add(st);
+    const k=G.edgeList.findIndex(e=>e.kind==="flow"&&e.t===st&&e.s.startsWith("stage:")&&e.s!=="stage:scanner");
+    if(k<0)break;hlE.add(k);st=G.edgeList[k].s}
+  G.nodeEls.forEach((el,k)=>{el.classList.toggle("dim",!keep.has(k));el.classList.toggle("hl",k===id);const h=el.querySelector(".halo");if(h)h.style.opacity=k===id?1:0});
+  G.edgeEls.forEach((el,i)=>{el.classList.toggle("hl",hlE.has(i));el.classList.toggle("dim",!hlE.has(i))});
+}
+function drawMinimap(){
+  const mm=G.host&&$(".minimap",G.host);if(!mm||!S.M)return;
+  const vis=visibleNodes(),P=G.pos[S.gmode],[x0,y0,x1,y1]=bbox(vis.map(n=>n.id)),W=180,H=112;
+  const k=Math.min(W/(x1-x0),H/(y1-y0)),ox=(W-(x1-x0)*k)/2,oy=(H-(y1-y0)*k)/2;
+  const v=G.view[S.gmode]||{k:1,tx:0,ty:0},[w,h]=G.size;
+  const vx=(-v.tx/v.k-x0)*k+ox,vy=(-v.ty/v.k-y0)*k+oy,vw=w/v.k*k,vh=h/v.k*k;
+  mm.innerHTML=vis.map(n=>{const p=P[n.id];if(!p)return "";return `<circle cx="${((p.x-x0)*k+ox).toFixed(1)}" cy="${((p.y-y0)*k+oy).toFixed(1)}" r="${n.primary?3.2:1.6}" fill="${n.color}" fill-opacity=".8"/>`}).join("")+
+    `<rect x="${vx.toFixed(1)}" y="${vy.toFixed(1)}" width="${vw.toFixed(1)}" height="${vh.toFixed(1)}" fill="rgba(217,164,65,.08)" stroke="#D9A441" stroke-width="1.4" rx="2"/>`;
+  mm._map={x0,y0,k,ox,oy};
+}
+function graphCard(opts={}){
+  G.opts=opts;
+  const types=Object.keys(TYPES).filter(t=>t!=="stage");
+  if(!S.gf.types)S.gf.types=new Set(store("gtypes")||types);
+  const chips=types.map(t=>`<button class="chip" data-type="${t}" aria-pressed="${S.gf.types.has(t)}"><span class="dot" style="background:${TYPES[t].color}"></span>${TYPES[t].label}s</button>`).join("");
+  return `<section class="card gcard" id="gcard" style="${opts.style||""}">
+    <div class="gbar">
+      <div class="seg" role="group" aria-label="View">
+        <button data-mode="graph" aria-pressed="${S.gmode==="graph"}">${icon("graph","sm")}Graph</button>
+        <button data-mode="workflow" aria-pressed="${S.gmode==="workflow"}">${icon("pipe","sm")}Workflow</button>
+        <button data-mode="list" aria-pressed="${S.gmode==="list"}">${icon("list","sm")}List</button></div>
+      ${opts.title?`<h2 style="font-size:14px;margin:0 4px;font-weight:600">${esc(opts.title)}</h2>`:""}
+      <span class="sp"></span>
+      <input class="f" id="gq" type="search" placeholder="Find candidate, job, agent, paper…" value="${esc(S.gf.q)}" aria-label="Search graph" style="width:230px">
+      <select class="f" id="gst" aria-label="Status filter">
+        ${[["all","All statuses"],["active","Active / waiting"],["done","Done / passed"],["failed","Failed / rejected"]].map(([v,l])=>`<option value="${v}"${S.gf.status===v?" selected":""}>${l}</option>`).join("")}</select>
+      <button class="chip" id="ghist" aria-pressed="${S.gf.hist}" title="Finished jobs, rejected candidates, applied approvals">Historical</button>
+      ${opts.filters?"":`<button class="btn" id="gmore" aria-expanded="false">${icon("list","sm")}Types</button>`}
+    </div>
+    <div class="gfilters ${opts.filters?"":"hide"}" id="gtypes">${chips}</div>
+    <div class="gwrap" id="gwrap" style="${opts.h?`min-height:${opts.h}px`:""}">
+      <svg class="g" id="gsvg" aria-label="Research graph" role="img"><defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#9FB4D6"/></marker></defs>
+        <g id="gvp"></g></svg>
+      <div class="gzoom"><button data-z="in" aria-label="Zoom in">${icon("plus","sm")}</button><button data-z="out" aria-label="Zoom out">${icon("minus","sm")}</button>
+        <button data-z="fit" aria-label="Fit everything to the screen" title="Fit everything">${icon("fit","sm")}</button><button data-z="reset" aria-label="Reset layout">${icon("reset","sm")}</button></div>
+      <svg class="minimap" aria-label="Minimap, click to move the view"></svg>
+      <div class="legend">${[["#3978F6","running"],["#D99016","waiting"],["#15966A","done / passed"],["#DC4C55","failed"],["#98A2B3","idle"]].map(([c,l])=>`<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>
+    </div>
+    <div class="glist hide" id="glist"></div>
+  </section>`;
+}
+function mountGraph(){
+  const card=$("#gcard");if(!card)return;
+  G.host=card;G.svg=$("#gsvg",card);G.vp=$("#gvp",card);
+  const wrap=$("#gwrap",card),list=$("#glist",card);
+  const sz=()=>{const r=wrap.getBoundingClientRect();G.size=[Math.max(200,r.width),Math.max(200,r.height)]};
+  sz();
+  if(G.ro)G.ro.disconnect();G.ro=new ResizeObserver(()=>{const old=G.size;sz();if(Math.abs(old[0]-G.size[0])>40&&G.view[S.gmode]&&S.gmode!=="list")fitView()});G.ro.observe(wrap);
+  const showList=S.gmode==="list";wrap.classList.toggle("hide",showList);list.classList.toggle("hide",!showList);
+  if(showList)renderGraphList(list);else renderGraphSVG();
+  card.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{S.gmode=b.dataset.mode;store("gmode",S.gmode);const g=$("#gcard");g.outerHTML=graphCard(G.opts||{});mountGraph()});
+  $("#gq",card).oninput=debounce(e=>{S.gf.q=e.target.value;refreshGraph()},200);
+  $("#gst",card).onchange=e=>{S.gf.status=e.target.value;refreshGraph()};
+  $("#ghist",card).onclick=e=>{S.gf.hist=!S.gf.hist;e.currentTarget.setAttribute("aria-pressed",S.gf.hist);refreshGraph()};
+  const more=$("#gmore",card);if(more)more.onclick=()=>{const t=$("#gtypes",card);t.classList.toggle("hide");more.setAttribute("aria-expanded",!t.classList.contains("hide"))};
+  card.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{const t=b.dataset.type;S.gf.types.has(t)?S.gf.types.delete(t):S.gf.types.add(t);b.setAttribute("aria-pressed",S.gf.types.has(t));store("gtypes",[...S.gf.types]);refreshGraph()});
+  card.querySelectorAll("[data-z]").forEach(b=>b.onclick=()=>{
+    const z=b.dataset.z,v=G.view[S.gmode];
+    if(z==="fit")return fitView(true);
+    if(z==="reset"){if(S.gmode==="graph")layoutGraph(true);else G.pos.workflow={};renderGraphSVG();return fitView()}
+    zoomAt(G.size[0]/2,G.size[1]/2,z==="in"?1.25:0.8)});
+  const mm=$(".minimap",card);
+  mm.onclick=e=>{const m=mm._map;if(!m)return;const r=mm.getBoundingClientRect(),x=(e.clientX-r.left-m.ox)/m.k+m.x0,y=(e.clientY-r.top-m.oy)/m.k+m.y0,v=G.view[S.gmode];
+    v.tx=G.size[0]/2-x*v.k;v.ty=G.size[1]/2-y*v.k;applyView()};
+  bindGraphPointer();
+}
+function refreshGraph(){const list=$("#glist");if(S.gmode==="list"&&list)renderGraphList(list);else renderGraphSVG()}
+function zoomAt(x,y,f){const v=G.view[S.gmode];if(!v)return;const k=Math.max(0.2,Math.min(3,v.k*f));v.tx=x-(x-v.tx)*(k/v.k);v.ty=y-(y-v.ty)*(k/v.k);v.k=k;applyView()}
+function bindGraphPointer(){
+  const svg=G.svg,tip=$("#tip"),pts=new Map();
+  const local=e=>{const r=svg.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  svg.onwheel=e=>{e.preventDefault();const [x,y]=local(e);zoomAt(x,y,Math.exp(-e.deltaY*0.0015))};
+  svg.onpointerdown=e=>{
+    svg.setPointerCapture(e.pointerId);pts.set(e.pointerId,local(e));
+    if(pts.size===2){const [a,b]=[...pts.values()];G.pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),k:G.view[S.gmode].k};G.drag=null;return}
+    const g=e.target.closest("g.n");const [x,y]=local(e);
+    G.drag=g?{id:g.dataset.id,x,y,moved:false,node:true}:{x,y,moved:false,node:false,tx:G.view[S.gmode].tx,ty:G.view[S.gmode].ty};
+    if(!g)svg.classList.add("panning");
+  };
+  svg.onpointermove=e=>{
+    const [x,y]=local(e);
+    if(pts.has(e.pointerId))pts.set(e.pointerId,[x,y]);
+    if(G.pinch&&pts.size===2){const [a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),v=G.view[S.gmode];zoomAt((a[0]+b[0])/2,(a[1]+b[1])/2,(G.pinch.k*d/G.pinch.d)/v.k);return}
+    const D=G.drag;
+    if(D){
+      if(Math.hypot(x-D.x,y-D.y)>4)D.moved=true;
+      if(!D.moved)return;
+      const v=G.view[S.gmode];
+      if(D.node){const p=G.pos[S.gmode][D.id];p.x+=(x-D.x)/v.k;p.y+=(y-D.y)/v.k;D.x=x;D.y=y;moveNode(D.id)}
+      else{v.tx=D.tx+(x-D.x);v.ty=D.ty+(y-D.y);applyView()}
+      tip.classList.remove("on");return;
+    }
+    const g=e.target.closest("g.n");
+    if(g&&e.pointerType==="mouse"){const n=S.M.nodes.get(g.dataset.id);if(!n)return;
+      tip.innerHTML=`<b>${esc(n.full||n.label)}</b><br><span>${esc(TYPES[n.type].label)} · ${esc(n.stText||ST_TEXT[n.status]||n.status)}</span>${n.sub&&n.sub!==n.full?`<br><span>${esc(clip(n.sub,120))}</span>`:""}`;
+      const r=G.host.getBoundingClientRect(),wr=$("#gwrap").getBoundingClientRect();
+      tip.style.left=Math.min(e.clientX+14,innerWidth-300)+"px";tip.style.top=(e.clientY+14)+"px";tip.style.position="fixed";tip.classList.add("on")}
+    else tip.classList.remove("on");
+  };
+  const up=e=>{
+    pts.delete(e.pointerId);if(pts.size<2)G.pinch=null;
+    svg.classList.remove("panning");
+    const D=G.drag;G.drag=null;if(!D)return;
+    if(!D.moved){if(D.node)select(D.id);else if(S.sel){select(null)}}
+  };
+  svg.onpointerup=up;svg.onpointercancel=up;svg.onpointerleave=()=>tip.classList.remove("on");
+  svg.ondblclick=e=>{const g=e.target.closest("g.n");if(g)primaryAction(g.dataset.id)};
+  svg.onkeydown=e=>{const g=e.target.closest&&e.target.closest("g.n");if(!g)return;if(e.key==="Enter"||e.key===" "){e.preventDefault();select(g.dataset.id)}};
+}
+function moveNode(id){
+  const el=G.nodeEls.get(id),p=G.pos[S.gmode][id];if(el)el.setAttribute("transform",`translate(${p.x},${p.y})`);
+  const P=G.pos[S.gmode];
+  G.edgeList.forEach((e,i)=>{if(e.s===id||e.t===id)G.edgeEls[i].setAttribute("d",edgePath({...P[e.s],id:e.s},{...P[e.t],id:e.t},e.kind))});
+  drawMinimap();
+}
+function renderGraphList(el){
+  const vis=visibleNodes().filter(n=>S.gmode!=="list"||true);
+  const all=[...S.M.nodes.values()].filter(n=>{const f=S.gf,q=f.q.trim().toLowerCase();
+    if(n.type!=="stage"&&f.types&&!f.types.has(n.type))return false;if(!f.hist&&n.hist)return false;
+    if(q&&!(n.label+" "+(n.full||"")+" "+(n.sub||"")).toLowerCase().includes(q))return false;
+    if(f.status!=="all"&&n.type!=="stage"){const grp={active:["running","active","awaiting","queued","pending"],done:["done","completed","pass","applied","approved"],failed:["failed","fail","rejected","violated"]}[f.status];if(!grp.includes(n.status))return false}
+    return true});
+  const order=Object.keys(TYPES);all.sort((a,b)=>order.indexOf(a.type)-order.indexOf(b.type));
+  el.innerHTML=`<div class="tbl-wrap"><table class="t"><caption class="sr">All entities in the research graph</caption><thead><tr><th>Type</th><th>Name</th><th>Stage / step</th><th>Status</th><th>Links</th><th>Updated</th></tr></thead><tbody>
+    ${all.map(n=>{const p=parentOf(n.id),a=S.M.adj.get(n.id);return `<tr data-id="${esc(n.id)}" class="${S.sel===n.id?"sel":""}" tabindex="0">
+      <td><span class="tagx" style="color:${TYPES[n.type].color}">${esc(TYPES[n.type].label)}</span></td>
+      <td><b style="font-weight:500">${esc(clip(n.full||n.label,70))}</b><div class="faint" style="font-size:12px">${esc(clip(n.sub||"",90))}</div></td>
+      <td class="muted">${esc(n.type==="stage"?(n.steps.map(s=>s.n).join(", ")||"—"):(p?p.label:"—"))}${n.step?` · step ${n.step}`:""}</td>
+      <td><span class="st ${esc(n.status)}">${esc(n.stText||ST_TEXT[n.status]||n.status)}</span></td>
+      <td class="num muted">${a.in.length+a.out.length}</td><td class="muted num">${esc(n.updated?when(n.updated):"—")}</td></tr>`}).join("")||`<tr><td colspan="6"><div class="empty"><b>Nothing matches</b>Clear the search or turn types back on.</div></td></tr>`}
+  </tbody></table></div>`;
+  el.querySelectorAll("tr[data-id]").forEach(tr=>{tr.onclick=()=>select(tr.dataset.id);tr.onkeydown=e=>{if(e.key==="Enter")select(tr.dataset.id)}});
+}
+function debounce(f,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}}
+</script>
+<script>
+"use strict";
+/* ============================================ charts (small, dependency-free) ============================================ */
+const CH={};let chId=0;
+function lineChart(series,opts={}){
+  const id="ch"+(++chId),W=opts.w||600,H=opts.h||220,L=54,R=12,T=14,B=28;
+  const pts=series.flatMap(s=>s.pts);
+  if(!pts.length)return `<div class="empty"><b>No series recorded</b>${esc(opts.empty||"")}</div>`;
+  const xs=pts.map(p=>+new Date(p[0])),ys=pts.map(p=>p[1]).concat(opts.lines?opts.lines.map(l=>l.y):[]);
+  let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);if(x1===x0)x1=x0+1;const pad=(y1-y0)*0.08||1;y0-=pad;y1+=pad;
+  const X=t=>L+(t-x0)/(x1-x0)*(W-L-R),Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B);
+  const fy=opts.yfmt||(v=>fmtNum(v,0));
+  let g="";for(let i=0;i<=4;i++){const v=y0+(y1-y0)*i/4,y=Y(v);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#EEF1F5"/><text x="${L-6}" y="${y+3.5}" text-anchor="end">${esc(fy(v))}</text>`}
+  for(let i=0;i<=4;i++){const t=x0+(x1-x0)*i/4;g+=`<text x="${X(t)}" y="${H-8}" text-anchor="middle">${new Date(t).toLocaleDateString("en-GB",{month:"short",year:"2-digit"})}</text>`}
+  for(const l of opts.lines||[])g+=`<line x1="${L}" x2="${W-R}" y1="${Y(l.y)}" y2="${Y(l.y)}" stroke="${l.color}" stroke-dasharray="5 4" stroke-width="1.4"/><text x="${W-R}" y="${Y(l.y)-4}" text-anchor="end" style="fill:${l.color}">${esc(l.label)}</text>`;
+  const paths=series.map(s=>`<path d="${s.pts.map((p,i)=>(i?"L":"M")+X(+new Date(p[0])).toFixed(1)+","+Y(p[1]).toFixed(1)).join("")}" fill="none" stroke="${s.color}" stroke-width="1.8"/>`).join("");
+  CH[id]={series,X,Y,x0,x1,L,R,W,H,T,B,fy};
+  const leg=series.length>1?`<div style="display:flex;gap:14px;font-size:12px;color:var(--text2);margin-top:4px">${series.map(s=>`<span><i style="display:inline-block;width:12px;height:3px;background:${s.color};vertical-align:middle;margin-right:5px"></i>${esc(s.name)}</span>`).join("")}</div>`:"";
+  return `<div style="position:relative"><svg class="chart" id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label||"chart")}">${g}${paths}<line class="cx" y1="${T}" y2="${H-B}" stroke="#98A2B3" stroke-dasharray="3 3" style="display:none"/><g class="cd"></g></svg>
+    <div class="tip" style="position:absolute" data-for="${id}"></div></div>${leg}`;
+}
+function bindCharts(root=document){
+  root.querySelectorAll("svg.chart[id]").forEach(svg=>{
+    const c=CH[svg.id];if(!c||svg._b)return;svg._b=1;const tip=svg.parentElement.querySelector(".tip");
+    svg.addEventListener("pointermove",e=>{
+      const r=svg.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*c.W;if(x<c.L||x>c.W-c.R){tip.classList.remove("on");return}
+      const t=c.x0+(x-c.L)/(c.W-c.L-c.R)*(c.x1-c.x0);
+      let html="",cx=null,dots="";
+      for(const s of c.series){let best=null,bd=1e18;for(const p of s.pts){const d=Math.abs(+new Date(p[0])-t);if(d<bd){bd=d;best=p}}
+        if(best){cx=c.X(+new Date(best[0]));html+=`<span style="color:${s.color}">●</span> ${esc(s.name)}: <b>${esc(c.fy(best[1]))}</b><br>`;dots+=`<circle cx="${cx}" cy="${c.Y(best[1])}" r="3.5" fill="${s.color}" stroke="#fff"/>`;html=`<b>${esc(best[0])}</b><br>`+html.replace(/^<b>[^<]*<\/b><br>/,"")}}
+      const l=svg.querySelector(".cx");l.setAttribute("x1",cx);l.setAttribute("x2",cx);l.style.display="";svg.querySelector(".cd").innerHTML=dots;
+      tip.innerHTML=html;tip.classList.add("on");tip.style.left=Math.min(r.width-180,Math.max(0,cx/c.W*r.width+10))+"px";tip.style.top="8px";
+    });
+    svg.addEventListener("pointerleave",()=>{tip.classList.remove("on");svg.querySelector(".cx").style.display="none";svg.querySelector(".cd").innerHTML=""});
+  });
+}
+function monthBars(rows,target=5){
+  if(!rows||!rows.length)return `<div class="empty"><b>No month rows</b></div>`;
+  const W=640,H=200,L=36,B=36,T=12,bw=(W-L-8)/rows.length,maxv=Math.max(target*1.1,...rows.map(r=>r.mult));
+  const Y=v=>T+(1-v/maxv)*(H-T-B);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" style="max-width:860px" role="img" aria-label="Month multiples against the ${target}x target">`;
+  for(const v of [0,1,2,3,4,5].filter(v=>v<=maxv))s+=`<line x1="${L}" x2="${W-8}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EEF1F5"/><text x="${L-6}" y="${Y(v)+3.5}" text-anchor="end">${v}x</text>`;
+  rows.forEach((r,i)=>{const x=L+i*bw+2,y=Y(r.mult),c=r.mult>=target?"#15966A":r.mult<1?"#DC4C55":"#D9A441";
+    s+=`<rect x="${x}" y="${y}" width="${Math.max(2,bw-4)}" height="${Y(0)-y}" rx="2" fill="${c}" fill-opacity=".85"><title>${esc(r.month)}: ${r.mult}x${r.dd!=null?", eq DD "+r.dd+"%":""}</title></rect>`;
+    if(rows.length<=24&&i%(rows.length>12?2:1)===0)s+=`<text x="${x+bw/2-2}" y="${H-B+14}" text-anchor="middle">${esc(r.month.slice(2))}</text>`});
+  s+=`<line x1="${L}" x2="${W-8}" y1="${Y(target)}" y2="${Y(target)}" stroke="#15966A" stroke-dasharray="5 4"/><text x="${W-10}" y="${Y(target)-4}" text-anchor="end" style="fill:#15966A">${target}x target</text>`;
+  s+=`<line x1="${L}" x2="${W-8}" y1="${Y(1)}" y2="${Y(1)}" stroke="#98A2B3" stroke-dasharray="2 3"/></svg>`;
+  return s+`<p class="faint" style="font-size:11.5px;margin:4px 0 0">Green: reached ${target}x · gold: 1x–${target}x · red: below the deposit. Hover a bar for the month.</p>`;
+}
+
+/* ============================================ inspector ============================================ */
+function select(id,opts={}){
+  S.sel=id;
+  applyHighlight();
+  $$("table.t tr[data-id]").forEach(tr=>tr.classList.toggle("sel",tr.dataset.id===id));
+  $$(".ccard[data-id]").forEach(c=>c.classList.toggle("sel",c.dataset.id===id));
+  if(id)openInspector(id);else closeInspector();
+}
+function closeInspector(){const el=$("#insp");el.classList.remove("on","wide");document.body.classList.remove("insp-open","insp-wide");el.setAttribute("aria-hidden","true");if(S.sel){S.sel=null;applyHighlight();$$("tr.sel,.ccard.sel").forEach(x=>x.classList.remove("sel"))}}
+function relList(id){
+  const a=S.M.adj.get(id);if(!a)return "";
+  const items=[...a.in.map(e=>[e.s,e.kind==="flow"?"from":"linked"]),...a.out.map(e=>[e.t,e.kind==="flow"?"to":"has"])];
+  if(!items.length)return `<p class="faint">No recorded relationship.</p>`;
+  return `<div class="rel">${items.slice(0,40).map(([k,dir])=>{const n=S.M.nodes.get(k);return `<button data-go="${esc(k)}"><span class="chip dot" style="width:8px;height:8px;padding:0;border:0;background:${n.color}"></span>${esc(clip(n.full||n.label,56))}<span class="dir">${esc(TYPES[n.type].label.toLowerCase())} · ${dir}</span></button>`}).join("")}${items.length>40?`<p class="faint">${items.length-40} more…</p>`:""}</div>`;
+}
+function inspectorFrame(n,body,actions){
+  return `<div class="insp-h"><div class="ic tone-${n.tone||TYPES[n.type].tone}">${icon(n.icon||TYPES[n.type].icon)}</div>
+    <div style="flex:1;min-width:0"><div class="ty">${esc(TYPES[n.type].label)}</div><h3>${esc(n.full||n.label)}</h3>
+    <div style="margin-top:6px"><span class="st ${esc(n.status)}">${esc(n.stText||ST_TEXT[n.status]||n.status)}</span></div></div>
+    <button class="iconbtn" data-close aria-label="Close details">${icon("x")}</button></div>
+    <div class="insp-b">${body}${actions?`<section><h4>Actions</h4><div class="actions">${actions}</div></section>`:""}<section><h4>Relationships</h4>${relList(n.id)}</section></div>`;
+}
+function kv(rows,cls=""){return `<dl class="kv ${cls}">${rows.filter(r=>r[1]!=null&&r[1]!=="").map(([k,v])=>`<dt>${esc(k)}</dt><dd>${v&&v.__raw!==undefined?v.__raw:esc(v)}</dd>`).join("")}</dl>`}
+function openInspector(id){
+  const n=S.M&&S.M.nodes.get(id),el=$("#insp");
+  if(!n){el.innerHTML=`<div class="insp-h"><h3 style="flex:1">Not found</h3><button class="iconbtn" data-close aria-label="Close">${icon("x")}</button></div><div class="insp-b"><div class="empty"><b>This entity is no longer in the data</b>It may have been renamed or removed from the files.</div></div>`;}
+  else{
+    let body="",act="",wide=false;
+    const path=n.path?`<button class="btn" data-doc="${esc(n.path)}">${icon("doc","sm")}Open ${esc(n.path.split("/").pop())}</button>`:"";
+    const showG=S.page!=="graph"&&S.page!=="overview"?`<button class="btn" data-graph="${esc(n.id)}">${icon("graph","sm")}Show in graph</button>`:"";
+    if(n.type==="stage"){
+      body=`<section>${kv([["Status",n.stText],["Pipeline steps",n.steps.length?n.steps.map(s=>s.n).join(", "):"Not a numbered step (side branch)"]])}</section>
+        <section><h4>Steps (docs/pipeline.json)</h4>${n.steps.length?n.steps.map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><b style="font-size:13px">${s.n}. ${esc(s.name)}</b>${s.gate?` <span class="tagx">gate: ${esc(s.gate)}</span>`:""}<div class="muted" style="font-size:12.5px;margin-top:2px">${esc(s.detail)}</div><div class="faint" style="font-size:11.5px;margin-top:2px">agent ${esc(s.agent)} · model ${esc(s.model)}</div></div>`).join(""):`<p class="muted">The scanner screens rule families on the instruments we can trade and logs every trial in docs/trials.jsonl (${esc(fmtNum(S.data.trials&&S.data.trials.counted))} counted). Survivors go straight to the gates.</p>`}</section>`;
+      if(n.id==="stage:live")body=`<div class="note err">${icon("lock","sm")} Going live is step 19–20 and belongs to the owner. This dashboard has no control that buys a challenge, connects a live account or changes approval a2.</div>`+body;
+      if(n.id==="stage:tester")act=`<a class="btn" href="#/jobs">${icon("beaker","sm")}Tester jobs</a>`;
+      if(n.id==="stage:approval")act=`<a class="btn" href="#/approvals">${icon("check","sm")}Approvals</a>`;
+      if(n.id==="stage:demo")act=`<a class="btn" href="#/product/funded">${icon("activity","sm")}Demo monitor</a><button class="btn" data-doc="docs/demo_log.md">${icon("doc","sm")}demo_log.md</button>`;
+      if(["stage:research","stage:prototype","stage:gates","stage:ea"].includes(n.id))act=`<a class="btn" href="#/pipeline">${icon("pipe","sm")}Pipeline board</a>`;
+    }else if(n.type==="product"){
+      const p=n.product,js=(S.data.jobs||[]).filter(j=>j.expert===p.expert);
+      body=`<section>${kv([["Goal",p.desc],["Tester jobs",`${js.length} (${js.filter(j=>j.status==="running").length} running, ${js.filter(j=>j.status==="queued").length} queued)`]])}</section>`;
+      act=`<a class="btn pri" href="#/product/${p.id}">Open ${esc(p.label)}</a>`;
+    }else if(n.type==="agent"){
+      const a=n.agent;
+      if(n.owner)body=`<p>The owner approves owner steps in docs/autopilot/approvals.json and alone takes step 19 (buy a challenge or go live).</p>`;
+      else{const lv=S.live&&S.live.agents&&S.live.agents[a.role];
+        body=`<section>${kv([["Model",a.model||"not set"],["Model from",a.model_source],["Kind",a.kind],["Now",lv?(lv.live?"running (event log written in the last 20 s)":"not running"):"live stream not connected"],
+          ["Last run",a.last?`${when(a.last.started)} → ${when(a.last.ended)} · exit ${a.last.exit}${a.last.timed_out?" · timed out":""}`:"no run recorded"],["Run logs",a.runs],["Writes",a.writes]])}</section>
+          ${a.description?`<section><h4>Role (agent file)</h4><p>${esc(a.description)}</p></section>`:""}`;
+        act=`<a class="btn" href="#/agents">${icon("bot","sm")}Agents page</a>`}
+    }else if(n.type==="candidate"){
+      const c=n.cand,st=candStatus(c),g=c.gates||{};
+      body=`<section>${kv([["Step",`${c.step??"?"} · ${(S.data.pipeline.steps.find(s=>s.n===n.step)||{}).name||""}`],["Status",st.text],["Source",c.source],["EA",c.ea],["Stress Sharpe",c.stress_sharpe]])}</section>
+        ${st.stopped?`<div class="note err"><b>Stopped at step ${esc(c.step)}.</b> ${esc(st.reason||"")}</div>`:""}
+        ${c.summary?`<section><h4>Summary</h4><p>${esc(c.summary)}</p></section>`:""}
+        ${g.gates?`<section><h4>Gates · ${esc(g.verdict||"")} <span class="faint" style="text-transform:none;font-weight:400">${esc(when(g.when))}</span></h4><div class="tbl-wrap"><table class="t"><thead><tr><th>Gate</th><th>Figure</th><th>Rule</th><th></th></tr></thead><tbody>${g.gates.map(x=>`<tr><td>${esc(x.gate)}</td><td class="num">${esc(x.figure)}</td><td class="muted">${esc(x.rule)}</td><td><span class="st ${x.pass?"pass":"fail"}">${x.pass?"pass":"fail"}</span></td></tr>`).join("")}</tbody></table></div></section>`:""}
+        ${(c.tester||[]).length?`<section><h4>Strategy Tester runs</h4>${c.tester.map(t=>`<div style="font-size:12.5px;padding:4px 0">${esc(t.symbol||"")}: ${esc(t.trades??"?")} trades, win ${esc(t.win_rate??"?")}%, PF ${esc(t.profit_factor??"?")}${t.return_pct!=null?", "+fmtPct(t.return_pct):""}${t.eq_dd_max_pct!=null?", eq DD "+t.eq_dd_max_pct+"%":""} <span class="faint mono">${esc(t.run||"")}</span></div>`).join("")}</section>`:""}
+        ${c.notes?`<section><h4>Notes</h4><p>${esc(c.notes)}</p></section>`:""}`;
+      act=`${g.gates?`<button class="btn" data-doc="docs/gates/${esc(c.id)}.json">${icon("shieldok","sm")}Gate file</button>`:""}<button class="btn" data-doc="docs/candidates.md">${icon("doc","sm")}candidates.md</button>${showG}`;
+    }else if(n.type==="job"){wide=true;body=`<div class="skel"></div><div class="skel" style="width:60%"></div>`;loadJob(n.job.id)}
+    else if(n.type==="decision"){
+      const x=n.dec;body=`<section>${kv([["When",when(x.when)],["Role",x.role],["Kind",x.kind],["Evidence",x.evidence]])}</section><section><h4>Decision</h4><p>${esc(x.decision)}</p></section>${x.why?`<section><h4>Why</h4><p>${esc(x.why)}</p></section>`:""}
+        <p class="faint" style="font-size:12px">The decision log is append-only (tools/memory.py decide); this page cannot edit it.</p>`;
+      act=`<button class="btn" data-doc="docs/memory/decisions.jsonl">${icon("log","sm")}decisions.jsonl</button>`;
+    }else if(n.type==="lesson"){
+      const l=n.les;body=`<section>${kv([["Section",l.section],["Learned",l.date],["Evidence",l.evidence]])}</section><section><h4>Lesson ${l.n}</h4><div class="md">${mdInline(l.body)}</div></section>`;
+      act=`<button class="btn" data-doc="docs/memory/lessons.md">${icon("lesson","sm")}lessons.md</button>`;
+    }else if(n.type==="approval"){
+      const a=n.appr;body=`<section>${kv([["Status",a.status],["Asked",a.asked],["Approved",a.approved],["Applied",a.applied]])}</section><section><h4>What</h4><p>${esc(a.what)}</p></section>${a.note?`<section><h4>Note</h4><p>${esc(a.note)}</p></section>`:""}
+        <div class="note">Approvals are given by the owner in chat or by editing docs/autopilot/approvals.json. This page shows them and has no approve button.</div>`;
+      act=`<button class="btn" data-doc="docs/autopilot/approvals.json">${icon("doc","sm")}approvals.json</button>`;
+    }else if(n.type==="demo"){
+      body=`<section><h4>${esc(n.day.date)} ${esc(n.day.label)}</h4><ul style="margin:0;padding-left:18px;font-size:13px">${n.day.lines.map(l=>`<li style="margin:4px 0">${esc(l)}</li>`).join("")}</ul></section>`;act=path;
+    }else if(n.type==="route"){
+      const r=n.route;body=`<section>${kv([["Rules (file)",r.rules],["Simulated median to first payout",r.median_months!=null?r.median_months+" months":null],["Alternative",r.alt_months!=null?`${r.alt_months} months ${r.alt_if||""}`:null],["Preset",r.preset],["Open question",r.open]])}</section>`;
+      act=`<a class="btn" href="#/routes">${icon("route","sm")}Prop routes</a>`;
+    }else{
+      body=`<section>${kv([["Title",n.full],["Updated",when(n.updated)],["File",n.path]])}</section>${n.sub?`<section><p>${esc(n.sub)}</p></section>`:""}`;act=path;
+    }
+    if(n.type!=="job")el.innerHTML=inspectorFrame(n,body,act||path);
+    else el.innerHTML=inspectorFrame(n,body,"");
+    el.classList.toggle("wide",wide);
+  }
+  el.classList.add("on");el.setAttribute("aria-hidden","false");
+  document.body.classList.add("insp-open");document.body.classList.toggle("insp-wide",el.classList.contains("wide"));
+  bindInspector(el);
+}
+function bindInspector(el){
+  el.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeInspector);
+  el.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>select(b.dataset.go));
+  el.querySelectorAll("[data-doc]").forEach(b=>b.onclick=()=>openDoc(b.dataset.doc));
+  el.querySelectorAll("[data-graph]").forEach(b=>b.onclick=()=>{location.hash="#/graph?sel="+encodeURIComponent(b.dataset.graph)});
+  bindCharts(el);
+}
+function primaryAction(id){
+  const n=S.M.nodes.get(id);if(!n)return;
+  if(n.type==="product")location.hash="#/product/"+n.product.id;
+  else if(n.path&&n.type!=="job")openDoc(n.path,n.full);
+  else select(id);
+}
+async function loadJob(jid){
+  const el=$("#insp");
+  try{
+    const j=await getJSON("/api/job?id="+encodeURIComponent(jid));
+    if(S.sel!=="job:"+jid)return;
+    const n=S.M.nodes.get("job:"+jid);
+    const res=(r,lab)=>r?`<td class="num r">${fmtPct(r.return_pct)}</td><td class="num r">${r.eq_dd_pct!=null?fmtNum(r.eq_dd_pct,2)+"%":"—"}</td><td class="num r">${fmtNum(r.pf,2)}</td><td class="num r">${fmtNum(r.trades)}</td><td class="num r">${r.win_rate!=null?fmtNum(r.win_rate,1)+"%":"—"}</td>`:"";
+    const e=j.expected;
+    let rows="";
+    if(e)rows+=`<tr><td>Expected (Python / ledger)</td><td class="num r">${fmtPct(e.return_pct)}</td><td class="num r">${e.eq_dd_max_pct!=null?e.eq_dd_max_pct+"%":"—"}</td><td class="num r">${fmtNum(e.profit_factor,2)}</td><td class="num r">${fmtNum(e.trades)}</td><td class="num r">${e.win_rate!=null?e.win_rate+"%":"—"}</td></tr>`;
+    if(j.result&&j.result.return_pct!=null)rows+=`<tr><td>${j.result_on?"Tester · legs off":"Tester"}</td>${res(j.result)}</tr>`;
+    if(j.result_on&&j.result_on.return_pct!=null)rows+=`<tr><td>Tester · legs on</td>${res(j.result_on)}</tr>`;
+    const series=[];if(j.result&&j.result.curve&&j.result.curve.length)series.push({name:j.result_on?"legs off":"equity",color:"#98A2B3",pts:j.result.curve});
+    if(j.result_on&&j.result_on.curve&&j.result_on.curve.length)series.push({name:"legs on",color:"#3978F6",pts:j.result_on.curve});
+    if(series.length===1)series[0].color="#3978F6";
+    const months=j.result&&j.result.months;
+    const w=j.window||[];
+    const body=`<section>${kv([["Expert",j.expert],["Symbol / period",`${j.symbol||"?"} ${j.period||""}`],["Data window",`${w[0]||"?"} → ${w[1]||"?"}${w[2]==="report"?" (from the report)":w[2]==="open"?" (open-ended)":""}`],
+        ["Preset",raw(`<span class="mono">${esc(j.preset)}</span>`)],["Deposit / leverage",`${fmtNum(j.deposit)} · 1:${j.leverage??"?"}`],["Inputs set",(j.set||[]).join(", ")||"none"],["Compared with",(j.compare_set||[]).join(", ")],
+        ["Started",j.started?when(j.started):"not started"],["Verdict",j.verdict?`${j.verdict} (${j.verdict_source})`:"Not recorded"],["Folder",j.result?raw(`<span class="mono">${esc(j.result.folder)}</span>`):"—"]])}</section>
+      ${j.status==="failed"?`<div class="note err"><b>Failed.</b> ${esc(j.note_run||j.note||"")}</div>`:""}
+      <section><h4>Expected (queue.json)</h4><p>${esc(j.expect||"Not recorded")}</p></section>
+      ${rows?`<section><h4>Expected vs actual</h4><div class="tbl-wrap"><table class="t"><thead><tr><th></th><th class="r">Return</th><th class="r">Eq DD</th><th class="r">PF</th><th class="r">Trades</th><th class="r">Win</th></tr></thead><tbody>${rows}</tbody></table></div>
+        ${!e?`<p class="faint" style="font-size:12px;margin-top:6px">No structured expectation for this job; compare with the text above. Figures are historical Strategy Tester results, not account performance.</p>`:""}</section>`:""}
+      ${series.length?`<section><h4>Strategy Tester equity (historical)</h4>${lineChart(series,{h:220,label:"Strategy Tester equity curve",yfmt:v=>fmtNum(v,0)})}</section>`:""}
+      ${months?`<section><h4>Fresh-deposit months</h4>${monthBars(months,/3x/i.test(j.preset||"")?3:5)}</section>`:""}
+      ${j.note?`<section><h4>Notes</h4><p>${esc(j.note)}</p>${j.note_run?`<p style="margin-top:8px">${esc(j.note_run)}</p>`:""}</section>`:""}`;
+    const act=`${j.result&&j.result.summary?`<button class="btn" data-doc="${esc(j.result.summary)}">${icon("doc","sm")}summary.md</button>`:""}${j.result_on&&j.result_on.summary?`<button class="btn" data-doc="${esc(j.result_on.summary)}">${icon("doc","sm")}legs-on summary</button>`:""}<button class="btn" data-doc="docs/autopilot/runs.md">${icon("log","sm")}runs.md</button>`;
+    el.innerHTML=inspectorFrame(n,body,act);bindInspector(el);
+  }catch(err){if(S.sel==="job:"+jid){$(".insp-b",el).innerHTML=`<div class="empty"><b>Could not load ${esc(jid)}</b>${esc(err.message)}</div>`}}
+}
+
+/* ============================================ shared bits ============================================ */
+function stChip(s,t){return `<span class="st ${esc(s)}">${esc(t||s)}</span>`}
+function loading(){return `<div class="card card-b"><div class="skel" style="width:30%"></div><div class="skel"></div><div class="skel" style="width:80%"></div></div>`}
+function errorBox(){return `<div class="card"><div class="empty"><b>Research data unavailable</b>${esc(S.dataErr||"")}<br>Is tools/live_server.py running on this PC? The page retries every 15 seconds.<br><br><button class="btn" onclick="loadResearch(true)">${icon("reset","sm")}Retry now</button></div></div>`}
+function jobCounts(){const c={queued:0,running:0,done:0,failed:0,hold:0};for(const j of S.data.jobs||[])c[j.status]=(c[j.status]||0)+1;return c}
+function latestJob(expert,pred=()=>true){return (S.data.jobs||[]).filter(j=>j.expert===expert&&pred(j)).sort((a,b)=>(a.started||"")<(b.started||"")?1:-1)[0]}
+function tickText(due){const d=new Date(String(due).replace(" ","T"));if(isNaN(d))return String(due);const s=(d-Date.now())/1000;
+  if(s>=0)return s<60?"in "+Math.round(s)+" s":"in "+Math.floor(s/60)+" min "+String(Math.round(s%60)).padStart(2,"0")+" s";
+  return "overdue by "+ago(due).replace(" ago","")+""}
+function ring(p,color){const r=22,c=2*Math.PI*r,v=Math.max(0,Math.min(1,p));return `<svg class="ring" width="58" height="58" viewBox="0 0 58 58" aria-hidden="true"><circle cx="29" cy="29" r="${r}" fill="none" stroke="#EEF1F5" stroke-width="5"/><circle cx="29" cy="29" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c*v} ${c}" transform="rotate(-90 29 29)"/><text x="29" y="33" text-anchor="middle" style="font:600 11px var(--sans);fill:#172033">${(v*100).toFixed(1)}%</text></svg>`}
+
+/* ============================================ overview ============================================ */
+function kpiCards(){
+  const d=S.data,M=S.M,hy=M.hydra,c=jobCounts();
+  const hNext=(d.jobs||[]).find(j=>j.expert==="AurumHydra"&&(j.status==="queued"||j.status==="running"));
+  const fLast=latestJob("AurumFunded",j=>j.status==="done"&&j.result&&j.result.return_pct!=null);
+  const fRes=fLast&&(fLast.result_on&&fLast.result_on.return_pct!=null?fLast.result_on:fLast.result);
+  const fRun=(d.jobs||[]).find(j=>j.expert==="AurumFunded"&&j.status==="running");
+  const ap=d.approvals||[],pend=ap.filter(a=>a.status==="pending");
+  const chosen=(d.prop_routes||{}).chosen;
+  return `<div class="grid kpis">
+    <button class="card kpi" onclick="location.hash='#/product/hydra'"><div class="ic tone-gold">${icon("trophy")}</div><div class="body">
+      <div class="lb">AurumHydra · months at 5x</div>
+      ${hy?`<div class="v num">${hy.hit} / ${hy.n}<small>reached target</small></div><div class="s">Historical tester series ${esc(hy.jobs.join(", "))} · median ${fmtNum(hy.median,2)}x. Not released.</div>`
+        :`<div class="v">—</div><div class="s">No finished 5x month series in queue.json.</div>`}
+      ${hNext?`<span class="tag">Next: ${esc(hNext.id)} ${esc(hNext.status)}</span>`:""}</div>${hy?ring(hy.hit/hy.n,"#D9A441"):""}</button>
+    <button class="card kpi" onclick="location.hash='#/product/funded'"><div class="ic tone-ok">${icon("trend")}</div><div class="body">
+      <div class="lb">AurumFunded · latest tester result</div>
+      ${fRes?`<div class="v num ${fRes.return_pct>=0?"":"neg"}">${fmtPct(fRes.return_pct,1)}<small>${fmtNum(fRes.eq_dd_pct,2)}% eq DD</small></div><div class="s">${esc(fLast.id)}${fLast.result_on?" (legs on)":""} · Strategy Tester, data ${esc(fLast.window[0]||"?")} → ${esc(fLast.window[1]||"?")}. Historical, not account equity.</div>`
+        :`<div class="v">—</div><div class="s">No finished AurumFunded job with a result.</div>`}
+      <span class="tag">${fRun?"Running: "+esc(fRun.id):"Route: "+esc(chosen||"not set")}</span></div></button>
+    <button class="card kpi" onclick="location.hash='#/jobs'"><div class="ic tone-blue">${icon("beaker")}</div><div class="body">
+      <div class="lb">Tester jobs</div><div class="v num">${c.running}<small>running</small> ${c.queued}<small>queued</small></div>
+      <div class="s num">${c.done} done · ${c.failed} failed${c.hold?` · ${c.hold} on hold`:""} · from queue.json</div></div></button>
+    <button class="card kpi" onclick="location.hash='#/approvals'"><div class="ic tone-warn">${icon("shieldok")}</div><div class="body">
+      <div class="lb">Owner approvals</div><div class="v num">${pend.length}<small>pending</small></div>
+      <div class="s">${pend.length?esc(pend.map(a=>a.id+": "+clip(a.what,46)).join(" · ")):"Nothing waiting."} ${ap.filter(a=>a.status==="approved").length} approved · ${ap.filter(a=>a.status==="applied").length} applied.</div></div></button>
+  </div>`;
+}
+function relayPanel(){
+  const d=S.data,L=S.live,rel=(L&&L.relay)||d.relay||{},agents=d.agents||[];
+  const liveA=L&&L.agents||{};
+  const running=Object.entries(liveA).filter(([,a])=>a.live).map(([r])=>r);
+  const lastStart=agents.map(a=>a.last&&a.last.started).filter(Boolean).sort().pop();
+  const paused=L&&L.paused,hold=L&&L.hold;
+  const status=!L?["unknown","Stream offline"]:paused?["hold","Paused"]:running.length?["running","Running"]:["active","Active"];
+  return `<div class="card-h">${icon("graph")}<h2>Agent relay</h2><span class="sp"></span>${stChip(status[0],status[1])}</div>
+    <div>${agents.map(a=>{const lv=liveA[a.role],isNext=rel.next===a.role;
+      const st=lv&&lv.live?["running","Running"]:isNext?["queued","Next"]:a.relay?["idle","Idle"]:["idle","On call"];
+      return `<div class="agent-row" data-go="agent:${esc(a.role)}" style="cursor:pointer"><div class="av tone-${a.role==="judge"?"gold":a.role==="tester"?"blue":a.role==="reviewer"?"purple":"neutral"}">${icon(a.role==="tester"?"beaker":a.role==="finder"?"search":a.role==="builder"?"code":a.role==="judge"?"shieldok":a.role==="monitor"?"activity":a.role==="reviewer"?"shieldok":"bot","sm")}</div>
+        <div style="min-width:0"><div class="nm">${esc(a.label)}</div><div class="md">${esc(cap(a.model||"model not set"))} · ${esc(a.relay?"relay run":"subagent")}</div></div>
+        <div class="r">${stChip(st[0],st[1])}<div style="margin-top:3px">${a.last&&a.last.ended?"ended "+esc(ago(a.last.ended)):"no run yet"}</div></div></div>`}).join("")}</div>
+    <div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+      ${paused?`<div class="note warn">Paused: the PAUSE file is set, no agent starts until resumed.</div>`:""}
+      ${hold?`<div class="note warn">Terminal 16 held until ${esc(String(hold.until||"?").replace("T"," ").slice(0,16))}.</div>`:""}
+      ${!L||S.conn!=="live"?`<div class="note warn">Live stream ${esc(S.conn)}. ${L?"Agent states are from the last update, "+esc(ago(new Date(S.lastState).toISOString()))+".":"Showing relay.json from the last data read."}</div>`:""}
+      ${kv([["Now running",running.length?running.join(", "):"No agent running"],["Next tick",raw(`<span class="num" id="nexttick">${rel.due?esc(tickText(rel.due)):"not scheduled"}</span>`)],
+        ["Due at",rel.due?when(rel.due):null],["Last run started",lastStart?when(lastStart):"—"],["Events this session",raw(`<span class="num" id="evcount">${S.evCount}</span>`)]])}
+      <div><div class="faint" style="font-size:12px;margin-bottom:4px">Last handoff (relay.json)</div>
+        <div class="handoff">${rel.from?`HANDOFF: ${esc(rel.from)} → ${esc(rel.next||"?")}`:"No handoff recorded"}${rel.reason?`<br><span class="muted">${esc(rel.reason)}</span>`:""}</div></div>
+    </div>`;
+}
+function decisionsCard(n=5){
+  const ds=(S.data.decisions||[]).filter(x=>!x.bad_line),qs=ds.filter(x=>x.kind==="question"),rest=ds.filter(x=>x.kind!=="question");
+  const items=[...qs,...rest].slice(0,n);
+  return `<section class="card"><div class="card-h">${icon("log")}<h2>Recent decisions</h2><span class="sp"></span><a class="link" href="#/decisions">View all →</a></div>
+    <div class="list">${items.map(x=>`<div class="row" data-go="decision:${x._line}" tabindex="0"><div class="ic tone-${x.kind==="question"?"warn":x.kind==="lesson"?"gold":"ok"}">${icon(x.kind==="question"?"q":x.kind==="lesson"?"lesson":"check","sm")}</div>
+      <div style="min-width:0"><div class="t">${esc(clip(x.decision,110))}</div><div class="d">${esc(x.role)} · ${esc(x.why||"")}</div></div><div class="w">${esc(when(x.when))}<br><span class="tagx">${esc(x.kind)}</span></div></div>`).join("")||`<div class="empty"><b>No decisions logged</b>docs/memory/decisions.jsonl is empty or missing.</div>`}</div></section>`;
+}
+function rulesCard(){
+  const R=S.data.rules||[],v=R.filter(r=>r.status==="verified").length,bad=R.filter(r=>r.status==="violated").length;
+  return `<section class="card"><div class="card-h">${icon("shieldok")}<h2>Fixed rules</h2><span class="sp"></span><a class="link" href="#/rules">${bad?`<span class="neg">${bad} violated</span>`:`${v} of ${R.length} verified`} →</a></div>
+    <div class="list">${R.map(r=>`<div class="row" onclick="location.hash='#/rules'" style="align-items:center;padding:8px 16px"><span style="color:${r.status==="verified"?"var(--ok)":r.status==="violated"?"var(--err)":"var(--warn)"}">${icon(r.status==="verified"?"check":r.status==="violated"?"alert":"q","sm")}</span><div class="t" style="font-weight:400">${esc(r.title)}</div><span class="w">${stChip(r.status,r.status.replace("_"," "))}</span></div>`).join("")}</div></section>`;
+}
+function jobsTableRows(list,compact){
+  return list.map(j=>{const r=jobResultLine(j);const e=j.expected;
+    return `<tr data-id="job:${esc(j.id)}" class="${S.sel==="job:"+j.id?"sel":""}" tabindex="0"><td class="mono"><b>${esc(j.id)}</b></td>
+    <td><div style="font-weight:500">${esc(j.expert||"—")}</div><div class="faint" style="font-size:12px">${esc(j.symbol||"")} ${esc(j.period||"")}${compact?"":" · "+esc(j.tag||"")}</div></td>
+    ${compact?"":`<td class="num muted" style="white-space:nowrap">${esc((j.window[0]||"?").slice(0,7))} → ${esc((j.window[1]||"?").slice(0,10))}</td>`}
+    <td>${stChip(jobStatusCls(j.status),j.status)}</td>
+    <td class="num" style="font-size:12.5px">${e?`${fmtPct(e.return_pct,1)} / ${e.eq_dd_max_pct??"—"}%`:`<span class="faint" title="${esc(j.expect||"")}">${j.expect?"in note":"—"}</span>`}</td>
+    <td class="num" style="font-size:12.5px">${r?esc(r):j.status==="failed"?`<span class="neg">failed · see details</span>`:"—"}</td>
+    ${compact?"":`<td class="num r">${j.result&&j.result.pf!=null?fmtNum((j.result_on||j.result).pf,2):"—"}</td><td class="num r">${j.result&&j.result.trades!=null?fmtNum((j.result_on||j.result).trades):"—"}</td><td>${verdictChip(j)}</td><td class="muted num" style="white-space:nowrap">${esc(j.started?when(j.started):"—")}</td>`}</tr>`}).join("");
+}
+function verdictChip(j){
+  if(!j.verdict)return '<span class="faint">Not recorded</span>';
+  const v=String(j.verdict),c=/^match/i.test(v)?"matched":/invalid/i.test(v)?"invalid":/worse|does not match|below/i.test(v)?"worse":"none";
+  return `<span class="st ${c}" title="${esc(v)} · ${esc(j.verdict_source||"")}">${c==="none"?esc(clip(v,24)):c}</span>`;
+}
+function jobsCard(){
+  const js=S.data.jobs||[],rank={running:0,queued:1,hold:2,failed:3,done:4};
+  const list=[...js].sort((a,b)=>(rank[a.status]??5)-(rank[b.status]??5)||((b.started||"")>(a.started||"")?1:-1)).slice(0,7);
+  return `<section class="card"><div class="card-h">${icon("beaker")}<h2>Tester jobs</h2><span class="sp"></span><a class="link" href="#/jobs">View all →</a></div>
+    <div class="tbl-wrap"><table class="t"><caption class="sr">Latest tester jobs</caption><thead><tr><th>Job</th><th>Strategy / symbol</th><th>Status</th><th>Expected</th><th>Actual</th></tr></thead><tbody>${jobsTableRows(list,true)}</tbody></table></div></section>`;
+}
+function pageOverview(){
+  return `<div class="page">${kpiCards()}
+    <div class="ov-mid">${graphCard({h:540})}<aside class="card" id="relaypanel">${relayPanel()}</aside></div>
+    <div class="ov-bot">${decisionsCard()}${rulesCard()}${jobsCard()}</div></div>`;
+}
+function pageGraph(){
+  return `<div class="page" style="height:100%"><div class="page-h"><div><h1>Live Graph</h1><p>Every candidate, job, agent, paper, decision and lesson, linked only where the files record a relationship. Double-click a node to open its file or job.</p></div></div>
+    ${graphCard({filters:true,h:Math.max(520,innerHeight-260)})}</div>`;
+}
+
+/* ============================================ agents ============================================ */
+function pageAgents(){
+  const d=S.data;
+  return `<div class="page"><div class="page-h"><div><h1>Agents</h1><p>No agent runs all the time: the relay starts one short run, it hands over with a HANDOFF line. Status comes from the local event logs, not from the roster.</p></div><span class="sp"></span><a class="btn" href="/live" target="_blank" rel="noopener">${icon("ext","sm")}Full live feed</a></div>
+    <div class="ov-mid"><section class="card"><div class="card-h">${icon("bot")}<h2>Roster</h2><span class="sp"></span><span class="faint" style="font-size:12px">models from run-agent.ps1 and .claude/agents</span></div>
+      <div class="tbl-wrap"><table class="t" id="roster"><thead><tr><th>Role</th><th>Model</th><th>Kind</th><th>Now</th><th>Last run</th><th class="r">Runs</th><th>Writes</th></tr></thead><tbody>${rosterRows()}</tbody></table></div></section>
+      <aside class="card" id="relaypanel">${relayPanel()}</aside></div>
+    <div class="split2">
+      <section class="card"><div class="card-h">${icon("activity")}<h2>Live events</h2><span class="sp"></span>
+        <select class="f" id="feedrole" aria-label="Filter by role"><option value="">All roles</option>${(d.agents||[]).filter(a=>a.relay).map(a=>`<option>${esc(a.role)}</option>`).join("")}</select></div>
+        <div class="feed" id="feed"></div></section>
+      <section class="card"><div class="card-h">${icon("gear")}<h2>Owner controls</h2><span class="sp"></span><span class="faint" style="font-size:12px">local server only · each asks first</span></div>
+        <div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="actions"><button class="btn" id="cpause"></button><button class="btn" id="crelease">${icon("reset","sm")}Release Terminal 16 hold</button></div>
+          <div class="actions"><select class="f" id="crole" aria-label="Role to start">${["finder","builder","judge","tester","monitor"].map(r=>`<option>${r}</option>`).join("")}</select><button class="btn" id="cstart">${icon("play","sm")}Start now</button></div>
+          <details><summary style="cursor:pointer;font-weight:500;font-size:13px">Queue a tester job</summary>
+            <form class="qf" id="cqf" style="margin-top:10px">
+              <label>EA<select class="f" name="expert"><option>AurumHydra</option><option>AurumFunded</option></select></label>
+              <label>Symbol<input class="f" name="symbol" value="XAUUSD"></label>
+              <label class="w">Preset<input class="f" name="preset" value="mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set"></label>
+              <label>Period<select class="f" name="period"><option>M15</option><option>M1</option><option>M5</option><option>M30</option><option>H1</option></select></label>
+              <label>Tag<input class="f" name="tag" value="own1"></label>
+              <label>Deposit<input class="f" name="deposit" value="10000" inputmode="numeric"></label>
+              <label>Leverage<input class="f" name="leverage" value="500" inputmode="numeric"></label>
+              <label>Months from<input class="f" name="months_from" placeholder="2025.01"></label>
+              <label>Months to<input class="f" name="months_to" placeholder="${esc(d.holdout.end_month||"2025.09")}"></label>
+              <label>Or from<input class="f" name="from" placeholder="2024.01.01"></label>
+              <label>To<input class="f" name="to" placeholder="2025.09.30"></label>
+              <label class="w">Set (Name=value, …)<input class="f" name="set" placeholder="InpBreakRiskPct=0"></label>
+              <label class="w">What to expect<input class="f" name="expect"></label>
+              <button class="btn pri w" type="submit">Queue job</button>
+            </form>
+            <p class="faint" style="font-size:12px">The server refuses a window that reaches the holdout (${esc(d.holdout.start||"?")}).</p></details>
+          <div class="note">These are the live server's existing controls (POST with the X-Aurum header, 127.0.0.1 only). None of them touches a terminal's EA, an approval or real money.</div>
+        </div></section></div></div>`;
+}
+function rosterRows(){
+  const L=S.live&&S.live.agents||{};
+  return (S.data.agents||[]).map(a=>{const lv=L[a.role];
+    return `<tr data-id="agent:${esc(a.role)}" tabindex="0"><td><b style="font-weight:600">${esc(a.label)}</b></td><td>${esc(cap(a.model||"not set"))}<div class="faint mono" style="font-size:11px">${esc(a.model_source||"")}</div></td><td class="muted">${esc(a.kind)}</td>
+      <td>${lv?stChip(lv.live?"running":"idle",lv.live?"running":"idle"):a.relay?'<span class="faint">stream offline</span>':stChip("idle","on call")}</td>
+      <td class="muted num">${a.last?esc(when(a.last.started))+(a.last.exit?` · exit ${esc(a.last.exit)}`:""):"—"}</td><td class="num r">${a.runs}</td><td class="muted" style="font-size:12px">${esc(a.writes)}</td></tr>`}).join("");
+}
+function renderFeed(){
+  const el=$("#feed");const ec=$("#evcount");if(ec)ec.textContent=S.evCount;if(!el)return;
+  const role=($("#feedrole")||{}).value||"";
+  const items=S.feed.filter(x=>!role||x.role===role).slice(-150);
+  const atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;
+  el.innerHTML=items.length?items.map(x=>`<div class="ev ${x.k==="tool"?"tool":x.k==="done"?"done":""}"><span class="k">${esc(x.k)}<br><span class="faint" style="text-transform:none;font-weight:400">${esc(x.role)}</span></span><span class="x">${esc(x.s)}</span></div>`).join("")
+    :`<div class="empty"><b>No events yet</b>${S.conn==="live"?"Events appear here as an agent run writes them.":"The live stream is "+esc(S.conn)+"."}</div>`;
+  if(atBottom)el.scrollTop=el.scrollHeight;
+}
+function bindAgents(){
+  const fr=$("#feedrole");if(fr)fr.onchange=renderFeed;renderFeed();
+  const pb=$("#cpause");if(!pb)return;
+  const setP=()=>{const p=S.live&&S.live.paused;pb.innerHTML=p?icon("play","sm")+"Resume agents":icon("pause","sm")+"Pause agents";pb.disabled=!S.live||S.conn!=="live"};setP();pb._set=setP;
+  pb.onclick=()=>{const p=S.live&&S.live.paused;confirmDlg(p?"Resume agents?":"Pause agents?",p?"Removes the PAUSE file; the relay starts agents again at its next tick.":"Writes the PAUSE file. No agent starts until resumed; a run already going finishes.",p?"Resume":"Pause",()=>post(p?"/api/resume":"/api/pause"))};
+  $("#crelease").onclick=()=>confirmDlg("Release the Terminal 16 hold?","Runs tools/autopilot/terminal.ps1 -Release, which lets the keeper restart the FTMO demo terminal.","Release",()=>post("/api/release"));
+  $("#cstart").onclick=()=>{const r=$("#crole").value;confirmDlg(`Start ${r} now?`,`Starts one ${esc(r)} run through run-agent.ps1, as the relay does. It waits if another agent is running.`,"Start",()=>post("/api/agent",{role:r}))};
+  $("#cqf").onsubmit=e=>{e.preventDefault();const b=Object.fromEntries(new FormData(e.target));confirmDlg("Queue this tester job?",`${esc(b.expert)} ${esc(b.symbol)} ${esc(b.period)}, preset <span class="mono">${esc(b.preset)}</span>. It is appended to docs/autopilot/queue.json as queued.`,"Queue",()=>post("/api/queue",b))};
+}
+
+/* ============================================ pipeline ============================================ */
+const PB={q:"",status:"all"};
+function pagePipeline(){
+  const d=S.data,pipe=d.pipeline||{steps:[],phases:{}},cands=d.candidates||[];
+  const q=PB.q.toLowerCase();
+  const vis=cands.filter(c=>{const st=candStatus(c);if(PB.status==="active"&&st.stopped)return false;if(PB.status==="stopped"&&!st.stopped)return false;
+    return !q||JSON.stringify([c.id,c.name,c.source,c.summary,c.ea,(c.expected_tester||[])]).toLowerCase().includes(q)});
+  const phases=Object.entries(pipe.phases||{}).filter(([k])=>k!=="A");
+  const col=(title,sub,list,key)=>`<div class="col"><div class="col-h"><div><b>${esc(title)}</b><br><small>${esc(sub)}</small></div><span class="n">${list.length}</span></div><div class="col-b">${list.map(candCard).join("")||`<div class="empty" style="padding:16px 6px;font-size:12px">No candidate here</div>`}</div></div>`;
+  const cols=phases.map(([k,name])=>{const steps=pipe.steps.filter(s=>s.phase===k);const ns=steps.map(s=>s.n);
+    return col(name,`steps ${ns[0]}–${ns[ns.length-1]}`,vis.filter(c=>!candStatus(c).stopped&&ns.includes(stepNum(c.step))),k)}).join("")+col("Stopped / rejected","failed a gate or dropped",vis.filter(c=>candStatus(c).stopped),"x");
+  return `<div class="page"><div class="page-h"><div><h1>Strategy Pipeline</h1><p>Candidates from docs/candidates.json in the phase of the step they reached (docs/pipeline.json). Nothing here promotes a candidate; going live stays with the owner.</p></div><span class="sp"></span>
+      <div class="toolbar"><input class="f" id="pbq" type="search" placeholder="Filter by name, instrument, family…" value="${esc(PB.q)}" aria-label="Filter candidates" style="width:250px">
+      <select class="f" id="pbs" aria-label="Status">${[["all","All"],["active","Active"],["stopped","Stopped / rejected"]].map(([v,l])=>`<option value="${v}"${PB.status===v?" selected":""}>${l}</option>`).join("")}</select></div></div>
+    <section class="card"><div class="card-h">${icon("pipe")}<h2>The 5 steps</h2><span class="sp"></span><span class="faint" style="font-size:12px">count = active candidates at that step</span></div>
+      <div class="card-b" style="display:flex;gap:6px;flex-wrap:wrap">${pipe.steps.map(s=>{const n=cands.filter(c=>stepNum(c.step)===s.n&&!candStatus(c).stopped).length;const sg=stageOfStep(s.n);
+        return `<button class="chip" title="${esc(s.detail)}" data-go="stage:${sg?sg.id:"research"}" style="${n?`border-color:${sg?sg.color:"#3978F6"};color:var(--text)`:""}"><b class="num">${s.n}</b> ${esc(clip(s.name,26))}${n?` <span class="tagx" style="background:${sg?sg.color:"#3978F6"};color:#fff">${n}</span>`:""}${s.n===19?" "+icon("lock","sm"):""}</button>`}).join("")}</div></section>
+    <div class="board">${cols}</div>
+    <section class="card"><div class="card-h">${icon("alert")}<h2>Rejected families</h2><span class="sp"></span><span class="faint" style="font-size:12px">checked by the finder before any new idea</span></div>
+      <div class="tbl-wrap"><table class="t"><thead><tr><th>Family</th><th>Examples</th><th>Why</th></tr></thead><tbody>${(d.rejected_families||[]).map(r=>`<tr style="cursor:default"><td><b style="font-weight:500">${esc(r.family)}</b></td><td class="muted">${esc(r.examples)}</td><td>${esc(r.why)}</td></tr>`).join("")||`<tr><td colspan="3" class="faint">None recorded.</td></tr>`}</tbody></table></div></section></div>`;
+}
+function candCard(c){
+  const st=candStatus(c),t=(c.tester||[])[0],sym=[...new Set([].concat(c.expected_tester||[]).map(e=>e.symbol).filter(Boolean))];
+  return `<div class="ccard ${S.sel==="cand:"+c.id?"sel":""}" data-id="cand:${esc(c.id)}" tabindex="0"><div class="nm">${esc(c.name||c.id)}</div>
+    <div class="meta"><span class="tagx num">step ${esc(c.step??"?")}</span>${stChip(st.cls,st.text)}${sym.map(s=>`<span class="tagx">${esc(s)}</span>`).join("")}</div>
+    ${t?`<div class="ln num">Tester: ${esc(t.symbol||"")} ${esc(t.trades??"?")} trades, PF ${esc(t.profit_factor??"?")}${t.return_pct!=null?", "+fmtPct(t.return_pct):""}</div>`:""}
+    ${st.stopped?`<div class="ln neg">Stopped at step ${esc(c.step)}: ${esc(clip(st.reason,120))}</div>`:c.summary?`<div class="ln">${esc(clip(c.summary,120))}</div>`:""}
+    <div class="ln faint">Next action: not recorded in the ledger</div></div>`;
+}
+function bindPipeline(){
+  const q=$("#pbq");if(!q)return;
+  q.oninput=debounce(e=>{PB.q=e.target.value;rerender("#pbq")},200);
+  $("#pbs").onchange=e=>{PB.status=e.target.value;render()};
+}
+
+/* ============================================ tester jobs ============================================ */
+const JB={status:"all",q:""};
+function pageJobs(){
+  const c=jobCounts(),q=JB.q.toLowerCase();
+  const list=(S.data.jobs||[]).filter(j=>(JB.status==="all"||j.status===JB.status)&&(!q||JSON.stringify([j.id,j.expert,j.symbol,j.preset,j.tag,j.expect,j.note]).toLowerCase().includes(q)));
+  return `<div class="page"><div class="page-h"><div><h1>Tester Jobs</h1><p>docs/autopilot/queue.json with each run's result.json. Figures are historical Strategy Tester results on FTMO data, not account performance.</p></div><span class="sp"></span>
+      <div class="toolbar"><div class="seg" role="group" aria-label="Status">${["all","running","queued","done","failed"].map(s=>`<button data-js="${s}" aria-pressed="${JB.status===s}">${cap(s)}${s!=="all"?` <span class="faint num">${c[s]||0}</span>`:""}</button>`).join("")}</div>
+      <input class="f" id="jbq" type="search" placeholder="Search jobs…" value="${esc(JB.q)}" aria-label="Search jobs" style="width:200px"></div></div>
+    <section class="card"><div class="tbl-wrap" style="max-height:calc(100vh - 230px)"><table class="t"><caption class="sr">Tester jobs</caption><thead><tr><th>Job</th><th>Strategy / symbol</th><th>Data window</th><th>Status</th><th>Expected</th><th>Actual (return / eq DD)</th><th class="r">PF</th><th class="r">Trades</th><th>Verdict</th><th>Started</th></tr></thead>
+      <tbody>${jobsTableRows(list,false)||`<tr><td colspan="10"><div class="empty"><b>No job matches</b></div></td></tr>`}</tbody></table></div></section>
+    <p class="faint" style="font-size:12px;margin:0">Expected figures are shown where the candidate ledger has a structured expectation; otherwise the job's own expect text is in its details. Verdicts show only when queue.json records one.</p></div>`;
+}
+function bindJobs(){
+  $$("[data-js]").forEach(b=>b.onclick=()=>{JB.status=b.dataset.js;render()});
+  const q=$("#jbq");if(q)q.oninput=debounce(e=>{JB.q=e.target.value;rerender("#jbq")},200);
+}
+
+/* ============================================ prop routes ============================================ */
+const BRIEF_ROUTES={ // the project brief's figures (2026-10-18), shown beside the file, never merged into it
+  "FTMO 2-Step":"Day stop and final stop of the challenge",
+  "FundedNext Stellar Instant":"4.5% under the highest day-start equity, 3% day stop, size 0.3",
+  "Instant Funding PRO":"-8.5% until +5%, then -3.5% for good",
+};
+function routeJobs(r){
+  const key=/FundedNext/i.test(r.route)?/FundedNext/i:/Instant Funding/i.test(r.route)?/InstantFunding/i:/1-Step/i.test(r.route)?/1step/i:/FTMO 2-Step/i.test(r.route)?/FTMO_(phase|funded)/i:null;
+  return key?(S.data.jobs||[]).filter(j=>key.test(j.preset||"")):[];
+}
+function pageRoutes(){
+  const p=S.data.prop_routes;
+  if(!p)return `<div class="page"><div class="card"><div class="empty"><b>docs/prop_routes.json not found</b></div></div></div>`;
+  const g=p.guard||{};
+  return `<div class="page"><div class="page-h"><div><h1>Prop Routes</h1><p>${esc(p.about||"")}</p></div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">${(p.routes||[]).map((r,i)=>{const js=routeJobs(r),chosen=/chosen/i.test(r.route);const bk=Object.keys(BRIEF_ROUTES).find(k=>r.route.startsWith(k));
+      return `<section class="card" style="${chosen?"border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-bg)":""}"><div class="card-h">${icon("route")}<h2>${esc(r.route)}</h2><span class="sp"></span>${chosen?stChip("active","chosen"):""}</div>
+      <div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+        ${kv([["Firm rules (file)",r.rules],["Simulated median to first payout",r.median_months!=null?r.median_months+" months":"—"],["Alternative",r.alt_months!=null?`${r.alt_months} months ${r.alt_if||""}`:null],["Preset",raw(`<span class="mono">${esc(r.preset||"—")}</span>`)],["Open question",r.open]],"stack")}
+        ${bk&&BRIEF_ROUTES[bk]?`<div class="note"><b>Project brief (guard the robot keeps):</b> ${esc(BRIEF_ROUTES[bk])}. The file above lists the firm's own rules; the two are shown side by side and not reconciled here. Source of record for this page: docs/prop_routes.json.</div>`:""}
+        <div><div class="faint" style="font-size:12px;margin-bottom:6px">Related tester jobs (by preset)</div>${js.length?js.map(j=>`<button class="chip" data-go="job:${esc(j.id)}" style="margin:0 6px 6px 0">${esc(j.id)} ${stChip(jobStatusCls(j.status),j.status)}</button>`).join(""):'<span class="faint" style="font-size:12.5px">None in queue.json</span>'}</div>
+      </div></section>`}).join("")}</div>
+    <div class="split2"><section class="card"><div class="card-h">${icon("shield")}<h2>AurumFunded guard (file)</h2></div><div class="card-b">${kv([["Day stop",g.day_stop_pct!=null?g.day_stop_pct+"%":null],["Final stop",g.final_stop_pct!=null?g.final_stop_pct+"%":null],["Shrink size within",g.shrink_within_pct!=null?g.shrink_within_pct+"% of the limit":null],["Firm daily limit",g.firm_daily_pct!=null?g.firm_daily_pct+"%":null],["Firm max loss",g.firm_max_pct!=null?g.firm_max_pct+"%":null]])}</div></section>
+      <section class="card"><div class="card-h">${icon("beaker")}<h2>Earlier tester evidence</h2></div><div class="list">${(p.tester||[]).map(t=>`<div class="row" style="cursor:default"><div><div class="t">${esc(t.what)}</div><div class="d mono">${esc(t.run)}</div></div></div>`).join("")||'<div class="empty">None recorded</div>'}</div></section></div>
+    <p class="faint" style="font-size:12px;margin:0">Firm rules were read on the firms' pages on the dates the file states; check again before buying. This page does not verify current provider terms.</p></div>`;
+}
+
+/* ============================================ decision log ============================================ */
+const DL={role:"",kind:"",range:"all",q:""};
+function pageDecisions(){
+  const d=S.data,all=(d.decisions||[]).filter(x=>!x.bad_line),bad=(d.decisions||[]).filter(x=>x.bad_line);
+  const roles=[...new Set(all.map(x=>x.role))],kinds=[...new Set(all.map(x=>x.kind))];
+  const cut=DL.range==="24h"?Date.now()-864e5:DL.range==="7d"?Date.now()-6048e5:0,q=DL.q.toLowerCase();
+  const list=all.filter(x=>(!DL.role||x.role===DL.role)&&(!DL.kind||x.kind===DL.kind)&&(!cut||new Date(x.when)>=cut)&&(!q||JSON.stringify(x).toLowerCase().includes(q)));
+  const qs=list.filter(x=>x.kind==="question"),rest=list.filter(x=>x.kind!=="question");
+  const L=d.lessons||{items:[]},lim=L.limit||40;
+  const docs=d.docs||{};
+  const row=x=>`<div class="row" data-go="decision:${x._line}" tabindex="0"><div class="ic tone-${x.kind==="question"?"warn":x.kind==="lesson"?"gold":"ok"}">${icon(x.kind==="question"?"q":x.kind==="lesson"?"lesson":"check","sm")}</div>
+    <div style="min-width:0"><div class="t">${esc(x.decision)}</div><div class="d">${esc(x.why||"")}</div><div class="faint mono" style="font-size:11.5px;margin-top:3px">${esc(x.evidence||"")}</div></div>
+    <div class="w">${esc(when(x.when))}<br><span class="tagx">${esc(x.role)}</span> <span class="tagx">${esc(x.kind)}</span></div></div>`;
+  return `<div class="page"><div class="page-h"><div><h1>Decision Log</h1><p>docs/memory/decisions.jsonl, newest first. Append-only: written through tools/memory.py decide; nothing here edits it.</p></div><span class="sp"></span>
+    <div class="toolbar"><input class="f" id="dlq" type="search" placeholder="Search decisions…" value="${esc(DL.q)}" aria-label="Search decisions" style="width:200px">
+      <select class="f" id="dlr" aria-label="Role"><option value="">All roles</option>${roles.map(r=>`<option${DL.role===r?" selected":""}>${esc(r)}</option>`).join("")}</select>
+      <select class="f" id="dlk" aria-label="Kind"><option value="">All kinds</option>${kinds.map(r=>`<option${DL.kind===r?" selected":""}>${esc(r)}</option>`).join("")}</select>
+      <select class="f" id="dlt" aria-label="Time range">${[["all","All time"],["24h","Last 24 h"],["7d","Last 7 days"]].map(([v,l])=>`<option value="${v}"${DL.range===v?" selected":""}>${l}</option>`).join("")}</select></div></div>
+    ${bad.length?`<div class="note err">${bad.length} line(s) of decisions.jsonl are not valid JSON (lines ${bad.map(b=>b.bad_line).join(", ")}).</div>`:""}
+    <div class="ov-mid"><div style="display:flex;flex-direction:column;gap:16px">
+      ${qs.length?`<section class="card" style="border-color:#F1DDB5"><div class="card-h">${icon("q")}<h2>Open questions for the owner</h2><span class="sp"></span><span class="tagx">${qs.length}</span></div><div class="list">${qs.map(row).join("")}</div></section>`:""}
+      <section class="card"><div class="card-h">${icon("log")}<h2>Decisions</h2><span class="sp"></span><span class="faint num" style="font-size:12px">${rest.length} shown</span></div><div class="list">${rest.map(row).join("")||`<div class="empty"><b>Nothing matches</b></div>`}</div></section></div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <section class="card"><div class="card-h">${icon("lesson")}<h2>Lessons</h2><span class="sp"></span><span class="num" style="font-size:13px;font-weight:600">${L.items.length} / ${lim}</span></div>
+          <div class="card-b" style="padding-bottom:6px"><div class="bar-h"><i style="width:${Math.min(100,L.items.length/lim*100)}%"></i></div></div>
+          <div class="list">${L.items.map(l=>`<div class="row" data-go="lesson:${l.n}" tabindex="0"><span class="tagx num">${l.n}</span><div style="min-width:0"><div class="t">${esc(l.title)}</div><div class="d">${esc(l.section)} · ${esc(l.date||"")}</div></div></div>`).join("")}</div></section>
+        <section class="card"><div class="card-h">${icon("doc")}<h2>Write-ups</h2></div><div class="list">
+          ${[["Ideas","ideas"],["Gates","gates"],["Fidelity","fidelity"]].map(([lab,k])=>`<div style="padding:8px 16px 2px" class="faint"><b style="font-size:12px">${lab}</b></div>`+((docs[k]||[]).map(x=>`<div class="row" data-doc="${esc(x.path)}" tabindex="0" style="padding:7px 16px"><div style="min-width:0"><div class="t">${esc(clip(x.title,70))}</div><div class="d mono">${esc(x.path)}</div></div><div class="w">${esc(when(x.mtime))}</div></div>`).join("")||`<div class="faint" style="padding:4px 16px 8px;font-size:12.5px">None yet (docs/${k}/ is empty).</div>`)).join("")}
+        </div></section>
+        <section class="card card-b">${kv([["Trials logged (docs/trials.jsonl)",d.trials?fmtNum(d.trials.counted)+" in "+d.trials.entries+" entries":"not found"],["Before the log (pipeline.json, step 9)","47"]])}</section>
+      </div></div></div>`;
+}
+function bindDecisions(){
+  const q=$("#dlq");if(!q)return;q.oninput=debounce(e=>{DL.q=e.target.value;rerender("#dlq")},200);
+  $("#dlr").onchange=e=>{DL.role=e.target.value;render()};$("#dlk").onchange=e=>{DL.kind=e.target.value;render()};$("#dlt").onchange=e=>{DL.range=e.target.value;render()};
+}
+
+/* ============================================ approvals, rules ============================================ */
+function pageApprovals(){
+  const ap=S.data.approvals||[];
+  return `<div class="page"><div class="page-h"><div><h1>Approvals</h1><p>docs/autopilot/approvals.json. Agents act only on approved items and add new ones as pending.</p></div></div>
+    <div class="note" style="display:flex;gap:10px;align-items:flex-start">${icon("lock","sm")}<div><b>Read-only by design.</b> The owner approves in chat or by editing approvals.json. Approval to change the demo (for example a3) is not approval for real money; only a2 covers step 19, and nothing on this page can set it.</div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">${ap.map(a=>`<section class="card" style="${a.status==="pending"?"border-color:#F1DDB5":""}"><div class="card-h"><span class="tagx mono">${esc(a.id)}</span><h2 style="flex:1">${esc(clip(a.what,80))}</h2>${stChip(a.status)}</div>
+      <div class="card-b" style="display:flex;flex-direction:column;gap:10px"><p style="margin:0;font-size:13px;line-height:1.55">${esc(a.what)}</p>
+      ${kv([["Asked",a.asked],["Approved",a.approved],["Applied",a.applied]])}${a.note?`<details><summary style="cursor:pointer;font-size:12.5px;font-weight:500">Note</summary><p style="font-size:12.5px;line-height:1.55;color:var(--text2)">${esc(a.note)}</p></details>`:""}
+      <div class="actions"><button class="btn" data-go="approval:${esc(a.id)}">${icon("graph","sm")}Details</button></div></div></section>`).join("")||`<div class="card"><div class="empty"><b>No approvals recorded</b></div></div>`}</div></div>`;
+}
+function pageRules(){
+  const R=S.data.rules||[],cnt=s=>R.filter(r=>r.status===s).length;
+  return `<div class="page"><div class="page-h"><div><h1>Rules</h1><p>The fixed rules from docs/memory/mission.md. A green tick needs a check that ran against the files on this PC; rules the page cannot check say so.</p></div><span class="sp"></span>
+    <div class="toolbar">${stChip("verified",cnt("verified")+" verified")}${stChip("violated",cnt("violated")+" violated")}${stChip("not_checked",cnt("not_checked")+" not checked")}${cnt("unknown")?stChip("unknown",cnt("unknown")+" unknown"):""}</div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(380px,1fr))">${R.map(r=>`<section class="card"><div class="card-h"><span style="color:${r.status==="verified"?"var(--ok)":r.status==="violated"?"var(--err)":"var(--warn)"}">${icon(r.status==="verified"?"check":r.status==="violated"?"alert":"q")}</span><h2 style="flex:1">${esc(r.title)}</h2>${stChip(r.status,r.status.replace("_"," "))}</div>
+      <div class="card-b" style="display:flex;flex-direction:column;gap:8px"><p class="muted" style="margin:0;font-size:13px">${esc(r.detail||"")}</p>
+      <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.55">${r.evidence.map(e=>`<li>${esc(e)}</li>`).join("")}</ul>
+      ${(r.history||[]).length?`<details><summary style="cursor:pointer;font-size:12.5px;font-weight:500">${r.history.length} earlier job(s) to review</summary><p class="faint" style="font-size:12px;margin:6px 0">${esc(r.history_note||"")}</p><ul style="margin:0;padding-left:18px;font-size:12.5px">${r.history.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></details>`:""}
+      <div class="faint mono" style="font-size:11px">${esc(r.source||"")}</div></div></section>`).join("")}</div></div>`;
+}
+
+/* ============================================ products ============================================ */
+function pageProduct(id){
+  const d=S.data;
+  if(id==="hydra"){
+    const hy=S.M.hydra,js=(d.jobs||[]).filter(j=>j.expert==="AurumHydra"),next=js.find(j=>j.status==="queued"||j.status==="running");
+    const les=((d.lessons||{}).items||[]).filter(l=>/5x goal/i.test(l.title));
+    return `<div class="page"><div class="page-h"><div><h1>AurumHydra</h1><p>Goal: turn a fresh $100 deposit into $500 within one calendar month. Measure: share of fresh-deposit months that reach the target, with the chance of ruin beside it.</p></div></div>
+      <div class="grid kpis">
+        <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Months at 5x (latest series)</div><div class="v num">${hy?`${hy.hit} / ${hy.n}`:"—"}</div><div class="s">${hy?`${esc(hy.jobs.join(", "))} · ${esc(hy.preset.split("/").pop())}`:"No finished series"}</div></div></div>
+        <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Median month multiple</div><div class="v num">${hy?fmtNum(hy.median,2)+"x":"—"}</div><div class="s">Same series, fresh deposit each month</div></div></div>
+        <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Months below 0.5x</div><div class="v num">${hy?hy.rows.filter(r=>r.mult<0.5).length:"—"}</div><div class="s">Closest recorded proxy; P(ruin) itself is not in the files</div></div></div>
+        <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Next job</div><div class="v">${next?esc(next.id):"—"}</div><div class="s">${next?esc(next.status)+" · "+esc(clip(next.preset.split("/").pop(),40)):"Nothing queued"}</div></div></div></div>
+      <div class="note warn"><b>Research finding, not a forecast.</b> In the cited Strategy Tester series ${hy?`${hy.hit} of ${hy.n} months`:"the months"} reached 5x against the model's expectation, and the 5x mode was not released. ${les.map(l=>esc(l.title)).join(" ")}</div>
+      <section class="card"><div class="card-h">${icon("trophy")}<h2>Fresh-deposit months</h2><span class="sp"></span><span class="faint" style="font-size:12px">historical Strategy Tester</span></div><div class="card-b">${hy?monthBars(hy.rows,5):'<div class="empty">No month series</div>'}</div></section>
+      <section class="card"><div class="card-h">${icon("beaker")}<h2>AurumHydra tester jobs</h2></div><div class="tbl-wrap"><table class="t"><thead><tr><th>Job</th><th>Strategy / symbol</th><th>Data window</th><th>Status</th><th>Expected</th><th>Actual</th><th class="r">PF</th><th class="r">Trades</th><th>Verdict</th><th>Started</th></tr></thead><tbody>${jobsTableRows(js,false)}</tbody></table></div></section></div>`;
+  }
+  const js=(d.jobs||[]).filter(j=>j.expert==="AurumFunded"),run=js.find(j=>j.status==="running");
+  const j3=js.find(j=>j.id==="j3"),last=latestJob("AurumFunded",j=>j.status==="done"&&j.result&&j.result.return_pct!=null);
+  const p=d.prop_routes||{},g=p.guard||{},chosen=(p.routes||[]).find(r=>/chosen/i.test(r.route));
+  const dm=d.demo||{days:[]};
+  return `<div class="page"><div class="page-h"><div><h1>AurumFunded</h1><p>Goal: pass a prop-firm challenge and keep the funded account. Measures: chance to pass, months to the first payout, chance of losing the account.</p></div></div>
+    <div class="grid kpis">
+      <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Chance to pass</div><div class="v">—</div><div class="s">Not recorded in the files</div></div></div>
+      <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Months to first payout</div><div class="v num">${chosen&&chosen.median_months!=null?chosen.median_months:"—"}</div><div class="s">Simulated median, ${esc(chosen?chosen.route:"no chosen route")} (prop_routes.json)</div></div></div>
+      <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Chance of losing the account</div><div class="v">—</div><div class="s">Not recorded in the files</div></div></div>
+      <div class="card kpi" style="cursor:default"><div class="body"><div class="lb">Tester now</div><div class="v">${run?esc(run.id):"—"}</div><div class="s">${run?esc(clip(run.preset.split("/").pop(),40)):"No AurumFunded job running"}</div></div></div></div>
+    <div class="split2">
+      <section class="card"><div class="card-h">${icon("activity")}<h2>FTMO demo</h2><span class="sp"></span><span class="faint" style="font-size:12px">clean test from 2026-10-19</span></div><div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+        ${dm.structured_equity?"":`<div class="note">docs/demo_log.md has no structured equity series yet, so no equity chart is drawn. Daily notes are listed below; the day-stop (${g.day_stop_pct??"?"}%) and final-stop (${g.final_stop_pct??"?"}%) lines will sit on the chart once equity is logged.</div>`}
+        ${dm.structured_equity?lineChart([{name:"demo equity",color:"#0EAA91",pts:dm.days.filter(x=>x.equity!=null).map(x=>[x.date,x.equity])}],{h:200,label:"Demo equity"}):""}
+        ${dm.days.length?dm.days.slice().reverse().map(x=>`<div><b style="font-size:13px">${esc(x.date)}</b> <span class="faint">${esc(x.label)}</span><ul style="margin:4px 0 0;padding-left:18px;font-size:12.5px;line-height:1.55">${x.lines.map(l=>`<li>${esc(l)}</li>`).join("")}</ul></div>`).join(""):'<div class="empty"><b>No demo days logged</b></div>'}
+        <p class="faint" style="font-size:12px;margin:0">Demo log last written ${esc(when((d.sources["docs/demo_log.md"]||{}).mtime))}. The page does not connect to the demo terminal.</p></div></section>
+      <section class="card"><div class="card-h">${icon("shield")}<h2>Risk rules and route</h2></div><div class="card-b">${kv([["Chosen route",p.chosen],["Day stop (guard)",g.day_stop_pct!=null?g.day_stop_pct+"%":null],["Final stop (guard)",g.final_stop_pct!=null?g.final_stop_pct+"%":null],["Firm daily / max",g.firm_daily_pct!=null?`${g.firm_daily_pct}% / ${g.firm_max_pct}%`:null],["Legs on in the demo",((d.approvals||[]).find(a=>a.id==="a3")||{}).status==="applied"?"Yes, approval a3 applied "+(((d.approvals||[]).find(a=>a.id==="a3")||{}).applied||""):"Not applied"]])}
+        <div class="actions" style="margin-top:12px"><a class="btn" href="#/routes">${icon("route","sm")}All routes</a></div></div></section></div>
+    <section class="card"><div class="card-h">${icon("beaker")}<h2>Tester results</h2><span class="sp"></span><span class="faint" style="font-size:12px">historical Strategy Tester, FTMO data</span></div>
+      <div class="card-b">${[j3,last].filter((x,i,a)=>x&&a.indexOf(x)===i).map(j=>`<div style="margin-bottom:8px"><button class="chip" data-go="job:${esc(j.id)}">${esc(j.id)}</button> <span class="num" style="font-size:13px">${esc(jobResultLine(j)||"—")}</span> <span class="faint" style="font-size:12px">· data ${esc(j.window[0]||"?")} → ${esc(j.window[1]||"?")}</span></div>`).join("")||"—"}</div>
+      <div class="tbl-wrap"><table class="t"><thead><tr><th>Job</th><th>Strategy / symbol</th><th>Data window</th><th>Status</th><th>Expected</th><th>Actual</th><th class="r">PF</th><th class="r">Trades</th><th>Verdict</th><th>Started</th></tr></thead><tbody>${jobsTableRows(js,false)}</tbody></table></div></section></div>`;
+}
+
+/* ============================================ settings ============================================ */
+function pageSettings(){
+  const d=S.data,src=d.sources||{};
+  return `<div class="page"><div class="page-h"><div><h1>Settings</h1><p>Data sources, connection and display preferences. Preferences are kept in this browser only.</p></div></div>
+    <div class="split2"><section class="card"><div class="card-h">${icon("db")}<h2>Data sources</h2><span class="sp"></span><span class="faint" style="font-size:12px">read ${esc(when(d.generated))}</span></div>
+      <div class="tbl-wrap"><table class="t"><thead><tr><th>File</th><th>Status</th><th>Last modified</th></tr></thead><tbody>${Object.entries(src).map(([k,v])=>`<tr data-doc="${k.startsWith("docs/")?esc(k):""}"><td class="mono">${esc(k)}</td><td>${v.exists?stChip("done","found"):stChip("failed","missing")}</td><td class="muted num">${esc(v.mtime?when(v.mtime)+" · "+ago(v.mtime):"—")}</td></tr>`).join("")}</tbody></table></div></section>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <section class="card"><div class="card-h">${icon("activity")}<h2>Connection</h2></div><div class="card-b">${kv([["Live stream (/stream)",S.conn],["Last state",S.lastState?ago(new Date(S.lastState).toISOString()):"never"],["Research data (/api/research)",S.dataErr?"error: "+S.dataErr:"ok"],["Last read",S.lastData?ago(new Date(S.lastData).toISOString()):"never"],["Local agent logs",d.local_logs?"found":"not found (the page is not on the trading PC)"],["Holdout from",d.holdout.start],["Last month agents may test",d.holdout.end_month]])}</div></section>
+        <section class="card"><div class="card-h">${icon("gear")}<h2>Display</h2></div><div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="prm" ${store("reduce")?"checked":""}> Reduce motion (also follows the system setting)</label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="pcol" ${store("collapsed")?"checked":""}> Collapse the sidebar</label>
+          <div class="actions"><a class="btn" href="/live" target="_blank" rel="noopener">${icon("ext","sm")}Original agent feed (/live)</a><button class="btn" id="preset">${icon("reset","sm")}Reset graph layout and filters</button></div></div></section>
+        <section class="card card-b"><p style="margin:0;font-size:12.5px;line-height:1.6" class="muted">Endpoints used: <span class="mono">/api/research</span>, <span class="mono">/api/job</span>, <span class="mono">/api/doc</span> (read-only, tools/research_api.py), <span class="mono">/api/state</span> and <span class="mono">/stream</span> (relay), and the existing owner POSTs on the Agents page. The server binds to 127.0.0.1 and answers the data endpoints only for a local Host header.</p></section>
+      </div></div></div>`;
+}
+function bindSettings(){
+  const a=$("#prm");if(!a)return;
+  a.onchange=e=>{store("reduce",e.target.checked);document.documentElement.classList.toggle("reduce",e.target.checked)};
+  $("#pcol").onchange=e=>{store("collapsed",e.target.checked);$("#app").classList.toggle("collapsed",e.target.checked)};
+  $("#preset").onclick=()=>{G.pos={graph:{},workflow:{}};G.view={graph:null,workflow:null};S.gf={types:null,status:"all",q:"",hist:true};store("gtypes",null);toast("Graph layout and filters reset","ok")};
+  $$("tr[data-doc]").forEach(tr=>{if(tr.dataset.doc)tr.onclick=()=>openDoc(tr.dataset.doc)});
+}
+
+/* ============================================ shell, router, palette ============================================ */
+function renderNav(){
+  const pend=S.data?(S.data.approvals||[]).filter(a=>a.status==="pending").length:0;
+  $("#nav").innerHTML=PAGES.map(([id,label,ic])=>`<a href="#/${id}" class="${S.page===id||(S.page==="product"&&id==="overview")?"on":""}" ${S.page===id?'aria-current="page"':""} title="${esc(label)}">${icon(ic)}<span>${esc(label)}</span>${id==="approvals"&&pend?`<b class="cnt" aria-label="${pend} pending">${pend}</b>`:""}</a>`).join("");
+}
+function renderTop(){
+  const c=$("#conn"),stale=S.lastState&&Date.now()-S.lastState>15000;
+  const st=S.conn==="live"&&!stale?"live":S.conn==="connecting"?"":"bad";
+  c.className="pill conn "+st;
+  c.querySelector(".t").textContent=S.conn==="live"&&!stale?"Live":S.conn==="connecting"?"Connecting":stale?"Stale":"Disconnected";
+  c.title=`Stream: ${S.conn}${S.lastState?" · last update "+ago(new Date(S.lastState).toISOString()):""}${S.dataErr?" · data: "+S.dataErr:""}`;
+  const b=$("#belln");b.textContent=S.unseen;b.classList.toggle("hide",!S.unseen);
+}
+function renderLive(){
+  renderTop();
+  const rp=$("#relaypanel");if(rp&&S.data){rp.innerHTML=relayPanel();bindGo(rp)}
+  const ro=$("#roster tbody");if(ro&&S.data){ro.innerHTML=rosterRows();ro.querySelectorAll("tr[data-id]").forEach(tr=>tr.onclick=()=>select(tr.dataset.id))}
+  const pb=$("#cpause");if(pb&&pb._set)pb._set();
+  if(S.M&&S.data){const sig=Object.entries((S.live&&S.live.agents)||{}).map(([r,a])=>r+a.live).join();
+    if(sig!==S._liveSig){S._liveSig=sig;S.M=buildModel(S.data);if($("#gsvg")&&S.gmode!=="list")renderGraphSVG()}}
+}
+function bindGo(root){
+  root.querySelectorAll("[data-go]").forEach(b=>{b.onclick=()=>select(b.dataset.go);if(!b.matches("button,a"))b.onkeydown=e=>{if(e.key==="Enter")select(b.dataset.go)}});
+  root.querySelectorAll("[data-doc]").forEach(b=>{if(b.closest(".insp"))return;b.onclick=()=>openDoc(b.dataset.doc);b.onkeydown=e=>{if(e.key==="Enter")openDoc(b.dataset.doc)}});
+  root.querySelectorAll("table.t tr[data-id]").forEach(tr=>{tr.onclick=()=>select(tr.dataset.id);tr.onkeydown=e=>{if(e.key==="Enter")select(tr.dataset.id)}});
+  root.querySelectorAll(".ccard[data-id]").forEach(c=>{c.onclick=()=>select(c.dataset.id);c.onkeydown=e=>{if(e.key==="Enter")select(c.dataset.id)}});
+}
+function parseHash(){
+  const h=location.hash.replace(/^#\/?/,"")||"overview",[path,qs]=h.split("?"),parts=path.split("/");
+  const q=Object.fromEntries(new URLSearchParams(qs||""));
+  return {page:parts[0],arg:parts[1],q};
+}
+function rerender(focusSel){const el=$(focusSel),pos=el?el.selectionStart:null;render();const n=$(focusSel);if(n){n.focus();if(pos!=null)try{n.setSelectionRange(pos,pos)}catch(e){}}}
+function render(){
+  const r=parseHash();S.page=PAGES.some(p=>p[0]===r.page)||r.page==="product"?r.page:"overview";S.route=r;
+  renderNav();renderTop();
+  const label=S.page==="product"?(r.arg==="hydra"?"AurumHydra":"AurumFunded"):(PAGES.find(p=>p[0]===S.page)||[,"Overview"])[1];
+  $("#crumb").innerHTML=`<i class="home" style="font-style:normal">AURUM</i> <span>/ Research Control /</span> ${esc(label)}`;
+  document.title=label+" · Aurum Research Control";
+  const c=$("#content");
+  if(!S.data){c.innerHTML=S.dataErr?`<div class="page">${errorBox()}</div>`:`<div class="page">${loading()}${loading()}</div>`;return}
+  const scroll=c.scrollTop;
+  if(S._lastPage&&S._lastPage!==S.page&&!r.q.sel&&$("#insp").classList.contains("on"))closeInspector();
+  const fn={overview:pageOverview,graph:pageGraph,agents:pageAgents,pipeline:pagePipeline,jobs:pageJobs,routes:pageRoutes,decisions:pageDecisions,approvals:pageApprovals,rules:pageRules,settings:pageSettings}[S.page];
+  c.innerHTML=S.page==="product"?pageProduct(r.arg):fn();
+  if(S._lastPage===S.page)c.scrollTop=scroll;else c.scrollTop=0;S._lastPage=S.page;
+  bindGo(c);bindCharts(c);
+  if($("#gcard"))mountGraph();
+  ({agents:bindAgents,pipeline:bindPipeline,jobs:bindJobs,decisions:bindDecisions,settings:bindSettings}[S.page]||(()=>{}))();
+  if(r.q.sel&&S.M.nodes.has(r.q.sel)&&S.sel!==r.q.sel){select(r.q.sel);history.replaceState(null,"","#/"+r.page)}
+  else if(S.sel&&$("#insp").classList.contains("on")&&!S.sel.startsWith("job:"))openInspector(S.sel);
+}
+function palette(){
+  const items=[...PAGES.map(([id,l,ic])=>({t:l,sub:"page",ic,go:()=>location.hash="#/"+id})),
+    {t:"AurumHydra",sub:"product",ic:"hex",go:()=>location.hash="#/product/hydra"},{t:"AurumFunded",sub:"product",ic:"hex",go:()=>location.hash="#/product/funded"},
+    ...(S.M?[...S.M.nodes.values()].map(n=>({t:n.full||n.label,sub:TYPES[n.type].label+(n.stText?" · "+n.stText:""),ic:n.icon||TYPES[n.type].icon,go:()=>select(n.id)})):[])];
+  const m=modal("Search",`<div class="palette" style="margin:-16px -20px"><input id="pq" placeholder="Search pages, candidates, jobs, agents, papers, decisions…" aria-label="Search" autocomplete="off"><div class="res" id="pres" role="listbox"></div></div>`,{noHead:true,cls:"palette"});
+  const inp=$("#pq",m.el),res=$("#pres",m.el);let cur=0,shown=[];
+  const draw=()=>{const q=inp.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    shown=items.filter(i=>q.every(w=>(i.t+" "+i.sub).toLowerCase().includes(w))).slice(0,40);cur=Math.min(cur,Math.max(0,shown.length-1));
+    res.innerHTML=shown.map((i,k)=>`<div class="it ${k===cur?"on":""}" role="option" aria-selected="${k===cur}" data-k="${k}">${icon(i.ic,"sm")}<span>${esc(clip(i.t,80))}</span><small>${esc(clip(i.sub,40))}</small></div>`).join("")||`<div class="empty">No match</div>`;
+    res.querySelectorAll(".it").forEach(el=>el.onclick=()=>{m.close();shown[+el.dataset.k].go()})};
+  inp.oninput=()=>{cur=0;draw()};
+  inp.onkeydown=e=>{if(e.key==="ArrowDown"){cur=Math.min(cur+1,shown.length-1);draw();e.preventDefault()}else if(e.key==="ArrowUp"){cur=Math.max(cur-1,0);draw();e.preventDefault()}
+    else if(e.key==="Enter"&&shown[cur]){m.close();shown[cur].go()}};
+  draw();inp.focus();
+}
+function init(){
+  if(store("reduce"))document.documentElement.classList.add("reduce");
+  if(store("collapsed"))$("#app").classList.add("collapsed");
+  $("#collapse").onclick=()=>{const c=$("#app").classList.toggle("collapsed");store("collapsed",c);setTimeout(()=>{if(G.view[S.gmode])fitView()},220)};
+  $("#menu").onclick=()=>$("#app").classList.toggle("drawer");
+  $("#nav").addEventListener("click",()=>$("#app").classList.remove("drawer"));
+  document.addEventListener("click",e=>{const app=$("#app");if(app.classList.contains("drawer")&&!e.target.closest(".side")&&!e.target.closest("#menu"))app.classList.remove("drawer")});
+  $("#searchbtn").onclick=palette;
+  $("#bell").onclick=e=>{e.stopPropagation();const p=$("#bellpop");p.classList.toggle("hide");S.unseen=0;renderTop();
+    p.innerHTML=`<div class="card-h"><h2>Changes since this page opened</h2></div><div class="list">${S.changes.map((c,i)=>`<div class="row" data-ch="${i}"><div style="min-width:0"><div class="t">${esc(c.t)}</div><div class="d">${esc(c.s)}</div></div><div class="w">${esc(ago(c.at))}</div></div>`).join("")||`<div class="empty">No change seen yet. Job status changes, new decisions and approval changes show here.</div>`}</div>`;
+    p.querySelectorAll("[data-ch]").forEach(r=>r.onclick=()=>{p.classList.add("hide");select(S.changes[+r.dataset.ch].go)})};
+  document.addEventListener("click",e=>{if(!e.target.closest("#bellpop")&&!e.target.closest("#bell"))$("#bellpop").classList.add("hide")});
+  document.addEventListener("keydown",e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();palette()}
+    else if(e.key==="/"&&!e.target.closest("input,textarea,select")){e.preventDefault();palette()}
+    else if(e.key==="Escape"&&!$(".scrim")){if($("#insp").classList.contains("on"))closeInspector();$("#app").classList.remove("drawer")}
+  });
+  window.addEventListener("hashchange",()=>{$("#app").classList.remove("drawer");render()});
+  setInterval(()=>{$("#clock").textContent=new Date().toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false});
+    const nt=$("#nexttick"),rel=(S.live&&S.live.relay)||(S.data&&S.data.relay);if(nt&&rel&&rel.due)nt.textContent=tickText(rel.due);renderTop()},1000);
+  render();loadResearch();connect();
+  setInterval(()=>loadResearch(),15000);
+}
+init();
+</script>
+</body>
+</html>

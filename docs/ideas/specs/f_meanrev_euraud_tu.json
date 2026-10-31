@@ -1,0 +1,21 @@
+{
+  "id": "f_meanrev_euraud_tu",
+  "title": "meanrev on EURAUD when trend up",
+  "source": "spec factory grid: z-score mean reversion, the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "EURAUD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "meanrev",
+  "when": {
+    "trend": "up"
+  },
+  "made": "2026-10-25",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-25T11:00:54"
+}

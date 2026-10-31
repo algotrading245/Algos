@@ -1,0 +1,246 @@
+{
+ "when": "2026-10-31T10:00:42",
+ "ends": "2025-10-10",
+ "book_sharpe_2018": 3.11,
+ "legs": [
+  {
+   "leg": "quartet",
+   "markets": [
+    "gold"
+   ],
+   "style": "seasonal session",
+   "horizon": "intraday",
+   "sharpe_2018": 2.36,
+   "weight_now": 0.032,
+   "corr_rest": 0.02,
+   "book_without": 2.61
+  },
+  {
+   "leg": "grid",
+   "markets": [
+    "aud/cad"
+   ],
+   "style": "mean reversion",
+   "horizon": "days",
+   "sharpe_2018": 0.75,
+   "weight_now": 0.09,
+   "corr_rest": 0.01,
+   "book_without": 3.18
+  },
+  {
+   "leg": "hold",
+   "markets": [
+    "gold"
+   ],
+   "style": "trend",
+   "horizon": "weeks+",
+   "sharpe_2018": 0.62,
+   "weight_now": 0.055,
+   "corr_rest": -0.05,
+   "book_without": 3.05
+  },
+  {
+   "leg": "fix",
+   "markets": [
+    "dollar pairs"
+   ],
+   "style": "calendar / flow",
+   "horizon": "intraday",
+   "sharpe_2018": 1.41,
+   "weight_now": 0.113,
+   "corr_rest": 0.1,
+   "book_without": 3.14
+  },
+  {
+   "leg": "cross",
+   "markets": [
+    "yen crosses",
+    "dollar pairs"
+   ],
+   "style": "calendar / flow",
+   "horizon": "intraday",
+   "sharpe_2018": 1.24,
+   "weight_now": 0.091,
+   "corr_rest": 0.18,
+   "book_without": 3.21
+  },
+  {
+   "leg": "fall",
+   "markets": [
+    "dollar pairs"
+   ],
+   "style": "cross-asset reaction",
+   "horizon": "intraday",
+   "sharpe_2018": 1.08,
+   "weight_now": 0.122,
+   "corr_rest": -0.04,
+   "book_without": 3.04
+  },
+  {
+   "leg": "morning",
+   "markets": [
+    "yen crosses"
+   ],
+   "style": "cross-asset reaction",
+   "horizon": "intraday",
+   "sharpe_2018": 1.11,
+   "weight_now": 0.133,
+   "corr_rest": -0.01,
+   "book_without": 3.18
+  },
+  {
+   "leg": "after",
+   "markets": [
+    "dollar pairs"
+   ],
+   "style": "calendar / flow",
+   "horizon": "intraday",
+   "sharpe_2018": 1.19,
+   "weight_now": 0.073,
+   "corr_rest": 0.01,
+   "book_without": 3.0
+  },
+  {
+   "leg": "breakout",
+   "markets": [
+    "usdjpy"
+   ],
+   "style": "breakout",
+   "horizon": "intraday",
+   "sharpe_2018": 0.84,
+   "weight_now": 0.25,
+   "corr_rest": -0.01,
+   "book_without": 3.08
+  },
+  {
+   "leg": "noise",
+   "markets": [
+    "us indices"
+   ],
+   "style": "intraday momentum",
+   "horizon": "intraday",
+   "sharpe_2018": 1.3,
+   "weight_now": 0.041,
+   "corr_rest": -0.02,
+   "book_without": 2.86
+  }
+ ],
+ "risk_by_market": {
+  "gold": 0.087,
+  "usdjpy": 0.25,
+  "eurusd": 0,
+  "dollar pairs": 0.353,
+  "yen crosses": 0.178,
+  "aud/cad": 0.09,
+  "us indices": 0.041
+ },
+ "legs_by_horizon": {
+  "intraday": 8,
+  "days": 1,
+  "weeks+": 1
+ },
+ "gaps": {
+  "markets_without_leg": [
+   "eurusd"
+  ],
+  "styles_without_leg": [
+   "carry",
+   "volatility premium"
+  ],
+  "thin_horizons": [
+   "days",
+   "weeks+"
+  ],
+  "crowded_markets": [
+   "dollar pairs"
+  ],
+  "untagged_legs": []
+ },
+ "losing_months_2018": [
+  {
+   "month": "2018-03",
+   "book_pct": -1.11
+  },
+  {
+   "month": "2018-06",
+   "book_pct": -2.43
+  },
+  {
+   "month": "2019-09",
+   "book_pct": -0.57
+  },
+  {
+   "month": "2019-10",
+   "book_pct": -3.49
+  },
+  {
+   "month": "2020-05",
+   "book_pct": -3.47
+  },
+  {
+   "month": "2020-12",
+   "book_pct": -3.43
+  },
+  {
+   "month": "2021-02",
+   "book_pct": -3.03
+  },
+  {
+   "month": "2021-04",
+   "book_pct": -2.94
+  },
+  {
+   "month": "2021-10",
+   "book_pct": -2.23
+  },
+  {
+   "month": "2021-11",
+   "book_pct": -8.5
+  },
+  {
+   "month": "2022-01",
+   "book_pct": -2.22
+  },
+  {
+   "month": "2022-10",
+   "book_pct": -1.41
+  },
+  {
+   "month": "2023-02",
+   "book_pct": -1.05
+  },
+  {
+   "month": "2023-04",
+   "book_pct": -2.28
+  },
+  {
+   "month": "2023-05",
+   "book_pct": -6.23
+  },
+  {
+   "month": "2023-06",
+   "book_pct": -2.55
+  },
+  {
+   "month": "2024-02",
+   "book_pct": -0.72
+  },
+  {
+   "month": "2024-05",
+   "book_pct": -4.22
+  },
+  {
+   "month": "2024-07",
+   "book_pct": -3.75
+  },
+  {
+   "month": "2024-08",
+   "book_pct": -2.3
+  },
+  {
+   "month": "2025-06",
+   "book_pct": -0.28
+  }
+ ],
+ "aim": "Queue ideas that fill a gap (a market, style or horizon with no leg), made money in the losing months, and are likely to have corr <= 0.30 with the book. A leg that only repeats a crowded market or style rarely lifts the book by the 0.03 the gate needs."
+}

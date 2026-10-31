@@ -1,7 +1,10 @@
 __pycache__/
 .obsidian/
 .tools/
-.claude/
+# Claude Code: the role agents are part of the repo, the rest (worktrees, locks) is local
+.claude/*
+!.claude/agents/
+!.claude/settings.json
 
 # Large market data, rebuilt by the downloaders in tools/ (too big for GitHub)
 marketdata/dukascopy/
@@ -9,5 +12,49 @@ marketdata/histdata/raw/
 marketdata/histdata/ticks_raw/
 marketdata/histdata/ticks_m1/
 marketdata/histdata/*_M1.csv.gz
+marketdata/histdata/*.part
 marketdata/histdata/*.npz
 marketdata/histdata/*.npy
+marketdata/histdata/ORB_*.npz
+# Papers fetched by tools/pdf_text.py: other people's copyright, kept local only
+marketdata/papers/
+
+# Strategy Tester raw output: the report header and logs can hold account details; result.json and summary.md are kept
+backtests/**/*.htm
+backtests/**/*.png
+backtests/**/summary.txt
+# job.json holds local paths and the process id; the dashboard copies only the test settings into data.js
+backtests/**/job.json
+
+# Autopilot run logs and the local hold/PAUSE files (tools/autopilot); runs are summarised in docs/autopilot/runs.md
+logs/
+
+# live dashboard feed (tools/dashboard_live.py) and atomic-write temp files
+dashboard/live.js
+dashboard/*.tmp
+
+# Pickled research intermediates (rebuilt by the scripts that write them)
+research/*.pkl
+
+# Compiled EAs: built by tools/autopilot/compile.ps1 next to the source, never committed (owner 2026-10-25).
+*.ex5
+
+# Fetched source data, rebuilt by the fetch scripts (owner 2026-10-27). ftmo_spread also holds rows past the holdout.
+marketdata/cot/
+marketdata/fomc/
+marketdata/fred/
+marketdata/ftmo_spread/
+marketdata/crypto/*.csv
+# research/gold_eur_residual.py caches its downloads here
+research/_cache_*.csv
+
+# The desk's runtime state (owner 2026-10-27): the journal, board, tickets and inbox change every minute
+desk/board.jsonl
+desk/inbox/
+desk/tickets.jsonl
+desk/journal/*.jsonl
+desk/reports/prop_odds.md
+
+# Chat-session month-by-month tester sweeps of 10-17 and 10-18, kept local; their findings are in HANDOFF and results.md
+backtests/2026-10-17_*/
+backtests/2026-10-18_*/

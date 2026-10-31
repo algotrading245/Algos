@@ -1,0 +1,7 @@
+{
+ "_why": "weekly_usd: the week the weekly limit hit (2026-10-16 18:00 to 10-20) the autopilot had used about $103 in Claude's notional dollars; chat sessions share the same limit. Reset: Friday (4) 18:00 local, from the limit message 'resets Oct 23, 6pm'.",
+ "weekly_usd": 100,
+ "reset_weekday": 4,
+ "reset_hour": 18,
+ "skip_above": 0.7
+}

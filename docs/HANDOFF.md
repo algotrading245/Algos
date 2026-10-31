@@ -1,85 +1,312 @@
-# Handoff: where the two-EA project stands
+# Handoff: where the two-EA project stands (one page)
 
-For a session that picks this work up without the earlier conversation (for example a cloud session). Last updated
-2026-10-14.
+For a session that picks this work up without the earlier conversation. Last updated 2026-10-21 (owner's change 6:
+this file is the current state only; the full history, all job judgements j1-j15, the **"Tested and rejected"** list,
+the **Scans** record and the EA / prop-route details are in `docs/HANDOFF_archive.md`).
 
 ## Goal
 
 Two MT5 expert advisors, and the work does not stop until both exist:
 
-1. **5x EA**: turn $100 into $500 in a month with the highest probability. This is `mql5/Experts/AurumHydra/`.
-2. **Funded-account EA**: pass a prop-firm challenge and keep the funded account with the highest probability. This is
-   `mql5/Experts/AurumFunded/`.
+1. **5x EA**: turn $100 into $500 in a month with the highest probability — `mql5/Experts/AurumHydra/`.
+2. **Funded-account EA**: pass a prop-firm challenge and keep the funded account — `mql5/Experts/AurumFunded/`.
 
-The owner gave a free hand: any source (SSRN, Google Scholar, anything else), any prebuilt strategy or own idea, and
-the choice of prop firm and challenge is ours. What stays with the owner: buying a challenge, attaching EAs in MT5,
-running the Strategy Tester and demo, and a yes before each live or real-money step.
+Fixed rules: nothing enters an EA unless it survives real costs in both data halves (to 2017 / 2018 on); papers are
+read in full before use (unverified ideas go last); order is Python backtest → Strategy Tester → demo → live; the
+server 23:00-01:00 rollover stays out of intraday tests; holdout: 2025-10-13 on (`tools/holdout.py`) is the owner's,
+agent tester runs end 2025-09-30, the clean out-of-sample test is the demo from 2026-10-19; commit and push after
+each finished piece of work.
 
-Rules of the work:
+## How the work runs (2026-10-18)
 
-- Nothing goes into an EA unless it survives realistic costs in both halves of the data (to 2017, and 2018 on;
-  `SPLIT` in the tools).
-- When a paper is used, read the full paper first (definitions, tables), not the abstract, and say in reports which
-  papers were read in full.
-- Order: Python backtest, then MT5 Strategy Tester, then demo, then live.
-- Commit and push to `claude/exciting-hopper-r6sdmc` after each finished piece of work.
+- **Relay of agents** (`tools/autopilot/relay.ps1`, every 5 min): researcher → scanner → orchestrator → tester →
+  fidelity, no gap inside a cycle, 30 min between cycles; a role that has nothing to do is skipped, and no role runs
+  twice in one tick. One agent at a time (mutex); usage, session and quota limits back the relay off 60 min.
+  Prompts: fixed parts first (memory, role) so repeats hit the cache, status last.
+- **Model router** (`tools/autopilot/router.json` + `router.py`): one switch picks the provider for every role —
+  **Claude Code** or **Qwen Code** — and each role maps to a tier (routine / code / judge) that each provider names a
+  model for. Switch the whole system with `python tools/autopilot/router.py use qwen|claude`, one role apart with
+  `... use claude --role orchestrator`, a tier's model with `... use qwen --tier code --model qwen3-coder-plus`;
+  `... show` prints the current mapping. If the provider it points at cannot authenticate (a Qwen run with no API
+  key) the run falls back to the other provider and says so in the log, so the pipeline never idles over a key.
+  Qwen specifics: no `--agent` flag, so `run-agent.ps1` inlines the role definition into the prompt and the two
+  subagents are mirrored into `.qwen/agents/` (`python tools/autopilot/mirror_agents.py` after any change to
+  `.claude/agents/`); permissions come from `.qwen/settings.json` (committed: the deny list, which is the only gate
+  because runs use `--approval-mode yolo` — deny still outranks yolo) and the API key is an environment variable in
+  `~/.qwen/settings.json` (user level, outside the repo, never committed).
+- **Mechanical work is scripts, not agents:** `tools/autopilot/tester_step.py` starts and collects tester jobs,
+  writes each `summary.md`, commits, and routes a collected job to the orchestrator (`logs/autopilot/to-judge.json`);
+  the tester agent only runs when the script writes `tester-help.json`. `tools/autopilot/scanner_step.py` works
+  through `docs/autopilot/scan_requests.json` (the orchestrator appends requests; a survivor that passes every gate
+  or a broken scan raises `scanner-flag.json` for the scanner agent). Both are started by the keeper every minute
+  and have their own locks, so MT5 runs never block the agents. The keeper also keeps Terminal 16 (demo EA) open.
+- **Shared memory** in `docs/memory/` (mission, lessons, decisions.jsonl) goes into every prompt; agents search it
+  before deciding and log every decision. Orchestrator run limit per idea: 3 (`runs` in `docs/candidates.json`),
+  then drop, move on, or ask the owner.
+- **Terminals:** Terminal 16 ("MetaTrader 5 - 16") runs the FTMO demo EA (AurumFunded 1.16 since 2026-10-27 19:26,
+  on `AurumFunded_FTMO_phase1_legs_nyclock.set` since 19:54, demo_log 10-27; 1.10 from 10-23 01:45, 1.06 from
+  10-19 14:54; legs on since a3; attached on
+  XAUUSD M15, re-initialised on M1 at 10-23 16:30, owner question (10)); the tester is its own install `C:\MetaTrader 5 - Tester`
+  (owner login done 2026-10-18). Live page: `python tools/live_server.py` (127.0.0.1:8765).
 
-## EA 2: AurumFunded (v1.00, compiles with 0 errors and 0 warnings, not yet run in the Strategy Tester)
+## Current state
 
-Firm chosen: **FTMO 2-Step Challenge, Swing account**. Targets 10% then 5%, daily loss 5% of the initial balance
-measured from the balance at midnight CE(S)T on equity, maximum loss 10% static, no time limit, at least 4 trading
-days a phase, EAs allowed, Swing has no news or weekend restriction, leverage 1:30. Backup: **The5ers High Stakes**
-(10% / 5%, 5% daily, 10% maximum, 3 profitable days a phase, 1:100, no orders within 2 minutes of high-impact news).
-Rules were read on the firms' own pages on 2026-10-14; check them again before a challenge is bought.
+- **Dual Thrust four-index leg (prebuilt_dual_thrust_four_indices_ew): j18 PASS, integrated (judge 2026-10-28
+  13:40).** The leg is in AurumFunded v1.18 and stays off by default (InpDualMult 0). It is switched on (0.25) only in
+  its own tester preset, `AurumFunded_FTMO_phase1_dual.set` with the j18 compare_set. **For the owner:** the demo EA
+  is unchanged, and adding the leg to the demo preset is your call. Results for 2024.01-2025.09 on 10k at 1:33:
+  - Turning the leg on adds +1,766 USD (+134.2% -> +151.8%). The index trades themselves add +7.3% of the running
+    balance (on 15.28% minus off 7.98%, `research/j18_by_symbol.py`). The Python model gives +5.45% at size 0.5.
+  - All four indices made money: US100 +340, JP225 +328, US500 +296, GER40 +148 USD.
+  - The relative equity drawdown rose from 6.91% to 7.59%, and return per unit of drawdown went from 19.4 to 20.0.
+  - Profitable months fell from 18 to 17: March 2025 went from +8 to -109 USD.
+  - The gate rerun (`fix_dual_thrust_dax_open`, using the EA's 01:15 open) passes only through the published source,
+    with GER40 at Sharpe -0.04.
+  - **Tool note (tools/ is not agent-editable):** `tester_step.py` writes the "Max equity drawdown" row of summary.md
+    from the absolute-maximum line. Its % is the drawdown at the largest dollar loss, not the largest relative one,
+    so j18 off shows 4.16% where the relative maximum is 6.91%. Use `eq_dd_rel`.
+  - `PropDays` (AurumFunded.mq5:317) still counts magics only up to +25, so the breakout, noise, VRP and Dual legs
+    do not count toward InpPropMinDays.
 
-The EA is AurumHydra v1.32 without its grid and gold hold, at half size (`InpSizeMult 0.5`), plus a guard
-(`PropGuard` in the source): day stop at 3%, final stop at 8.5%, sizes shrink once equity is within 6.5% of the
-final stop, stop at the target once the minimum trading days are done, a broker-side stop on each gold unit, and no
-trading on days the server clock is not New York + 7 hours. State is kept in terminal global variables, so a restart
-does not lose the day's starting balance. Presets for phase 1, phase 2 and the funded account are next to the source.
+- **Demo trading again on the New York clock preset (judge 2026-10-27 20:00).** The first order after the switch was
+  a US100.cash noise buy of 0.07 lots, logged at 29647.28 and filled at 29647.08, with a broker stop at 28496.13 in
+  the journal. `tools/demo_check.py` reports ok. Lesson 21 is now in lessons.md: the risk layer's `CloseEverything()`
+  also closes multi-day legs, so they must be modelled with the book's exits (j17).
 
-Simulated on daily leg results 2010-2026 (`python tools/backtest_prop.py`, legs in
-`marketdata/hydra_legs_daily.csv.gz`). Daily data cannot see a day that dips below a limit and recovers, so these are
-upper bounds:
+- **VRP leg (variant_vrp_gap_equity_indices): rejected, judge 2026-10-25 23:00 on j17.** AurumFunded v1.15 at
+  InpVrpMult 0.5, 2024.01-2025.09, 10k, 1:33. The VIX file source worked (5,253 closes, last 2025.10.10, a VIX line
+  every Monday). The leg's 26 trades (magic +30/+31) netted +0.31 USD against the model's +2.6% (about +260), which is
+  0% of it against lesson 4's 67-87%. With the leg on, equity DD went from 4.16% to 5.99% and return per unit of DD
+  from 32.2 to 22.9. 14 of the 26 trades were closed early by a CloseAll from the risk layer and lost 972.60. The 12
+  that ran to their planned exit or to the end of the test made 972.91. The 50-seed control had already put it at the
+  44th percentile of random longs. The leg stays in v1.15, off by default (InpVrpMult 0), so there is no fix item. Do
+  not use `AurumFunded_FTMO_phase1_vrp.set`. The Hydra compile for the shared `Legs.mqh`/`Inputs.mqh` change is
+  done (Hydra 1.42, 0 errors, 0 warnings, 2026-10-27 17:56, gaps_report 10-27). The early-close finding is lesson 21
+  (reviewer-checked, 2026-10-27). Earlier VRP history (j16, v1.13-v1.15
+  reviews) is in git history of this file.
+- **Both EAs share one leg library** (`mql5/Include/Aurum/`; the thin wrappers are Hydra 1.42 and Funded 1.18 in
+  the repo, `#property version`, doctor 2026-10-29; the demo runs Funded 1.16, and 1.18 loads at its next restart,
+  with the Dual Thrust leg off by default). The breakout and noise legs passed steps 15-16 and are on by default in the demo: Hydra 0.125 / 0.275,
+  Funded half that. The older single-leg EAs are in `mql5/Experts/_archive/` or kept beside the two EAs as reference
+  (AurumBreakout, AurumNoise, AurumFix and others); they are not used.
+- **AurumHydra (5x goal), InpTarget tested on 21 fresh-deposit months 2024.01-2025.09:** 3x in 9 of 21 (43%),
+  4x in 4 (19%), 5x in 2 (10%), 0 ruin months — but the "0 ruin" hides broker stop-outs (margin level < 50%) in
+  7/10/9 months; that is the 4x/5x shortfall against the model (lesson 19). These 21 months ran at 1:100 and j8a-c
+  (5x 1/21) at 1:33, not the 1:500 asked; lesson 7 amended 2026-10-19 to judge each at its logged leverage. The goal model
+  (`research/hydra_goal_margin_model.py`, EA+legs round 5: per-order clip, month-end boost ×2) gives P(goal)
+  39.7 / 28.8 / 22.3% over 184 months 2010-2025.09 (edge 1.0, preset) — a **loose upper bound only**: reviewer
+  REDO, the noise is still round 4's constant ticket (NSXUSD M1 missing), on the 21 tester months the model reaches
+  the goal 10/10/9 times against the tester's 9/4/2. Model iteration stopped (run limit); do not quote r5 edge-0.7.
+- **Size cap (candidate `hydra_size_cap`, CLOSED after run 3 of 3, 2026-10-19: keep InpGoalCap 50, no EA change):** `research/hydra_size_cap.py` fixed the
+  round-5 REDO items (C1 no-clip branch + unit tests, fix before cross, boost haircut at edge 0.7; noise P&L and
+  balance-vs-equity sizing stay stated limits) and swept static InpGoalCap 3-14 against 50. Keep cap 50: every cap
+  <=14 loses 19-25 pp of P(goal) for near-zero stop-outs (with the fixes, cap 50 gives 39.7/28.8/22.8%). Reviewer
+  PASS WITH CHANGES: caps 15-49 are untested (cap 50 binds in 55-76% of rounds, median day-1 size asked 36-47).
+  **Run 2 (2026-10-19, `research/hydra_size_cap2.py` + `.out.txt`):** static caps 20-45 do not beat 50 by the
+  pre-registered rule (3x to 2017: 27.5/31.9/38.5/39.6/42.9/44.0% vs 44.0%; 45 ties 50), so cap 50 stays. The
+  dynamic arm was void: it projected margin before the EA's 50% free-margin clip and summed tickets not open
+  together, so s_dyn <= 2.9 at every threshold (reviewer PASS WITH CHANGES; lesson logged).
+  **Run 3 (2026-10-19, `research/hydra_size_cap3.py` + `.out.txt`):** clip-aware projection in the EA's order, legs
+  as the peak open together, plan fitted to 2017. The pre-registered guard found every threshold 1.1-3 DEGENERATE
+  (binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0), so no sweep ran and there were 0 new trials. Reviewer
+  PASS WITH CHANGES: the result is real. The goal preset fits only through the 50% clip (legs alone 0.128 margin per
+  unit of size), so a margin-level cap above 1 is a static cap of 0-3, which run 1 rejected. Lesson 20.
+- **Next pipeline work (no tester time):** none is waiting on an agent (checked 2026-10-21 03:45: no to-judge job,
+  no candidate at steps 5-14, no unstarted idea, no pending lesson or question line). Researcher runs 10-22 on
+  10-19 and 10-21 found no idea, so more researcher runs are unlikely to help until new data or a new route comes in
+  (proposed tools change (5)). The noise path from SPXUSD/NSXUSD M1 is already in the goal model
+  (`research/hydra_leverage_sens.py`). Fidelity is next, after the first demo week (Friday 2026-10-23). It runs
+  against j12-j14, because the demo account is at 1:100 with gold at 1:50. From 2026-10-23 01:45 to 2026-10-27 19:26 the demo ran
+  AurumFunded 1.10 (now 1.16, see Terminals) with `AurumFunded_FTMO_phase1_legs.set` (keeper log 01:45:11 "Terminal 16: started, AurumFunded
+  attached"; build compiled 2026-10-22 22:29, commit 2869c12; risk layer off by default, so it trades as 1.09). The
+  deal-0 log fix, the late-breakout guard and the grid resend guard (1.07-1.09, below) are in it. Demo days 10-19 to
+  10-22 ran 1.06 (doctor 2026-10-23).
+  **For the fill comparison (judge 2026-10-22 14:40):** on 10-22 the demo skipped the USDJPY breakout, "balance too
+  small for the minimum lot of USDJPY at a stop of 1.181". That is `RiskLots()` working as built (`Legs.mqh:633-644`,
+  balance x risk / loss per lot, floored to 0.01). The risk per yen of stop matches 10-21's trade: 0.03 lot at a
+  0.363 stop gives 0.03 x 0.363 / 1.181 = 0.0092 lot, under the 0.01 minimum. At about 10,000 EUR, a range wider
+  than about 1.09 yen gets no breakout trade. A tester run at the same deposit skips that trade too. A Python model
+  with fractional size does not. So on wide-range days the comparison should expect "no trade" from the demo and the
+  tester, and count those days apart from the model's figure. No input changes.
+  10-23 confirms the threshold: a range of 1.048 (156.075-157.123) got the 0.01 floor (0.03 x 0.363 / 1.048 =
+  0.0104), bought at 157.123 at 09:06, stop 156.075 (judge 2026-10-23 10:30).
+  **Grid resend guard (2026-10-21 03:07, AurumFunded 1.09 / AurumHydra 1.38, reviewer approve, compile 0/0):**
+  `Grid()` sends no new level until the last one sent shows in `GridHeld()` or `GRID_WAIT` (10 s) pass; closes and
+  stop-outs are not held. No tester change (deals show at once); the demo preset has the grid off, so it matters for
+  Hydra's grid at goal sizes. Reviewer's later options: check the order in the history before a timeout resend; keep
+  the pending level in a GlobalVariable across restarts; size later levels of one call without trusting
+  `ACCOUNT_MARGIN_FREE` before earlier deals show (`Legs.mqh:931`). The owner may copy 1.09 to Terminal 16.
+  **Late-breakout guard (2026-10-21 02:22, AurumFunded 1.08 / AurumHydra 1.37, reviewer PASS, compile 0/0):** when
+  `Breakout()` reads the USD/JPY range 5 min or more after the start (attach, keeper restart, data gap, a blocked
+  live Run), a side whose level the closed M1 bars since the start already passed is skipped that day (no repeat of
+  the 10-19 buy 22 pips past the high); with under 90% of the M1 bars since the start, both sides are skipped. Held
+  trades still exit. No tester change (a running EA reads the range in the start minute). The owner may copy 1.08 to
+  Terminal 16; agents do not attach an EA.
+  **Deal-0 fix (2026-10-19 15:35, AurumFunded 1.07 / AurumHydra 1.36, reviewer PASS, compile 0/0):** `Filled(ok)`
+  (`Legs.mqh:199`) counts DONE with an order ticket and deal 0 as a fill at all 8 order sites, so the leg sets its
+  done flag at once and logs its normal line, priced with `FillPrice` (the asked bid/ask while the deal price is 0).
+  No change in the tester (deals are reported there at once). The grid resend this left open is fixed in 1.09/1.38.
+  The owner may copy 1.07 to Terminal 16 (not needed for trading; it fixes the log lines and the repeat-order gap).
+  **Leverage log line (2026-10-19, AurumFunded 1.05 / AurumHydra 1.35, reviewer PASS WITH CHANGES, compile 0/0):**
+  once a server day each EA prints "account leverage 1:n, margin of 1 lot in <currency>, XAUUSD m at p, ..." (gold,
+  USDJPY, EURUSD, grid symbol, stock index; "n/a" for a symbol not in use). Logging only, no trading change. Fidelity
+  reads it from the demo's EA log on its first day attached, and from the agent log of any new tester run. Hint: the
+  AurumFunded header's default account is an FTMO Swing account at 1:30, close to j3's 1:33, not j12-j14's 1:100.
+  **Tester leverage (2026-10-19, reviewer-checked, lesson 19 corrected):** the job's `leverage` has never been
+  applied; each terminal tests at its saved [Tester] leverage. So every Terminal 16 run on 10-15/17/18 (Hydra
+  j4-j9, the 10-17 month series and the 10-18 5xEQ runs, asked for 500) ran at 1:33, and every tester-install run
+  on 10-18 (j12-j14, t3b-t5b) ran at 1:100; check the agent log for any other run. Re-read any Hydra conclusion drawn from Terminal 16 runs with that in mind (no re-run
+  yet; holdout rule for j8b/j8c/j9 unchanged). Evidence: `research/demo_margin_terminals.py` + `.out.txt`.
+  **Hydra leverage sensitivity (2026-10-19, `research/hydra_leverage_sens.py` + `.out.txt`, 0 trials):** the
+  goal model (size-cap fixes, now the round-5 noise path from SPXUSD/NSXUSD M1) at cap 50, only the margin rates
+  scaled. Calibration holds: at 1:100 the model's stop-outs on the 21 tester months are 8/8/9 vs the tester's
+  7/10/9 (its goals 10/9/8 vs 9/4/2 still overstate). Over 184 months, edge 1.0, 3x/4x/5x, P(goal) / P(stop-out) /
+  share below 0.5x: 1:100 40.8/32.1/24.5 / 20.1/26.6/33.7 / 31.0/30.4/32.1%; 1:500 53.3/45.1/40.2 / 17.9/20.1/22.8
+  / 41.3/48.4/52.2%; 1:33 25.5/17.4/12.5%. Pre-registered rule B NOT MET (stop-outs fall 24-32%, not half): the
+  tester's stop-outs are not mainly the leverage. Rule C MET (+13/+16 pp at 4x/5x). So a 1:500 account trades
+  more goals for more deep losses (median 5x result 0.89x -> 0.31x), and the 1:100 tester figures (9/4/2 of 21)
+  do not stand for a 1:500 account in either direction. Hydra figures only count at a leverage written into the job
+  and checked in the log, so tools change (4) is now needed for Hydra too. The model's levels stay an upper bound.
+- **AurumFunded:** j12 (FTMO funded preset), j13 (FundedNext Stellar Instant), j14 (Instant Funding PRO) all judged
+  PASS at step 16 (tester keeps 0.67-0.84 of the model's log growth, lesson 4 band). **j12-vs-j3 closed
+  2026-10-19** (`research/funded_j12_j3_daystops.py` + `.out.txt`): j12's 3 extra day stops are its XAUUSD bell at
+  2-2.9x j3's lots. The cause is the test leverage, not the library: j3 ran on Terminal 16 at 1:33 (gold about
+  1:16.5), and j12-j14 (and Hydra t3b-t5b) ran on the tester install at 1:100 (gold about 1:50), though every one
+  of these jobs asked for 33. The FTMO demo account runs at 1:100 with gold at 1:50
+  (EA log 2026-10-19 14:54), so the j12-j14 figures hold for it (lesson 19, corrected 2026-10-19). **j14's 1.7% floating stop priced 2026-10-19** (`research/funded_j14_floatstops.py` +
+  `.out.txt`, closed baskets held on histdata to server 00:00): outside rollover (9 of 13 stops) it saved 7.06% and
+  8 of 9 held baskets would have crossed the firm's assumed -2%; a 1.8 / 1.9 stop would have avoided 0 / 1 of 9. So
+  1.7 stays. The other 4 stops are the XAUUSD 23:00 bell at 0.72-1.22 lots (5-20x the intraday gold legs), stopped
+  26 s to 3 min after entry by a $1.4-2.4/oz move (checked on histdata: mostly real moves, not spread). On IF PRO the
+  bell at that size can trip the Account Drawdown alone; its size follows the gold margin (1:50 at the tester
+  install's 1:100), so the fidelity leverage check decides this too. Owner question stays: the PRO Account Drawdown figure.
+  **Floor log line (2026-10-19, AurumFunded 1.06, reviewer PASS, compile 0/0, logging only):** once a firm day the
+  EA prints "firm day <date>, day start X (balance, equity), day stop at Y, highest day start Z, final stop at F
+  (static|trailing|locked)". Fidelity can set F against the firm's own figure on the demo, and any new j13-type
+  (trailing) tester run shows its floor. Not printed after a same-day restart (the next firm day prints it).
+  Compile re-checked 0/0 and the decision logged at 14:15 (the 14:25 run's `memory.py decide` was refused; long
+  `decide` and `git commit -m` commands are refused even without ";", short ones go through, so keep them short). Prop
+  routes and presets: see archive.
+- **Demo (step 17): running since 2026-10-19 14:54.** The terminal was restarted from `t16_attach.ini`, and AurumFunded
+  1.06 was loaded with `AurumFunded_FTMO_phase1_legs.set` (the morning ALERT, EA not attached since 10-17 04:57, is over);
+  since 2026-10-23 01:45 the demo runs 1.10 (keeper log; doctor 2026-10-25).
+  **The demo account is 1:100 with gold at 1:50**, the same as the tester install, so j12-j14 are the demo's
+  reference and j3 (1:33) is not. That settles the fidelity leverage question. The **account currency is EUR**
+  (the tester deposits USD), so compare in %. First fill: a breakout buy of 0.01 USDJPY at 158.365. demo_check's ALERT
+  on it is false: retcode 10009 is DONE, but the EA treats deal 0 as a failure (`Legs.mqh:1630`; FTMO's market
+  execution reports the deal moments later). That fill is also a late-attach entry 22 pips past the range high, a
+  restart artefact. Details are in `docs/demo_log.md` 2026-10-19 15:30. The monitor reports in `docs/demo_log.md`;
+  fidelity pairs demo fills with a tester run weekly.
+  **10-20 (`docs/demo_log.md`):** 5 fills, each 1 order with no repeat: Tokyo USDJPY, breakout USDJPY, midday EURUSD,
+  US500 and US100; the bell leg skipped. No day or final stop was hit. The ALERT is the same deal-0 false alarm (Tokyo
+  fill). One unplanned restart at 04:13: the keeper itself restarted (cause unknown) and relaunched T16 with the attach
+  ini. The open Tokyo position synced and closed on time at 04:24:59. All relay agent runs on 10-20 failed with the
+  weekly usage limit (resets 2026-10-23 18:00).
+  Watch: gold entries must come on the same days as the tester's (the `InpGoldMaxSpread=0.30` cap). Any "order
+  failed, retcode 10009" line is a fill, not a failure. Check that no leg sent a repeat order.
+- **Tester queue** (`docs/autopilot/queue.json`): j1-j15 done or judged, nothing queued; the size cap
+  closed without a tester job. Scan candidates scan_slot_EURUSD_s25_L4_short, s21_L8_short and
+  scan_cal_wed_EURUSD_s25_L2_short rejected 2026-10-18 (gates.py failed 2026-10-17). Judgements live in each `backtests/<folder>/summary.md`.
+- **Research pipeline:** simple-rule scans on the histdata symbols are exhausted (all four `edge_scan.py` families
+  run; the record is `docs/trials.jsonl` and the Scans note in the archive) — a new scan needs new data and goes
+  into `docs/autopilot/scan_requests.json`. Ideas: Osler round-number levels and China releases and AUD
+  (`china_release_aud`, net -0.017 R a trade from 2018 at 1.1 bp) rejected at step 7; eight more ideas were dropped
+  at step 4 on 2026-10-19 (paper read in full or unreadable, 0 trials). All of them are in the archive's "Tested and
+  rejected" and "Dropped before any test" lists. **No unstarted idea is left** (researcher runs 1-16 on 2026-10-19
+  found 4 ideas, all dropped; the last, run 9's leveraged-ETF close flow, at 10:06; runs 10-16 found none). Do not
+  re-propose carry or other slow cross-section FX books, or close-flow ideas on the index (see archive).
+  `pdf_text.py` retries mirrors before marking a paper unreadable.
+  **Idea engine (`tools/idea_engine.py`, 2026-10-21):** `china_activity_aud` FAIL at halves (`docs/ideas/results.md`).
+  The four "unread" example specs (pre-FOMC gold/S&P, pre-ISM, post-NFP USDJPY, month-end EURUSD fix) were set to
+  `dropped` by the orchestrator at 18:03: three repeat rejected tests whose papers were read in full
+  (`research/pre_fomc_drift.py`, `pre_announcement_drift.py`, `post_announcement_drift.py`), and the fix spec is the
+  EA's live fix leg (`Legs.mqh:1035-1114`) in a weaker unsigned form. New specs should be checked against the
+  archive's "Tested and rejected" list before they are written.
 
-| Edge assumed | Size | Shrink rule | Pass | Median days | Funded alive after 12 months | Paid in 12 months |
-|---|---|---|---|---|---|---|
-| as backtested | 0.5 | on | 100% | 124 | 100% | 33% |
-| as backtested | 1.0 | on | 100% | 68 | 100% | 64% |
-| half | 0.5 | off | 94% | 223 | 93% | 19% |
-| half | 0.5 | on | 100% | 238 | 100% | 18% |
-| a third | 0.5 | on | 92% | 287 | 100% | 13% |
-| a third | 1.0 | on | 66% | 105 | 59% | 20% |
+## For the owner
 
-Open points for EA 2:
+- **XAGUSD spread and commission (data_xagusd_costs, finder 2026-10-22):** agents cannot fetch it. The export to
+  `C:\MetaTrader 5 - Tester` is refused to agents and fails at IPC ("Process create failed", 2026-10-22 15:05), and
+  terminal 14 did not answer on the earlier try. The silver legs were rejected at an assumed 4 bp spread. Please run
+  `python tools/export_mt5_data.py --terminal "MetaTrader 5 - Tester" --symbol XAGUSD --tick-days 7` (with the terminal
+  open) or allow the call, then write the measured figure to `docs/data/xagusd_costs.md`.
 
-- Not yet run in the MT5 Strategy Tester. The symbol names in the inputs (`XAUUSD`, `US500.cash`, ...) are FTMO's as
-  far as known and must be checked in the FTMO terminal.
-- FTMO's server clock is assumed to follow European summer time (`InpEuClock true`). The EA checks the clock live and
-  skips the day if it is off.
-- At 1:30 (less on metals) the margin cap `InpMarginPct` may shrink the gold units; the tester run will show it.
-- The gold-unit broker stop is not in the Python model.
+## Waiting on the owner
 
-## EA 1: AurumHydra (v1.32)
+- **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
+  weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
+  `expected_tester`, e.g. PF < 0.8 on 20+ trades, or a fill or rule error); full verdict about 2027-01-19. The question
+  as it was asked: **Breakout fails the belief gate. Keep it in the demo or pull it?** The recheck ran
+  the same parameters on 9 markets. 7 were profitable; AUDJPY (-0.32) and AUDUSD (-0.18 over the whole sample, about
+  -0.4 for each from 2018) lost (`docs/gates/breakout.json`, `marketdata/candidates/breakout_markets.csv`). Every
+  other gate passes: halves 1.10 / 0.84, 0.59 at 1.5x cost, corr -0.00, book 2018+ 3.27 -> 3.34, DSR 1.000.
+  The judge recommends keeping it. It was approved (a3), and the demo it runs in is the clean out-of-sample test from
+  10-19. Pulling it mid-test would remove the book's largest weight because of a rule added after the approval.
+  Until the owner decides, it stays at "tester" and is frozen: no weight increase and no new EA use. After 3 demo
+  months of breakout trades, judge it against `expected_tester` (about 24 trades a month, win 47%, PF 1.14). Pulling
+  it means setting `InpBreakRiskPct` to 0 in the demo EA and the presets, which is the owner's change.
+- **(a4) Done in effect on 2026-10-19 at 14:54**: the terminal restarted from `t16_attach.ini` with AurumFunded 1.06
+  loaded (`docs/demo_log.md`). The owner may close a4. The instructions below are kept for a later re-attach.
+  **Done 2026-10-23 01:45:** Terminal 16 restarted with build 1.10 (keeper log; see "Next pipeline work" above), so
+  the optional copy of 1.09 is no longer needed (doctor 2026-10-23).
+  Re-attach the demo EA: On Terminal 16, open XAUUSD M15 and attach AurumFunded 1.06 (the
+  current build in the repo; copy `AurumFunded.ex5` into the terminal's Experts folder first) with
+  `AurumFunded_FTMO_phase1_legs.set` (Algo Trading on). Check that the journal says "expert AurumFunded (XAUUSD,M15)
+  loaded successfully" and that the EA log has its "phase 1 started" line and, on the first tick, the "account
+  leverage 1:n" and "firm day" lines. Then save the profile, or close the
+  terminal once so the chart files are written. Agents may not attach an EA.
+- **Proposed tools/ changes (agents may not edit tools/):**
+  (1) `keeper.ps1`: while Terminal 16 is running, look at the journal after its latest start for "expert
+  AurumFunded ... loaded successfully" not followed by "removed". If that line is missing for more than 10 min, log
+  an ALERT, or restart the terminal with `t16_attach.ini`. Today `Test-DemoEA` is checked only while the terminal
+  is closed.
+  (2) The keeper should restart itself when `keeper.ps1` or `common.ps1` is newer than its own start. The copy that
+  ran at 01:24 on 10-18 was the 10-17 process running old code.
+  (3) `demo_check.py`: raise an ALERT when a weekday has 0 EA lines, or when the journal's last Experts line for
+  AurumFunded is "removed". Today it printed "ok" for a day with no EA.
+  (4) `run-tester.ps1:151` writes `Leverage=$Leverage` (e.g. `33`), which the tester does not apply (the deposit
+  is applied). Try `Leverage=1:$Leverage`, the format the tester logs. Then make `tester_step.py` read the agent
+  log's "initial deposit X USD, leverage 1:n" line and fail the job if n differs from the job's `leverage`.
+  `tester_step.py:300,342` should report the logged leverage, not the requested one. Until that is done, the
+  leverage of every run is whatever the terminal has saved: Terminal 16 1:33, tester install 1:100.
+  (5) `relay.ps1` `Test-Runnable` (lines 46-53): the researcher runs whenever fewer than 3 ideas are unstarted, and
+  the orchestrator always runs (`default { $true }`). On 2026-10-19 that gave 16 researcher runs (runs 10-16 in a
+  row found no idea, `docs/ideas/2026-10-19.md`), each followed by an orchestrator run with no pipeline work
+  (`docs/autopilot/runs.md` 10:57-15:00). Proposal: skip the researcher after 3 runs in a row that logged no new
+  idea, until 24 h have passed or the orchestrator hands to it with a named route or data set. Run the orchestrator
+  only when it has work: `to-judge.json`, a new demo ALERT, a new idea, a candidate at steps 5-14, a pending
+  `kind: lesson` or `question` line, or 6 h since its last run.
+  (6) `demo_check.py`: an "order ... failed, retcode 10009" line is a fill (TRADE_RETCODE_DONE with deal 0 on
+  FTMO's market execution), not a failure. Count it as a fill. Instead, raise an ALERT when one leg sends two orders
+  on the same symbol within a minute (a repeat).
+  (7) `demo_check.py` `leg_of()` counts noise orders as "other": the noise leg's order line is "US500.cash sold 0.68
+  lots at ..., bands ..." (`Legs.mqh:1903`) with no leg word, and the breakout line "USD/JPY broke its range" has
+  none either. Match "bands" as noise and "broke its range" as breakout (judge 2026-10-22 16:30: 10-22 shows
+  `other: 2` for the two noise shorts).
+  (8) `demo_check.py` `PRIVATE` (line 19) drops every line with "account", so the EA's daily "account leverage 1:n,
+  margin of 1 lot ..." line (`Legs.mqh:2390`) never reaches the checker or the monitor, which then reads as if the
+  line were missing. Let a line through when it matches `account leverage 1:\d+` and has no run of 6+ digits
+  (judge 2026-10-23 10:30: the line is in the 10-23 log at 00:05 and 01:45, 1:100, gold 7183 EUR a lot at 4029).
+  (9) Demo ALERT 2026-10-23 14:00 (judge 15:25), harmless: "close on EURUSD failed, retcode 10036 (position
+  closed)". The midday exit (`Legs.mqh:779-780`) sent the close at 13:59:59.507; it took 1235 ms and filled at
+  14:00:00.736 (bought 0.44 at 1.11902 against the 1.11994 sell, about +40 USD). 56 ms later the next OnTick/OnTimer
+  call still saw the position in `PositionsTotal()` (the terminal had not yet dropped it) and `CloseAll`
+  (`Legs.mqh:357-373`) sent a second close, which the server refused ("Position doesn't exist"). Nothing opened, no
+  trade or state changed (`Leg()` ignores CloseAll's return), and the tester fills at once, so it cannot happen there.
+  Proposals, for the owner's session: `demo_check.py` should not raise an ALERT for a retcode 10036 close when the
+  journal shows a deal closing that position in the same second; and a later EA build could check
+  `PositionSelectByTicket(t)` again and skip 10036 in `CloseAll` (log-only change; the demo EA stays as it is).
+  (10) Question for the owner (judge 2026-10-23 17:03): at 16:30:16 the EA re-initialised, and its chart is now
+  XAUUSD,M1 (it was attached on M15). Was the timeframe switched by hand? It did no harm: the late-start guard
+  (`Legs.mqh:1747-1772`) skipped the breakout side that was already traded, and the loss-run sizing comes from deal
+  history. No leg reads the chart period (no `PERIOD_CURRENT` or `_Period` in `mql5/`). M15 is still the documented
+  attach; switching back is the owner's choice.
 
-Eight legs: quartet (gold session dip, bell fade, Tokyo fixing, EUR/USD midday), AUD/CAD grid, gold hold, month-end
-fix on dollar pairs, the same on yen crosses, stock-fall fix, Tokyo morning, day after a US holiday. Combined Sharpe
-3.0 (2.6 to 2017, 3.4 from 2018), volatility 24.5% a year. With a Sharpe of 3 the best reachable chance of 5x in a
-month is about 51%; the goal mode of the EA tests at 47% (preset `AurumHydra_5x_month.set`). More chance needs more
-Sharpe, which means new legs that are uncorrelated with these.
-
-Tested and rejected (do not repeat): Asian dip buy and shock fade, LBMA auction dip, burst fade, channel breakout,
-deep and reinforcement learning replications, HFT, market intraday momentum (unconditional, both-agree, big-move),
-minute slot scan, daily ML, noise-area momentum, session-open drift, overnight-intraday reversal, scalp concepts,
-tick ML scalp, FX fixing reversals, pre-FOMC drift, overnight drift, FOMC cycle, FX local hours, pre-announcement
-drift, turn of month, market return around the clock, Bitcoin intraday momentum, market intraday momentum under
-short-gamma proxies (high VIX, falling or jump day), shorter last windows, next-day fade of the last half hour, crude oil
-intraday momentum on EIA report days (Wen, Indriawan, Lien, Xu 2023; `research/oil_eia_intraday.py`). The scans are in `research/`.
-
-## Tools and data
-
-- `tools/backtest_hydra.py`: every Hydra leg on minute data. `tools/backtest_prop.py`: the challenge simulator.
-- Minute data (`marketdata/histdata/*_M1.csv.gz`, 7 GB) is not on GitHub; `tools/` has the histdata.com downloader
-  that rebuilds it. Without it the challenge simulator still runs from the cached daily leg results.
-- Compiling: `metaeditor64.exe /compile:<file> /include:<terminal data folder>\MQL5 /log:<file>`; see
-  `tools/run-backtest.ps1`.
+- **Owner question (researcher run 40, 2026-10-21 14:25, `kind: question`):** 40 researcher runs on 10-21 found no
+  idea; angles (a)-(e) and open code are logged (`docs/ideas/2026-10-21.md` run 40). Which new source or data set
+  (a paid data feed, a paper you can supply as PDF, an instrument outside the FTMO list above) should the next search
+  use? Until one is named, proposed tools change (5) would stop the empty researcher/orchestrator cycles.
+- Prop-firm facts: FundedNext Stellar Instant consistency rule; Instant Funding PRO account-drawdown % and EA
+  policy; FTMO 1-Step maximum loss (details in the archive).
+- Commit 031f5b6 carried 18 staged renames into `mql5/Experts/_archive/` (.ex5 rule broken): keep or revert.
+- Anything in `docs/autopilot/approvals.json` with status "pending".

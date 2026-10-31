@@ -1,0 +1,18 @@
+{
+  "id": "f_donchian_nzdusd",
+  "title": "donchian on NZDUSD",
+  "source": "spec factory grid: Donchian channel breakout (Turtle rules), the engine's default parameters",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "rule": "donchian",
+  "symbols": [
+    "NZDUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "made": "2026-10-22",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T00:54:53"
+}

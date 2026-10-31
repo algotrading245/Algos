@@ -1,0 +1,21 @@
+{
+  "id": "f_reversal_audcad_vh",
+  "title": "reversal on AUDCAD when vol high",
+  "source": "spec factory grid: short-term reversal (Jegadeesh 1990), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "AUDCAD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "reversal",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at belief",
+  "tested": "2026-10-24T06:00:17"
+}

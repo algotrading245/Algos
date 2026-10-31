@@ -1,0 +1,200 @@
+
+=== 2024.05.01 (extra j12 stop)
+  j3 on: day-open balance 11,321.90, closed P&L +26.38 (+0.23%)
+      in  02:55 EURJPY     buy    0.10  AurumFunded morning
+      in  02:55 CADJPY     buy    0.16  AurumFunded morning
+      in  02:55 GBPJPY     buy    0.09  AurumFunded morning
+      in  10:00 USDJPY     buy    0.04  AurumFunded breakout
+      in  13:30 EURUSD     sell   0.64  AurumFunded midday
+      in  16:27 USDJPY     sell   0.05  AurumFunded breakout
+      in  22:00 US100.cash buy    0.18  AurumFunded noise
+      in  23:00 XAUUSD     buy    0.40  AurumFunded bell
+  j12: day-open balance 11,109.01, closed P&L -298.48 (-2.69%)
+      in  02:55 EURJPY     buy    0.10  AurumFunded morning
+      in  02:55 CADJPY     buy    0.16  AurumFunded morning
+      in  02:55 GBPJPY     buy    0.09  AurumFunded morning
+      in  10:00 USDJPY     buy    0.02  AurumFunded breakout
+      in  13:30 EURUSD     sell   0.63  AurumFunded midday
+      in  16:27 USDJPY     sell   0.02  AurumFunded breakout
+      in  22:00 US100.cash buy    0.09  AurumFunded noise
+      in  23:00 XAUUSD     buy    1.16  AurumFunded bell
+  symbol      leg                     j3 on      j12
+  XAUUSD      -                      +0.51%   -2.48%
+  EURUSD      -                      -0.14%   -0.14%
+  USDJPY      sl                     -0.08%   -0.04%
+  US100.cash  -                      -0.05%   -0.03%
+  EURJPY      -                      -0.01%   -0.01%
+  GBPJPY      -                      -0.01%   -0.01%
+  USDJPY      -                      -0.01%   -0.00%
+  CADJPY      -                      +0.03%   +0.03%
+
+=== 2024.08.05 (extra j12 stop)
+  j3 on: day-open balance 11,818.17, closed P&L -219.76 (-1.86%)
+      in  02:55 EURJPY     buy    0.10  AurumFunded morning
+      in  02:55 GBPJPY     buy    0.08  AurumFunded morning
+      in  02:55 CADJPY     buy    0.14  AurumFunded morning
+      in  03:55 USDJPY     sell   0.26  AurumFunded Tokyo
+      in  13:30 EURUSD     sell   0.11  AurumFunded midday
+      in  23:00 XAUUSD     buy    0.39  AurumFunded bell
+  j12: day-open balance 11,140.81, closed P&L -298.49 (-2.68%)
+      in  02:55 EURJPY     buy    0.10  AurumFunded morning
+      in  02:55 GBPJPY     buy    0.08  AurumFunded morning
+      in  02:55 CADJPY     buy    0.14  AurumFunded morning
+      in  03:55 USDJPY     sell   0.24  AurumFunded Tokyo
+      in  13:30 EURUSD     sell   0.10  AurumFunded midday
+      in  23:00 XAUUSD     buy    0.77  AurumFunded bell
+  symbol      leg                     j3 on      j12
+  XAUUSD      -                      -0.09%   -0.86%
+  USDJPY      sl                     -0.59%   -0.57%
+  EURJPY      sl                     -0.36%   -0.38%
+  CADJPY      sl                     -0.35%   -0.38%
+  GBPJPY      sl                     -0.33%   -0.35%
+  EURUSD      -                      -0.14%   -0.14%
+
+=== 2025.02.28 (extra j12 stop)
+  j3 on: day-open balance 16,476.03, closed P&L -208.21 (-1.26%)
+      in  01:55 EURJPY     buy    0.10  AurumFunded morning
+      in  01:55 GBPJPY     buy    0.08  AurumFunded morning
+      in  01:55 CADJPY     buy    0.15  AurumFunded morning
+      in  02:55 USDJPY     sell   0.69  AurumFunded Tokyo
+      in  10:00 USDJPY     buy    0.01  AurumFunded breakout
+      in  13:30 EURUSD     sell   0.82  AurumFunded midday
+      in  16:00 EURUSD     sell   0.09  AurumFunded fix
+      in  16:00 GBPUSD     sell   0.07  AurumFunded fix
+      in  16:00 AUDUSD     sell   0.13  AurumFunded fix
+      in  16:00 USDCAD     buy    0.11  AurumFunded fix
+      in  16:00 USDCHF     buy    0.12  AurumFunded fix
+      in  16:00 AUDJPY     sell   0.12  AurumFunded fix
+      in  16:00 CADJPY     sell   0.10  AurumFunded fix
+      in  16:00 GBPJPY     sell   0.06  AurumFunded fix
+      in  17:30 US100.cash buy    0.25  AurumFunded noise
+      in  18:00 EURUSD     buy    0.18  AurumFunded after fix
+      in  18:00 GBPUSD     buy    0.14  AurumFunded after fix
+      in  18:00 AUDUSD     buy    0.32  AurumFunded after fix
+      in  18:00 USDCAD     sell   0.26  AurumFunded after fix
+      in  18:00 USDCHF     sell   0.22  AurumFunded after fix
+      in  23:00 XAUUSD     sell   0.46  AurumFunded bell
+  j12: day-open balance 15,656.00, closed P&L -292.41 (-1.87%)
+      in  01:55 EURJPY     buy    0.10  AurumFunded morning
+      in  01:55 GBPJPY     buy    0.08  AurumFunded morning
+      in  01:55 CADJPY     buy    0.14  AurumFunded morning
+      in  02:55 USDJPY     sell   0.65  AurumFunded Tokyo
+      in  13:30 EURUSD     sell   0.78  AurumFunded midday
+      in  16:00 EURUSD     sell   0.08  AurumFunded fix
+      in  16:00 GBPUSD     sell   0.07  AurumFunded fix
+      in  16:00 AUDUSD     sell   0.12  AurumFunded fix
+      in  16:00 USDCAD     buy    0.11  AurumFunded fix
+      in  16:00 USDCHF     buy    0.11  AurumFunded fix
+      in  16:00 AUDJPY     sell   0.11  AurumFunded fix
+      in  16:00 CADJPY     sell   0.10  AurumFunded fix
+      in  16:00 GBPJPY     sell   0.06  AurumFunded fix
+      in  17:30 US100.cash buy    0.12  AurumFunded noise
+      in  18:00 EURUSD     buy    0.17  AurumFunded after fix
+      in  18:00 GBPUSD     buy    0.13  AurumFunded after fix
+      in  18:00 AUDUSD     buy    0.30  AurumFunded after fix
+      in  18:00 USDCAD     sell   0.24  AurumFunded after fix
+      in  18:00 USDCHF     sell   0.21  AurumFunded after fix
+      in  23:00 XAUUSD     sell   1.08  AurumFunded bell
+  symbol      leg                     j3 on      j12
+  EURUSD      -                      -0.53%   -0.53%
+  XAUUSD      -                      +0.13%   -0.44%
+  EURJPY      sl                     -0.33%   -0.35%
+  CADJPY      -                      -0.33%   -0.33%
+  USDCAD      sl                     -0.32%   -0.31%
+  GBPJPY      -                      -0.25%   -0.27%
+  AUDUSD      -                      -0.23%   -0.23%
+  USDCAD      -                      -0.06%   -0.07%
+  AUDJPY      -                      -0.06%   -0.05%
+  US100.cash  -                      +0.00%   +0.00%
+  GBPUSD      -                      +0.00%   +0.01%
+  USDCHF      -                      +0.04%   +0.04%
+  USDJPY      -                      +0.67%   +0.66%
+
+=== 2024.07.25 (stop in both)
+  j3 on: day-open balance 11,753.91, closed P&L -298.71 (-2.54%)
+      in  02:55 EURJPY     buy    0.11  AurumFunded morning
+      in  02:55 GBPJPY     buy    0.10  AurumFunded morning
+      in  02:55 CADJPY     buy    0.17  AurumFunded morning
+      in  03:55 USDJPY     sell   0.13  AurumFunded Tokyo
+      in  04:30 XAUUSD     buy    0.11  AurumFunded dip
+  j12: day-open balance 11,070.29, closed P&L -298.90 (-2.70%)
+      in  02:55 EURJPY     buy    0.11  AurumFunded morning
+      in  02:55 GBPJPY     buy    0.09  AurumFunded morning
+      in  02:55 CADJPY     buy    0.16  AurumFunded morning
+      in  03:55 USDJPY     sell   0.12  AurumFunded Tokyo
+      in  04:30 XAUUSD     buy    0.10  AurumFunded dip
+  symbol      leg                     j3 on      j12
+  XAUUSD      -                      -1.73%   -1.89%
+  EURJPY      sl                     -0.36%   -0.38%
+  CADJPY      sl                     -0.37%   -0.36%
+  GBPJPY      sl                     -0.36%   -0.34%
+  USDJPY      -                      +0.28%   +0.27%
+
+=== 2024.11.06 (stop in both)
+  j3 on: day-open balance 12,594.26, closed P&L -300.18 (-2.38%)
+      in  05:34 XAUUSD     buy    0.11  AurumFunded dip
+  j12: day-open balance 12,143.02, closed P&L -300.19 (-2.47%)
+      in  05:34 XAUUSD     buy    0.10  AurumFunded dip
+  symbol      leg                     j3 on      j12
+  XAUUSD      -                      -2.38%   -2.47%
+
+=== 2025.05.01 (stop in both)
+  j3 on: day-open balance 19,555.45, closed P&L -304.04 (-1.55%)
+      in  03:30 XAUUSD     buy    0.08  AurumFunded dip
+      in  10:00 USDJPY     buy    0.01  AurumFunded breakout
+      in  13:30 EURUSD     sell   0.44  AurumFunded midday
+  j12: day-open balance 18,175.66, closed P&L -307.62 (-1.69%)
+      in  03:30 XAUUSD     buy    0.07  AurumFunded dip
+      in  13:30 EURUSD     sell   0.41  AurumFunded midday
+  symbol      leg                     j3 on      j12
+  XAUUSD      -                      -1.35%   -1.27%
+  EURUSD      -                      -0.19%   -0.42%
+  USDJPY      -                      -0.01%   +0.00%
+
+=== 2025.05.30 (stop in both)
+  j3 on: day-open balance 20,377.65, closed P&L -299.20 (-1.47%)
+      in  03:55 USDJPY     sell   0.54  AurumFunded Tokyo
+      in  10:23 USDJPY     buy    0.03  AurumFunded breakout
+      in  13:30 EURUSD     sell   0.70  AurumFunded midday
+      in  16:00 EURUSD     buy    0.19  AurumFunded fix
+      in  16:00 GBPUSD     buy    0.20  AurumFunded fix
+      in  16:00 AUDUSD     buy    0.28  AurumFunded fix
+      in  16:00 USDCAD     sell   0.31  AurumFunded fix
+      in  16:00 USDCHF     sell   0.19  AurumFunded fix
+      in  16:00 AUDJPY     buy    0.30  AurumFunded fix
+      in  16:00 CADJPY     buy    0.32  AurumFunded fix
+      in  16:00 GBPJPY     buy    0.20  AurumFunded fix
+  j12: day-open balance 18,922.29, closed P&L -297.12 (-1.57%)
+      in  03:55 USDJPY     sell   0.50  AurumFunded Tokyo
+      in  10:23 USDJPY     buy    0.01  AurumFunded breakout
+      in  13:30 EURUSD     sell   0.65  AurumFunded midday
+      in  16:00 EURUSD     buy    0.18  AurumFunded fix
+      in  16:00 GBPUSD     buy    0.18  AurumFunded fix
+      in  16:00 AUDUSD     buy    0.26  AurumFunded fix
+      in  16:00 USDCAD     sell   0.28  AurumFunded fix
+      in  16:00 USDCHF     sell   0.18  AurumFunded fix
+      in  16:00 AUDJPY     buy    0.28  AurumFunded fix
+      in  16:00 CADJPY     buy    0.29  AurumFunded fix
+      in  16:00 GBPJPY     buy    0.18  AurumFunded fix
+  symbol      leg                     j3 on      j12
+  EURUSD      -                      -0.58%   -0.61%
+  GBPUSD      -                      -0.37%   -0.38%
+  USDJPY      -                      -0.24%   -0.23%
+  GBPJPY      -                      -0.17%   -0.17%
+  USDCHF      -                      -0.14%   -0.17%
+  AUDUSD      -                      -0.15%   -0.15%
+  USDCAD      -                      +0.03%   -0.02%
+  AUDJPY      -                      -0.02%   -0.00%
+  CADJPY      -                      +0.19%   +0.16%
+
+=== 2025.10.03 (stop in both)
+  j3 on: day-open balance 23,956.86, closed P&L -300.73 (-1.26%)
+      in  03:55 USDJPY     sell   1.38  AurumFunded Tokyo
+  j12: day-open balance 23,350.97, closed P&L -303.32 (-1.30%)
+      in  03:55 USDJPY     sell   1.35  AurumFunded Tokyo
+  symbol      leg                     j3 on      j12
+  USDJPY      -                      -1.26%   -1.30%
+
+=== bell entries (XAUUSD in at 23:00): implied margin leverage lots x price x 100 / (0.5 x balance)
+  j3 on   99 entries  p10   8.4  median  15.9  p90  16.4  max  16.5
+  j12     88 entries  p10   8.2  median  21.7  p90  37.1  max  49.6

@@ -1,0 +1,32 @@
+{
+  "id": "tsmom_hurst_fx",
+  "title": "Time-series momentum on FX majors, 1/3/12-month lookbacks, monthly hold",
+  "source": "Hurst, Ooi & Pedersen (2017), A Century of Evidence on Trend-Following Investing, Journal of Portfolio Management 44(1)",
+  "link": "https://fairmodel.econ.yale.edu/ec439/hurst.pdf",
+  "read": "in full",
+  "why": "The paper's time-series momentum rule: the sign of the 1, 3 and 12-month return, held for a month. Lookbacks mapped to 21, 63 and 252 trading days. Overlaps the rejected 20-futures TSMOM test (research/futures_tsmom.py), which used lookbacks 21/63/126/252 with volatility sizing; this spec is FX only, sign rule, no sizing, and tests the paper's own monthly hold",
+  "rule": "tsmom",
+  "symbols": [
+    "USDJPY",
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD",
+    "USDCAD",
+    "USDCHF",
+    "NZDUSD"
+  ],
+  "params": {
+    "lookback": [
+      21,
+      63,
+      252
+    ],
+    "hold": [
+      21
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T21:51:43"
+}

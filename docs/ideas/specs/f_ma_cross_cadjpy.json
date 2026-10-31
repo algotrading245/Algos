@@ -1,0 +1,18 @@
+{
+  "id": "f_ma_cross_cadjpy",
+  "title": "ma_cross on CADJPY",
+  "source": "spec factory grid: moving-average crossover (Brock, Lakonishok & LeBaron 1992), the engine's default parameters",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "rule": "ma_cross",
+  "symbols": [
+    "CADJPY"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "made": "2026-10-22",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T01:03:54"
+}

@@ -1,0 +1,57 @@
+{
+ "about": "The 5 steps every idea goes through, one idea after another (owner 2026-10-22); an idea stops at the first failed gate and the next starts at once. The one queue is docs/ideas/queue.jsonl (new -> testing -> tester -> hydra/funded/both, or rejected). 'agent' is the role file in .claude/agents/ or the prompt in tools/autopilot/prompts/. The dashboard (python tools/dashboard.py) reads this file.",
+ "phases": {
+  "A": "Find",
+  "B": "Test",
+  "C": "Verify",
+  "D": "Integrate",
+  "E": "Judge"
+ },
+ "steps": [
+  {
+   "n": 1,
+   "phase": "A",
+   "name": "Find the next idea",
+   "detail": "Rotates four sources: prebuilt edges (GitHub, MQL5 CodeBase, Quantpedia, QuantConnect) to improve, research papers read in full, ML models and DRL models. Checks each against the rejected families and queues it in docs/ideas/queue.jsonl; simple rules go to docs/ideas/specs/ for idea_engine.py. Also fetches data the queue asks for. Aims at the book's gaps (tools/gaps.py) and the portfolio manager's weekly docs/ideas/steer.md (owner 2026-10-22).",
+   "model": "sonnet",
+   "agent": "finder",
+   "gate": null
+  },
+  {
+   "n": 2,
+   "phase": "B",
+   "name": "Build and test in Python with the gates",
+   "detail": "Builds the idea (or the improved prebuilt edge) in research/ on all the data before the holdout (2025-10-13), at 1x, 1.5x and 2x costs, and runs tools/gates.py (portfolio rule, owner 2026-10-22): Sharpe >= 0.2 in both halves, profitable at 1.5x costs, correlation <= 0.30 with the book and with each leg, a reason to believe (a published source, or the same parameters profitable on 3+ markets), the equal-risk book Sharpe from 2018 up by >= 0.03, and book DSR >= 0.90 over all trials. A FAIL is logged and the next idea starts; a PASS gets a standalone MQL5 EA compiled to 0/0 and a queued tester job.",
+   "model": "sonnet",
+   "agent": "builder",
+   "gate": "halves, costs, corr, belief, book, dsr"
+  },
+  {
+   "n": 3,
+   "phase": "C",
+   "name": "Strategy Tester to 2025-09-30",
+   "detail": "tools/autopilot/tester_step.py runs the queued job in C:\\MetaTrader 5 - Tester on FTMO's real ticks and compares it with the Python figures; the tester agent only starts when the script asks for help.",
+   "model": "script, haiku when asked",
+   "agent": "tester",
+   "gate": "tester"
+  },
+  {
+   "n": 4,
+   "phase": "D",
+   "name": "Integrate switched off",
+   "detail": "The leg goes into the EA it suits best, AurumHydra (5x goal), AurumFunded (prop rules) or both, as an input that is off by default, compiled to 0/0; a leg on vs off tester run shows what it adds.",
+   "model": "sonnet",
+   "agent": "builder",
+   "gate": null
+  },
+  {
+   "n": 5,
+   "phase": "E",
+   "name": "Judge and review",
+   "detail": "The judge reads the tester results against the Python figures, has the reviewer check the EA change with a fresh context, and records the verdict on the queue item (hydra, funded, both or rejected). It also handles demo orders and ALERTs; the monitor checks the FTMO demo nightly. Nothing goes live without the owner.",
+   "model": "opus",
+   "agent": "judge",
+   "gate": "review"
+  }
+ ]
+}

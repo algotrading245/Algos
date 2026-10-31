@@ -1,0 +1,26 @@
+; AurumFunded v1.18 - FTMO 2-Step Swing, phase 1: phase1_legs_nyclock.set plus the Dual Thrust index leg on (owner 2026-10-30).
+; Dual inputs as the j18 on run (InpDualMult=0.25). FTMO's server stays New York + 7 hours all year, so InpEuClock=false.
+InpPropTargetPct=10.0
+InpPropRound=1
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=false
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+; Fast sizing while in profit: set true only after live results confirm the edge (tools/prop_dp.py)
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275
+InpVrpMult=0.0
+InpDualMult=0.25
+InpDualDax=GER40.cash
+InpDualNikkei=JP225.cash
+InpDualKLong=0.3
+InpDualKShort=0.7
+InpDualMaxSpreadBp=5.0
