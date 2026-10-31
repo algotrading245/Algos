@@ -99,6 +99,7 @@ string   g_dualSym[4];     // S&P 500, Nasdaq, DAX, Nikkei, "" for one that is m
 datetime g_dualDay[4];     // day the levels below belong to
 int      g_dualState[4];   // 0 = levels not yet made, 1 = ready, 2 = no trade today
 int      g_dualFlips[4];   // entries made today
+datetime g_dualSentAt[4];  // when a filled entry was sent that is not yet among the positions, 0 = none
 double   g_dualUp[4],g_dualDn[4],g_dualExpo[4];
 
 int HHMM(datetime t)
@@ -2523,6 +2524,8 @@ void Dual()
          continue;
       long magic=InpMagic+DUAL_MAGIC+i;
       double held=HeldLots(sym,magic,opened);
+      if(held>0)
+         g_dualSentAt[i]=0;
       if(held>0 && (minute>=DUAL_END || DayOf(opened)!=today))
         {
          CloseAll(sym,magic);
@@ -2533,11 +2536,21 @@ void Dual()
          g_dualDay[i]=today;
          g_dualState[i]=0;
          g_dualFlips[i]=0;
+         g_dualSentAt[i]=0;
         }
       if(st.day_of_week<1 || st.day_of_week>5 || minute<DUAL_START+1 || minute>=DUAL_END || g_dualState[i]==2)
          continue;
       if(held>0)
          continue;                 // the broker stop is the reversal level
+      if(g_dualSentAt[i]!=0)
+        {
+         // FTMO answers DONE with deal 0 and shows the position a moment later: wait before sending again
+         if(now-g_dualSentAt[i]<GRID_WAIT)
+            continue;
+         PrintFormat(AURUM_NAME+": Dual Thrust order on %s sent %d s ago is not among the positions, it may be sent again",
+                     sym,(int)(now-g_dualSentAt[i]));
+         g_dualSentAt[i]=0;
+        }
       if(g_dualState[i]==0)
         {
          if(!DualPrepare(i,today))
@@ -2587,14 +2600,27 @@ void Dual()
         }
       int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
       double sl=NormalizeDouble(dir>0 ? g_dualDn[i] : g_dualUp[i],dg);
+      // the loss at the stop is capped: on wide-range days (2025-04-07) the notional size alone risked 0.8-1.2% each
+      double riskPct=SizeMult()*InpDualMaxRiskPct;
+      double riskLots=RiskLots(sym,dir,px,MathAbs(px-sl),riskPct);
+      if(riskLots<=0)
+        {
+         PrintFormat(AURUM_NAME+": the minimum lot of %s loses more than %.2f%% at the Dual Thrust stop (or the loss could not be priced), no trade today",sym,riskPct);
+         g_dualState[i]=2;
+         continue;
+        }
+      lots=MathMin(lots,riskLots);
       Prepare(sym,magic);
       g_dualFlips[i]++;
       bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" dual") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" dual"));
       if(!Filled(ok))
          PrintFormat(AURUM_NAME+": Dual Thrust order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
       else
+        {
+         g_dualSentAt[i]=now;
          PrintFormat(AURUM_NAME+": Dual Thrust %s %s %.2f lots at %.2f, levels %.2f / %.2f",sym,dir>0 ? "bought" : "sold",lots,
                      FillPrice(px),g_dualUp[i],g_dualDn[i]);
+        }
      }
   }
 
@@ -2719,7 +2745,7 @@ int OnInit()
       InpBreakFilterDays<10 || InpBreakMinRange<0 || InpBreakMaxRange<=InpBreakMinRange ||
       InpVrpMult<0 || InpVrpHHMM<0 || InpVrpHHMM%100>59 || InpVrpHHMM>2350 || InpVrpEntrySec<1 || InpVrpMaxSpreadBp<=0 ||
       InpVrpStopEqPct<=0 || (InpVrpVix=="" && InpVrpVixFile=="") ||
-      InpDualMult<0 || InpDualKLong<=0 || InpDualKShort<=0 || InpDualMaxSpreadBp<=0 ||
+      InpDualMult<0 || InpDualKLong<=0 || InpDualKShort<=0 || InpDualMaxSpreadBp<=0 || InpDualMaxRiskPct<=0 ||
       InpNoiseMult<0 || InpNoiseBandSpx<=0 || InpNoiseBandNdx<=0 || InpNoiseMaxSpreadBp<=0 || AurumInputsBad())
       return(INIT_PARAMETERS_INCORRECT);
    // InpTarget: the goal scale with the best chance of each multiple in tools/target_odds.py (21 weekdays, 70% of
@@ -2868,6 +2894,7 @@ int OnInit()
       g_dualDay[i]=0;
       g_dualState[i]=0;
       g_dualFlips[i]=0;
+      g_dualSentAt[i]=0;
       if(!g_dualOn)
          continue;
       if(SymbolSelect(g_dualSym[i],true))

@@ -239,6 +239,7 @@ input string InpDualNikkei      = "JP225.cash"; // Nikkei 225 on the broker (che
 input double InpDualKLong       = 0.3;   // Buy at the day open + this x the 4-day range
 input double InpDualKShort      = 0.7;   // Sell at the day open - this x the 4-day range
 input double InpDualMaxSpreadBp = 5.0;   // No entry while the spread is above this, basis points of price
+input double InpDualMaxRiskPct  = 1.0;   // Most loss at the broker stop per Dual Thrust trade, % of balance, times the cushion size (not in the Python test)
 
 input group "Fast leg (2-minute fade at the bell)"
 input double InpSnapRiskPct     = 0.0;   // Loss at the stop, % of balance (0 = off)

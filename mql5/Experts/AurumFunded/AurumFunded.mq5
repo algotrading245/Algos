@@ -100,6 +100,9 @@
 //| +32..+35: S&P 500, Nasdaq, DAX, Nikkei): 4-day range, buy at the |
 //| 01:00 open + 0.3 range, sell at open - 0.7 range, stop at the    |
 //| other level (reverses), flat 22:00. Size min(3, 10% / vol).      |
+//| v1.19: Dual Thrust waits 10 s for a sent order to show before it |
+//| sends again, caps the loss at the stop (InpDualMaxRiskPct 1% of  |
+//| balance), and PropDays counts its magic numbers (review 10-31).  |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -108,7 +111,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.18"
+#property version   "1.19"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
@@ -314,7 +317,7 @@ int PropDays()
       if(d==0 || HistoryDealGetInteger(d,DEAL_ENTRY)!=DEAL_ENTRY_IN)
          continue;
       long magic=HistoryDealGetInteger(d,DEAL_MAGIC);
-      if(magic<InpMagic || magic>InpMagic+DRIFT_MAGIC)
+      if(magic<InpMagic || magic>InpMagic+DUAL_MAGIC+3)
          continue;
       datetime day=DayOf((datetime)HistoryDealGetInteger(d,DEAL_TIME)-HHMMSec(InpPropResetHHMM));
       if(day!=last)
