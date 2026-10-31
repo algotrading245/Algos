@@ -120,6 +120,49 @@ def status(now=None):
             "today": roles, "week_days": days}
 
 
+DESK_JOURNAL = ROOT / "desk" / "journal"
+
+
+def trend(weeks=4, now=None, journal=None):
+    """Tokens and runs per role for this week and the weeks before it, newest first (owner 2026-11-01: item 22).
+    Autopilot roles come from usage.jsonl; the desk's agents from its journal's agent_run rows, as "desk:<role>"
+    (the desk counts a cache read as 0.1 of a token, desk/runner.py)."""
+    c = config()
+    now = now or datetime.now()
+    starts = [week_start(now, c) - timedelta(days=7 * i) for i in range(weeks)]
+    out = [{"week_start": s.isoformat(timespec="minutes"), "roles": {}} for s in starts]
+
+    def add(ts, role, tokens):
+        for w, s in zip(out, starts):
+            if ts >= s:
+                x = w["roles"].setdefault(role, {"runs": 0, "tokens": 0})
+                x["runs"] += 1
+                x["tokens"] += int(tokens)
+                return
+
+    for r in load():
+        ts = datetime.fromisoformat(r["ts"])
+        if ts <= now:
+            add(ts, r["role"], r["input"] + r["output"] + r["cache_read"] + r["cache_create"])
+    first = starts[-1].date()
+    for p in sorted(Path(journal or DESK_JOURNAL).glob("*.jsonl")):
+        try:
+            if datetime.fromisoformat(p.stem).date() < first - timedelta(days=1):
+                continue
+        except ValueError:
+            continue
+        for line in p.read_text(encoding="utf-8").splitlines():
+            try:
+                j = json.loads(line)
+            except ValueError:
+                continue
+            if j.get("kind") == "agent_run" and j.get("tokens"):
+                ts = datetime.fromisoformat(j["t"]).astimezone().replace(tzinfo=None)
+                if ts <= now:
+                    add(ts, "desk:" + str(j.get("role")), j["tokens"])
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -130,6 +173,8 @@ def main():
     rec.add_argument("--model")
     sub.add_parser("backfill")
     sub.add_parser("status")
+    tr = sub.add_parser("trend")
+    tr.add_argument("--weeks", type=int, default=4)
     a = ap.parse_args()
     if a.cmd == "record":
         r = row(a.events, a.role, a.provider, a.model)
@@ -142,6 +187,10 @@ def main():
         LOGS.mkdir(parents=True, exist_ok=True)
         USAGE.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
         print(f"backfill: {len(rows)} runs, ${sum(r['cost_usd'] for r in rows):.2f} in all -> {USAGE}")
+    elif a.cmd == "trend":
+        for w in trend(a.weeks):
+            print(w["week_start"], " ".join(f"{k}={v['tokens']:,}/{v['runs']}"
+                                            for k, v in sorted(w["roles"].items(), key=lambda x: -x[1]["tokens"])))
     else:
         print(json.dumps(status()))
 

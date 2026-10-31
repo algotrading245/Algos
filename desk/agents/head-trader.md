@@ -17,6 +17,13 @@ Decide on these, in order, and write the reason in one or two sentences:
    both a USD short), a clash with another pod, too much on one currency or one theme. When two pods clash, pick the side with
    the better evidence and record why; the desk never holds both sides.
 5. **Costs and timing.** The spread now (`view quote SYM`), news inside the trade's first hour, a target under 1.5R.
+6. **Reviews.** Another pod may have reviewed the ticket (`reviews` in the row). Weigh a concrete objection (a clash with
+   its market, a release, a level) as evidence; say in the reason how it changed your call. With no review, say so and
+   judge alone.
+
+**A pod with no record** (`pod_closed_trades` 0, demo phase): checks 2 and 3 have nothing to judge yet. Approve a
+ticket that passes checks 1, 4 and 5 at minimum size (reject with "resize to 0.1" if it asks for more), so the desk
+can start to calibrate the pod.
 
 Then act: `ticket approve ID "why"` or `ticket reject ID "why"`. Every ticket gets an answer at every run; never
 leave one waiting. The risk gate checks limits after you; you check judgment.

@@ -23,6 +23,11 @@ RISK_PCT = 0.25  # each leg's base risk per trade; the gate caps it again (new-e
 ENTRY_TTL = dt.timedelta(minutes=10)  # a signal not placed within this is stale: the next bar's open has passed
 SHADOW_EVERY = dt.timedelta(hours=6)
 SHADOW_MAX_BARS = 5000
+# owner 2026-11-01 (6 trades, -1.74 R, PF 0.28): the systematic pod trades at half size until it has 20 closed trades;
+# then a review note goes to the inbox once, and half size stays until "probation": "cleared" is set in systematic.json
+PROBATION_TRADES = 20
+PROBATION_SCALE = 0.5
+REVIEW = paths.INBOX / "pod_review_systematic.md"
 
 # sandbox runs before the holdout, after costs (2026-10-26): PF on the market each leg is armed on
 DEFAULT_ARMED = [
@@ -97,11 +102,34 @@ def _close(live, a, s, t):
     return acted
 
 
-def _enter(live, a, e, s, t):
+def probation(st, t):
+    """The systematic pod's size factor: PROBATION_SCALE until the owner clears it. At PROBATION_TRADES closed trades
+    the review note is written once (st["probation_review"] records when)."""
+    if st.get("probation") == "cleared":
+        return 1.0
+    rows = [v for v in tickets.by_status("closed") if v.get("pod") == POD and v.get("R") is not None]
+    if len(rows) >= PROBATION_TRADES and not st.get("probation_review"):
+        R = sum(float(v["R"]) for v in rows)
+        wins, losses = sum(float(v["R"]) for v in rows if v["R"] > 0), -sum(float(v["R"]) for v in rows if v["R"] < 0)
+        pf = round(wins / losses, 2) if losses else None
+        paths.INBOX.mkdir(parents=True, exist_ok=True)
+        REVIEW.write_text(
+            f"# Review the systematic pod\n\n{len(rows)} closed trades at half size: {R:.2f} R in total, profit factor "
+            f"{pf}. Owner 2026-11-01: run it at half size until 20 trades, then review it. Keep it, cut legs "
+            f"(`python -m desk.cli edge disarm NAME MARKET`), or set \"probation\": \"cleared\" in logs/desk/state/systematic.json to "
+            f"go back to full size.\n", encoding="utf-8")
+        st["probation_review"] = t.isoformat(timespec="seconds")
+        journal.log("systematic_review_due", trades=len(rows), R=round(R, 3), pf=pf)
+    return PROBATION_SCALE
+
+
+def _enter(live, a, e, s, t, scale=1.0):
     if _mine(live, a, s["slot"]):
         return None  # one position per slot, as in the sandbox
+    if a.get("pod", POD) != POD:
+        scale = 1.0  # the probation is the systematic pod's, not other pods' armed legs
     tk = {"pod": a.get("pod", POD), "instrument": a["market"], "side": s["side"], "stop": s["stop"], "targets": s["targets"],
-          "risk_pct": round(float(a.get("risk_pct", RISK_PCT)) * s.get("weight", 1.0), 4),
+          "risk_pct": round(float(a.get("risk_pct", RISK_PCT)) * s.get("weight", 1.0) * scale, 4),
           "thesis": f"{a['edge']}: {s['why']}", "invalidation": f"stop {s['stop']:.5g}", "edge": a["edge"],
           "slot": s["slot"], "arm": True, "expires": (t + ENTRY_TTL).isoformat(timespec="seconds"),
           "evidence": f"sandbox card desk/edges/cards/{a['edge']}.json", "confidence": 3}
@@ -122,6 +150,7 @@ def run(b, cfg, t):
         return {}
     st = state()
     live = tickets.live()
+    scale = probation(st, t)
     out = {}
     for a in st["armed"]:
         key = f"{a['edge']} {a['market']}"
@@ -147,7 +176,7 @@ def run(b, cfg, t):
                 live = tickets.live()
             for s in sigs:
                 if not s.get("close"):
-                    tid = _enter(live, a, e, s, t)
+                    tid = _enter(live, a, e, s, t, scale)
                     if tid:
                         acts.append(tid)
                         live = tickets.live()

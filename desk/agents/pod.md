@@ -17,6 +17,9 @@ trades that make money per unit of risk do.
    If you need another pod's read on a market it owns (fxmacro on the dollar, indices on risk mood), ask it:
    `board ask fxmacro "Is the USD move after CPI a trend or a squeeze?" instrument=EURUSD`, or `board ask all ...`.
    Its answer shows in your next brief. Ask only what would change a trade.
+   **Review the other pods' proposed tickets** the brief lists, one comment each, before the head trader judges them:
+   `board review t1a2b3c4 "Clashes with my USD long; NFP Friday sits inside its first hour; stop is fine"`.
+   Be honest: the risk you see, the conflict with your markets, or "no objection" when there is none.
 4. Check your live tickets: is each thesis still intact? If its invalidation has happened, close it
    (`ticket close ID "why"`) or cancel it if not yet filled. Do not wait for the stop to do it for you.
 5. Look at your markets, all of them in one call: `view bars XAUUSD XAGUSD D1 20` (H1, H4, D1 serve most needs),
@@ -28,6 +31,8 @@ trades that make money per unit of risk do.
    and share their P&L with you.
 7. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
    your similar past setups once it exists (`memory similar ID` after `ticket new`), and propose it.
+   With no closed trades yet (the brief says so), propose your best setup at confidence 2 or more at minimum size
+   (risk_pct 0.1): the desk cannot calibrate a pod that never trades.
 8. Set a trigger if you want to be woken at a level or time rather than wait for the next brief:
    `trigger add <pod> above "why" instrument=EURUSD level=1.0900`. You have at most 6 wakes a day.
 9. When you learned something another pod can use (a regime, a level that held, a release that moves a market

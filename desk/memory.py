@@ -83,6 +83,22 @@ def talk(n=40):
     return [r for r in paths.read_jsonl(BOARD) if r.get("kind") in ("ask", "reply")][-n:]
 
 
+# ---- cross-review: another pod comments on a proposed ticket before the head trader judges it (owner 2026-11-01) --
+
+def review(pod, ticket_id, text):
+    tk = tickets.fold().get(ticket_id)
+    if tk is None:
+        raise ValueError(f"no ticket {ticket_id}")
+    if tk.get("pod") == pod:
+        raise ValueError("a pod does not review its own ticket")
+    return post(pod, text, tk.get("instrument"), kind="review", to=tk.get("pod"), reply_to=ticket_id)
+
+
+def reviews(ticket_id):
+    return [{"pod": r.get("pod"), "text": r.get("text"), "id": r.get("id")} for r in paths.read_jsonl(BOARD)
+            if r.get("kind") == "review" and r.get("reply_to") == ticket_id]
+
+
 # ---- pods share knowledge ----------------------------------------------------------------------------------------
 
 def learn(pod, text, instrument=None, share="desk"):

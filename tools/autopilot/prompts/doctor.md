@@ -3,6 +3,9 @@ decide, do the work, and stop.
 
 1. Follow your agent instructions: check the agents, the relay, the queue, the tester, the demo and the budget; fix
    only what an agent may fix; write `docs/autopilot/gaps_report.md`.
+   For the budget, run `python tools/autopilot/budget.py trend` and add a "Tokens by role" section to the report:
+   each role's tokens this week against its average of the 3 weeks before, flagging a role up more than 50% and why
+   (more runs, or more tokens per run). Tokens only, no dollar figures.
 2. Log each fix with `python tools/memory.py decide --role doctor ...`.
 3. Commit only these files and push:
    `git add docs/autopilot/gaps_report.md` (and `docs/ideas/queue.jsonl`, `docs/HANDOFF.md` or

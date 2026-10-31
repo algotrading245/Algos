@@ -41,12 +41,29 @@ def test_entry_becomes_an_armed_ticket_once(b, cfg, leg):
     assert list(out) == ["t_leg EURUSD"]
     tk = list(tickets.live().values())[0]
     assert tk["status"] == "approved" and tk["pod"] == "systematic" and tk["edge"] == "t_leg" and tk["slot"] == 0
-    assert tk["risk_pct"] == 0.125 and tk["trail"] == {"atr": 2.0, "tf": "H1", "n": 14}
+    assert tk["risk_pct"] == 0.0625 and tk["trail"] == {"atr": 2.0, "tf": "H1", "n": 14}  # half size: probation
     assert tk["time_stop"] == broker.server_epoch_to_utc(1_790_200_000).isoformat(timespec="seconds")
     assert systematic.run(b, cfg, t) == {}  # same bar: not read twice
     b.bar_frames[("EURUSD", "H1")] = frame(41)
     assert systematic.run(b, cfg, t) == {}  # new bar, same signal: the slot is taken
     assert len(tickets.live()) == 1
+
+
+def test_probation_reviews_once_and_holds_half_size_until_cleared(b, cfg, leg, monkeypatch):
+    monkeypatch.setattr(systematic, "PROBATION_TRADES", 2)
+    for R in (1.0, -2.0):
+        tid, errs = tickets.new(**ticket(pod="systematic"))
+        assert not errs, errs
+        tickets.closed(tid, R=R, pnl=R * 10, reason="test")
+    t = clocks.now()
+    st = systematic.state()
+    assert systematic.probation(st, t) == 0.5 and st["probation_review"]
+    note = systematic.REVIEW.read_text(encoding="utf-8")
+    assert "2 closed trades" in note and "-1.00 R" in note and "profit factor 0.5" in note
+    systematic.REVIEW.unlink()
+    assert systematic.probation(st, t) == 0.5 and not systematic.REVIEW.exists()  # written once
+    st["probation"] = "cleared"
+    assert systematic.probation(st, t) == 1.0
 
 
 def test_a_leg_trades_as_the_pod_that_armed_it(b, cfg, leg):

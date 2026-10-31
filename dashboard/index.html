@@ -563,6 +563,19 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   }
 
   // ---------- agents ----------
+  function trendTable(T) {
+    if (!T || !T.length) return "";
+    var tot = {};
+    T.forEach(function (w) { Object.keys(w.roles).forEach(function (r) { tot[r] = (tot[r] || 0) + w.roles[r].tokens; }); });
+    var roles = Object.keys(tot).sort(function (a, b) { return tot[b] - tot[a]; });
+    if (!roles.length) return "";
+    var m = function (n) { return n ? (n / 1e6).toFixed(n < 1e6 ? 2 : 1) + "M" : "–"; };
+    return '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Tokens by week</th>' +
+      T.map(function (w) { return "<th>" + esc(w.week_start.slice(5, 10)) + "</th>"; }).join("") + "</tr>" +
+      roles.map(function (r) {
+        return "<tr><td>" + esc(r) + "</td>" + T.map(function (w) { var x = w.roles[r]; return '<td title="' + (x ? x.runs + " runs" : "") + '">' + m(x && x.tokens) + "</td>"; }).join("") + "</tr>";
+      }).join("") + "</table></div>";
+  }
   function agents() {
     var B = D.budget;
     if (!B) { $("#budget").innerHTML = '<h3>Token budget</h3><div class="empty">No usage yet: run python tools/autopilot/budget.py backfill</div>'; }
@@ -575,7 +588,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
         '<div style="height:10px;border-radius:5px;background:var(--grid);overflow:hidden"><div style="height:100%;width:' + (f * 100).toFixed(1) + "%;background:" + col + '"></div></div>' +
         (roles.length ? '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Today</th><th>Runs</th><th>Cost</th><th>Tokens</th></tr>' +
           roles.map(function (r) { var x = B.today[r]; return "<tr><td>" + esc(r) + "</td><td>" + x.runs + "</td><td>$" + fmt(x.cost_usd) + "</td><td>" + Number(x.tokens).toLocaleString() + "</td></tr>"; }).join("") + "</table></div>"
-          : '<div class="sub" style="margin-top:10px">No agent runs today.</div>');
+          : '<div class="sub" style="margin-top:10px">No agent runs today.</div>') + trendTable(B.trend);
     }
     $("#agentCards").innerHTML = D.agents.map(function (a) {
       var col = AGENT_COL[a.name] || "#888";

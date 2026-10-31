@@ -84,7 +84,11 @@ def board(args):
         return _mem(memory.reply, _talker(), pos[0], " ".join(pos[1:]))
     if op == "asks":
         return memory.open_asks(_pod(pos[0]) if pos else _talker())
-    raise Refused("board post|read|ask|reply|asks")
+    if op == "review":
+        if len(pos) < 2:
+            raise Refused('board review TICKET "comment"')
+        return _mem(memory.review, _talker(), pos[0], " ".join(pos[1:]))
+    raise Refused("board post|read|ask|reply|asks|review")
 
 
 def memory_cmd(args):

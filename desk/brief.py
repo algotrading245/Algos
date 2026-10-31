@@ -6,6 +6,7 @@ shared, its intelligence profile (desk/intel.py), the calendar, its tickets and 
 its calibration; the head trader also sees every proposed ticket with its 20 most similar past setups and its pod's
 profile; the debrief sees the day's closed tickets; the monitor sees the issues the code found.
 """
+import datetime as dt
 import json
 
 from desk import cli, intel, journal, memory, news, paths, playbooks, systematic, tickets, triggers
@@ -43,6 +44,32 @@ def proposed(state=None):
     return [v for v in tickets.live(state).values() if v.get("status") == "proposed"]
 
 
+QUIET_RUNS = 3  # owner 2026-11-01: a pod that neither asked, answered, reviewed nor shared in its last 3 runs is nudged
+
+
+def quiet(pod, n=QUIET_RUNS):
+    """True when the pod's last n successful runs left no ask, reply, review or knowledge entry."""
+    runs = [r for r in journal.recent(["agent_run"], 14) if r.get("role") == pod and r.get("ok")]
+    if len(runs) < n:
+        return False
+    r = runs[-n]
+    since = (dt.datetime.fromisoformat(r["t"]) - dt.timedelta(seconds=r.get("seconds") or 0)).isoformat(
+        timespec="seconds")
+    talked = any(b.get("pod") == pod and b.get("kind") in ("ask", "reply", "review") and b.get("t", "") >= since
+                 for b in memory.board(10 ** 6))
+    shared = any(k.get("pod") == pod and k.get("t", "") >= since for k in paths.read_jsonl(memory.KNOWLEDGE))
+    return not (talked or shared)
+
+
+def to_review(pod, owns, state=None):
+    """Other pods' proposed tickets this pod has not reviewed yet, those on its own markets first."""
+    rows = [v for v in proposed(state) if v.get("pod") != pod
+            and all(r["pod"] != pod for r in memory.reviews(v["id"]))]
+    rows.sort(key=lambda v: v.get("instrument") not in owns)
+    return [cli._ticket_brief(v) | {"thesis": v.get("thesis"), "invalidation": v.get("invalidation"),
+                                    "evidence": v.get("evidence"), "reviews": memory.reviews(v["id"])} for v in rows]
+
+
 def build(role, job=None):
     """The brief for one agent run, as markdown."""
     from desk import clocks
@@ -69,6 +96,18 @@ def build(role, job=None):
         out.append(_section("Your intelligence profile: work on your weaknesses, lean on your strengths",
                             {k: prof[k] for k in ("level", "iq", "xp", "trading", "strengths", "weaknesses",
                                                   "work", "talk", "share")}))
+        out.append(_section("Tickets for you to review: one board review ID each, before the head trader judges",
+                            to_review(role, owns, state)))
+        if not prof["trading"].get("trades") and role != systematic.POD:
+            out.append(_section("You have no closed trades yet",
+                                "The desk cannot calibrate a pod with no record. Propose your best setup this run if "
+                                "one meets confidence 2 or more, at minimum size (risk_pct 0.1): the head trader "
+                                "approves a first ticket on its thesis, invalidation and costs alone."))
+        if quiet(role):
+            out.append(_section(f"Quiet for {QUIET_RUNS} runs",
+                                "You have not asked, answered, reviewed or shared in your last "
+                                f"{QUIET_RUNS} runs. This run: ask one pod a question (board ask), or share one "
+                                "thing you learned (memory learn)."))
         out.append(_section("Calendar, next 24 hours", [{k: v for k, v in e.items() if k != "time"}
                                                        for e in news.upcoming(24, t)]))
         out.append(_section(f"Your triggers ({role})", triggers.active(role)))
@@ -89,8 +128,10 @@ def build(role, job=None):
                                                          "evidence": v.get("evidence"), "cites": v.get("cites")},
                          "similar": memory.similar(v, 20, state),
                          "calibration": memory.calibration(v.get("pod"), state),
+                         "reviews": memory.reviews(v["id"]),
                          "pod_intel": {k: intel.profile(v.get("pod"), state)[k]
                                        for k in ("iq", "trading", "strengths", "weaknesses")}})
+            rows[-1]["pod_closed_trades"] = rows[-1]["pod_intel"]["trading"].get("trades") or 0
         out.append(_section("Proposed tickets, each with its 20 most similar past setups", rows))
         out.append(_section("The board (last 30 posts)", memory.board(30)))
         out.append(_section("Shadow benchmark", _shadow()))

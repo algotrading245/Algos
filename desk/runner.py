@@ -217,9 +217,32 @@ def refused(role, job, denied, t):
 def _with_head(roles, job, cfg):
     """Run roles, then the head trader when something waits for approval."""
     out = [run_agent(r, job, cfg) for r in roles]
+    rv = reviewer(cfg)
+    if rv:
+        out.append(run_agent(rv[0], dict(job, review=rv[1]), cfg))
     if brief.proposed():
         out.append(run_agent(HEAD, job, cfg))
     return out
+
+
+def reviewer(cfg):
+    """Cross-review (owner 2026-11-01): when a proposed ticket has no other pod's review yet, one more pod run before
+    the head trader reviews them, the active pod with the fewest reviews so far that proposed none of them.
+    Returns (pod, [ticket ids]) or None."""
+    from desk import memory
+    todo = [v for v in brief.proposed() if not memory.reviews(v["id"])]
+    if not todo:
+        return None
+    done = {}
+    for r in memory.board(10 ** 6):
+        if r.get("kind") == "review":
+            done[r.get("pod")] = done.get(r.get("pod"), 0) + 1
+    pods = [p for p in phase.pods_active(cfg) if p != brief.systematic.POD]
+    free = [p for p in pods if all(v.get("pod") != p for v in todo)]
+    pick = min(free or [p for p in pods if p != todo[0].get("pod")], key=lambda p: done.get(p, 0), default=None)
+    if pick is None:
+        return None
+    return pick, [v["id"] for v in todo if v.get("pod") != pick]
 
 
 def missing_notes(job, pods, since, cfg):

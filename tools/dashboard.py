@@ -63,7 +63,7 @@ def budget_status():
     try:
         sys.path.insert(0, str(ROOT / "tools" / "autopilot"))
         import budget
-        return budget.status()
+        return budget.status() | {"trend": budget.trend()}
     except Exception:
         return None
 

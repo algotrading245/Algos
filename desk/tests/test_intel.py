@@ -161,6 +161,50 @@ def test_dashboard_shows_intel_talk_and_knowledge():
     assert next(p for p in pods if p["name"] == "metals")["intel"]["talk"]["asked"] == 1
 
 
+def test_review_a_ticket_and_cli(monkeypatch):
+    tid, errs = tickets.new(**ticket()); assert not errs, errs
+    with pytest.raises(ValueError, match="own ticket"):
+        memory.review("fxmacro", tid, "fine")
+    with pytest.raises(ValueError, match="no ticket"):
+        memory.review("metals", "tnope", "fine")
+    r = memory.review("metals", tid, "Clashes with my USD long")
+    assert r["to"] == "fxmacro" and r["instrument"] == "EURUSD"
+    monkeypatch.setenv("AURUM_DESK_ROLE", "indices")
+    extras.board(["review", tid, "No", "objection"])
+    assert [(v["pod"], v["text"]) for v in memory.reviews(tid)] == [("metals", "Clashes with my USD long"),
+                                                                     ("indices", "No objection")]
+
+
+def test_runner_picks_a_reviewer_that_did_not_propose():
+    from conftest import backdate_phase
+    backdate_phase(20)
+    cfg = paths.config()
+    tid, _ = tickets.new(**ticket())
+    pod, ids = runner.reviewer(cfg)
+    assert pod not in ("fxmacro", "systematic") and ids == [tid]
+    memory.review(pod, tid, "ok")
+    assert runner.reviewer(cfg) is None
+
+
+def test_brief_review_list_idle_and_quiet(monkeypatch):
+    monkeypatch.setenv("AURUM_DESK_DRY", "1")
+    from desk import brief
+    tid, _ = tickets.new(**ticket())
+    text = brief.build("metals")
+    assert "Tickets for you to review" in text and tid in text and "You have no closed trades yet" in text
+    assert "Quiet for" not in text
+    for _ in range(brief.QUIET_RUNS):
+        journal.log("agent_run", role="metals", ok=True, seconds=30)
+    assert brief.quiet("metals") and "Quiet for" in brief.build("metals")
+    memory.review("metals", tid, "ok")
+    assert not brief.quiet("metals")
+    assert tid not in brief.build("metals").split("Tickets for you to review")[1].split("##")[0]
+    head = brief.build(cli.HEAD)
+    assert '"pod_closed_trades": 0' in head and "\"text\": \"ok\"" in head
+    closed(1.0, pod="metals", instrument="XAUUSD")
+    assert "You have no closed trades yet" not in brief.build("metals")
+
+
 def test_runner_journals_unanswered_asks():
     q = memory.ask("metals", "fxmacro", "?")
     memory.ask("metals", "all", "anyone?")
