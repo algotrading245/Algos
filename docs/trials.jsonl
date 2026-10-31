@@ -570,3 +570,4 @@
 {"id": "prescreen:leg_cross_dailyz_meanrev_3mkts", "when": "2026-10-31T04:45:57", "verdict": "SCREEN_PASS", "count": 16}
 {"id": "leg_cross_dailyz_meanrev_3mkts", "when": "2026-10-31T04:48:05", "verdict": "FAIL at halves"}
 {"id": "ml_volmanaged_grid_hold_sizing", "when": "2026-10-31T04:54:09", "verdict": "FAIL at halves"}
+{"id": "paper_jones_pyun_vix_conditional_index_reversal", "when": "2026-10-31T05:07:42", "verdict": "FAIL at halves"}
