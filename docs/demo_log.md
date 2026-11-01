@@ -361,3 +361,12 @@ Checked by the monitor role. `tools/demo_check.py` reports ok, 30 EA lines, 36 j
 
 - **What it does at about 10k EUR:** at 0.01-lot granularity, half the risk rounded to the nearest step trades exactly the pairs that 1.19 traded, at the same 1-step size. The halving applies only to positions of 2 steps or more. The 10 pairs skipped on 10-30 stay skipped. Trading them would need more than the full 0.5% risk on a weak trend weight, which goes against the halving, so it was not done. book_sim's halved-fix figures apply to v1.20 only from 2 steps up.
 - **Deploy:** waits for the owner (hold, graceful close, release, the keeper starts T16 with t16_attach.ini). The .ex5 is not in the repo.
+
+## 2026-11-01 (Sunday), 21:57: AurumFunded 1.23 deployed on T16
+
+Owner's yes 2026-11-01. 1.23 adds the dashboard stop switch (ff247e2) on top of 1.20-1.22.
+
+- **How:** `terminal.ps1 -Hold -By owner -Hours 0.25` (graceful close), then `-Release`; the keeper relaunched T16 at 21:57:35 from t16_attach.ini.
+- **Loaded:** the journal at 21:57:52 shows 23 inputs read from AurumFunded_FTMO_phase1_legs_nyclock_dual.set and "expert AurumFunded (XAUUSD,M15) loaded successfully". The .ex5 (21:12) is newer than the 1.23 source. 0 positions, 0 orders at restart.
+- **Clock line:** the EA logs "3 expected" for the server offset. That is a weekend artifact: TimeCurrent is Friday's last tick, still before the US DST end. From Monday's first tick it expects 2.
+- **AurumHydra 1.43:** compiled, but Hydra is not attached on T16, so nothing changes there.
