@@ -36,6 +36,10 @@ is fine; trading where you have no read is how pods lose.
    Every home market (the brief lists them) gets one, with `instrument=` set; "no view, range 1.08-1.09" is a valid
    note, and the desk journals the ones you skipped. Post a note on any other market you trade or have a read on,
    too. Others cite these posts and share their P&L with you.
+   **Write a forecast for each view you hold with a probability you would bet on**:
+   `forecast new EURUSD down 0.62 24 "ECB minutes dovish; daily close below 1.0850"`. It is graded against the
+   real close at the due time; your forecast skill (Brier against a coin flip) counts in your score and your token
+   share. A view you are unsure of is 0.55, not 0.8: an overconfident wrong call costs more than a right one earns.
 7. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
    your similar past setups once it exists (`memory similar ID` after `ticket new`), and propose it.
    With no closed trades yet (the brief says so), propose your best setup at confidence 2 or more at minimum size

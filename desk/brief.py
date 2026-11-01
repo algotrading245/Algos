@@ -9,7 +9,8 @@ profile; the debrief sees the day's closed tickets; the monitor sees the issues 
 import datetime as dt
 import json
 
-from desk import cli, intel, journal, memory, news, paths, playbooks, research, systematic, tickets, triggers
+from desk import (cli, forecasts, intel, journal, memory, news, paths, playbooks, research, systematic, tickets,
+                  triggers)
 
 HEAD = cli.HEAD
 
@@ -100,6 +101,11 @@ def build(role, job=None):
         out.append(_section("Your intelligence profile: work on your weaknesses, lean on your strengths",
                             {k: prof[k] for k in ("level", "iq", "xp", "trading", "strengths", "weaknesses",
                                                   "work", "talk", "share")}))
+        out.append(_section("Your forecasts: write a call on any market you have a view on (forecast new SYM up|down "
+                            "PROB HOURS \"why\"). They are graded daily against the real price; the skill (Brier "
+                            "against a coin flip) feeds your score and your token share. Only a calibrated PROB pays: "
+                            "a confident wrong call costs more than a confident right one earns",
+                            forecasts.brief(role, t)))
         out.append(_section("Tickets for you to review: one board review ID each, before the head trader judges",
                             to_review(role, owns, state)))
         if not prof["trading"].get("trades") and role != systematic.POD:

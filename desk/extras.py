@@ -19,12 +19,17 @@ edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
 edge arm NAME MARKET [key=value ...] [risk=PCT]    any pod, on any desk market (owner 2026-11-01), or the owner
                                                    [pod=POD]; needs a passing sandbox run; the leg's P&L is the pod's
 edge disarm NAME [MARKET]                          a pod disarms its own legs; systematic and the owner any leg
+forecast new SYM up|down PROB HOURS "why" [level=PRICE]   a pod's call: SYM closes above/below the level (the mid
+                                                   now by default) in HOURS (1-120), with chance PROB (0.5-0.99);
+                                                   graded daily against the real price, the skill feeds the pod's
+                                                   score and token share
+forecast list [POD] [open|graded|void] [n=20] | forecast skill [POD]
 scores                                            the scorekeeper's last scores and the pod allocation
 live-gate                                          the live gate, evaluated now (it also writes reports/live_gate.md)
 """
 from pathlib import Path
 
-from desk import cli, live_gate, memory, paths, playbooks, scorekeeper, tickets
+from desk import cli, forecasts, live_gate, memory, paths, playbooks, scorekeeper, tickets
 from desk.cli import HEAD, Refused
 
 EDITORS = (HEAD, "")  # the head trader, or the owner (no role)
@@ -248,6 +253,37 @@ def _spread_over_cost(market, cfg):
     return None
 
 
+def forecast(args):
+    pos, kv = _kv_split(args)
+    if not pos or pos[0] not in ("new", "list", "skill"):
+        raise Refused('forecast new SYM up|down PROB HOURS "why" [level=PRICE] | list [POD] [open|graded|void] | '
+                      'skill [POD]')
+    op, rest = pos[0], pos[1:]
+    if op == "skill":
+        return forecasts.skill(_pod(rest[0])) if rest else forecasts.skills()
+    if op == "list":
+        st = next((a for a in rest if a in ("open", "graded", "void")), None)
+        pod = next((_pod(a) for a in rest if a not in ("open", "graded", "void")), None)
+        rows = [f for f in forecasts.all_rows() if (pod is None or f["pod"] == pod) and (st is None or f["status"] == st)]
+        return rows[-int(kv.get("n", 20)):]
+    if len(rest) < 5:
+        raise Refused('forecast new SYM up|down PROB HOURS "why" [level=PRICE]')
+    cfg = paths.config()
+    me = cli._pod_role(cfg)
+    if me is None:
+        if cli.role() != "":
+            raise Refused("only a pod (or the owner, with pod=POD) makes forecasts")
+        me = _pod(kv.get("pod", ""), cfg)
+    elif kv.get("pod", me) != me:
+        raise Refused("a pod makes forecasts as itself")
+    sym, direction, prob, hours, why = rest[0].upper(), rest[1], rest[2], rest[3], " ".join(rest[4:])
+    try:
+        level = float(kv["level"]) if "level" in kv else None
+        return {"ok": True, "forecast": forecasts.new(me, sym, direction, prob, hours, why, level)}
+    except ValueError as e:
+        raise Refused(str(e))
+
+
 def scores(_args):
     return {"scores": paths.read_json(scorekeeper.SCORES, {}), "alloc": paths.read_json(scorekeeper.ALLOC, {})}
 
@@ -257,5 +293,5 @@ def gate(_args):
 
 
 for _name, _fn in (("board", board), ("memory", memory_cmd), ("playbook", playbook), ("edge", edge),
-                   ("scores", scores), ("live-gate", gate), ("intel", intel_cmd)):
+                   ("scores", scores), ("live-gate", gate), ("intel", intel_cmd), ("forecast", forecast)):
     cli.register(_name, _fn)

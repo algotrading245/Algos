@@ -132,6 +132,13 @@ def _report(sc):
     r = sc["rejected"]
     lines += ["", f"Rejected tickets followed on paper: {r['followed']}, which would have made {r['would_have_made_R']} R "
                   f"({r['pending']} still open)."]
+    if sc.get("forecasts"):
+        lines += ["", "## Forecasts (Brier skill against a coin flip, shrunk by n/(n+20))", "",
+                  "| pod | graded | hit | Brier | skill raw | skill | open |", "|---|---|---|---|---|---|---|"]
+        for p, f in sc["forecasts"].items():
+            lines.append(f"| {p} | {f['graded']} | {f['hit'] if f['hit'] is not None else '-'} | "
+                         f"{f['brier'] if f['brier'] is not None else '-'} | "
+                         f"{f['skill_raw'] if f['skill_raw'] is not None else '-'} | {f['skill']} | {f['open']} |")
     return "\n".join(lines) + "\n"
 
 
@@ -222,7 +229,16 @@ def daily(t=None, b=None):
         follow_rejected(b, t, state)
     except Exception as e:  # a broker hiccup must not cost the day's scores
         journal.log("scorekeeper_error", step="rejected", error=f"{type(e).__name__}: {e}")
+    from desk import forecasts
+    try:
+        forecasts.grade(b, t)
+    except Exception as e:
+        journal.log("scorekeeper_error", step="forecasts", error=f"{type(e).__name__}: {e}")
     sc = scores(t, state)
+    sc["forecasts"] = forecasts.skills(t)
+    for p, f in sc["forecasts"].items():
+        if p in sc["pods"]:
+            sc["pods"][p]["forecast_skill"] = f["skill"]
     paths.write_json(SCORES, sc)
     paths.REPORTS.mkdir(parents=True, exist_ok=True)
     (paths.REPORTS / f"scores_{t.date().isoformat()}.md").write_text(_report(sc), encoding="utf-8")

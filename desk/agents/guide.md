@@ -43,6 +43,7 @@ python -m desk.cli ticket approve|reject ID "why"    (head trader only)
 python -m desk.cli playbook edit POD FILE "why"      (your own pod's; the head trader any)
 python -m desk.cli memory lesson POD "text" [ticket=ID]   (debrief only)
 python -m desk.cli kill "why"                        (emergency only: halts the desk and closes every position)
+python -m desk.cli forecast new SYM up|down PROB HOURS "why" [level=PRICE] | forecast list [POD] | forecast skill
 python -m desk.cli scores | live-gate
 ```
 
