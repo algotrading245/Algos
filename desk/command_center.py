@@ -13,8 +13,9 @@ recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the fir
 the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
 lines. The activity feed: today's agent runs, journal rows and git commits, newest first. The funded card and Funded
 Equity KPI from the T16 AurumFunded EA log (read only; private lines dropped). Live on Pods (from the same state): each pod's allocation, work and
-talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
-pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
+talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets, the KPI row, each
+pod's brief line (markets owned, state, level), its wakes from the config schedule and what it knows (its own
+knowledge entries, most endorsed first); the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
 list from mql5/Experts/_archive, and the Hydra legs from the armed edges (risk per leg); trade counts, today's
 P/L per leg, the diff rows and the other guards are still design text. Live on Processes: each scheduled job's last run
@@ -471,10 +472,42 @@ def _hhmm(t):
         return "—"
 
 
+def _pod_panel(pid, p, cfg, know):
+    """The selected pod's brief line, its wakes and what it knows (its own knowledge entries, most endorsed first)."""
+    pc = (cfg.get("pods") or {}).get(pid) or {}
+    mk = pc.get("owns") or []
+    owns = ", ".join(mk[:5]) + (f" +{len(mk) - 5} More" if len(mk) > 5 else "") if mk else "No Markets Of Its Own"
+    lv = ((p.get("intel") or {}).get("level") or {})
+    st = ("Paused" if p.get("paused") else "Active" if p.get("active")
+          else f"Opens In Phase {p.get('opens_phase') or pc.get('phase') or '?'}")
+    brief = f"Owns {owns} · {st}" + (f" · Level {lv['n']} {lv.get('name', '')}".rstrip() if lv.get("n") else "")
+    wd = we = 0
+    for ev in cfg.get("schedule") or []:
+        if ev.get("kind") == "brief" and pid in (ev.get("pods") or [pid]):
+            days = ev.get("days") or range(7)
+            wd += any(d < 5 for d in days)
+            we += any(d >= 5 for d in days)
+    wakes = (f"{wd} Briefs Each Weekday" if wd else "No Weekday Briefs") + (f" · {we} On Weekends" if we else "") + " · Plus Triggers"
+    mine = [k for k in know if k.get("pod") == pid]
+    mine.sort(key=lambda k: (len(k.get("endorsed_by") or []), str(k.get("t") or "")), reverse=True)
+    rows = []
+    for k in mine[:3]:
+        n = len(k.get("endorsed_by") or [])
+        rows.append(f"['{_js(str(k.get('text') or '')[:90])}', '{f'{n} Endorsed' if n else 'New'}']")
+    knows = "knows: [" + (", ".join(rows) or "['Nothing Shared Yet', '']") + "]"
+    return _js(brief), _js(wakes), knows
+
+
 def _patch_pods_page(src, state):
     pods = {str(p.get("name")): p for p in state.get("pods") or []}
     eq = float((state.get("limits") or {}).get("equity") or 0)
+    try:
+        cfg = json.loads((ROOT / "desk" / "config.json").read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        cfg = {}
+    know = [k for k in state.get("knowledge") or [] if isinstance(k, dict)]
     for pid, p in pods.items():
+        brief, wakes, knows = _pod_panel(pid, p, cfg, know)
         it, sc = p.get("intel") or {}, p.get("score") or {}
         w, tk, sh, tr = it.get("work") or {}, it.get("talk") or {}, it.get("share") or {}, it.get("trading") or {}
         trades = int(sc.get("trades") or tr.get("trades") or 0)
@@ -485,8 +518,11 @@ def _patch_pods_page(src, state):
         tail = (f"wk: {wk:.2f}, bench: 0, below: 0, closed: {trades}, followed: '{float(sc.get('total_R') or 0):+.2f} R'"
                 + (", idle: true" if trades == 0 else ""))
 
-        def one(m, c=c, tail=tail, alloc=round(float(p.get("share") or 0) * 100), hit=float(tr.get("hit") or sc.get("hit") or 0)):
-            s = re.sub(r"alloc: \d+", f"alloc: {alloc}", m.group(0), count=1)
+        def one(m, c=c, tail=tail, alloc=round(float(p.get("share") or 0) * 100), hit=float(tr.get("hit") or sc.get("hit") or 0),
+                brief=brief, wakes=wakes, knows=knows):
+            s = re.sub(r"brief: '[^']*'", lambda _: f"brief: '{brief}'", m.group(0), count=1)
+            s = re.sub(r"knows: \[\[.*?\]\](?= \})", lambda _: f"wakes: '{wakes}', {knows}", s, count=1)
+            s = re.sub(r"alloc: \d+", f"alloc: {alloc}", s, count=1)
             s = re.sub(r"c: \{[^}]*\}", lambda _: c, s, count=1)
             s = re.sub(r"winR: [\d.]+", f"winR: {hit:.2f}", s, count=1)
             s = re.sub(r" probation: '[^']*',", "", s, count=1)
@@ -495,6 +531,7 @@ def _patch_pods_page(src, state):
         src = re.sub(rf"\{{ id: '{re.escape(pid)}', name: [^\n]*", one, src, count=1)
     src = src.replace("const nameOf = (id) => PODS.find((p) => p.id === id).name;",
                       "const nameOf = (id) => ((PODS.find((p) => p.id === id) || {}).name || String(id));", 1)
+    src = src.replace("wakes: 'Six Wakes A Day',", "wakes: p.wakes || 'Six Wakes A Day',", 1)
 
     board = sorted(state.get("board") or [], key=lambda b: str(b.get("t") or ""), reverse=True)
     talk = []

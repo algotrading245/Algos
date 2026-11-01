@@ -163,6 +163,10 @@ def test_command_center_pods_shows_live_state():
              "board": [{"t": "2026-11-01T10:00:00", "pod": "head-trader", "kind": None, "text": "It's flat \\ ok"}],
              "tickets": [{"id": "t-1", "pod": "crypto", "status": "blocked", "side": "sell", "instrument": "BTCUSD",
                           "risk_pct": 0.1, "why": "past the weekend cutoff"}]}
+    state["knowledge"] = [{"t": "2026-10-30T09:00:00", "id": "k1", "pod": "systematic", "text": "Noise leg's fills lag", "endorsed_by": []},
+                          {"t": "2026-10-29T09:00:00", "id": "k2", "pod": "systematic", "text": "Gold's dip fills on Fridays",
+                           "endorsed_by": ["fxmacro", "metals"]},
+                          {"t": "2026-10-29T09:00:00", "id": "k3", "pod": "metals", "text": "not mine", "endorsed_by": []}]
     out = cc.build(dashboard.BUNDLE, {}, [], [], {"state": state}).decode("utf-8")
     man = json.loads(cc._MANIFEST.search(out).group(2))
     e = man[json.loads(cc._ORDER.search(out).group(1))[1]]
@@ -172,6 +176,10 @@ def test_command_center_pods_shows_live_state():
     assert "from: 'head-trader'" in pods and "|| {}).name || String(id)" in pods
     assert "past the weekend cutoff" in pods and "state: 'Blocked'" in pods
     assert "label: 'Messages Today', value: '1'" in pods
+    row = next(l for l in pods.splitlines() if "{ id: 'systematic'" in l)
+    assert "brief: 'Owns " in row and "Briefs Each Weekday" in row
+    assert "knows: [['Gold’s dip fills on Fridays', '2 Endorsed'], ['Noise leg’s fills lag', 'New']]" in row
+    assert "not mine" not in row and "wakes: p.wakes || 'Six Wakes A Day'," in pods
 
 
 def test_command_center_eas_shows_live_state():
