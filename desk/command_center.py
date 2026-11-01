@@ -11,7 +11,7 @@ rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and dai
 rows, the alerts (needs_you) and the idea queue. From the usage log and docs/: the token chart (today, per role), the
 recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. From
 the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
-lines. Live on Pods (from the same state): each pod's allocation, work and
+lines. The activity feed: today's agent runs, journal rows and git commits, newest first. Live on Pods (from the same state): each pod's allocation, work and
 talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
 pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
@@ -1193,6 +1193,84 @@ def _patch_main_procs(src, rows, mem):
     return src
 
 
+_FEED_TAGS = {"monitor": "Monitor", "watchdog": "Keeper", "terminal_started": "Keeper", "clock_stalled": "Alert",
+              "commit_error": "Alert"}
+_FEED_ROLE = {"finder": "Finder", "builder": "Builder", "portfolio-manager": "Portfolio", "portfolio": "Portfolio",
+              "doctor": "Doctor", "monitor": "Monitor"}
+
+
+def _git_today():
+    """[(HH:MM local, subject)] for today's commits, newest first."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "log", "--since=midnight", "--format=%ad|%s", "--date=format:%H:%M"],
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [tuple(l.split("|", 1)) for l in out.splitlines() if "|" in l]
+
+
+def _feed_text(r):
+    k = str(r.get("kind") or "")
+    if k == "agent_run":
+        s = f"{_ROLE_NAME.get(r.get('role'), _title(re.sub('[_-]', ' ', str(r.get('role') or 'agent'))))} Run"
+        if r.get("model"):
+            s += f" · {_title(r['model'])}"
+        if r.get("tokens"):
+            s += f" · {int(r['tokens']):,} Tokens"
+        return s if r.get("ok", True) else s + " · Failed"
+    if k == "monitor":
+        n = r.get("issues")
+        return f"Monitor: {len(n) if isinstance(n, list) else n or 0} Issues"
+    if k.startswith("ticket_"):
+        what = {"new": "New", "approve": "Approved", "block": "Blocked"}.get(k[7:], _title(k[7:]))
+        s = f"Ticket {what}"
+        if r.get("id"):
+            s += f" · {r['id']}"
+        if k == "ticket_new" and r.get("instrument"):
+            s += f" · {r['instrument']} {r.get('side') or ''}".rstrip()
+        return s + (f" · {r['why']}" if r.get("why") else "")
+    if k == "shadow" and r.get("total_r") is not None:
+        return f"Shadow Book · {float(r['total_r']):+.2f}R"
+    bits = [_title(k.replace("_", " "))]
+    for f in ("pod", "instrument", "name", "did", "why", "events", "last"):
+        if r.get(f) not in (None, "", [], {}):
+            v = r[f]
+            bits.append(str(len(v)) + " Events" if isinstance(v, list) else str(v))
+    return " · ".join(bits)
+
+
+def _patch_main_feed(src, state, usage, git_rows, today=None):
+    """Main page: the activity feed from today's agent runs, journal rows and commits, newest first."""
+    today = today or dt.date.today()
+    rows = []
+    for r in usage or []:
+        ts = str(r.get("ts") or "")
+        if ts[:10] != today.isoformat():
+            continue
+        role = str(r.get("role") or "")
+        txt = f"Run Done · {_title(r.get('model') or role)} · {int(r.get('output') or 0):,} Out"
+        rows.append((ts[11:16], _FEED_ROLE.get(role, "Desk"), txt))
+    for r in (state or {}).get("journal") or []:
+        t = _ts(r.get("t"))
+        if t is None:
+            continue
+        t = t.astimezone()
+        if t.date() != today:
+            continue
+        k = str(r.get("kind") or "")
+        tag = "Ticket" if k.startswith("ticket_") else _FEED_TAGS.get(k, "Desk")
+        rows.append((t.strftime("%H:%M"), tag, _feed_text(r)))
+    for hm, subj in git_rows or []:
+        rows.append((hm, "Git", subj))
+    if not rows:
+        return src
+    rows.sort(key=lambda x: x[0], reverse=True)
+    js = json.dumps([[t, g, _js(_cut(x, 90))] for t, g, x in rows[:30]], ensure_ascii=False)
+    return re.sub(r"const baseFeed = \[\n.*?\n    \]\.map\(\(\[t, src, text\]\)",
+                  lambda _: "const baseFeed = " + js[:-1] + "\n    ].map(([t, src, text])", src, count=1, flags=re.S)
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -1209,6 +1287,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_gate, src, state)
             src = _safe(_patch_pods, src, state)
             src = _safe(_patch_alerts, src, state)
+            src = _safe(lambda s: _patch_main_feed(s, state, usage, _git_today()), src)
             src = _patch_sources(src)
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
         src = _safe(_patch_main_live, src, live, usage)

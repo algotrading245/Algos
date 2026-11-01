@@ -373,6 +373,29 @@ def _main_template():
     return json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
 
 
+def test_command_center_main_feed_from_usage_journal_and_git():
+    import datetime as dt
+    from desk import command_center as cc
+    src = _main_template()
+    day = dt.date(2026, 11, 1)
+    usage = [{"ts": "2026-11-01T09:50:05", "role": "finder", "model": "sonnet", "output": 2703},
+             {"ts": "2026-10-31T09:50:05", "role": "finder", "model": "sonnet", "output": 1}]
+    state = {"journal": [
+        {"t": "2026-11-01T11:01:00+00:00", "kind": "ticket_approve", "id": "abc-1", "why": "ok"},
+        {"t": "2026-11-01T11:01:00+00:00", "kind": "agent_run", "role": "head-trader", "model": "opus", "tokens": 39616},
+        {"t": "2026-10-30T11:00:00+00:00", "kind": "monitor", "issues": 3}]}
+    out = cc._patch_main_feed(src, state, usage, [("13:55", "Dashboard it's live")], today=day)
+    assert "'Demo Log: AurumFunded 1.19 Deployed On T16'" not in out
+    assert '["09:50", "Finder", "Run Done · Sonnet · 2,703 Out"]' in out
+    assert '"Ticket", "Ticket Approved · abc-1 · ok"]' in out
+    assert "Head Trader Run · Opus · 39,616 Tokens" in out
+    assert '["13:55", "Git", "Dashboard it’s live"]' in out
+    assert "Monitor: 3 Issues" not in out and "1 Out" not in out
+    assert out.index('"13:55"') < out.index('"09:50"')
+    assert "\n    ].map(([t, src, text])" in out
+    assert cc._patch_main_feed(src, {}, [], [], today=day) == src
+
+
 def test_command_center_main_shows_live_processes():
     from desk import command_center as cc
     D = r"C:\MetaTrader 5 - Desk\terminal64.exe"
