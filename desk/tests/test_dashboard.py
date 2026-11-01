@@ -135,3 +135,20 @@ def test_command_center_build_patches_every_page():
     assert main.count("/api/kill") == 1 and "'X-Desk': 'kill'" in main
     assert "XAUUSD" in main and "−12.30" in main
     assert "Last Run: J19 Judged As Diagnostic Only" in main
+
+
+def test_command_center_main_shows_live_state():
+    import base64, gzip
+    from desk import command_center as cc
+    state = {"live_gate": {"checks": {"weeks": {"need": 8, "have": 0.7, "ok": False},
+                                      "trades": {"need": 100, "have": 7, "ok": False}}},
+             "needs_you": [{"level": "WARN", "what": "Demo heartbeat is stale"}], "pods": []}
+    extra = {"state": state, "queue": [{"id": "q-live-1", "status": "new"}]}
+    out = cc.build(dashboard.BUNDLE, {}, [], [], extra).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[0]]
+    raw = base64.b64decode(e["data"])
+    main = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    assert "gv('Trades', '7 Of 100'" in main and "gv('Weeks', '0.7 Of 8.0'" in main
+    assert "Demo heartbeat is stale" in main
+    assert "q-live-1" in main

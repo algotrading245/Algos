@@ -415,7 +415,12 @@ class Handler(BaseHTTPRequestHandler):
             positions = (self.state.live.read() or {}).get("positions")
         except Exception:
             positions = None
-        return read_js(LIVE_JS)[0], read_tail_jsonl(USAGE, 5000) or [], positions
+        try:
+            state = self.state.build()
+        except Exception:
+            state = None
+        extra = {"state": state, "queue": read_tail_jsonl(QUEUE, 60) or []}
+        return read_js(LIVE_JS)[0], read_tail_jsonl(USAGE, 5000) or [], positions, extra
 
     def do_GET(self):
         path = self.path.split("?")[0]
