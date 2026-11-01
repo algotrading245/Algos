@@ -168,3 +168,4 @@ committed).
 | 2026-11-01 03:40 | judge | review fix_graziani_rev (v1.22, 622e9a6) | 5/7 fixed; 2 blocking (Hydra compile log, lesson-21 book exits); fix_graziani_rev2 queued; j20 running, not counted until done |
 | 2026-11-01 03:50 | judge | review fix_graziani_rev2 (5092522) | 1 blocking (no AurumHydra compile log committed, Hydra is v1.42), 3 minor; fix_graziani_rev3 queued; j20 running, judged when done |
 | 2026-11-01 03:42 | tester | Collected j20 off run, started the on run | j20 running |
+| 2026-11-01 04:17 | tester | Collected j20 (AurumFunded grz2): net +13,732 (+137%), 2298.0 trades, PF 1.63, equity DD 7.75% | j20 done, needs judging |
