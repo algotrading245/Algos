@@ -1685,6 +1685,88 @@ def _patch_main_feed(src, state, usage, git_rows, today=None):
                   lambda _: "const baseFeed = " + js[:-1] + "\n    ].map(([t, src, text])", src, count=1, flags=re.S)
 
 
+# Where a blocked ticket stopped on the 11-stage lane (Pod, Head Trader, Halts, Ticket, Market, Risk, Book, Prop,
+# Size, Executor, MT5), read from the gate's reason.
+_LANE_WORDS = ((("broker refused",), 10), (("halt", "kill"), 2), (("market", "session", "weekend", "cutoff", "closed"), 4),
+               (("book", "correl"), 6), (("prop", "daily", "loss"), 7), (("volume", "size", "lot"), 8), (("risk",), 5))
+
+
+def _lane_ticket(t, pods):
+    st, why = str(t.get("status") or "").lower(), str(t.get("why") or "")
+    pn = (pods.get(str(t.get("pod"))) or {}).get("name") or t.get("pod") or "?"
+    title = f"{_title(str(pn))} · {_title(str(t.get('side') or ''))} {t.get('instrument') or ''}".strip()
+    stage, done, blocked, ask, rej = 1, False, None, False, False
+    r = f"{float(t['R']):+.2f} R" if isinstance(t.get("R"), (int, float)) else ""
+    note = why or str(t.get("thesis") or "")
+    if st == "proposed":
+        ask, note = True, "Waits For The Head Trader. Your Sign-Off Stands In For Theirs."
+    elif st == "approved":
+        stage = 9
+    elif st == "placed":
+        stage = 10
+    elif st in ("open", "closed"):
+        stage, done = 10, True
+        note = ("Closed " + str(t.get("updated") or "")[5:10] + (" · " + r if r else "") if st == "closed" else "Open On MT5") \
+            + (" · " + note if note else "")
+    elif st == "rejected":
+        blocked, rej, note = 1, True, "Rejected" + (": " + why if why else "")
+    elif st in ("cancelled", "expired"):
+        blocked, note = 9, _title(st) + " Before It Was Placed" + (": " + why if why else "")
+    else:
+        low = why.lower()
+        blocked = next((n for ws, n in _LANE_WORDS if any(w in low for w in ws)), 5)
+        note = "Blocked: " + (why or "no reason given")
+    stage = blocked if blocked is not None else stage
+    return (f"{{ id: '{_js(str(t.get('id') or '?'))}', title: '{_js(title)}', stage: {stage}, done: {str(done).lower()}, "
+            f"blocked: {'null' if blocked is None else blocked}, ask: {str(ask).lower()}, rejected: {str(rej).lower()}, "
+            f"loop: false, note: '{_js(_cut(_title(note), 120))}' }}")
+
+
+def _patch_main_tickets(src, state):
+    """Ticket Lane: the six most recently updated desk tickets, each on the stage its status puts it."""
+    pods = {str(p.get("name")): p for p in state.get("pods") or []}
+    tickets = sorted((t for t in state.get("tickets") or [] if isinstance(t, dict)),
+                     key=lambda t: str(t.get("updated") or t.get("created") or ""), reverse=True)[:6]
+    rows = [_lane_ticket(t, pods) for t in tickets]
+    src = re.sub(r"tickets: \[\n.*?\n      \], tkSeq: \d+",
+                 lambda _: "tickets: [" + ", ".join(rows) + f"], tkSeq: {len(rows)}", src, count=1, flags=re.S)
+    src = src.replace("filledN / s.tickets.length * 100", "filledN / Math.max(1, s.tickets.length) * 100")
+    return src.replace(">Sample Tickets<", ">Live Tickets<" if rows else ">No Tickets Yet<", 1)
+
+
+def _patch_main_debrief(src, state, root):
+    """Debrief card: this week's (Mon-Fri, New York) finished debrief runs, the closed tickets they read, the lessons."""
+    try:
+        from zoneinfo import ZoneInfo
+        ny = ZoneInfo("America/New_York")
+    except Exception:
+        ny = dt.timezone.utc
+
+    def at(s):
+        try:
+            d = dt.datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+            return (d if d.tzinfo else d.replace(tzinfo=dt.timezone.utc)).astimezone(ny)
+        except ValueError:
+            return None
+    now = at(state.get("t") or dt.datetime.now(dt.timezone.utc).isoformat()) or dt.datetime.now(ny)
+    mon = (now - dt.timedelta(days=now.weekday())).date()
+    rows = _jsonl(root / "logs" / "desk" / "state" / "jobs.jsonl")
+    last_ev = {r.get("job"): r for r in rows if r.get("job")}
+    runs = [at(r.get("queued")) for r in rows if r.get("kind") == "debrief" and r.get("id")
+            and (last_ev.get(r["id"]) or {}).get("event") == "done"]
+    lessons = [(at(r.get("t")), r) for r in _jsonl(root / "desk" / "memory" / "lessons.jsonl")]
+    week = lambda d: d is not None and mon <= d.date() <= now.date() and d.weekday() < 5
+    days = {d.date() for d in runs if week(d)} | {d.date() for d, _ in lessons if week(d)}
+    due = 5 if now.weekday() >= 5 else now.weekday() + 1
+    read = sum(1 for t in state.get("tickets") or [] if str(t.get("status")).lower() == "closed" and week(at(t.get("updated"))))
+    n_les = sum(1 for d, _ in lessons if week(d))
+    stamps = [d for d in runs if d] + [d for d, _ in lessons if d]
+    last = max(stamps).strftime("%a %H:%M NY") if stamps else "None Yet"
+    vals = (f"[['Last', '{last}'], ['This Week', '{len(days)} Of {due}'], ['Trades Read', '{read}'], "
+            f"['Lessons', '{n_les}']],\n        'Debriefs This Week', '{len(days)} Of {due}', {round(100 * len(days) / due)})")
+    return re.sub(r"\[\['Last', 'Fri 17:15 NY'\].*?'Debriefs This Week', '5 Of 5', 100\)", lambda _: vals, src, count=1, flags=re.S)
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -1700,6 +1782,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_desk, src, state, positions)
             src = _safe(_patch_gate, src, state)
             src = _safe(_patch_pods, src, state)
+            src = _safe(_patch_main_tickets, src, state)
+            src = _safe(_patch_main_debrief, src, state, ROOT)
             src = _safe(lambda s: _patch_main_feed(s, state, usage, _git_today()), src)
             src = _patch_sources(src)
         src = _safe(_patch_alerts, src, state if isinstance(state, dict) else {}, ROOT)

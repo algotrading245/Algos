@@ -611,3 +611,38 @@ def test_command_center_alerts_from_inbox_and_doctor(tmp_path):
     assert rows[1][4] == "Sun 11-01 00:41" and rows[2][4] == "Wed 10-28 23:58" and rows[3][4] == "Sat 10-31 06:05"
     assert rows[3][2] == "Doctor" and rows[3][0].startswith("doc-") and out == cc._patch_alerts(src, state, tmp_path)
     assert "Sample" not in out and cc._patch_alerts(src, {}, tmp_path / "none").startswith("    const alertDefs = []")
+
+
+def test_command_center_main_ticket_lane_and_debrief(tmp_path):
+    from desk import command_center as cc
+    src = ("<span>Sample Tickets</span>\n      tickets: [\n        { id: 'T-1', note: 'x' },\n      ], tkSeq: 4, decided: {}\n"
+           "filledN / s.tickets.length * 100\n"
+           "[['Last', 'Fri 17:15 NY'], ['This Week', '5 Of 5'], ['Trades Read', '7'], ['Lessons', 'Sample']],\n"
+           "        'Debriefs This Week', '5 Of 5', 100),")
+    state = {"t": "2026-10-31T12:00:00+00:00", "pods": [{"name": "crypto"}], "tickets": [
+        {"id": "a1", "pod": "crypto", "side": "sell", "instrument": "BTCUSD", "status": "blocked",
+         "why": "past the weekend cutoff", "updated": "2026-10-31T10:00:00+00:00"},
+        {"id": "b2", "pod": "fx", "side": "buy", "instrument": "EURUSD", "status": "closed", "R": 1.5,
+         "updated": "2026-10-29T15:00:00+00:00"},
+        {"id": "c3", "pod": "fx", "side": "buy", "instrument": "GBPUSD", "status": "proposed",
+         "updated": "2026-10-30T15:00:00+00:00"}]}
+    out = cc._patch_main_tickets(src, state)
+    assert ">Live Tickets<" in out and "tkSeq: 3" in out and "Math.max(1, s.tickets.length)" in out
+    a, c, b = out.split("tickets: [", 1)[1].split("], tkSeq", 1)[0].split("}, {")
+    assert "id: 'a1'" in a and "Crypto · Sell BTCUSD" in a and "stage: 4" in a and "blocked: 4" in a
+    assert "ask: true" in c and "stage: 1" in c
+    assert "done: true" in b and "stage: 10" in b and "Closed 10-29 · +1.50 R" in b
+    assert ">No Tickets Yet<" in cc._patch_main_tickets(src, {})
+    (tmp_path / "logs" / "desk" / "state").mkdir(parents=True)
+    (tmp_path / "logs" / "desk" / "state" / "jobs.jsonl").write_text("\n".join(json.dumps(r) for r in [
+        {"id": "d1", "kind": "debrief", "queued": "2026-10-29T21:15:00+00:00"},
+        {"id": "d2", "kind": "debrief", "queued": "2026-10-30T21:15:00+00:00"},
+        {"id": "d0", "kind": "debrief", "queued": "2026-10-23T21:15:00+00:00"},
+        {"job": "d1", "event": "done"}, {"job": "d2", "event": "running"}, {"job": "d0", "event": "done"}]),
+        encoding="utf-8")
+    (tmp_path / "desk" / "memory").mkdir(parents=True)
+    (tmp_path / "desk" / "memory" / "lessons.jsonl").write_text(json.dumps(
+        {"t": "2026-10-30T21:20:00+00:00", "pod": "fx", "lesson": "x"}), encoding="utf-8")
+    out = cc._patch_main_debrief(src, state, tmp_path)
+    assert "['Last', 'Fri 17:20 NY'], ['This Week', '2 Of 5'], ['Trades Read', '1'], ['Lessons', '1']" in out
+    assert "'Debriefs This Week', '2 Of 5', 40)" in out and "Sample" not in out.split("Tickets<", 1)[1]
