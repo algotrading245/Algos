@@ -16,6 +16,8 @@ playbook edit POD FILE "why"                       the pod itself, the head trad
 playbook rollback POD V "why"                      the pod itself, the head trader or the owner
 edge list | describe NAME | score NAME
 edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
+edge signal NAME [MARKET ...] [key=value ...]      read-only: what the edge says on the live bars now and lately
+edge signal all MARKET                             every edge in the library on one market
 edge arm NAME MARKET [key=value ...] [risk=PCT]    any pod, on any desk market (owner 2026-11-01), or the owner
                                                    [pod=POD]; needs a passing sandbox run; the leg's P&L is the pod's
 edge disarm NAME [MARKET]                          a pod disarms its own legs; systematic and the owner any leg
@@ -177,6 +179,8 @@ def edge(args):
         return {"edges": {n: {k: e.get(k) for k in ("pod", "kind", "markets", "tf") if k in e}
                           for n, e in sorted(edges.EDGES.items())},
                 "broken": edges.BROKEN}
+    if op == "signal":
+        return _signal_cmd(args[1:])
     if len(args) < 2:
         raise Refused(f"edge {op} NAME")
     try:
@@ -197,7 +201,109 @@ def edge(args):
             raise Refused(str(err))
     if op in ("arm", "disarm"):
         return _arm(op, e, args[1:])
-    raise Refused("edge list|describe|score|sandbox|arm|disarm")
+    raise Refused("edge list|describe|score|sandbox|signal|arm|disarm")
+
+
+SIGNAL_LOOKBACK = 20  # bars back that edge signal reports a past signal from
+
+
+def signal(b, name, market, params=None, lookback=SIGNAL_LOOKBACK, armed=None, cache=None):
+    """What one edge says on one market on the live bars, read-only: the signals on the last closed bar ("now") and
+    the last 3 within `lookback` bars, the way systematic.run would read them. Writes nothing."""
+    from desk import edges, systematic
+    from desk.edges import base
+    e = edges.get(name)
+    market = market.upper()
+    sym = b.resolve(market)
+    if not sym:
+        raise ValueError(f"{market} does not resolve at the broker")
+    key = (sym, e["tf"], e["bars"])
+    df = (cache or {}).get(key)
+    if df is None:
+        df = b.bars(sym, e["tf"], e["bars"])
+        if cache is not None:
+            cache[key] = df
+    if df is None or len(df) < 3:
+        raise ValueError(f"no {e['tf']} bars for {market}")
+    n = len(df) - 1
+    sigs = sorted((s for s in edges.run(name, df, params, systematic.context(b, e, market)) if n - s["i"] <= lookback),
+                  key=lambda s: s["i"])
+
+    def row(s):
+        r = {"bar": base.to_utc(df["time"].iloc[s["i"]]).isoformat(timespec="minutes"), "bars_ago": n - s["i"]}
+        if s.get("close"):
+            r["close"] = True
+        else:
+            r |= {"side": s["side"], "stop": round(s["stop"], 5), "targets": [[round(float(p), 5), f] for p, f in s.get("targets") or []]}  # [price, share]
+        if s.get("slot"):
+            r["slot"] = s["slot"]
+        return r | {"why": s.get("why")}
+
+    armed = systematic.state()["armed"] if armed is None else armed
+    return {"edge": name, "market": market, "tf": e["tf"],
+            "last_bar": base.to_utc(df["time"].iloc[-1]).isoformat(timespec="minutes"),
+            "price": round(float(df["close"].iloc[-1]), 5),
+            "now": [row(s) for s in sigs if s["i"] == n],
+            "recent": [row(s) for s in sigs[-3:]],
+            "armed_by": [a.get("pod", systematic.POD) for a in armed if a["edge"] == name and a["market"] == market]}
+
+
+def signal_all(b, market, lookback=SIGNAL_LOOKBACK):
+    """Every edge in the library on one market: which fire now, which fired lately, which are quiet or failed."""
+    from desk import edges, systematic
+    edges.load_new()
+    armed, cache = systematic.state()["armed"], {}
+    out = {"market": market.upper(), "now": {}, "recent": {}, "quiet": [], "errors": {}}
+    for name in sorted(edges.EDGES):
+        try:
+            r = signal(b, name, market, None, lookback, armed, cache)
+        except Exception as err:  # one edge failing on this market does not stop the others
+            out["errors"][name] = f"{type(err).__name__}: {err}"
+            continue
+        if r["now"]:
+            out["now"][name] = r["now"]
+        elif r["recent"]:
+            out["recent"][name] = r["recent"][-1]
+        else:
+            out["quiet"].append(name)
+    return out
+
+
+def _signal_cmd(args):
+    import json
+    from desk import edges
+    usage = "edge signal NAME [MARKET ...] [key=value ...] [lookback=N] | edge signal all MARKET"
+    if not args:
+        raise Refused(usage)
+    markets = [a for a in args[1:] if "=" not in a]
+    params, lookback = {}, SIGNAL_LOOKBACK
+    for kv in (a for a in args[1:] if "=" in a):
+        k, v = kv.split("=", 1)
+        try:
+            v = json.loads(v)
+        except json.JSONDecodeError:
+            pass
+        if k == "lookback":
+            lookback = int(v)
+        else:
+            params[k] = v
+    if args[0] == "all":
+        if len(markets) != 1:
+            raise Refused(usage)
+        return signal_all(cli._broker(), markets[0], lookback)
+    edges.load_new()
+    try:
+        e = edges.get(args[0])
+    except KeyError:
+        raise Refused(f"no edge {args[0]}")
+    b = cli._broker()
+    out = {}
+    for m in markets or e["markets"]:
+        try:
+            out[m.upper()] = signal(b, args[0], m, params, lookback)
+        except Exception as err:  # report per market, like signal_all
+            out[m.upper()] = {"error": f"{type(err).__name__}: {err}"}
+    return out
 
 
 def _arm(op, e, args):

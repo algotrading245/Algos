@@ -31,6 +31,9 @@ is fine; trading where you have no read is how pods lose.
 5. Look at your home markets and anything else you want to trade, in one call: `view bars XAUUSD XAGUSD D1 20`
    (H1, H4, D1 serve most needs), `view quote XAUUSD XAGUSD`, the calendar, and the web for what moved them and what
    is due. Any desk market is open to you.
+   Ask the tested edges what they say on the live bars: `edge signal all XAUUSD` lists every edge firing now or in
+   the last 20 bars on that market, `edge signal donchian_trend EURUSD GBPUSD` one edge on the markets you name.
+   It is read-only. An edge's signal is evidence you can cite in a ticket, not an order.
 6. **Post one note per home market on the board**, at every brief, even when you will not trade:
    `board post "EURUSD: bias down below 1.0850; ECB minutes Thu; wrong if a daily close above 1.0900; conviction 2/5" instrument=EURUSD`
    Every home market (the brief lists them) gets one, with `instrument=` set; "no view, range 1.08-1.09" is a valid
