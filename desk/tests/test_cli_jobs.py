@@ -26,8 +26,10 @@ def test_pending_by_priority_then_age():
 
 def test_wake_limit_per_pod_day(cfg):
     t = clocks.now()
-    got = [jobs.wake("fxmacro", ["g1"], cfg, t) for _ in range(cfg["wakes_per_pod_day"] + 2)]
-    assert sum(1 for g in got if g) == cfg["wakes_per_pod_day"] and got[-1] is None
+    from desk import allowance
+    cap = allowance.wake_cap("fxmacro", cfg)
+    got = [jobs.wake("fxmacro", ["g1"], cfg, t) for _ in range(cap + 2)]
+    assert sum(1 for g in got if g) == cap and got[-1] is None
     assert jobs.wake("systematic", ["g2"], cfg, t)
 
 

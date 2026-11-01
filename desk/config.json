@@ -55,6 +55,8 @@
  "budgets": {
   "_note": "Daily tokens, weighted = input + output + cache_creation + 0.1 x cache_read.",
   "pod": 800000,
+  "_pod_weekly_note": "Dollars a week the pods may spend; allowance.py cuts the daily pod pool to it and to the plan's weekly cap.",
+  "pod_weekly_usd": 15,
   "head-trader": 600000,
   "debrief": 400000,
   "monitor": 150000,
@@ -64,6 +66,8 @@
  "max_turns": {"pod": 40, "head-trader": 40, "debrief": 50, "monitor": 20, "scorekeeper": 15},
  "timeout_min": {"pod": 20, "head-trader": 25, "debrief": 30, "monitor": 10, "scorekeeper": 10},
  "wakes_per_pod_day": 6,
+ "_wake_note": "Base wakes a pod a day; allowance.wake_cap scales it by the pod's token share (1 to twice this).",
+ "watcher": {"shock_atr": 2.5, "shock_tf": "H1", "atr_n": 14},
  "schedule": [
   {"name": "asia_brief", "kind": "brief", "at": "08:30", "zone": "TOKYO", "days": [0, 1, 2, 3, 4]},
   {"name": "london_brief", "kind": "brief", "at": "07:30", "zone": "LONDON", "days": [0, 1, 2, 3, 4]},

@@ -13,7 +13,7 @@ import subprocess
 import traceback
 
 from desk import (broker, clocks, executor, jobs, journal, monitor, mutex, news, paths, phase, research, systematic,
-                  tickets, triggers)
+                  tickets, triggers, watcher)
 
 SCHEDULE = paths.STATE / "schedule.json"
 HEARTBEAT = paths.STATE / "heartbeat.json"
@@ -135,6 +135,11 @@ def once():
                     woke = wake_pods(b, cfg, t)
                 except Exception as e:
                     journal.log("tick_error", where="triggers", why=f"{type(e).__name__}: {e}")
+                try:  # the pods' own market models against the live market
+                    for pod, rows in watcher.run(b, cfg, t).items():
+                        woke.setdefault(pod, []).append(f"watch:{len(rows)}")
+                except Exception as e:
+                    journal.log("tick_error", where="watcher", why=f"{type(e).__name__}: {e}")
             ran = schedule(b, cfg, summary, t)
             jobs.expire_stale(t)
             jobs.launch()

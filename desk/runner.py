@@ -24,7 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from desk import brief, clocks, journal, jobs, mutex, paths, phase
+from desk import allowance, brief, clocks, journal, jobs, mutex, paths, phase
 
 AGENTS = paths.DESK / "agents"
 SETTINGS = AGENTS / "settings.json"
@@ -62,28 +62,17 @@ def add_spend(role, tokens, cfg, t=None):
     paths.write_json(BUDGET, b)
 
 
-def pod_budget(pod, cfg):
-    """A pod's own daily tokens: the pods' pool split by the competition's shares among the pods trading now (base
-    shares before the first weekly allocation), so a pod that scores well gets more tokens and one that scores badly
-    fewer; a paused pod gets none."""
-    pool = cfg.get("budgets", {}).get("pod")
-    if pool is None:
-        return None
-    alloc = paths.read_json(phase.ALLOC, {})
-    shares = alloc.get("token_shares") or alloc.get("shares") or {}  # token shares: trading + forecasts + contribution
-    share = lambda p: shares.get(p, cfg["pods"].get(p, {}).get("base_share", 0))
-    total = sum(share(p) for p in phase.pods_active(cfg)) or share(pod) or 1
-    return int(pool * share(pod) / total)
+def pod_budget(pod, cfg, t=None):
+    """A pod's own daily tokens: the pods' pool (fitted to the weekly dollars, desk/allowance.py) split by the token
+    shares among the pods trading now, so a pod that scores well gets more tokens and one that scores badly fewer."""
+    return allowance.pod_budget(pod, cfg, t)
 
 
 def over_budget(role, cfg, t=None):
-    limit = cfg.get("budgets", {}).get(group(role, cfg))
-    if limit is not None and spent(role, cfg, t) >= limit:
-        return True
     if role in cfg.get("pods", {}):
-        own = pod_budget(role, cfg)
-        return own is not None and spent(role, cfg, t, key=role) >= own
-    return False
+        return allowance.slice_spent(role, cfg, t)
+    limit = cfg.get("budgets", {}).get(group(role, cfg))
+    return limit is not None and spent(role, cfg, t) >= limit
 
 
 def prompt_for(role, job):
@@ -143,7 +132,7 @@ def call(role, model, prompt, turns, minutes, job):
     r = paths.read_json(jobs.RUNNER, {})
     r.pop("agent_pid", None)
     paths.write_json(jobs.RUNNER, r)
-    usage, result, err, denied = {}, "", False, []
+    usage, result, err, denied, usd = {}, "", False, [], None
     for line in out.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             ev = json.loads(line)
@@ -152,11 +141,12 @@ def call(role, model, prompt, turns, minutes, job):
         if ev.get("type") == "result":
             usage, result, err = ev.get("usage") or {}, ev.get("result") or "", bool(ev.get("is_error"))
             denied = [_denial(d) for d in ev.get("permission_denials") or []]
+            usd = ev.get("total_cost_usd")
     if code is None:
         return {"ok": False, "tokens": weighted(usage), "result": result, "why": f"timeout after {minutes} min",
-                "denied": denied}
+                "denied": denied, "usd": usd}
     return {"ok": code == 0 and not err, "tokens": weighted(usage), "result": result,
-            "why": "" if code == 0 and not err else f"exit {code}", "denied": denied}
+            "why": "" if code == 0 and not err else f"exit {code}", "denied": denied, "usd": usd}
 
 
 def _denial(d):
@@ -183,7 +173,8 @@ def run_agent(role, job, cfg):
     denied = res.get("denied") or []
     journal.log("agent_run", job=job["id"], kind=job["kind"], role=role, model=model, ok=res["ok"],
                 tokens=res.get("tokens", 0), seconds=round((clocks.now() - t0).total_seconds()),
-                why=res.get("why", ""), result=(res.get("result") or "")[:500], denied=len(denied))
+                why=res.get("why", ""), result=(res.get("result") or "")[:500], denied=len(denied),
+                usd=None if res.get("usd") is None else round(float(res["usd"]), 4))
     if denied:
         refused(role, job, denied, t0)
     if role == "monitor":

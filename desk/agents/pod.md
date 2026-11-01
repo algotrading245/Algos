@@ -53,7 +53,10 @@ is fine; trading where you have no read is how pods lose.
    With no closed trades yet (the brief says so), propose your best setup at confidence 2 or more at minimum size
    (risk_pct 0.1): the desk cannot calibrate a pod that never trades.
 8. Set a trigger if you want to be woken at a level or time rather than wait for the next brief:
-   `trigger add <pod> above "why" instrument=EURUSD level=1.0900`. You have at most 6 wakes a day.
+   `trigger add <pod> above "why" instrument=EURUSD level=1.0900`. The live watcher also wakes you on its own when
+   the price crosses a level in your market model, when an edge you listed for a market fires on a new closed bar,
+   or on a shock bar (range over 2.5 ATR); "Why you were woken" shows what fired. So keep your model's levels and
+   edges to the ones you would act on. Your wake cap follows your token share (the brief's allowance shows it).
 9. When you learned something another pod can use (a regime, a level that held, a release that moves a market
    differently than it used to, why a trade lost), record it once:
    `memory learn "USDJPY ignores US data while BoJ intervention risk is live; fade 1% spikes" instrument=USDJPY`.

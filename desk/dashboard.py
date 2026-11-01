@@ -220,8 +220,9 @@ def _pods(cfg, st, iq=None):
 
 
 def _budgets(cfg):
-    return [{"group": g, "spent": runner.spent(g, cfg, key=g), "limit": lim}
-            for g, lim in cfg.get("budgets", {}).items() if not g.startswith("_")]
+    from desk import allowance
+    return [{"group": g, "spent": runner.spent(g, cfg, key=g), "limit": allowance.pool(cfg) if g == "pod" else lim}
+            for g, lim in cfg.get("budgets", {}).items() if not g.startswith("_") and g in cfg.get("models", {})]
 
 
 def _brief(v):

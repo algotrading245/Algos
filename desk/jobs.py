@@ -56,15 +56,22 @@ def has_pending(kind, **match):
     return any(j["kind"] == kind and all(j.get(k) == v for k, v in match.items()) for j in pending())
 
 
-def wake(pod, trigger_ids, cfg, t=None):
-    """Queue a wake for a pod whose triggers fired, inside its daily wake limit. Returns the job id or None."""
-    from desk import triggers
-    limit = int(cfg.get("wakes_per_pod_day", 6))
-    if triggers.wakes_today(pod, t) >= limit:
-        journal.log("wake_refused", pod=pod, triggers=trigger_ids, why=f"{limit} wakes already today")
+def wake(pod, trigger_ids, cfg, t=None, **data):
+    """Queue a wake for a pod, unless it used its wake cap today (which follows its token share, allowance.wake_cap)
+    or its token slice is spent. data (the watcher's `watch` rows) goes into the job, so the brief says why the pod
+    was woken. Returns the job id or None."""
+    from desk import allowance, triggers
+    cap = allowance.wake_cap(pod, cfg)
+    why = None
+    if triggers.wakes_today(pod, t) >= cap:
+        why = f"{cap} wakes already today (the cap follows the token share)"
+    elif allowance.slice_spent(pod, cfg, t):
+        why = "token slice spent for today"
+    if why:
+        journal.log("wake_refused", pod=pod, triggers=trigger_ids, why=why, **data)
         return None
     triggers.count_wake(pod, t)
-    return queue("wake", t, pod=pod, triggers=trigger_ids)
+    return queue("wake", t, pod=pod, triggers=trigger_ids, **data)
 
 
 def compact(keep_days=14):

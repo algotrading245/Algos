@@ -111,6 +111,18 @@ def build(role, job=None):
                             "Refresh the stale ones or drop them. The model itself is not graded: put a forecast on "
                             "each bias you hold, or it earns nothing. desk_biases is every pod's live bias",
                             market_model.brief(role, t)))
+        try:
+            from desk import allowance
+            st = allowance.status(paths.config(), t)
+            mine = st["pods"].get(role, {})
+            out.append(_section("Your allowance today: your slice of the pods' token pool (the pool is fitted to "
+                                "the pods' weekly dollars and the account's weekly cap) and your wake cap, both "
+                                "following your token share. A spent slice or cap means no more wakes today",
+                                {"slice": mine.get("slice"), "spent": mine.get("spent"),
+                                 "wake_cap": mine.get("wake_cap"), "wakes_today": mine.get("wakes"),
+                                 "pool": st.get("pool"), "throttle": st.get("throttle")}))
+        except Exception as e:
+            out.append(_section("Your allowance today", f"unavailable: {type(e).__name__}: {e}"))
         alloc = paths.read_json(paths.STATE / "alloc.json", {})
         if alloc.get("token_shares"):
             out.append(_section("Your token share this week: how much of the pods' token pool you get to think "
