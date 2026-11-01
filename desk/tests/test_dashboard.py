@@ -261,3 +261,41 @@ def test_command_center_research_shows_live_state(tmp_path):
     assert "label: 'In The Queue', value: '2'" in pr and "value: '50%', sub: '1 Of 2 Gated'" in pr
     assert "label: 'Book Sharpe', value: '2.50'" in pr and "v: '1 · noise'" in pr
     assert "{ k: 'Last Run', v: 'Sat 31 Oct' }" in pr and "Next Run', v: 'Sat 7 Nov" in pr
+
+
+def test_command_center_controls_shows_live_state(tmp_path, monkeypatch):
+    import base64, gzip
+    from desk import command_center as cc
+    out = cc.build(dashboard.BUNDLE, {}, [], [], {}).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[5]]
+    raw = base64.b64decode(e["data"])
+    tpl = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    (tmp_path / "desk").mkdir()
+    (tmp_path / "docs" / "autopilot").mkdir(parents=True)
+    (tmp_path / "logs" / "autopilot").mkdir(parents=True)
+    (tmp_path / "desk" / "risk.json").write_text(json.dumps({"active": "p1", "profiles": {"p1": {
+        "kind": "prop", "per_trade_pct": 0.5, "desk_open_pct": 3.0, "daily_loss_pct": 4.0, "max_loss_pct": 9.0,
+        "kill_dd_pct": 7.0, "news_window_min": 2, "allow_live": False}}}))
+    (tmp_path / "desk" / "config.json").write_text(json.dumps({"pods": {"metals": {"owns": ["XAUUSD"]}}}))
+    (tmp_path / "logs" / "autopilot" / "last-finder.json").write_text(
+        json.dumps({"model": "sonnet", "reason": "3 ideas queued", "ended": "2026-11-01T10:00:00", "empty_streak": 2}),
+        encoding="utf-8-sig")
+    (tmp_path / "docs" / "autopilot" / "approvals.json").write_text(json.dumps(
+        {"items": [{"id": "a9", "what": "Step 19: buy a challenge", "status": "pending"}]}))
+    monkeypatch.setattr(cc, "ROOT", tmp_path)
+    monkeypatch.setattr(cc, "DOCS", tmp_path / "docs")
+    state = {"pods": [{"name": "metals", "active": True, "enabled": True, "paused": False,
+                       "intel": {"level": {"n": 2, "name": "Analyst"}}}],
+             "alloc": {"paused": []}, "status": {"halt": None},
+             "tickets": [{"pod": "metals", "created": "2026-11-01T09:30:00", "status": "closed"}],
+             "limits": {"account": "Demo Co/demo/p1", "day": "2026-11-01", "day_balance": 10000, "equity": 9900,
+                        "record": {"max_dd_pct": 1.5}},
+             "journal": [{"t": "2026-11-01T09:31:00", "kind": "ticket_block", "by": "code", "why": "news window"}]}
+    pr = cc._patch_controls_page(tpl, state, [])
+    assert '"name": "Metals Pod", "what": "Tickets For XAUUSD."' in pr
+    assert "Last Ticket 09:30" in pr and "3 ideas queued" in pr and "2 Empty Runs" in pr
+    assert '"where": "approvals · a9", "state": "Waiting"' in pr and "allow_live: false" in pr
+    assert '["Daily Loss", "Desk Halts At 4%", 1.0, 4.0, "%"]' in pr and "Funded Account · Demo Co Demo" in pr
+    assert '"what": "Ticket Block"' in pr and '"state": "Cancelled"' in pr
+    assert "sub: 'Funded · Halts At 4%'" in pr and "fivex: { title: '5x EA" in pr

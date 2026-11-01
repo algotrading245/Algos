@@ -16,7 +16,11 @@ list from mql5/Experts/_archive, and the Hydra legs from the armed edges (risk p
 P/L per leg, the diff rows and the other guards are still design text. Live on Processes: each scheduled job's last run
 and state (Late past its window, Failed if its newest runner job failed), the recent runs and the run and failure KPIs
 from the desk runner, and the MT5, relay, scheduler and feed heartbeats; Doctor, Watchdog, the finder loop, the tester
-queue and beat, and the demo beat are still design text. The rest is still the design's sample content.
+queue and beat, and the demo beat are still design text. Live on Research: the funnel counts, the candidates, the
+gaps, the rejected list and the KPI row from docs/. Live on Controls: the pod, pipeline and demo-leg switches (paused,
+halted, last run), the locks (risk file, halt, live trading, pending approvals), the funded risk block from
+desk/risk.json and the desk limits, and the change log from the journal; the 5x EA risk block, the MT5 lock and the
+trades-per-day limit are still design text. The rest is still the design's sample content.
 """
 import base64
 import collections
@@ -573,7 +577,7 @@ def _jsonl(p):
 
 def _jfile(p):
     try:
-        return json.loads(p.read_text(encoding="utf-8"))
+        return json.loads(p.read_text(encoding="utf-8-sig"))
     except (OSError, ValueError):
         return None
 
@@ -746,6 +750,148 @@ def _patch_research_page(src, state, live, root=None):
     return src
 
 
+ROOT = DOCS.parent
+_FINAL = {"rejected", "done", "funded", "failed", "dropped"}
+
+
+def _relay(role):
+    """logs/autopilot/last-<role>.json (written with a BOM) or {}."""
+    try:
+        d = json.loads((ROOT / "logs" / "autopilot" / f"last-{role}.json").read_text(encoding="utf-8-sig"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _patch_controls_page(src, state, positions=None):
+    """Controls: pod and pipeline switches, owner locks, the funded risk rows and the change log."""
+    try:
+        risk = json.loads((ROOT / "desk" / "risk.json").read_text(encoding="utf-8-sig"))
+        prof = risk["profiles"][risk["active"]]
+    except (OSError, ValueError, KeyError, TypeError):
+        risk, prof = {}, {}
+    try:
+        owns = {k: (v or {}).get("owns") or [] for k, v in
+                json.loads((ROOT / "desk" / "config.json").read_text(encoding="utf-8-sig")).get("pods", {}).items()}
+    except (OSError, ValueError, AttributeError):
+        owns = {}
+    tickets = [t for t in state.get("tickets") or [] if isinstance(t, dict)]
+    paused = set((state.get("alloc") or {}).get("paused") or [])
+    sw = []
+    for p in state.get("pods") or []:
+        n = str(p.get("name") or "")
+        if not n:
+            continue
+        lv = ((p.get("intel") or {}).get("level") or {})
+        meta = f"Level {lv.get('n', '?')} · {lv.get('name', '')}".rstrip(" ·")
+        last = max((t.get("created") or "" for t in tickets if t.get("pod") == n), default="")
+        if last:
+            meta += " · Last Ticket " + _hhmm(last)
+        o = owns.get(n) or []
+        what = ("Tickets For " + ", ".join(o[:4]) + (f" And {len(o) - 4} More." if len(o) > 4 else ".")) if o else \
+            f"Phase {p.get('opens_phase', '?')} Pod, Tickets Across All Markets."
+        st = "Paused" if p.get("paused") or n in paused else "Running" if p.get("enabled") and p.get("active") else "Stopped"
+        sw.append({"id": n, "group": "Desk Pods", "name": {"fxmacro": "FX Macro"}.get(n, _title(n)) + " Pod", "what": what, "meta": meta, "state": st})
+    halted = (ROOT / "logs" / "autopilot" / "PAUSE").exists()
+    ideas = [x for x in _jsonl(DOCS / "ideas" / "queue.jsonl") if isinstance(x, dict)]
+    jobs = (_jfile(DOCS / "autopilot" / "queue.json") or {}).get("jobs") or []
+    jobs = [j for j in (jobs if isinstance(jobs, list) else []) if isinstance(j, dict)]
+    run_n = sum(j.get("status") == "running" for j in jobs)
+    q_n = sum(j.get("status") == "queued" for j in jobs)
+    extra_meta = {"builder": f"{sum(str(x.get('status')) not in _FINAL for x in ideas)} In The Queue",
+                  "tester": f"{run_n} Running · {q_n} Queued"}
+    names = {"finder": "Finder Loop", "builder": "Builder Loop", "tester": "Tester Queue", "judge": "Judge"}
+    designs = {"finder": "Every 2 Hours, Four Sources, Aimed At The Top Gap.",
+               "builder": "Builds, Gates And Queues Tester Jobs From The Queue.",
+               "tester": "Runs Strategy Tester Jobs In The Tester Install.",
+               "judge": "Judges Tester Results And Merges Passing Legs."}
+    now = dt.datetime.now()
+    for role in ("finder", "builder", "tester", "judge"):
+        r = _relay(role)
+        parts = [_title(r.get("model") or "?")]
+        try:
+            parts.append("Last Run " + _ago((now - dt.datetime.fromisoformat(str(r.get("ended"))[:19])).total_seconds()))
+        except ValueError:
+            pass
+        if role in extra_meta:
+            parts.append(extra_meta[role])
+        if int(r.get("empty_streak") or 0) > 0:
+            parts.append(f"{r['empty_streak']} Empty Runs")
+        if r.get("failed"):
+            parts.append("Last Run Failed")
+        st = "Paused" if halted or int(r.get("fails_in_row") or 0) >= 3 else "Running"
+        sw.append({"id": role, "group": "Pipeline", "name": names[role], "what": _cut(r.get("reason"), 90) or designs[role],
+                   "meta": " · ".join(parts), "state": st})
+    ver = _ea_versions()
+    appr = (_jfile(DOCS / "autopilot" / "approvals.json") or {}).get("items") or []
+    pend = [a for a in appr if isinstance(a, dict) and a.get("status") == "pending"]
+    halt = (state.get("status") or {}).get("halt")
+    desk_st = "Stopped" if halt else "Running"
+    for eid, ea, nm in (("hydra", "AurumHydra", "Hydra Demo Legs"), ("funded", "AurumFunded", "Funded EA · Demo")):
+        v = ver.get(ea, "?")
+        what = f"All Hydra Legs On The Demo. Stops New Entries." if eid == "hydra" else f"AurumFunded {v} On The Demo. Stops New Entries."
+        armed = len((state.get("edges") or {}).get("armed") or [])
+        meta = f"{ea} {v}" + (f" · {armed} Legs Armed" if eid == "hydra" and armed else "")
+        sw.append({"id": eid, "group": "Demo Legs", "name": nm, "what": what, "meta": meta, "state": desk_st})
+    src = re.sub(r"const SWITCHES = \[.*?\n\];", lambda _: "const SWITCHES = " + json.dumps(sw, ensure_ascii=False) + ";",
+                 src, count=1, flags=re.S)
+
+    locks = [{"name": "Risk File", "why": "Daily Loss, Max Loss And Per-Trade Risk For Every Account.",
+              "where": f"desk/risk.json · {risk.get('active', '?')}", "state": "Locked"},
+             {"name": "Resume After A Halt", "why": ("Halted: " + _cut(halt if isinstance(halt, str) else (halt or {}).get("why")
+                                                                       if isinstance(halt, (str, dict)) else str(halt), 70))
+              if halt else "After A Guard Halts The Desk, Only The Owner Resumes It.", "where": "cli resume",
+              "state": "Waiting" if halt else "Locked"},
+             {"name": "Live Trading", "why": "All Accounts Trade Demo. Going Live Is The Owner’s Call.",
+              "where": "allow_live: " + ("true" if prof.get("allow_live") else "false"),
+              "state": "Waiting" if prof.get("allow_live") else "Off"}]
+    for a in pend:
+        locks.append({"name": _cut(str(a.get("what") or a.get("id")).split(":")[0], 40), "why": _cut(a.get("what"), 90),
+                      "where": f"approvals · {a.get('id', '')}", "state": "Waiting"})
+    locks.append({"name": "MT5 Terminal · T16", "why": "Watched For Heartbeats. Never Restarted, Closed Or Compiled Into.",
+                  "where": "T16", "state": "Never Touched"})
+    src = re.sub(r"const LOCKS = \[.*?\n\];", lambda _: "const LOCKS = " + json.dumps(locks, ensure_ascii=False) + ";",
+                 src, count=1, flags=re.S)
+
+    lim = state.get("limits") or {}
+    if prof and lim:
+        bal = float(lim.get("day_balance") or lim.get("balance") or 0) or 1.0
+        day_used = round(max(0.0, bal - float(lim.get("equity") or bal)) / bal * 100, 2)
+        dd = round(float((lim.get("record") or {}).get("max_dd_pct") or 0), 2)
+        live_t = [t for t in tickets if t.get("status") in ("open", "live", "filled", "approved")]
+        n_open = len(positions) if isinstance(positions, list) else len(live_t)
+        per = max((float(t.get("risk_pct") or 0) for t in live_t), default=0.0)
+        today = str(lim.get("day") or state.get("t", ""))[:10]
+        n_today = sum(str(t.get("created") or "").startswith(today) for t in tickets)
+        cap_n = int(float(prof.get("desk_open_pct") or 3) / float(prof.get("per_trade_pct") or 0.5))
+        acct = str(lim.get("account") or "").split("/")
+        title = "Funded Account · " + " ".join(_title(x) for x in acct[:2]) if acct[0] else "Funded Account"
+        g = lambda k, d=0: float(prof.get(k) or d)
+        rows = [["Daily Loss", f"Desk Halts At {g('daily_loss_pct'):g}%", day_used, g("daily_loss_pct", 4), "%"],
+                ["Max Loss", f"Hard Limit {g('max_loss_pct'):g}%; Desk Halts At {g('kill_dd_pct'):g}%", dd, g("kill_dd_pct", 7), "%"],
+                ["Risk Per Trade", "Per Ticket, Of Balance", per, g("per_trade_pct", 0.5), "%"],
+                ["Open Positions", f"At Once; Desk Risk Cap {g('desk_open_pct'):g}%", n_open, cap_n, ""],
+                ["Trades Today", "Across All Pods", n_today, 12, ""],
+                ["News Blackout", "Minutes Each Side Of High Impact", g("news_window_min"), g("news_window_min", 2), " Min"]]
+        block = ("funded: { title: " + json.dumps(title, ensure_ascii=False) + ", tag: " +
+                 json.dumps(f"{risk.get('active')} · {_title(prof.get('kind') or '')}", ensure_ascii=False) +
+                 ", rows: " + json.dumps(rows, ensure_ascii=False) + " },\n  fivex:")
+        src = re.sub(r"funded: \{ title: .*?\n  fivex:", lambda _: block, src, count=1, flags=re.S)
+        src = src.replace("sub: 'Funded · Halts At 3%'", f"sub: 'Funded · Halts At {g('daily_loss_pct'):g}%'", 1)
+
+    jr = [j for j in state.get("journal") or [] if isinstance(j, dict)]
+    keep = ("ticket_block", "ticket_approve", "ticket_new", "pause", "resume", "halt", "unhalt")
+    pick = [j for j in jr if j.get("kind") in keep] or jr
+    pick = sorted(pick, key=lambda j: str(j.get("t") or ""), reverse=True)[:8]
+    log = [{"at": _hhmm(j.get("t")), "what": _title(str(j.get("kind") or "").replace("_", " ")),
+            "who": _cut(" · ".join(x for x in (_title(str(j.get("by") or "")), str(j.get("why") or "")) if x), 80),
+            "state": "Cancelled" if "block" in str(j.get("kind")) else "Applied"} for j in pick]
+    if log:
+        src = re.sub(r"const LOG0 = \[.*?\n\];", lambda _: "const LOG0 = " + json.dumps(log, ensure_ascii=False) + ";",
+                     src, count=1, flags=re.S)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -772,6 +918,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_processes_page, src, extra["state"], live)
     elif i == 4 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_research_page, src, extra["state"], live)
+    elif i == 5 and isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_controls_page, src, extra["state"], positions)
     return src
 
 
