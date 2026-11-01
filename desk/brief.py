@@ -9,7 +9,7 @@ profile; the debrief sees the day's closed tickets; the monitor sees the issues 
 import datetime as dt
 import json
 
-from desk import cli, intel, journal, memory, news, paths, playbooks, systematic, tickets, triggers
+from desk import cli, intel, journal, memory, news, paths, playbooks, research, systematic, tickets, triggers
 
 HEAD = cli.HEAD
 
@@ -92,6 +92,10 @@ def build(role, job=None):
         out.append(_section("Replies to your questions", memory.replies_for(role)))
         out.append(_section("Knowledge other pods shared (most endorsed first; endorse what helped you)",
                             memory.shared_with(role, owns)))
+        out.append(_section("Research desk: the book's gaps and the finder's ideas. If a market you own fits a gap, "
+                            "or you keep seeing a pattern no leg trades, share it (memory learn, share desk): the "
+                            "finder reads the desk's notes each run",
+                            {"gaps": research.gaps(), "ideas": research.ideas()}))
         prof = intel.profile(role, state)
         out.append(_section("Your intelligence profile: work on your weaknesses, lean on your strengths",
                             {k: prof[k] for k in ("level", "iq", "xp", "trading", "strengths", "weaknesses",

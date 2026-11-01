@@ -12,7 +12,8 @@ import datetime as dt
 import subprocess
 import traceback
 
-from desk import broker, clocks, executor, jobs, journal, monitor, mutex, news, paths, phase, systematic, tickets, triggers
+from desk import (broker, clocks, executor, jobs, journal, monitor, mutex, news, paths, phase, research, systematic,
+                  tickets, triggers)
 
 SCHEDULE = paths.STATE / "schedule.json"
 HEARTBEAT = paths.STATE / "heartbeat.json"
@@ -81,6 +82,10 @@ def schedule(b, cfg, summary, t):
                 monitor.run(b, cfg, summary, t)
             elif k == "commit":
                 jobs.compact()
+                try:  # the pods' week for the finder (desk/research.py); a digest error must not stop the commit
+                    research.desk_notes()
+                except Exception as e:
+                    journal.log("desk_notes_error", why=f"{type(e).__name__}: {e}")
                 ok = commit(t)
         except Exception as e:
             ok = False

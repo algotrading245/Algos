@@ -12,7 +12,10 @@ next one starts, so keep the queue fed with good ideas, not many weak ones.
    target** (owner 2026-11-01): the first gap in its "Top 3 gaps" that its status note or the queue does not show as
    tested, and not "tried" (below). At least one lead you add, and the first lead you work, aims at it; name it in
    the line before the hand-over ("steer target: <gap>, <what you did for it>"). Only when steer has no open gap, lead
-   with the biggest gap in gaps.py: a market, style or holding period with no leg, or the book's losing months. Then read `docs/ideas/backlog.jsonl` (your open
+   with the biggest gap in gaps.py: a market, style or holding period with no leg, or the book's losing months. Also
+   read `docs/ideas/desk_notes.md` when it exists (the trading pods' last week, written nightly by desk/research.py,
+   owner 2026-11-01): a market or pattern the pods keep raising that fits a gap and no leg covers is a lead (source
+   "desk"); their notes are discretionary, so test them like any idea. Then read `docs/ideas/backlog.jsonl` (your open
    leads, below; closed ones are in `backlog_done.jsonl`, never read it whole) and, only in a run that writes specs,
    `docs/ideas/specs/README.md`. Do not read the queue, `results.md` or `rejected_index.json` whole or by tail
    (token diet, owner 2026-10-24): use the Grep tool on them for what you need, e.g. on `docs/ideas/queue.jsonl` the
