@@ -372,6 +372,25 @@ def test_command_center_main_shows_live_logs(tmp_path):
     assert '["Ideas Tried", 8]' in pr and '["Full Backtest", 3]' in pr and "Math.log(9)" in pr
     assert "Both Halves', 2]" in pr and "1.5x Costs', 1]" in pr and "(f / 2 * 100)" in pr
     assert 'const wl = [["Breakout", 25.0, 0.97], ["Grid", 9.0, 0.83]];' in pr and "'Quartet'" not in pr
+    assert "8 Ideas · 3 Rejected · 0 Passed · 2 In The Book · 3 Gate Files" in pr and "Middle Stages Sample" not in pr
+
+
+def test_command_center_main_pod_xp_from_intel_and_queue_counts(tmp_path, monkeypatch):
+    from desk import command_center as cc
+    tpl = _main_template()
+    intel = {"xp": 168, "iq": 94, "work": {"runs": 9, "notes": 9}, "talk": {"asked": 1},
+             "share": {"cited": 2}, "trading": {"trades": 6}}
+    out = cc._patch_main_podxp(tpl, {"pods": [{"name": "systematic", "intel": intel}, {"name": "crypto"}]})
+    assert '"systematic": {"runs": 9, "notes": 9, "asked": 1,' in out and '"xp": 168, "iq": 94}' in out
+    assert "podSeed(9, 9, 6" not in out and "x.xp != null ? x.xp" in out and "x.iq != null ? x.iq" in out
+    assert "Pod Split Sample" not in out and "Simulated Events" not in out
+    assert cc._patch_main_podxp(tpl, {"pods": [{"name": "crypto"}]}) == tpl
+    (tmp_path / "ideas").mkdir()
+    (tmp_path / "ideas" / "queue.jsonl").write_text("\n".join(
+        json.dumps({"id": f"q{n}", "status": s}) for n, s in enumerate(["rejected", "rejected", "done", "new"])))
+    monkeypatch.setattr(cc, "DOCS", tmp_path)
+    q = cc._patch_queue(tpl, [{"id": "q3", "status": "new"}])
+    assert "4 Ideas · 1 New · 2 Rejected · 1 Done<" in q and "95 Rejected · 13 Done · 1 Funded<" not in q
 
 
 def _main_template():

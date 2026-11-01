@@ -497,6 +497,11 @@ def _patch_queue(src, rows):
                    f"chip: {chips.get(st.lower(), chr(99) + 'hip(' + chr(39) + '#E8F5EC' + chr(39) + ', ' + chr(39) + '#1E7B34' + chr(39) + ')')} }}")
     if not out:
         return src
+    every = [r for r in _jsonl(DOCS / "ideas" / "queue.jsonl") if isinstance(r, dict)] or list(rows)
+    n = collections.Counter(str(r.get("status") or "new").lower() for r in every)
+    sub = " · ".join([f"{sum(n.values())} Ideas"] + [f"{n[k]} {k.title()}" for k in
+                     ("new", "rejected", "done", "funded") if n[k]])
+    src = src.replace("109 Ideas · 95 Rejected · 13 Done · 1 Funded<", sub + "<", 1)
     return re.sub(r"const queue = \[.*?\n    \];", lambda _: "const queue = [" + ", ".join(out) + "];", src, count=1, flags=re.S)
 
 
@@ -1485,6 +1490,11 @@ def _patch_main_live(src, live, usage, root=None, today=None):
         src = re.sub(r"const funnel = \[\[.*?\]\]\n", lambda _: "const funnel = " + json.dumps(funnel) + "\n", src, count=1)
         # Counts span 1 to hundreds, so the bars use a log scale.
         src = src.replace("(n / 109 * 100).toFixed(1)", f"(Math.log(1 + n) / Math.log({1 + len(ids)}) * 100).toFixed(1)", 1)
+        n_pass = funnel[3][1]
+        sub = (f"{len(ids)} Ideas · {len(gates) - n_pass} Rejected · {n_pass} Passed · "
+               f"{funnel[5][1]} In The Book · {len(gates)} Gate Files")
+        src = src.replace("109 Ideas · 95 Rejected · 13 Done · 1 Funded · 91 Gate Files", sub, 1)
+        src = src.replace('{{sampleChip}}">Middle Stages Sample<', '{{srcChip}}">Live Counts<', 1)
     first = collections.Counter()
     for g in gates:
         fails = {x.get("gate") for x in g.get("gates") or [] if isinstance(x, dict) and x.get("pass") is False}
@@ -1767,6 +1777,32 @@ def _patch_main_debrief(src, state, root):
     return re.sub(r"\[\['Last', 'Fri 17:15 NY'\].*?'Debriefs This Week', '5 Of 5', 100\)", lambda _: vals, src, count=1, flags=re.S)
 
 
+def _patch_main_podxp(src, state):
+    """Pod ranking and cards: each pod's counts, xp and iq from desk/intel.py (state pods' intel)."""
+    xp = {}
+    for p in state.get("pods") or []:
+        it = p.get("intel") or {}
+        if not p.get("name") or "xp" not in it:
+            continue
+        w, tk, sh, tr = (it.get(k) or {} for k in ("work", "talk", "share", "trading"))
+        xp[str(p["name"])] = {"runs": w.get("runs") or 0, "notes": w.get("notes") or 0,
+                              "asked": tk.get("asked") or 0, "answered": tk.get("answered") or 0,
+                              "shared": sh.get("shared") or 0, "endorsed": sh.get("endorsed") or 0,
+                              "cited": sh.get("cited") or 0, "trades": tr.get("trades") or 0,
+                              "winR": 0, "iqBase": it.get("iq") or 100, "xp": it.get("xp"), "iq": it.get("iq")}
+    if not xp:
+        return src
+    src, n = re.subn(r"podXp: \{\n.*?\n\s*\}, podBusy", lambda _: "podXp: " + json.dumps(xp) + ", podBusy", src, count=1, flags=re.S)
+    if not n:
+        return src
+    src = src.replace("const xpTotal = (x) => Math.round(", "const xpTotal = (x) => x.xp != null ? x.xp : Math.round(", 1)
+    src = src.replace("const iqOf = (x) => Math.max(", "const iqOf = (x) => x.iq != null ? x.iq : Math.max(", 1)
+    src = src.replace('{{sampleChip}}">Pod Split Sample<', '{{srcChip}}">Live XP And IQ<', 1)
+    src = src.replace('{{sampleChip}}">Real Counts 10-31, Simulated Events<', '{{srcChip}}">desk/intel.py<', 1)
+    return src.replace("Values Stay Sample Until The Wiring Reads The Logs.",
+                       "Pod Values Come From desk/intel.py (logs/desk/state/intel.json).", 1)
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -1784,6 +1820,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_pods, src, state)
             src = _safe(_patch_main_tickets, src, state)
             src = _safe(_patch_main_debrief, src, state, ROOT)
+            src = _safe(_patch_main_podxp, src, state)
             src = _safe(lambda s: _patch_main_feed(s, state, usage, _git_today()), src)
             src = _patch_sources(src)
         src = _safe(_patch_alerts, src, state if isinstance(state, dict) else {}, ROOT)
