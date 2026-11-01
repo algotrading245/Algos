@@ -58,3 +58,51 @@ def test_kill_needs_the_header_and_a_local_origin(srv):
     assert code == 200 and body["ok"]
     assert paths.KILL.exists() and "owner: test" in paths.KILL.read_text(encoding="utf-8")
     assert risk_gate.halted().startswith("KILL file")
+
+
+def _get(url):
+    with urllib.request.urlopen(url, timeout=30) as r:
+        return json.loads(r.read())
+
+
+def test_read_js_parses_wrapper_and_caches(tmp_path):
+    f = tmp_path / "x.js"
+    f.write_text('window.AURUM = {"a": 1, "runs": [1,2]};\n', encoding="utf-8")
+    d, mt = dashboard.read_js(f)
+    assert d == {"a": 1, "runs": [1, 2]} and mt
+    assert dashboard.read_js(f)[0] is d  # same mtime: cached object
+    d2, mt2 = dashboard.read_js(tmp_path / "missing.js")
+    assert "error" in d2 and mt2 is None
+
+
+def test_slim_aurum_cuts_runs_and_gates():
+    big = {"runs": [{"n": i} for i in range(100)], "demo": {"log": "x" * 9000},
+           "ledger": {"candidates": [{"id": "a", "notes": "long", "status": "tester"}], "rejected": []},
+           "gates": {"g": {"id": "g", "verdict": "PASS", "extra": 1, "gates": [{"gate": "dsr", "pass": True, "figure": "1", "rule": "r"}]}}}
+    o = dashboard.slim_aurum(big)
+    assert len(o["runs"]) == 40 and o["runs"][-1] == {"n": 99}
+    assert len(o["demo"]["log"]) == 3000
+    assert o["ledger"]["candidates"] == [{"id": "a", "status": "tester"}]
+    assert o["gates"]["g"]["gates"] == [{"gate": "dsr", "pass": True, "figure": "1"}]
+
+
+def test_live_aurum_queue_usage_routes(srv, monkeypatch, tmp_path):
+    live = tmp_path / "live.js"
+    live.write_text('window.AURUM_LIVE = {"paused": false, "roles": {}};', encoding="utf-8")
+    monkeypatch.setattr(dashboard, "LIVE_JS", live)
+    d = _get(srv + "/api/live")
+    assert d["paused"] is False and d["file_age_s"] is not None
+    a = _get(srv + "/api/aurum")
+    assert "error" in a or "ledger" in a
+    q = _get(srv + "/api/queue")
+    assert set(q) == {"queue", "gaps"}
+    assert "rows" in _get(srv + "/api/usage")
+    monkeypatch.setattr(dashboard, "LIVE_JS", tmp_path / "gone.js")
+    assert "error" in _get(srv + "/api/live")
+
+
+def test_new_routes_are_read_only(srv):
+    for p in ("/api/live", "/api/aurum", "/api/queue", "/api/usage"):
+        req = urllib.request.Request(srv + p, data=b"{}", method="POST")
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(req, timeout=10)

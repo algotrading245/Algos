@@ -4,6 +4,11 @@ python -m desk.dashboard [--host 127.0.0.1] [--port 8765]     then open http://1
 
 GET  /            the page (desk/dashboard/index.html)
 GET  /api/state   everything the page shows, as JSON
+GET  /api/live    dashboard/live.js (window.AURUM_LIVE, rewritten about every second) as JSON, plus "age_s"
+GET  /api/aurum   dashboard/data.js (window.AURUM) as JSON, slimmed: runs cut to the latest 40, ledger and gates
+                  summarised, demo log tailed; cached by file mtime
+GET  /api/queue   docs/ideas/queue.jsonl (latest 60 rows) and docs/gaps.json
+GET  /api/usage   logs/autopilot/usage.jsonl, latest 300 rows
 POST /api/kill    the kill switch, the same as `python -m desk.cli kill "why"`; the clock closes every desk position on
                   its next pass. Only from this PC (127.0.0.1), with the X-Desk: kill header and no foreign Origin.
                   Resume stays owner-only on the command line.
@@ -26,6 +31,61 @@ from pathlib import Path
 from desk import clocks, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
 
 PAGE = paths.DESK / "dashboard" / "index.html"
+LIVE_JS = paths.ROOT / "dashboard" / "live.js"
+DATA_JS = paths.ROOT / "dashboard" / "data.js"
+QUEUE = paths.ROOT / "docs" / "ideas" / "queue.jsonl"
+GAPS = paths.ROOT / "docs" / "gaps.json"
+USAGE = paths.ROOT / "logs" / "autopilot" / "usage.jsonl"
+_JS_CACHE = {}
+
+
+def read_js(path):
+    """Parse a `window.X = {...};` file to a dict; cached by mtime. Returns {"error":..} when missing or broken."""
+    try:
+        mt = path.stat().st_mtime
+        hit = _JS_CACHE.get(path)
+        if hit and hit[0] == mt:
+            return hit[1], mt
+        txt = path.read_text(encoding="utf-8")
+        data = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+        _JS_CACHE[path] = (mt, data)
+        return data, mt
+    except Exception as e:  # noqa: BLE001 - the page shows the error as "no data"
+        return {"error": f"{type(e).__name__}: {e}"}, None
+
+
+def slim_aurum(d):
+    """data.js is ~1.2 MB; keep what the page draws."""
+    if "error" in d:
+        return d
+    o = dict(d)
+    o["runs"] = (d.get("runs") or [])[-40:]
+    led = d.get("ledger") or {}
+    keep = ("id", "name", "source", "status", "step", "ea", "summary", "stress_sharpe", "tag")
+    o["ledger"] = {"about": led.get("about"),
+                   "candidates": [{k: c.get(k) for k in keep if k in c} for c in led.get("candidates", [])],
+                   "rejected": led.get("rejected", [])}
+    o["gates"] = {k: {"id": g.get("id"), "when": g.get("when"), "verdict": g.get("verdict"),
+                      "gates": [{"gate": x.get("gate"), "pass": x.get("pass"), "figure": x.get("figure")}
+                                for x in g.get("gates", [])]} for k, g in (d.get("gates") or {}).items()}
+    demo = dict(d.get("demo") or {})
+    demo["log"] = (demo.get("log") or "")[-3000:]
+    o["demo"] = demo
+    return o
+
+
+def read_tail_jsonl(path, n):
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()[-n:]
+    except OSError:
+        return None
+    rows = []
+    for ln in lines:
+        try:
+            rows.append(json.loads(ln))
+        except ValueError:
+            pass
+    return rows
 SLOW_TTL = 5          # seconds the file-heavy sections are cached
 LIVE_TTL = 1          # seconds a live MT5 read is reused
 PROC_TTL = 10         # seconds between checks that the desk terminal is running
@@ -353,6 +413,20 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, PAGE.read_bytes(), "text/html")
         if path == "/api/state":
             return self._send(200, self.state.build())
+        if path == "/api/live":
+            d, mt = read_js(LIVE_JS)
+            return self._send(200, {**d, "file_age_s": None if mt is None else round(time.time() - mt, 1)})
+        if path == "/api/aurum":
+            d, mt = read_js(DATA_JS)
+            return self._send(200, {**slim_aurum(d), "file_age_s": None if mt is None else round(time.time() - mt, 1)})
+        if path == "/api/queue":
+            try:
+                gaps = json.loads(GAPS.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                gaps = None
+            return self._send(200, {"queue": read_tail_jsonl(QUEUE, 60), "gaps": gaps})
+        if path == "/api/usage":
+            return self._send(200, {"rows": read_tail_jsonl(USAGE, 300)})
         return self._send(404, {"error": "not found"})
 
     def _local_origin(self):
