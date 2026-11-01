@@ -10,13 +10,17 @@ desk's open positions, and the kill button, which POSTs /api/kill. With extra = 
 rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and daily loss, the live-gate checks, the pod
 rows, the alerts (needs_you) and the idea queue. Live on Pods (from the same state): each pod's allocation, work and
 talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
-pod briefs, what each pod knows and the rules are still design text. The rest is still the design's sample content.
+pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
+the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
+list from mql5/Experts/_archive, and the Hydra legs from the armed edges (risk per leg); trade counts, today's
+P/L per leg, the diff rows and the other guards are still design text. The rest is still the design's sample content.
 """
 import base64
 import collections
 import datetime as dt
 import gzip
 import json
+import pathlib
 import re
 import time
 
@@ -325,6 +329,99 @@ def _patch_pods_page(src, state):
                   lambda _: f"{{ label: 'Pods Idle', value: '{idle}', sub: 'No Closed Trade Yet'", src, count=1)
 
 
+EXPERTS = pathlib.Path(__file__).resolve().parent.parent / "mql5" / "Experts"
+_LEG_ALIAS = {"hold": "goldhold", "grid": "audcad", "cross": "yen"}
+_ARCHIVE_TO = {"Bell": "Hydra", "Lattice": "Hydra", "Orient": "Hydra", "Tokyo": "Hydra"}
+
+
+def _ea_text(p):
+    b = p.read_bytes()
+    return b.decode("utf-16") if b[:2] in (b"\xff\xfe", b"\xfe\xff") else b.decode("utf-8", "replace")
+
+
+def _ea_versions(root=None):
+    out = {}
+    for d in (root or EXPERTS).glob("Aurum*"):
+        f = d / (d.name + ".mq5")
+        try:
+            m = re.search(r'#property\s+version\s+"([^"]+)"', _ea_text(f))
+        except OSError:
+            continue
+        if m:
+            out[d.name] = m.group(1)
+    return out
+
+
+def _archived(root=None):
+    try:
+        names = sorted(d.name[5:] for d in ((root or EXPERTS) / "_archive").iterdir() if d.is_dir() and d.name.startswith("Aurum"))
+    except OSError:
+        return None
+    return [[n, _ARCHIVE_TO.get(n, "Retired")] for n in names]
+
+
+def _patch_eas_page(src, state, positions, root=None):
+    lim, st = state.get("limits") or {}, state.get("status") or {}
+    fl = lim.get("floors") or {}
+    eq, bal = float(lim.get("equity") or 0), float(lim.get("balance") or 0)
+    kill, day = float(fl.get("kill") or 0), float(fl.get("day") or 0)
+    if kill:
+        src = re.sub(r"const START = 10000, KILL = [\d.]+;", lambda _: f"const START = 10000, KILL = {kill:.2f};", src, count=1)
+    src = re.sub(r"\n    today\.golddip = [^\n]*", "", src, count=1)
+    if eq:
+        src = src.replace("equity: 9962.86, on", f"equity: {eq:.2f}, on", 1)
+        src = src.replace("9962.86 + drift", "s.equity", 1)
+    if bal:
+        src = src.replace("sub: 'Balance 9,958.40'", f"sub: 'Balance {bal:,.2f}'", 1)
+
+    pos = [p for p in positions or [] if isinstance(p, dict)]
+    if pos:
+        p0 = pos[0]
+        sub = f"{p0.get('symbol') or '?'} {float(p0.get('volume') or 0):.2f}" + (f" · {p0['comment']}" if p0.get("comment") else "")
+        sub += f" +{len(pos) - 1} More" if len(pos) > 1 else ""
+    else:
+        sub = "Flat"
+    src = src.replace("value: '1', sub: 'XAUUSD 0.05 · Gold Dip'", f"value: '{len(pos)}', sub: '{_js(sub)}'", 1)
+
+    halt = st.get("halt")
+    src = src.replace("grey: ['#E8E8ED', '#424245'] };", "grey: ['#E8E8ED', '#424245'], red: ['#FDECEC', '#B3261E'] };", 1)
+    if day:
+        src = src.replace("['Daily Loss Guard', '3.0%', 'Armed', 'green']", f"['Daily Loss Guard', '{day:,.2f}', 'Armed', 'green']", 1)
+    if kill:
+        src = src.replace("['Max Loss Kill', '9,311.30', 'Armed', 'green']",
+                          f"['Max Loss Kill', '{kill:,.2f}', " + ("'Halted', 'red']" if halt else "'Armed', 'green']"), 1)
+    if halt:
+        src = src.replace("fundedState: 'Trading', fundedPill: pill('#E9F7EC', '#248A3D')",
+                          "fundedState: 'Halted', fundedPill: pill('#FDECEC', '#B3261E')", 1)
+
+    for name, ver in _ea_versions(root).items():
+        src = re.sub(rf"name: '{re.escape(name)}', ver: '[^']*'", lambda _, n=name, v=ver: f"name: '{n}', ver: '{_js(v)}'", src, count=1)
+    src = src.replace("v: 'mql5/Experts/' + e.name + '.mq5'", "v: 'mql5/Experts/' + e.name + '/' + e.name + '.mq5'", 1)
+    arch = _archived(root)
+    if arch:
+        src = re.sub(r"const ARCHIVED = \[[^\n]*\];", lambda _: "const ARCHIVED = " + json.dumps(arch).replace('"', "'") + ";", src, count=1)
+
+    armed = (state.get("edges") or {}).get("armed") or []
+    m = re.search(r"const LEGS = \[\n(.*?)\n\];", src, re.S)
+    if armed and m:
+        design = {}
+        for row in m.group(1).split("\n"):
+            g = dict(re.findall(r"(\w+): '([^']*)'", row))
+            if g.get("id"):
+                design[g["id"]] = g
+        rows = []
+        for a in armed:
+            eid = str(a.get("edge") or "?")
+            d = design.get(_LEG_ALIAS.get(eid, eid), {})
+            risk = a.get("risk_pct")
+            size = f"{float(risk):.2f}%" if isinstance(risk, (int, float)) else "—"
+            rows.append(f"  {{ id: '{_js(eid)}', name: '{_js(d.get('name') or eid.title())}', market: '{_js(str(a.get('market') or '—'))}', "
+                        f"window: '{_js(d.get('window') or '—')}', pod: '{_js(d.get('pod') or '—')}', size: '{size}', trades: '—', on: true }}")
+        src = src[:m.start()] + "const LEGS = [\n" + ",\n".join(rows) + "\n];" + src[m.end():]
+        src = src.replace("legs: '11 Of 12 Armed'", f"legs: '{len(rows)} Armed'", 1)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -345,6 +442,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
+    elif i == 2 and isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_eas_page, src, extra["state"], positions)
     return src
 
 

@@ -172,3 +172,25 @@ def test_command_center_pods_shows_live_state():
     assert "from: 'head-trader'" in pods and "|| {}).name || String(id)" in pods
     assert "past the weekend cutoff" in pods and "state: 'Blocked'" in pods
     assert "label: 'Messages Today', value: '1'" in pods
+
+
+def test_command_center_eas_shows_live_state():
+    import base64, gzip
+    from desk import command_center as cc
+    state = {"limits": {"equity": 9962.86, "balance": 9958.4, "floors": {"day": 9562.86, "kill": 9311.2995}},
+             "edges": {"armed": [{"edge": "golddip", "market": "XAUUSD", "risk_pct": 0.25},
+                                 {"edge": "noise", "market": "US100", "risk_pct": 0.25}]},
+             "status": {"halt": "KILL file"}}
+    pos = {"symbol": "EURUSD", "type": 0, "volume": 0.05, "price_open": 1.08, "profit": 1.0, "comment": "fix"}
+    out = cc.build(dashboard.BUNDLE, {}, [], [pos], {"state": state}).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[2]]
+    raw = base64.b64decode(e["data"])
+    eas = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    assert "KILL = 9311.30;" in eas and "Balance 9,958.40" in eas
+    assert "'Max Loss Kill', '9,311.30', 'Halted', 'red'" in eas and "fundedState: 'Halted'" in eas
+    assert "name: 'AurumFunded', ver: '" + cc._ea_versions()["AurumFunded"] + "'" in eas
+    assert "'/' + e.name + '.mq5'" in eas and "['Bell', 'Hydra']" in eas
+    assert "value: '1', sub: 'EURUSD 0.05 · fix'" in eas
+    assert "id: 'noise', name: 'Noise', market: 'US100'" in eas and "size: '0.25%'" in eas
+    assert "id: 'bellfade'" not in eas and "today.golddip = 0.18" not in eas
