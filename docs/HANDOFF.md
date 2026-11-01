@@ -51,6 +51,18 @@ each finished piece of work.
 
 ## Current state
 
+- **Month-reversal leg (graziani_rev, AurumFunded v1.21): review found 4 blocking issues (judge 2026-11-01
+  01:14).** (1) `Legs.mqh:2545`: the 40-day guard counts from the position's first open, so a renewed hold is closed
+  around day 10 of its second month. (2) `NyseClosed` (`Legs.mqh:1639`) has no Good Friday, so 2024-03-29 is taken as
+  March's last trading day. The VRP leg shares this function. (3) The Python swap of 2 bp a night is below FTMO's
+  swap (about 2.4 bp for US500, about 3.0 bp for US100), so the cost and book gates have to be run again. (4) There is
+  no v1.21 compile log. Notes: lesson 21's book exits are not modelled, and `OnTradeTransaction` (`Legs.mqh:3160`)
+  hides magics +36/+37 from the P/L lines. The gate passes on diversification, not on timing: the rule does worse than
+  buy-and-hold. The fix is builder item `fix_graziani_rev` (new). j19 is still running in the tester, because holding a
+  running job would let tester_step start a second job on the same install. Its result is diagnostic only and does
+  not count as Step 15. The leg is off by default, so the demo is not affected. **For tools/ (owner):**
+  tester_step has no way to cancel or hold a job that is already running.
+
 - **Dual Thrust four-index leg (prebuilt_dual_thrust_four_indices_ew): j18 PASS, integrated (judge 2026-10-28
   13:40).** The leg is in AurumFunded v1.18 and stays off by default (InpDualMult 0). It is switched on (0.25) only in
   its own tester preset, `AurumFunded_FTMO_phase1_dual.set` with the j18 compare_set. **For the owner:** the demo EA

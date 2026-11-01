@@ -157,3 +157,4 @@ committed).
 | 2026-10-30 17:33 | judge | demo check (noise leg 15:30 and 17:30 index sells) | ok: US500/US100 sells with broker stops, 16:00 exit back inside band (-19.02 EUR), 17:30 re-entry 0.63 / 0.08 lots filled 0.5 pt worse than log, no ALERT; nothing to judge or review |
 | 2026-10-30 17:34 | judge | demo check of the 10-30 Tokyo, USDJPY breakout and midday orders | no ALERT: all filled with broker stops, timing and sizes match the phase1_legs preset, fills 0-0.4 pip off the log; closed P/L -2.96 / -1.00 / +68.56 EUR. Next: none |
 | 2026-11-01 00:53 | tester | Started j19 (AurumFunded grz1_off) | j19 running in 2026-11-01_0053_AurumFunded_grz1_off |
+| 2026-11-01 01:15 | judge | review of graziani_rev EA change (AurumFunded v1.21, j19) | 4 BLOCKING (40-day guard cuts renewed holds, no Good Friday, swap below FTMO so redo cost gate, no compile log); fix_graziani_rev queued for builder; j19 runs on, diagnostic only |
