@@ -33,6 +33,7 @@ import base64
 import collections
 import datetime as dt
 import gzip
+import html
 import json
 import pathlib
 import re
@@ -312,6 +313,45 @@ def _t16_preset(ini=None, experts=None):
         except ValueError:
             out[k] = v.strip()
     return out
+
+
+_T16_LOADED = re.compile(r"\t(\d\d:\d\d:\d\d)\.\d+\tExperts\texpert AurumFunded \((\S+),(\w+)\) (loaded successfully|removed)")
+
+
+def _t16_loaded(data_dir=None, ini=None, days=14):
+    """The preset T16 runs and its last load or removal: the .set from the ExpertParameters line of t16_attach.ini
+    (only that line is read) and the last AurumFunded line of the terminal journal. {} when neither is found."""
+    out = {}
+    try:
+        m = re.search(r"^ExpertParameters=(.+?)\s*$", pathlib.Path(ini or ROOT / "tools" / "autopilot" / "t16_attach.ini")
+                      .read_text(encoding="utf-8", errors="replace"), re.M)
+        if m:
+            out["set"] = pathlib.Path(m.group(1)).name
+    except OSError:
+        pass
+    for p in sorted((pathlib.Path(data_dir or T16_DATA) / "logs").glob("2*.log"))[-days:]:
+        raw = p.read_bytes()
+        text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
+        for line in text.splitlines():
+            m = _T16_LOADED.search(line)
+            if m and not _T16_PRIVATE.search(line):
+                out.update(day=p.stem, time=m.group(1), symbol=m.group(2), tf=m.group(3),
+                           loaded=m.group(4) == "loaded successfully")
+    return out
+
+
+def _patch_main_preset(src, info, today=None):
+    """The Main preset line: the .set T16 runs, its chart and when it was last loaded (or removed)."""
+    if not info:
+        return src
+    tail = ""
+    if info.get("time"):
+        day = dt.datetime.strptime(info["day"], "%Y%m%d").date()
+        when = info["time"] if day == (today or dt.date.today()) else f"{day.day} {day:%b} {info['time']}"
+        tail = f" · {info['symbol']} {info['tf']} · {'Loaded' if info['loaded'] else 'Removed'} {when}"
+    name = html.escape(info.get("set") or "—")
+    return re.sub(r"(Preset <span[^>]*>)[^<]*(</span>)[^<]*(</div>)",
+                  lambda m: m.group(1) + name + m.group(2) + html.escape(tail) + m.group(3), src, count=1)
 
 
 def _patch_main_rules(src, t16, preset, daily=5.0, total=10.0):
@@ -1451,6 +1491,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(lambda s: _patch_main_funded(s, t16, _deployed_funded()), src)
         src = _safe(lambda s: _patch_main_rules(s, t16, _t16_preset()), src)
         src = _safe(lambda s: _patch_main_legs(s, t16), src)
+        src = _safe(lambda s: _patch_main_preset(s, _t16_loaded()), src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):

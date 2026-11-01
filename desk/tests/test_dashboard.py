@@ -494,3 +494,28 @@ def test_command_center_main_legs_from_t16_log(tmp_path):
     assert '"Noise Area": 2' in out and "[n] || 0" in out
     assert "Legs · Orders 30 Oct" in cc._patch_main_legs(src, t16, dt.date(2026, 11, 1))
     assert cc._patch_main_legs(src, None) == src
+
+
+def test_command_center_main_preset_from_ini_and_journal(tmp_path):
+    import datetime as dt
+    from desk import command_center as cc
+    ini = tmp_path / "attach.ini"
+    ini.write_text("[Experts]\nLogin=123456789\nExpertParameters=AurumFunded_x.set\n", encoding="utf-8")
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    (logs / "20261031.log").write_text(
+        "HO\t0\t18:11:34.537\tExperts\texpert AurumFunded (XAUUSD,M15) loaded successfully\n", encoding="utf-16")
+    (logs / "20261101.log").write_text("\n".join([
+        "HO\t0\t01:37:42.100\tExperts\texpert AurumFunded (XAUUSD,M15) removed",
+        "HO\t0\t01:42:39.902\tExperts\texpert AurumFunded (XAUUSD,M15) loaded successfully",
+        "HO\t0\t01:42:40.000\tNetwork\t'123456789': authorized on FTMO-Demo",
+    ]), encoding="utf-8")
+    info = cc._t16_loaded(tmp_path, ini)
+    assert info == {"set": "AurumFunded_x.set", "day": "20261101", "time": "01:42:39", "symbol": "XAUUSD",
+                    "tf": "M15", "loaded": True}
+    src = ('<div style="a">Preset <span style="b">old.set</span> · XAUUSD M15 · Loaded 18:11:34</div>')
+    out = cc._patch_main_preset(src, info, dt.date(2026, 11, 1))
+    assert out == '<div style="a">Preset <span style="b">AurumFunded_x.set</span> · XAUUSD M15 · Loaded 01:42:39</div>'
+    assert "Loaded 1 Nov 01:42:39" in cc._patch_main_preset(src, info, dt.date(2026, 11, 2))
+    assert "Removed 1 Nov" in cc._patch_main_preset(src, dict(info, loaded=False), dt.date(2026, 11, 2))
+    assert cc._patch_main_preset(src, {}) == src
