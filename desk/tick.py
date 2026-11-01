@@ -42,9 +42,12 @@ def commit(t):
     def git(*a):
         return subprocess.run(["git", *a], cwd=root, capture_output=True, text=True, timeout=120)
     git("add", "--", *have)
-    if not git("diff", "--cached", "--name-only", "--", *have).stdout.strip():
+    # Commit the staged files by name: some desk paths are gitignored (kept local, owner 10-27 and 11-01), and
+    # naming an ignored path in "git commit --" fails the whole commit.
+    staged = git("diff", "--cached", "--name-only", "--", *have).stdout.splitlines()
+    if not staged:
         return True
-    r = git("commit", "-m", f"Desk record {clocks.trading_day(t).isoformat()}", "--", *have)
+    r = git("commit", "-m", f"Desk record {clocks.trading_day(t).isoformat()}", "--", *staged)
     if r.returncode != 0:
         journal.log("commit_error", why=(r.stderr or r.stdout)[-400:])
         return False
