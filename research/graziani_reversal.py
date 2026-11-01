@@ -84,13 +84,14 @@ if __name__ == "__main__":
         SWAP_BP_SYM[s] = abs(sp["swap_long"]) * sp["point"] / c.iloc[-1] * 1e4
         print(s, c.index[0].date(), c.index[-1].date(), len(c), "swap bp/night %.2f" % SWAP_BP_SYM[s])
     _run = run
-    run = lambda c, sb, k=1.0, variant=0, s=None: _run(c, sb, k, variant, SWAP_BP_SYM["SPXUSD" if sb == 1.0 else "NSXUSD"])
+    # the symbol is passed explicitly, not inferred from the spread value (a spread change no longer swaps the swap)
+    run = lambda c, sb, k=1.0, variant=0, s=None, sym=None: _run(c, sb, k, variant, SWAP_BP_SYM[sym])
     for v in (0, 1):
         for s, c in px.items():
             for k in (0.0, 1.0, 1.5, 2.0):
-                x, n = run(c, SPEC[s], k, v)
+                x, n = run(c, SPEC[s], k, v, sym=s)
                 print(f"var{v} {s} x{k}: n={n} Sharpe all {sh(x):.2f} <=2017 {sh(x, hi='2018-01-01'):.2f} 2018+ {sh(x, lo='2018-01-01'):.2f} mean/yr {x.mean()*252*100:.2f}%")
-            out[(v, s)] = {k: run(c, SPEC[s], k, v)[0] for k in (1.0, 1.5)}
+            out[(v, s)] = {k: run(c, SPEC[s], k, v, sym=s)[0] for k in (1.0, 1.5)}
     for s, c in px.items():
         bh = c.pct_change().dropna()
         print("buy&hold", s, "all %.2f <=2017 %.2f 2018+ %.2f" % (sh(bh), sh(bh, hi="2018-01-01"), sh(bh, lo="2018-01-01")))
