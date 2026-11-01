@@ -351,6 +351,8 @@ def test_command_center_main_shows_live_logs(tmp_path):
     for n, gate in enumerate(["halves", "halves", "costs"]):
         (tmp_path / "gates" / f"g{n}.json").write_text(json.dumps(
             {"id": f"g{n}", "verdict": "FAIL", "gates": [{"gate": gate, "pass": False}, {"gate": "dsr", "pass": False}]}))
+    (tmp_path / "book.json").write_text(json.dumps({"legs": {"grid": {"sharpe": 0.83, "weight": 0.09},
+                                                             "breakout": {"sharpe": 0.971, "weight": 0.25}}}))
     today = dt.date(2026, 11, 1)
     usage = [{"ts": "2026-11-01T09:50:05", "role": "finder", "model": "sonnet", "input": 1_000_000, "output": 500_000},
              {"ts": "2026-11-01T08:00:00", "role": "tester", "model": "haiku", "input": 250_000},
@@ -361,6 +363,7 @@ def test_command_center_main_shows_live_logs(tmp_path):
     assert "fmtTok(1750000 + liveTok + doneTok)" in pr and "String(2 + s.done.length)" in pr and "'2 Runs'" in pr
     assert '["Ideas Tried", 8]' in pr and '["Full Backtest", 3]' in pr and "Math.log(9)" in pr
     assert "Both Halves', 2]" in pr and "1.5x Costs', 1]" in pr and "(f / 2 * 100)" in pr
+    assert 'const wl = [["Breakout", 25.0, 0.97], ["Grid", 9.0, 0.83]];' in pr and "'Quartet'" not in pr
 
 
 def _main_template():
@@ -519,3 +522,24 @@ def test_command_center_main_preset_from_ini_and_journal(tmp_path):
     assert "Loaded 1 Nov 01:42:39" in cc._patch_main_preset(src, info, dt.date(2026, 11, 2))
     assert "Removed 1 Nov" in cc._patch_main_preset(src, dict(info, loaded=False), dt.date(2026, 11, 2))
     assert cc._patch_main_preset(src, {}) == src
+
+
+def test_command_center_main_book_sharpe_and_correlation():
+    from desk import command_center as cc
+    src = ('<h2 style="x">Book Exposure</h2>\n          <p style="y">Sharpe 3.11 (3.26 With Dual) · old</p>'
+           '<span style="{{sampleChip}}">Heatmap Sample</span>'
+           '<div role="img" aria-label="Correlation Heatmap Of Eight Legs, Sample Values" style="display: grid; '
+           'grid-template-columns: 70px repeat(8, minmax(0, 1fr)); gap: 3px">'
+           '<sc-for list="{{heat}}" as="hc" hint-placeholder-count="81">\n'
+           "    const HL = ['Breakout', 'Morning'];\n    const HS = ['Brk', 'Mor'];\n"
+           "    const corrSpecial = { '0-1': 0.4 };\n    const corr = (i, j) => (i === j ? 1 : corrSpecial[i + '-' + j]);\n")
+    book = {"backtest": {"sharpe": 2.75, "sharpe_2018": 3.11, "profitable_months": 0.78, "prop": {"pass_12m": 0.909}}}
+    corr = {"legs": ["breakout", "grid", "quartet"], "corr": [[1, 0.2, 0.1], [0.2, 1, 0.3], [0.1, 0.3, 1]]}
+    out = cc._patch_main_book(src, book, corr)
+    assert ">Sharpe 3.11 Since 2018 (2.75 All Years) · 78% Profitable Months · 91% FTMO Payout Within 12 Months<" in out
+    assert 'const HL = ["Breakout", "Grid", "Quartet"];' in out and 'const HS = ["Brk", "Grid", "Qrt"];' in out
+    assert "const CM = [[1, 0.2, 0.1], [0.2, 1, 0.3], [0.1, 0.3, 1]];" in out
+    assert "const corr = (i, j) => CM[i][j];" in out and "corrSpecial" not in out
+    assert "Correlation Heatmap Of 3 Legs, Last 252 Days" in out and "repeat(3, minmax" in out
+    assert 'hint-placeholder-count="16"' in out and ">Risk Bar Sample<" in out
+    assert cc._patch_main_book(src, {}, {}) == src

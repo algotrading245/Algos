@@ -1217,6 +1217,71 @@ def _tok(r):
     return sum(int(r.get(k) or 0) for k in ("input", "output", "cache_read", "cache_create"))
 
 
+_CORR_CACHE = {}
+
+
+def _book_corr(names, days=252):
+    """{"legs", "corr"}: the book legs' pairwise correlation over the last `days` days, from tools/book_sim.py legs().
+    Runs in a child Python so pandas stays out of the server; cached until book.json or a leg file changes."""
+    import subprocess
+    import sys
+    files = [ROOT / "marketdata" / "hydra_legs_daily.csv.gz", DOCS / "candidates.json", DOCS / "book.json"]
+    key = (tuple(names), days, tuple(f.stat().st_mtime if f.exists() else 0 for f in files))
+    if key not in _CORR_CACHE:
+        code = ("import sys, json; sys.path.insert(0, 'tools'); import book_sim as b; n = json.loads(sys.argv[1]); "
+                "L = b.legs(); L = L[[k for k in n if k in L]].iloc[-int(sys.argv[2]):]; "
+                "print(json.dumps({'legs': list(L.columns), 'corr': L.corr().fillna(0).round(2).values.tolist()}))")
+        res = {}
+        try:
+            out = subprocess.run([sys.executable, "-c", code, json.dumps(list(names)), str(days)], cwd=ROOT,
+                                 capture_output=True, text=True, timeout=60,
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            if out.returncode == 0 and out.stdout.strip():
+                res = json.loads(out.stdout.strip().splitlines()[-1])
+        except (OSError, ValueError, subprocess.SubprocessError):
+            pass
+        _CORR_CACHE.clear()
+        _CORR_CACHE[key] = res  # a failure is cached too, so a broken file costs one run, not one per page
+    return _CORR_CACHE[key]
+
+
+_LEG_SHORT = {"breakout": "Brk", "morning": "Mor", "cross": "Crs", "noise": "Nse", "quartet": "Qrt", "after": "Aft"}
+
+
+def _patch_main_book(src, book, corr, days=252):
+    """Book Exposure: the headline line from docs/book.json and the leg correlation heatmap from the leg series."""
+    bt = book.get("backtest") or {}
+    if bt.get("sharpe") is not None:
+        pm = bt.get("profitable_months_2018", bt.get("profitable_months")) or 0
+        sub = (f"Sharpe {bt.get('sharpe_2018', bt['sharpe'])} Since 2018 ({bt['sharpe']} All Years) · "
+               f"{round(pm * 100)}% Profitable Months · "
+               f"{round(((bt.get('prop') or {}).get('pass_12m') or 0) * 100)}% FTMO Payout Within 12 Months")
+        src = re.sub(r"(Book Exposure</h2>\s*<p[^>]*>)[^<]*", lambda m: m.group(1) + html.escape(sub), src, count=1)
+    legs, cm = corr.get("legs") or [], corr.get("corr") or []
+    if len(legs) >= 2 and len(cm) == len(legs):
+        n = len(legs)
+        hl = [str(k).title() for k in legs]
+        hs = [_LEG_SHORT.get(k, str(k).title()[:4]) for k in legs]
+        src = re.sub(r"const HL = \[.*?\];", lambda _: "const HL = " + json.dumps(hl) + ";", src, count=1)
+        src = re.sub(r"const HS = \[.*?\];", lambda _: "const HS = " + json.dumps(hs) + ";", src, count=1)
+        src = re.sub(r"const corrSpecial = .*?\n(\s*)const corr = [^\n]*",
+                     lambda m: "const CM = " + json.dumps(cm) + ";\n" + m.group(1) + "const corr = (i, j) => CM[i][j];",
+                     src, count=1, flags=re.S)
+        src = re.sub(r'(<div role="img" aria-label=")Correlation Heatmap Of [^"]*(" style="[^"]*?repeat\()8,',
+                     lambda m: f"{m.group(1)}Correlation Heatmap Of {n} Legs, Last {days} Days{m.group(2)}{n},",
+                     src, count=1)
+        src = src.replace('hint-placeholder-count="81"', f'hint-placeholder-count="{(n + 1) ** 2}"', 1)
+        src = src.replace(">Heatmap Sample<", ">Risk Bar Sample<", 1)
+    return src
+
+
+def _main_book(src):
+    book = _jfile(DOCS / "book.json") or {}
+    w = {k: float((v or {}).get("weight") or 0) for k, v in (book.get("legs") or {}).items() if isinstance(v, dict)}
+    names = sorted(w, key=lambda k: -w[k])
+    return _patch_main_book(src, book, _book_corr(names) if names else {})
+
+
 def _patch_main_live(src, live, usage, root=None, today=None):
     """Main page: token chart, recent runs, funnel, gate fails and the Tokens/Runs Today KPIs from the logs."""
     docs = pathlib.Path(root) if root else DOCS
@@ -1255,6 +1320,10 @@ def _patch_main_live(src, live, usage, root=None, today=None):
     cj = _jfile(docs / "candidates.json") or {}
     cands = [c for c in (cj.get("candidates") if isinstance(cj, dict) else cj) or [] if isinstance(c, dict)]
     book = _jfile(docs / "book.json") or {}
+    wl = sorted(([str(k).title(), round(float(v.get("weight") or 0) * 100, 1), round(float(v.get("sharpe") or 0), 2)]
+                 for k, v in (book.get("legs") or {}).items() if isinstance(v, dict)), key=lambda x: -x[1])
+    if wl:
+        src = re.sub(r"const wl = \[\[.*?\]\];", lambda _: "const wl = " + json.dumps(wl) + ";", src, count=1)
     ids = {x.get("id") for x in queue + backlog + results + gates} - {None}
     if ids:
         funnel = [["Ideas Tried", len(ids)],
@@ -1492,6 +1561,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(lambda s: _patch_main_rules(s, t16, _t16_preset()), src)
         src = _safe(lambda s: _patch_main_legs(s, t16), src)
         src = _safe(lambda s: _patch_main_preset(s, _t16_loaded()), src)
+        src = _safe(_main_book, src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):
