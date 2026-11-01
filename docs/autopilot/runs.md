@@ -164,3 +164,4 @@ committed).
 | 2026-11-01 02:20 | tester | Collected j19 off run, started the on run | j19 running |
 | 2026-11-01 03:10 | tester | Collected j19 (AurumFunded grz1): net +13,732 (+137%), 2298.0 trades, PF 1.63, equity DD 7.75% | j19 done, needs judging |
 | 2026-11-01 03:10 | tester | Started j20 (AurumFunded grz2_off) | j20 running in 2026-11-01_0310_AurumFunded_grz2_off |
+| 2026-11-01 03:20 | judge | Judged j19 (graziani_rev v1.21) | diagnostic only, superseded by j20: leg +393 USD, rel DD 7.06->7.75%; failed index closes at Mon 00:05 flagged for j20 |
