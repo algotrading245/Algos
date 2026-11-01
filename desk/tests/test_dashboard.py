@@ -466,3 +466,31 @@ def test_command_center_main_rules_from_t16_log_and_preset(tmp_path):
     assert "label: 'Max Loss', value: '0.00% Of 10%', bar: bar(0.0, '#D70015')" in out
     assert "label: 'Profit Target', value: '0.50% Of 10% · Days 1 Of 4', bar: bar(5.0, '#34C759')" in out
     assert cc._patch_main_rules("x", t16, {}) == "x"
+
+
+def test_command_center_main_legs_from_t16_log(tmp_path):
+    import datetime as dt
+    from desk import command_center as cc
+    logs = tmp_path / "MQL5" / "Logs"
+    logs.mkdir(parents=True)
+    t = "AurumFunded (XAUUSD,M15)\tAurumFunded: "
+    (logs / "20261030.log").write_text("\n".join([
+        f"IH\t0\t00:00:01.000\t{t}firm day 2026.10.29, day start 10000.00 (balance 10000.00)",
+        f"JK\t0\t09:00:00.000\t{t}USD/JPY broke its range, bought 0.30 lots at 152.10, stop 151.80",
+        f"IH\t0\t23:00:01.000\t{t}firm day 2026.10.30, day start 10000.00 (balance 10000.00)",
+        f"JK\t0\t12:30:00.047\t{t}midday leg sold 0.45 EURUSD at 1.11936, stop 1.12140",
+        f"JK\t0\t12:45:00.047\t{t}USD/JPY broke its range, sold 0.30 lots at 152.10, stop 152.40",
+        f"HH\t0\t15:29:59.874\t{t}US500.cash sold 0.65 lots at 7602.95, bands 7744.30 / 7611.57",
+        f"HH\t0\t16:29:59.874\t{t}US100.cash sold 0.07 lots at 25602.95, bands 25744.30 / 25611.57",
+        f"HH\t0\t17:00:00.000\t{t}dip unit, leverage 1.20, model weight 0.50, bought 0.10",
+        f"HH\t0\t17:30:00.000\t{t}Dual Thrust US500.cash bought 0.20 lots at 7600.00, levels 7610.00 / 7590.00",
+    ]), encoding="utf-8")
+    t16 = cc._t16_log(tmp_path)
+    assert t16["legs"] == {"Midday": 1, "Breakout": 1, "Noise Area": 2, "Dip": 1, "Dual Thrust": 1}
+    src = ("Legs · Orders Today\nconst legs = ['Midday', 'Breakout', 'Noise Area', 'Dip', 'VRP']"
+           ".map((n) => ({ name: n, orders: '0' }));")
+    out = cc._patch_main_legs(src, t16, dt.date(2026, 10, 30))
+    assert "Legs · Orders Today" in out and "orders: '0'" not in out
+    assert '"Noise Area": 2' in out and "[n] || 0" in out
+    assert "Legs · Orders 30 Oct" in cc._patch_main_legs(src, t16, dt.date(2026, 11, 1))
+    assert cc._patch_main_legs(src, None) == src

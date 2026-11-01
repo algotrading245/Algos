@@ -207,8 +207,13 @@ _T16_PRIVATE = re.compile(r"login|authoriz|account", re.I)
 _T16_DIGITS = re.compile(r"(?<![.\d])\d{6,}(?![.\d])")
 _T16_DAY = re.compile(r"firm day (\S+), day start (-?[\d.]+)")
 _T16_CLOSED = re.compile(r"closed \S+ magic \S+ [\d.]+ at \S+, P/L (-?[\d.]+)")
-_T16_OPEN = re.compile(r"\b(?:bought|sold) [\d.]+ ")
+_T16_OPEN = re.compile(r"\b(?:bought|sold) \d[\d.]*(?:\s|$)")
 _T16_FINAL = re.compile(r"final stop at (-?[\d.]+)")
+# The open line each AurumFunded leg prints (mql5/Include/Aurum/Legs.mqh) and its tile on the Main page.
+_T16_LEGS = (("day after a US holiday", "After Holiday"), ("bell leg ", "Bell"), ("after the fix ", "After Fix"),
+             ("midday leg ", "Midday"), ("Tokyo leg ", "Tokyo"), ("dip unit", "Dip"),
+             ("for the Tokyo morning", "Morning"), ("before the fix ", "Fix"), ("broke its range", "Breakout"),
+             (", bands ", "Noise Area"), ("variance-premium gap", "VRP"), ("Dual Thrust ", "Dual Thrust"))
 
 
 def _t16_log(data_dir=None, days=14):
@@ -216,6 +221,7 @@ def _t16_log(data_dir=None, days=14):
     the firm day, its day start and closed P/L, open positions and the time of the last line. None without a log."""
     logs = sorted((pathlib.Path(data_dir or T16_DATA) / "MQL5" / "Logs").glob("2*.log"))[-days:]
     curve, firm, start, day, opens, closes, last, final, traded = [], None, None, 0.0, 0, 0, None, None, set()
+    legs = {}
     for p in logs:
         raw = p.read_bytes()
         text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
@@ -228,7 +234,7 @@ def _t16_log(data_dir=None, days=14):
                 last = (p.stem, m.group(1))
             m = _T16_DAY.search(line)
             if m:
-                firm, start, day = m.group(1), float(m.group(2)), 0.0
+                firm, start, day, legs = m.group(1), float(m.group(2)), 0.0, {}
                 curve.append(start)
                 m = _T16_FINAL.search(line)
                 final = float(m.group(1)) if m else final
@@ -243,6 +249,9 @@ def _t16_log(data_dir=None, days=14):
             elif _T16_OPEN.search(line):
                 opens += 1
                 traded.add(firm)
+                leg = next((n for k, n in _T16_LEGS if k in line), None)
+                if leg:
+                    legs[leg] = legs.get(leg, 0) + 1
     if start is None:
         return None
     try:
@@ -250,7 +259,8 @@ def _t16_log(data_dir=None, days=14):
     except ValueError:
         when = "—"
     return {"curve": curve, "balance": curve[-1], "firm": firm, "start": start, "day": day,
-            "positions": max(0, opens - closes), "last": when, "final": final, "traded": len(traded)}
+            "positions": max(0, opens - closes), "last": when, "final": final, "traded": len(traded),
+            "legs": legs}
 
 
 def _deployed_funded():
@@ -325,6 +335,23 @@ def _patch_main_rules(src, t16, preset, daily=5.0, total=10.0):
              f"  {{ label: 'Profit Target', value: '{pt:.2f}% Of {target:g}% · Days {t16['traded']} Of {days}', "
              f"bar: bar({b(pt, target)}, '#34C759') }}\n];")
     return re.sub(r"const rules = \[.*?\n\s*\];", lambda _: rules, src, count=1, flags=re.S)
+
+
+def _patch_main_legs(src, t16, today=None):
+    """The Main leg chips: opens per leg on the latest T16 firm day. When that day is not today the label names it."""
+    if not t16 or not t16.get("firm"):
+        return src
+    counts = json.dumps(t16.get("legs") or {})
+    out = src.replace(".map((n) => ({ name: n, orders: '0' }))",
+                      f".map((n) => ({{ name: n, orders: String(({counts})[n] || 0) }}))", 1)
+    today = today or dt.date.today()
+    try:
+        day = dt.datetime.strptime(t16["firm"], "%Y.%m.%d").date()
+    except ValueError:
+        return out
+    if day != today:
+        out = out.replace("Legs · Orders Today", f"Legs · Orders {day.day} {day:%b}", 1)
+    return out
 
 
 def _patch_gate(src, state):
@@ -1423,6 +1450,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         t16 = _t16_log()
         src = _safe(lambda s: _patch_main_funded(s, t16, _deployed_funded()), src)
         src = _safe(lambda s: _patch_main_rules(s, t16, _t16_preset()), src)
+        src = _safe(lambda s: _patch_main_legs(s, t16), src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):
