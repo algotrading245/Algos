@@ -373,6 +373,15 @@ def test_refused_commands_reach_the_owner(monkeypatch, cfg):
     assert "Read: C:/secret.txt" in text
 
 
+def test_usage_limit_is_one_alert_not_a_failure_per_pod(monkeypatch, cfg):
+    msg = "You've hit your weekly limit · resets 5pm (Europe/Berlin)"
+    monkeypatch.setattr(runner, "call", lambda *a: {"ok": False, "tokens": 0, "result": msg, "why": "exit 1"})
+    for pod in ("fxmacro", "metals", "indices"):
+        assert runner.run_agent(pod, {"id": "j1", "kind": "brief"}, cfg) == "limit"
+    text = (paths.INBOX / "ALERT.md").read_text(encoding="utf-8")
+    assert text.count("# Usage limit") == 1 and "resets 5pm" in text
+
+
 def test_missing_notes_per_owned_market(monkeypatch, cfg):
     from desk import memory
     monkeypatch.setitem(cfg["pods"]["metals"], "owns", ["XAUUSD", "XAGUSD"])

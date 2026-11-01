@@ -18,6 +18,7 @@ python -m desk.runner once ROLE [KIND]     one run now, for testing a prompt by 
 import datetime as dt
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -29,6 +30,8 @@ AGENTS = paths.DESK / "agents"
 SETTINGS = AGENTS / "settings.json"
 BUDGET = paths.STATE / "budget.json"
 HEAD = brief.HEAD
+LIMIT_RE = re.compile(r"hit your (weekly |daily |session |usage )*limit", re.I)
+LIMIT_STATE = paths.STATE / "usage_limit.json"
 
 
 def group(role, cfg):
@@ -184,7 +187,23 @@ def run_agent(role, job, cfg):
         refused(role, job, denied, t0)
     if role == "monitor":
         alert(res.get("result") or "", t0)
+    if not res["ok"] and LIMIT_RE.search(res.get("result") or ""):
+        usage_limit(res["result"], t0)
+        return "limit"
     return "ok" if res["ok"] else "failed"
+
+
+def usage_limit(text, t):
+    """The Claude account hit its usage limit (10-29 to 10-30 every pod brief failed this way): one alert in
+    inbox/ALERT.md per 6 hours instead of a silent failure per pod."""
+    last = paths.read_json(LIMIT_STATE, {}).get("t")
+    if last and t - dt.datetime.fromisoformat(last) < dt.timedelta(hours=6):
+        return False
+    paths.write_json(LIMIT_STATE, {"t": t.isoformat(timespec="seconds"), "result": text[:200]})
+    journal.log("usage_limit", result=text[:200])
+    _to_inbox(f"Usage limit {t.isoformat(timespec='minutes')}",
+              [f"ALERT the desk's agent runs stop until the limit resets: {text.strip()[:200]}"])
+    return True
 
 
 def _to_inbox(title, lines):
@@ -316,6 +335,9 @@ def run_job(job, cfg):
     if res and all(r == "budget" for r in res):
         jobs.mark(job["id"], "skipped", why="budget")
         return "skipped"
+    if "limit" in res:
+        jobs.mark(job["id"], "failed", why=f"usage limit ({res.count('limit')} of {len(res)} runs)")
+        return "failed"
     if "failed" in res:
         jobs.mark(job["id"], "failed", why=f"{res.count('failed')} of {len(res)} runs failed")
         return "failed"
