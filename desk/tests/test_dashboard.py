@@ -220,3 +220,44 @@ def test_command_center_processes_shows_live_state():
     assert "const runs = LIVE_RUNS.map" in pr and "Brief · Crypto · 1m 20s" in pr and '"Crypto Desk"' in pr
     assert "value: '2', sub: '1 OK · 1 Other'" in pr and "value: '1', sub: 'Last Failure Sun 01 Nov'" in pr
     assert '"mt5": 166' in pr and "dur(a) + ' Ago'" in pr
+
+
+def test_command_center_research_shows_live_state(tmp_path):
+    import base64, gzip
+    from desk import command_center as cc
+    out = cc.build(dashboard.BUNDLE, {}, [], [], {}).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[4]]
+    raw = base64.b64decode(e["data"])
+    tpl = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    d = tmp_path
+    (d / "ideas").mkdir()
+    (d / "gates").mkdir()
+    jl = lambda rows: "\n".join(json.dumps(r) for r in rows)
+    (d / "ideas" / "queue.jsonl").write_text(jl([
+        {"id": "a_one", "title": "Idea A", "status": "rejected", "reason": "Halves 0.1/0.2"},
+        {"id": "b_two", "title": "Idea B", "status": "queued"}]))
+    (d / "ideas" / "backlog.jsonl").write_text(jl([
+        {"id": "c_three", "title": "Idea C", "status": "open", "gap": "indices", "kind": "paper", "added": "2026-10-30"}]))
+    (d / "ideas" / "results.jsonl").write_text(jl([{"id": "a_one"}, {"id": "d_four"}]))
+    (d / "gates" / "d_four.json").write_text(json.dumps({
+        "id": "d_four", "verdict": "PASS", "when": "2026-10-31",
+        "halves": {"to_2017": 0.5, "from_2018": 0.6}}))
+    (d / "gates" / "a_one.json").write_text(json.dumps({"id": "a_one", "verdict": "FAIL"}))
+    (d / "candidates.json").write_text(json.dumps({"candidates": []}))
+    (d / "gaps.json").write_text(json.dumps({"book_sharpe_2018": 2.5,
+                                             "legs": [{"leg": "noise", "book_without": 2.7}]}))
+    (d / "ideas" / "steer.md").write_text(
+        "# Steer - 2026-10-31\n\n## Top 2 gaps\n\n"
+        "1. **US/EU/Asian indices (4%).** Split done: below. The book has one index leg.\n"
+        "2. **Weeks+ horizon.** Nothing untried this week.\n", encoding="utf-8")
+    pr = cc._patch_research_page(tpl, {}, [], root=d)
+    assert 'const FUNNEL = [["Ideas Found", "Finder · Queue, Scans, Gates", 4]' in pr and "found: 4 }" in pr
+    assert "Math.log(1 + v)" in pr and "label: 'Ideas Tried'" in pr
+    assert '"name": "D Four"' in pr and '"stage": "Gate"' in pr
+    assert '"name": "Idea C"' in pr and "sel: 'd_four'" in pr
+    assert '"name": "US/EU/Asian Indices", "why": "The book has one index leg."' in pr and "1 Open Idea · Idea C" in pr
+    assert '"name": "Idea A", "at": "Gate"' in pr
+    assert "label: 'In The Queue', value: '2'" in pr and "value: '50%', sub: '1 Of 2 Gated'" in pr
+    assert "label: 'Book Sharpe', value: '2.50'" in pr and "v: '1 · noise'" in pr
+    assert "{ k: 'Last Run', v: 'Sat 31 Oct' }" in pr and "Next Run', v: 'Sat 7 Nov" in pr

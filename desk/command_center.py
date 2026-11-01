@@ -555,6 +555,197 @@ def _patch_processes_page(src, state, live):
     return src
 
 
+DOCS = pathlib.Path(__file__).resolve().parent.parent / "docs"
+
+
+def _jsonl(p):
+    out = []
+    try:
+        for line in p.read_text(encoding="utf-8").splitlines():
+            try:
+                out.append(json.loads(line))
+            except ValueError:
+                pass
+    except OSError:
+        pass
+    return out
+
+
+def _jfile(p):
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _title(s):
+    return " ".join(w[:1].upper() + w[1:] for w in str(s).split(" "))
+
+
+def _cut(s, n):
+    s = " ".join(str(s or "").split())
+    return s if len(s) <= n else s[:n - 1].rstrip() + "…"
+
+
+def _gate_figs(g):
+    figs = {x.get("gate"): str(x.get("figure") or "") for x in (g or {}).get("gates") or [] if isinstance(x, dict)}
+    halves = re.sub(r"\s*\(.*", "", figs.get("halves", "")) or "—"
+    corr = re.search(r"book\s+([+-]?\d+\.\d+)", figs.get("corr", ""))
+    book = re.search(r"([+-]?\d+\.\d+)\s*->\s*([+-]?\d+\.\d+)", figs.get("book", ""))
+    return {"sharpe": halves + " (To 2017 / From 2018)" if halves != "—" else "—",
+            "stress": ("1.5x Cost Sharpe " + figs["costs"]) if figs.get("costs") else "—",
+            "corr": corr.group(1) if corr else "—",
+            "adds": _sgn(float(book.group(2)) - float(book.group(1))) if book else "—"}
+
+
+def _steer_gaps(text):
+    m = re.search(r"^## Top \d gaps.*?$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    out = []
+    for item in re.findall(r"^\d\.\s+(.*?)(?=^\d\.\s|\Z)", m.group(1) if m else "", re.M | re.S):
+        b = re.match(r"\*\*(.+?)\*\*\s*(.*)", " ".join(item.split()))
+        if not b:
+            continue
+        name = re.sub(r"\s*\([^)]*\)", "", b.group(1)).rstrip(".")
+        # The first plain sentence; ones with a colon are lead-ins to a list or an example.
+        sents = re.split(r"(?<=\.)\s+", b.group(2).replace("**", ""))
+        why = next((x for x in sents if ":" not in x and len(x) < 140), b.group(1))
+        out.append({"key": b.group(1).lower(), "name": _title(name.split(",")[0]), "why": _cut(why, 110)})
+    return out
+
+
+def _patch_research_page(src, state, live, root=None):
+    docs = pathlib.Path(root) if root else DOCS
+    queue = _jsonl(docs / "ideas" / "queue.jsonl")
+    backlog = [x for x in _jsonl(docs / "ideas" / "backlog.jsonl") if x.get("status") == "open"]
+    results = _jsonl(docs / "ideas" / "results.jsonl")
+    gates = [g for g in (_jfile(p) for p in sorted((docs / "gates").glob("*.json"))) if isinstance(g, dict)]
+    cj = _jfile(docs / "candidates.json") or {}
+    cands = [c for c in (cj.get("candidates") if isinstance(cj, dict) else cj) or [] if isinstance(c, dict)]
+    book = _jfile(docs / "book.json") or {}
+    gj = _jfile(docs / "gaps.json") or {}
+    try:
+        steer = (docs / "ideas" / "steer.md").read_text(encoding="utf-8")
+    except OSError:
+        steer = ""
+    titles = {x.get("id"): x.get("title") for x in results + queue + backlog if x.get("title")}
+    status = {c.get("id"): c.get("status") for c in cands}
+    passed = [g for g in gates if str(g.get("verdict", "")).upper() == "PASS"]
+
+    # Funnel: every idea ever tried, then each stage it reached.
+    ids = {x.get("id") for x in queue + backlog + results + gates} - {None}
+    live_c = [c for c in cands if c.get("status") in ("tester", "demo", "live", "integrated")]
+    legs = len((book.get("legs") or {})) or len(gj.get("legs") or [])
+    n = [len(ids), len({x.get("id") for x in results + gates} - {None}), len(gates), len(passed), len(live_c), legs]
+    if n[0]:
+        funnel = [["Ideas Found", "Finder · Queue, Scans, Gates", n[0]], ["Prescreened", "Builder · results.jsonl", n[1]],
+                  ["Full Backtest", "Builder · docs/gates", n[2]], ["Passed Gate", "tools/gates.py", n[3]],
+                  ["Tester Matched", "Judge · candidates.json", n[4]], ["In The Book", "docs/book.json", n[5]]]
+        src = re.sub(r"const FUNNEL = \[.*?\n\];", lambda _: "const FUNNEL = " + json.dumps(funnel, ensure_ascii=False) + ";",
+                     src, count=1, flags=re.S)
+        src = re.sub(r"found: \d+ \}", lambda _: f"found: {n[0]} }}", src, count=1)
+        # Counts span 1 to hundreds, so bars use a log scale; the labels keep the exact counts.
+        src = src.replace("(v / s.found * 100).toFixed(1)", "(Math.log(1 + v) / Math.log(1 + s.found) * 100).toFixed(1)", 1)
+        src = src.replace("{ label: 'Ideas · 30 Days', value: String(s.found), sub: 'Finder Rotates 4 Sources'",
+                          "{ label: 'Ideas Tried', value: String(s.found), sub: 'Queue, Scans And Gates'", 1)
+
+    # Candidates: tester legs, then gate passes still alive, then the newest open ideas.
+    rows, seen = [], set()
+
+    def gate_of(c):
+        g = c.get("gates")
+        return g if isinstance(g, dict) else _jfile(docs / "gates" / f"{c.get('id')}.json") or {}
+
+    for c in sorted(live_c, key=lambda c: str(gate_of(c).get("when", "")), reverse=True):
+        g, t = gate_of(c), (c.get("tester") or [{}])
+        t0 = t[0] if isinstance(t, list) and t and isinstance(t[0], dict) else {}
+        et = c.get("expected_tester")
+        syms = [e.get("symbol") for e in (et if isinstance(et, list) else [et]) if isinstance(e, dict) and e.get("symbol")]
+        verdict = str(g.get("verdict") or "")
+        rows.append(dict(_gate_figs(g), id=c.get("id"), name=_cut(c.get("name") or titles.get(c.get("id")) or _title(str(c.get("id")).replace("_", " ")), 60),
+                         stage="Tester", source=_cut(re.split(r"[;(]", str(c.get("source") or c.get("published") or "—"))[0], 40),
+                         markets=", ".join(syms) or "—", idea=_cut(c.get("summary") or c.get("reason") or c.get("note") or "—", 240),
+                         dd=f"{t0['eq_dd_max_pct']}%" if t0.get("eq_dd_max_pct") is not None else "—",
+                         trades=str(t0.get("trades", "—")), gate="Pass" if verdict.upper() == "PASS" else _title(verdict.lower()) or "Not Yet",
+                         next=_cut(f"{_title(str(c.get('status')))} · Step {c.get('step', '—')}" + (f" · {c['job']}" if c.get("job") else ""), 60),
+                         file=f"docs/gates/{c.get('id')}.json"))
+        seen.add(c.get("id"))
+    for g in sorted(passed, key=lambda g: str(g.get("when", "")), reverse=True):
+        gid = g.get("id")
+        if gid in seen or status.get(gid) == "rejected" or len(rows) >= 7:
+            continue
+        rows.append(dict(_gate_figs(g), id=gid, name=_cut(titles.get(gid) or _title(str(gid).replace("_", " ")), 60), stage="Gate",
+                         source=_title(str(gid).split("_")[0]), markets="—", idea=_cut(titles.get(gid) or gid, 240), dd="—",
+                         trades="—", gate="Pass", next="Judge Builds It Off, Then A Tester Job", file=f"docs/gates/{gid}.json"))
+        seen.add(gid)
+    for b in sorted(backlog, key=lambda b: str(b.get("added", "")), reverse=True):
+        if len(rows) >= 10:
+            break
+        rows.append({"id": b.get("id"), "name": _cut(b.get("title") or b.get("id"), 60), "stage": "Idea",
+                     "source": _title(str(b.get("kind") or "—")), "markets": _title(str(b.get("gap") or "—")), "adds": "—",
+                     "corr": "—", "idea": _cut(b.get("note") or b.get("title"), 240), "sharpe": "—", "dd": "—", "trades": "—",
+                     "stress": "—", "gate": "Not Yet", "next": "Finder Reads It In Full, Then The Queue",
+                     "file": "docs/ideas/backlog.jsonl"})
+    if rows:
+        src = re.sub(r"const CANDS = \[.*?\n\];", lambda _: "const CANDS = " + json.dumps(rows, ensure_ascii=False) + ";",
+                     src, count=1, flags=re.S)
+        src = re.sub(r"sel: '[^']*'", lambda _: "sel: '" + _js(rows[0]["id"]) + "'", src, count=1)
+
+    # Gaps: the steer's top gaps, with the open backlog ideas aimed at each.
+    sg = _steer_gaps(steer)
+    if not sg:
+        gp = gj.get("gaps") or {}
+        sg = [{"key": m, "name": m.upper(), "why": "The Book Has No Leg On " + m.upper() + "."} for m in gp.get("markets_without_leg") or []]
+        sg += [{"key": s, "name": _title(s), "why": "No Leg Earns This Style."} for s in gp.get("styles_without_leg") or []]
+        sg += [{"key": h, "name": _title(h) + " Horizon", "why": "Few Legs Hold This Long."} for h in gp.get("thin_horizons") or []]
+    if sg:
+        out = []
+        for gp in sg[:4]:
+            aim = [b for b in backlog if b.get("gap") and str(b["gap"]).lower() in gp["key"]]
+            out.append({"name": gp["name"], "why": gp["why"], "fill": min(1.0, len(aim) / 10),
+                        "filling": f"{len(aim)} Open Idea{'s' if len(aim) != 1 else ''} · {_cut(aim[0].get('title'), 40)}" if aim else "No Candidate Yet"})
+        src = re.sub(r"const GAPS = \[.*?\n\];", lambda _: "const GAPS = " + json.dumps(out, ensure_ascii=False) + ";",
+                     src, count=1, flags=re.S)
+
+    gate_ids = {g.get("id") for g in gates}
+    rej = [x for x in queue if x.get("status") == "rejected"][-3:][::-1]
+    if rej:
+        out = [{"name": _cut(x.get("title") or x.get("id"), 60), "at": "Gate" if x.get("id") in gate_ids else "Prescreen",
+                "why": _cut(x.get("reason") or x.get("result") or x.get("why") or "—", 120)} for x in rej]
+        src = re.sub(r"const REJECTED = \[.*?\n\];", lambda _: "const REJECTED = " + json.dumps(out, ensure_ascii=False) + ";",
+                     src, count=1, flags=re.S)
+
+    open_n = len(backlog) + sum(1 for x in queue if x.get("status") not in ("rejected", "done", "funded"))
+    src = src.replace("{ label: 'In The Queue', value: '6', sub: 'docs/ideas/queue.jsonl'",
+                      f"{{ label: 'In The Queue', value: '{open_n}', sub: 'Open · docs/ideas/backlog.jsonl'", 1)
+    if gates:
+        src = src.replace("{ label: 'Gate Pass Rate', value: '22%', sub: '7 Of 31 Prescreened'",
+                          f"{{ label: 'Gate Pass Rate', value: '{round(100 * len(passed) / len(gates))}%', sub: '{len(passed)} Of {len(gates)} Gated'", 1)
+    bs = gj.get("book_sharpe_2018") or (book.get("backtest") or {}).get("sharpe_2018")
+    if bs:
+        src = src.replace("{ label: 'Book Sharpe', value: '1.38', sub: '+0.04 After Last Change'",
+                          f"{{ label: 'Book Sharpe', value: '{float(bs):.2f}', sub: 'From 2018 · docs/gaps.json'", 1)
+
+    # Portfolio-manager card: last weekly review, next Saturday, legs the book is better without.
+    sd = re.search(r"^# Steer - (\d{4}-\d{2}-\d{2})", steer, re.M)
+    try:
+        last = dt.date.fromisoformat(sd.group(1)) if sd else dt.datetime.fromisoformat(str(book.get("when"))).date()
+    except ValueError:
+        last = None
+    if last:
+        hm = str(book.get("when") or "")[11:16]
+        nxt = last + dt.timedelta(days=(5 - last.weekday()) % 7 or 7)
+        src = re.sub(r"\{ k: 'Last Run', v: '[^']*' \}", lambda _: "{ k: 'Last Run', v: '" + last.strftime("%a %d %b").replace(" 0", " ") + (" · " + hm if hm else "") + "' }", src, count=1)
+        src = re.sub(r"\{ k: 'Next Run', v: '[^']*' \}", lambda _: "{ k: 'Next Run', v: '" + nxt.strftime("%a %d %b").replace(" 0", " ") + " · Or After A Book Change' }", src, count=1)
+    if gj.get("legs") and gj.get("book_sharpe_2018"):
+        dil = [str(x.get("leg")) for x in gj["legs"] if isinstance(x, dict) and float(x.get("book_without") or 0) > float(gj["book_sharpe_2018"])]
+        src = re.sub(r"\{ k: 'Legs Diluting The Book', v: '[^']*' \}",
+                     lambda _: "{ k: 'Legs Diluting The Book', v: '" + _js(f"{len(dil)}" + (" · " + ", ".join(dil) if dil else "")) + "' }", src, count=1)
+    if sg:
+        src = re.sub(r"\{ k: 'Steer Written', v: '[^']*' \}",
+                     lambda _: "{ k: 'Steer Written', v: '" + _js(", Then ".join(g["name"] for g in sg[:2])) + "' }", src, count=1)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -579,6 +770,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_eas_page, src, extra["state"], positions)
     elif i == 3 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_processes_page, src, extra["state"], live)
+    elif i == 4 and isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_research_page, src, extra["state"], live)
     return src
 
 
