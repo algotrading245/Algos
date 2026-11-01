@@ -265,6 +265,56 @@ def _t16_log(data_dir=None, days=14):
             "legs": legs}
 
 
+def _demo_week(today=None, data_dir=None):
+    """The last Mon-Fri week with AurumFunded log lines on T16, read day by day through tools/demo_check.py (read-only,
+    same privacy rules): its dates, every close's P/L in order, the orders, the alert days and the currency."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("demo_check", ROOT / "tools" / "demo_check.py")
+    dc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dc)
+    if data_dir:
+        dc.DATA = pathlib.Path(data_dir)
+    today = today or dt.date.today()
+    monday = today - dt.timedelta(days=today.weekday())
+    for back in range(3):
+        mon = monday - dt.timedelta(weeks=back)
+        days = [dc.check(mon + dt.timedelta(days=k)) for k in range(5) if mon + dt.timedelta(days=k) <= today]
+        if any(d["experts_lines"] for d in days):
+            closes = [c for d in days for c in d["closes"]]
+            return {"start": mon, "end": mon + dt.timedelta(days=4), "pl": [c["pl"] for c in closes],
+                    "orders": sum(sum(d["orders_by_leg"].values()) for d in days),
+                    "alerts": sum(1 for d in days if d["alert"]),
+                    "currency": closes[0]["currency"] if closes else "EUR"}
+    return None
+
+
+def _patch_main_fidelity(src, week):
+    """The Demo Versus Tester card: the demo side (curve by close, orders, P/L, alert days) from the T16 logs. No tester
+    run is paired with the demo week yet (owner-only step), so the tester line is hidden and its stats show a dash."""
+    if not week:
+        return src
+    pl = week["pl"] or [0.0]
+    tot = sum(week["pl"])
+    src = src.replace("Week 10-26 To 10-30 ·",
+                      f"Week {week['start']:%m-%d} To {week['end']:%m-%d} ·", 1)
+    src = src.replace(">Order Path And Tester Line Sample<", ">No Tester Run Paired Yet<", 1)
+    src = re.sub(r"const demoInc = \[[^\]]*\];", lambda _: "const demoInc = [" + ", ".join(f"{x:.2f}" for x in pl) + "];",
+                 src, count=1)
+    src = src.replace("const testInc = [", "const testIncSample = [", 1)
+    src = src.replace("const dC = cum(demoInc), tC = cum(testInc);", "const dC = cum(demoInc), tC = [0];", 1)
+    src = src.replace("(186 - (v - lo) / (hi - lo) * 172)", "(186 - (v - lo) / ((hi - lo) || 1) * 172)", 1)
+    src = src.replace("tester: fpts(tC),", "tester: '',", 1)
+    green, red, ink = "#248A3D", "#D70015", "#1D1D1F"
+    stats = {"Demo Orders": (str(week["orders"]), ink),
+             "Demo P/L": (f"{tot:+.2f} {week['currency']}", green if tot >= 0 else red),
+             "Tester P/L": ("—", "#6E6E73"), "Demo Of Tester": ("—", "#6E6E73"),
+             "Alerts": (str(week["alerts"]), green if not week["alerts"] else red)}
+    for label, (value, color) in stats.items():
+        src = re.sub(r"\{ label: '" + re.escape(label) + r"', value: [^}]*?, style: fv\('[^']*'\) \}",
+                     lambda _: f"{{ label: '{label}', value: '{_js(value)}', style: fv('{color}') }}", src, count=1)
+    return src
+
+
 def _deployed_funded():
     """The AurumFunded version on T16, from the last 'AurumFunded X on T16' change in docs/demo_log.md."""
     try:
@@ -1598,6 +1648,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(lambda s: _patch_main_rules(s, t16, _t16_preset()), src)
         src = _safe(lambda s: _patch_main_legs(s, t16), src)
         src = _safe(lambda s: _patch_main_preset(s, _t16_loaded()), src)
+        src = _safe(lambda s: _patch_main_fidelity(s, _demo_week()), src)
         src = _safe(_main_book, src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])

@@ -507,6 +507,35 @@ def test_command_center_main_legs_from_t16_log(tmp_path):
     assert cc._patch_main_legs(src, None) == src
 
 
+def test_command_center_main_fidelity_from_demo_week(tmp_path):
+    import datetime as dt
+    from desk import command_center as cc
+    logs = tmp_path / "MQL5" / "Logs"
+    logs.mkdir(parents=True)
+    t = "AurumFunded (XAUUSD,M15)\tAurumFunded: "
+    (logs / "20261028.log").write_text("\n".join([
+        f"JK\t0\t12:30:00.047\t{t}midday leg sold 0.45 EURUSD at 1.11936, stop 1.12140",
+        f"QM\t0\t13:59:59.772\t{t}closed EURUSD magic 20261030 0.45 at 1.11762, P/L 68.56 EUR",
+        f"RN\t0\t14:00:00.000\t{t}account 12345678 leverage 1:100",
+    ]), encoding="utf-16")
+    (logs / "20261030.log").write_text("\n".join([
+        f"HH\t0\t15:29:59.874\t{t}US500.cash sold 0.65 lots at 7602.95, bands 7744.30 / 7611.57",
+        f"PQ\t0\t16:00:00.157\t{t}closed US500.cash magic 99 0.65 at 7622.05, P/L -11.38 EUR",
+        f"PR\t0\t16:00:01.000\t{t}order failed, retcode 10019",
+    ]), encoding="utf-8")
+    week = cc._demo_week(dt.date(2026, 11, 1), tmp_path)
+    assert week["start"] == dt.date(2026, 10, 26) and week["pl"] == [68.56, -11.38]
+    assert week["orders"] == 2 and week["alerts"] == 1 and week["currency"] == "EUR"
+    assert cc._demo_week(dt.date(2026, 11, 1), tmp_path / "none") is None
+    out = cc._patch_main_fidelity(_main_template(), week)
+    assert "Week 10-26 To 10-30 ·" in out and "No Tester Run Paired Yet" in out
+    assert "const demoInc = [68.56, -11.38];" in out and "tester: ''," in out
+    assert "{ label: 'Demo P/L', value: '+57.18 EUR', style: fv('#248A3D') }" in out
+    assert "{ label: 'Tester P/L', value: '—'" in out and "{ label: 'Alerts', value: '1', style: fv('#D70015') }" in out
+    assert "tC = cum(testInc)" not in out and "12345678" not in out
+    assert cc._patch_main_fidelity("x", None) == "x"
+
+
 def test_command_center_main_preset_from_ini_and_journal(tmp_path):
     import datetime as dt
     from desk import command_center as cc
