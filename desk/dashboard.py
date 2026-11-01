@@ -2,7 +2,9 @@
 
 python -m desk.dashboard [--host 127.0.0.1] [--port 8765]     then open http://127.0.0.1:8765
 
-GET  /            the page (desk/dashboard/index.html)
+GET  /            the Aurum Command Center (desk/dashboard/command_center.html, live data patched in by
+                  desk/command_center.py); falls back to the classic page if that build fails
+GET  /classic     the classic page (desk/dashboard/index.html)
 GET  /api/state   everything the page shows, as JSON
 GET  /api/live    dashboard/live.js (window.AURUM_LIVE, rewritten about every second) as JSON, plus "age_s"
 GET  /api/aurum   dashboard/data.js (window.AURUM) as JSON, slimmed: runs cut to the latest 40, ledger and gates
@@ -28,9 +30,10 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from desk import clocks, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
+from desk import clocks, command_center, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
 
 PAGE = paths.DESK / "dashboard" / "index.html"
+BUNDLE = paths.DESK / "dashboard" / "command_center.html"
 LIVE_JS = paths.ROOT / "dashboard" / "live.js"
 DATA_JS = paths.ROOT / "dashboard" / "data.js"
 QUEUE = paths.ROOT / "docs" / "ideas" / "queue.jsonl"
@@ -407,9 +410,21 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _cc_inputs(self):
+        try:
+            positions = (self.state.live.read() or {}).get("positions")
+        except Exception:
+            positions = None
+        return read_js(LIVE_JS)[0], read_tail_jsonl(USAGE, 5000) or [], positions
+
     def do_GET(self):
         path = self.path.split("?")[0]
         if path in ("/", "/index.html"):
+            try:
+                return self._send(200, command_center.cached(BUNDLE, self._cc_inputs), "text/html")
+            except Exception:
+                return self._send(200, PAGE.read_bytes(), "text/html")
+        if path == "/classic":
             return self._send(200, PAGE.read_bytes(), "text/html")
         if path == "/api/state":
             return self._send(200, self.state.build())
