@@ -13,7 +13,10 @@ talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board po
 pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
 list from mql5/Experts/_archive, and the Hydra legs from the armed edges (risk per leg); trade counts, today's
-P/L per leg, the diff rows and the other guards are still design text. The rest is still the design's sample content.
+P/L per leg, the diff rows and the other guards are still design text. Live on Processes: each scheduled job's last run
+and state (Late past its window, Failed if its newest runner job failed), the recent runs and the run and failure KPIs
+from the desk runner, and the MT5, relay, scheduler and feed heartbeats; Doctor, Watchdog, the finder loop, the tester
+queue and beat, and the demo beat are still design text. The rest is still the design's sample content.
 """
 import base64
 import collections
@@ -422,6 +425,136 @@ def _patch_eas_page(src, state, positions, root=None):
     return src
 
 
+# Processes page: design job name -> (desk schedule key, hours after which the last run counts as late).
+_JOBS = {"Calendar Pull": ("calendar", 26), "London Desk": ("london_brief", 74), "Crypto Desk": ("crypto_weekend", 192),
+         "Weekly Review": ("weekly", 192), "NY Desk": ("ny_brief", 74), "NY Debrief": ("debrief", 74),
+         "Scorekeeper": ("scorekeeper", 26), "Asia Desk": ("asia_brief", 74), "Commit And Push": ("commit", 26),
+         "Code Monitor": ("monitor", 2)}
+_RUN_TONE = {"done": ("OK", "green"), "running": ("Running", "blue"), "queued": ("Queued", "grey"),
+             "skipped": ("Skipped", "grey")}
+
+
+def _ts(x):
+    try:
+        t = dt.datetime.fromisoformat(str(x))
+    except ValueError:
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
+
+
+def _ago(sec):
+    sec = max(0, int(sec))
+    if sec >= 172800:
+        return f"{sec // 86400}d Ago"
+    if sec >= 3600:
+        return f"{sec // 3600}h {sec % 3600 // 60:02d}m Ago"
+    return f"{sec // 60}m Ago"
+
+
+def _dur(sec):
+    sec = max(0, int(sec))
+    return f"{sec // 60}m {sec % 60:02d}s" if sec >= 60 else f"{sec}s"
+
+
+def _patch_processes_page(src, state, live):
+    now = _ts(state.get("t")) or dt.datetime.now(dt.timezone.utc)
+    sched = {str(r.get("name")): _ts(r.get("ran")) for r in state.get("schedule") or [] if isinstance(r, dict)}
+    recent = [r for r in ((state.get("runner") or {}).get("recent") or []) if isinstance(r, dict)]
+    latest = {}
+    for r in recent:  # newest first
+        latest.setdefault(str(r.get("name")), r)
+
+    def job_row(m):
+        row = m.group(0)
+        key, late_h = _JOBS[m.group(1)]
+        ran = sched.get(key)
+        if ran is None:
+            return row
+        age = (now - ran).total_seconds()
+        last_run = latest.get(key)
+        st = ("Failed" if last_run and last_run.get("status") not in _RUN_TONE
+              else "Late" if age > late_h * 3600 else "OK")
+        row = re.sub(r"last: '[^']*'", lambda _: f"last: '{ran.strftime('%a %H:%M')} · {_ago(age)}'", row, count=1)
+        row = re.sub(r"state: '[^']*'", lambda _: f"state: '{st}'", row, count=1)
+        if key == "crypto_weekend":
+            row = row.replace("runs: 'Daily'", "runs: 'Weekends'")
+        if key == "commit":
+            row = row.replace("when: '23:30 Local', utc: 1350", "when: '23:30 UTC', utc: 1410")
+        return row
+
+    names = "|".join(re.escape(n) for n in _JOBS)
+    src = re.sub(r"\{ name: '(" + names + r")', [^\n]*", job_row, src)
+    src = src.replace("const t = j.state === 'OK' ? TONES.green : TONES.amber",
+                      "const t = j.state === 'OK' ? TONES.green : j.state === 'Failed' ? TONES.red : TONES.amber", 1)
+
+    # Recent runs from the desk runner.
+    label = {k: n for n, (k, _) in _JOBS.items()}
+    rows = []
+    for r in recent[:8]:
+        t0, t1 = _ts(r.get("started") or r.get("queued")), _ts(r.get("done"))
+        if t0 is None:
+            continue
+        res, tone = _RUN_TONE.get(str(r.get("status")), ("Failed", "red"))
+        note = str(r.get("kind") or "job").title()
+        if r.get("pods"):
+            note += " · " + ", ".join(str(p).title() for p in r["pods"])
+        if t1:
+            note += " · " + _dur((t1 - t0).total_seconds())
+        if r.get("why") and r.get("status") != "done":
+            note += " · " + str(r["why"])
+        name = str(r.get("name") or r.get("pod") or "?")
+        rows.append([_js(label.get(name, name.replace("_", " ").title())), _js(note), res, tone, t0.isoformat()])
+    if rows:
+        src = src.replace("class Component extends DCLogic {",
+                          "const LIVE_RUNS = " + json.dumps(rows, ensure_ascii=False) + ";\nclass Component extends DCLogic {", 1)
+        src = re.sub(r"const runs = RUN_POOL\.slice\(0, 5\)\.map\([^\n]*",
+                     lambda _: "const runs = LIVE_RUNS.map((r) => ({ r, t: new Date(r[4]) }));", src, count=1)
+        today = [r for r in recent if (_ts(r.get("started") or r.get("queued")) or now).date() == now.date()]
+        ok = sum(r.get("status") == "done" for r in today)
+        src = src.replace("value: '41', sub: '39 OK · 2 Dry'",
+                          f"value: '{len(today)}', sub: '{ok} OK · {len(today) - ok} Other'", 1)
+        fails = [(_ts(r.get("started") or r.get("queued")), r) for r in recent
+                 if r.get("status") not in _RUN_TONE]
+        fails = [(t, r) for t, r in fails if t]
+        n24 = sum((now - t).total_seconds() < 86400 for t, _ in fails)
+        sub = ("Last Failure " + max(t for t, _ in fails).strftime("%a %d %b")) if fails else "None In Recent Runs"
+        src = src.replace("value: '0', sub: 'Last Failure Thu 29 Oct', style: big + '; color: #248A3D'",
+                          f"value: '{n24}', sub: '{sub}', style: big + '; color: {'#B3261E' if n24 else '#248A3D'}'", 1)
+
+    # Heartbeats: real ages in seconds where the desk has a source; tester and demo stay as designed.
+    m = re.search(r"const age = \{ relay: (\d+), mt5: (\d+), demo: (\d+), tester: (\d+), sched: (\d+), data: (\d+) \};", src)
+    if m:
+        age = dict(zip(("relay", "mt5", "demo", "tester", "sched", "data"), map(int, m.groups())))
+        detail = {}
+        hb = (state.get("status") or {}).get("heartbeat") or {}
+        hbt = _ts(hb.get("t"))
+        if hbt:
+            age["mt5"] = max(0, int((now - hbt).total_seconds()))
+            detail["mt5"] = f"{str(hb.get('broker') or 'mt5').upper()} · " + ("Connected" if hb.get("ok") else str(hb.get("why") or "Not OK"))
+        steps = ((live or {}).get("steps") or {}).get("relay") or []
+        if steps:
+            line = str(steps[-1])
+            try:
+                rt = dt.datetime.strptime(line[:19], "%Y-%m-%d %H:%M:%S")
+                age["relay"] = max(0, int((dt.datetime.now() - rt).total_seconds()))
+                detail["relay"] = "Last · " + line[19:].strip()[:60]
+            except ValueError:
+                pass
+        ran = [t for t in sched.values() if t]
+        if ran:
+            age["sched"] = max(0, int((now - max(ran)).total_seconds()))
+            detail["sched"] = f"{len(ran)} Jobs Tracked"
+        age["data"] = 0
+        src = src[:m.start()] + "const age = " + json.dumps(age) + ";" + src[m.end():]
+        for bid, lim in (("relay", 7200), ("mt5", 120), ("sched", 3900), ("data", 60)):
+            src = re.sub(r"(\{ id: '" + bid + r"', [^\n]*?limit: )\d+", lambda g: g.group(1) + str(lim), src, count=1)
+        for bid, text in detail.items():
+            src = re.sub(r"(\{ id: '" + bid + r"', [^\n]*?detail: ')[^']*'", lambda g: g.group(1) + _js(text) + "'", src, count=1)
+        src = src.replace("age: a === 0 ? 'Now' : a + 's Ago', limit: b.limit + 's'",
+                          "age: a === 0 ? 'Now' : dur(a) + ' Ago', limit: dur(b.limit)", 1)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -444,6 +577,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_eas_page, src, extra["state"], positions)
+    elif i == 3 and isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_processes_page, src, extra["state"], live)
     return src
 
 

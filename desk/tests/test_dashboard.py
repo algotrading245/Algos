@@ -194,3 +194,29 @@ def test_command_center_eas_shows_live_state():
     assert "value: '1', sub: 'EURUSD 0.05 · fix'" in eas
     assert "id: 'noise', name: 'Noise', market: 'US100'" in eas and "size: '0.25%'" in eas
     assert "id: 'bellfade'" not in eas and "today.golddip = 0.18" not in eas
+
+
+def test_command_center_processes_shows_live_state():
+    import base64, gzip
+    from desk import command_center as cc
+    state = {"t": "2026-11-01T11:42:49+00:00",
+             "schedule": [{"name": "calendar", "ran": "2026-11-01T00:06:35+00:00"},
+                          {"name": "commit", "ran": "2026-10-27T00:00:00+00:00"},
+                          {"name": "debrief", "ran": "2026-10-30T17:15:00+00:00"}],
+             "runner": {"recent": [
+                 {"kind": "brief", "name": "crypto_weekend", "pods": ["crypto"], "status": "done",
+                  "started": "2026-11-01T10:00:05+00:00", "done": "2026-11-01T10:01:25+00:00"},
+                 {"kind": "debrief", "name": "debrief", "status": "error", "started": "2026-11-01T09:00:00+00:00"}]},
+             "status": {"heartbeat": {"t": "2026-11-01T11:40:03+00:00", "ok": True, "broker": "mt5"}}}
+    out = cc.build(dashboard.BUNDLE, {}, [], [], {"state": state}).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[3]]
+    raw = base64.b64decode(e["data"])
+    pr = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    assert "const HERE = 'Processes.dc.html'" in pr
+    assert "last: 'Sun 00:06 · 11h 36m Ago', state: 'OK'" in pr
+    assert "last: 'Tue 00:00 · 5d Ago', state: 'Late'" in pr and "when: '23:30 UTC', utc: 1410" in pr
+    assert "last: 'Fri 17:15 · 1d Ago'" not in pr and "state: 'Failed'" in pr
+    assert "const runs = LIVE_RUNS.map" in pr and "Brief · Crypto · 1m 20s" in pr and '"Crypto Desk"' in pr
+    assert "value: '2', sub: '1 OK · 1 Other'" in pr and "value: '1', sub: 'Last Failure Sun 01 Nov'" in pr
+    assert '"mt5": 166' in pr and "dur(a) + ' Ago'" in pr
