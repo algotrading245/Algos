@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 import urllib.error
 import urllib.request
@@ -307,6 +308,65 @@ def test_command_center_controls_shows_live_state(tmp_path, monkeypatch):
     assert '["Daily Loss", "Desk Halts At 4%", 1.0, 4.0, "%"]' in pr and "Funded Account · Demo Co Demo" in pr
     assert '"what": "Ticket Block"' in pr and '"state": "Cancelled"' in pr
     assert "sub: 'Funded · Halts At 4%'" in pr and "fivex: { title: '5x EA" in pr
+    # the switches are real: no fake "Applied" tick, confirm posts to /api/control, a flag shows as paused
+    assert "tick % 5" not in pr and "Draft Pause" not in pr and ">Draft Stop<" not in pr
+    assert "fetch('/api/control'" in pr and "'X-Desk': 'control'" in pr and "Per Instrument" in pr
+    from desk import controls
+    f = controls.role_flag("finder")
+    f.write_text("test", encoding="utf-8")
+    try:
+        pr = cc._patch_controls_page(tpl, state, [])
+    finally:
+        f.unlink()
+    sw = json.loads(re.search(r"const SWITCHES = (\[.*?\]);", pr, re.S).group(1))
+    fin = next(w for w in sw if w["id"] == "finder")
+    assert fin["state"] == "Paused" and fin["meta"].startswith("Paused By You")
+
+
+def test_controls_apply_pause_resume_and_refuse():
+    from desk import controls, phase
+    st = controls.apply("pipeline", "tester", "pause", "test")
+    assert st["pipeline"] == ["tester"] and controls.role_flag("tester").exists()
+    assert controls.apply("pipeline", "tester", "pause")["pipeline"] == ["tester"]  # already paused: no-op
+    assert controls.apply("pipeline", "tester", "resume")["pipeline"] == []
+    pod = sorted(controls._pods())[0]
+    assert pod in controls.apply("pod", pod, "pause")["pod"]
+    assert pod in (paths.read_json(phase.ALLOC, {}) or {}).get("paused", [])
+    assert pod not in controls.apply("pod", pod, "resume")["pod"]
+    assert controls.apply("demo", "funded", "stop")["demo"] == ["funded"]
+    assert controls.leg_flag("funded").read_text(encoding="utf-8").startswith("stop new entries")
+    assert controls.apply("demo", "funded", "resume")["demo"] == []
+    for bad in (("risk", "x", "pause"), ("pipeline", "t16", "pause"), ("pipeline", "nobody", "pause"),
+                ("pod", "nobody", "pause"), ("demo", "hydra", "explode"), ("deploy", "funded", "resume")):
+        with pytest.raises(controls.Refused):
+            controls.apply(*bad)
+    kinds = [json.loads(x) for p in paths.JOURNAL.glob("*.jsonl") for x in p.read_text(encoding="utf-8").splitlines() if x]
+    assert sum(k.get("kind") in ("pause", "resume") and k.get("by") == "owner" for k in kinds) >= 6
+
+
+def test_control_endpoint_needs_the_header_and_refuses_owner_only(srv):
+    from desk import controls
+
+    def post(body, headers):
+        req = urllib.request.Request(srv + "/api/control", data=json.dumps(body).encode(), method="POST",
+                                     headers={"Content-Type": "application/json", **headers})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read())
+
+    b = {"kind": "pipeline", "target": "judge", "action": "pause", "why": "test"}
+    assert post(b, {})[0] == 403
+    assert post(b, {"X-Desk": "kill"})[0] == 403
+    assert post(b, {"X-Desk": "control", "Origin": "https://evil.example"})[0] == 403
+    assert not controls.role_flag("judge").exists()
+    code, body = post(b, {"X-Desk": "control", "Origin": srv})
+    assert code == 200 and body["ok"] and body["status"]["pipeline"] == ["judge"]
+    code, body = post({**b, "action": "resume"}, {"X-Desk": "control"})
+    assert code == 200 and body["status"]["pipeline"] == []
+    code, body = post({"kind": "risk", "target": "prop_10k", "action": "resume"}, {"X-Desk": "control"})
+    assert code == 400 and not body["ok"] and "owner" in body["error"]
 
 
 def test_command_center_agents_shows_live_state(tmp_path, monkeypatch):

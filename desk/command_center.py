@@ -1119,6 +1119,38 @@ def _relay(role):
         return {}
 
 
+_CTRL_JS = [
+    # no fake "Applied" every 5 seconds: the log shows what the desk answered
+    ("    const log = tick % 5 === 0 ? s.log.map((e) => (e.state === 'Drafted' ? { ...e, state: 'Applied' } : e)) : s.log;\n"
+     "    this.setState({ now: new Date(), tick, log });",
+     "    this.setState({ now: new Date(), tick });"),
+    ("    const entry = { at: hm(s.now), what: verb + ' ' + w.name, who: 'You · From The Dashboard', state: 'Drafted' };\n"
+     "    this.setState({ states: { ...s.states, [p.id]: p.to }, pending: null, log: [entry, ...s.log].slice(0, 8) });",
+     "    const kind = { 'Desk Pods': 'pod', 'Pipeline': 'pipeline', 'Demo Legs': 'demo' }[w.group];\n"
+     "    const action = p.to === 'Running' ? 'resume' : p.to === 'Paused' ? 'pause' : 'stop';\n"
+     "    const key = Date.now();\n"
+     "    const entry = { key, at: hm(s.now), what: verb + ' ' + w.name, who: 'You · From The Dashboard', state: 'Sending' };\n"
+     "    this.setState({ pending: null, log: [entry, ...s.log].slice(0, 8) });\n"
+     "    const done = (ok, why) => { const t = this.state; this.setState({ states: ok ? { ...t.states, [p.id]: p.to } : t.states,\n"
+     "      log: t.log.map((e) => (e.key === key ? { ...e, state: ok ? 'Applied' : 'Refused', who: ok ? e.who : why } : e)) }); };\n"
+     "    fetch('/api/control', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Desk': 'control' },\n"
+     "      body: JSON.stringify({ kind, target: w.id, action, why: verb + ' from the dashboard' }) })\n"
+     "      .then((r) => r.json().then((j) => done(r.ok && j.ok, j.error || ('HTTP ' + r.status))))\n"
+     "      .catch((e) => done(false, 'Desk Not Reached: ' + e));"),
+    ("Drafted: 'blue', Cancelled: 'grey' };", "Drafted: 'blue', Sending: 'blue', Refused: 'red', Cancelled: 'grey' };"),
+    ("const drafts = s.log.filter((e) => e.state === 'Drafted').length;",
+     "const drafts = s.log.filter((e) => e.state === 'Sending').length;"),
+    ("{ label: 'Drafts Waiting', value: String(drafts), sub: 'Applied At The Next Heartbeat', style: big }",
+     "{ label: 'Changes Sending', value: String(drafts), sub: 'Applied On Confirm, Logged To The Journal', style: big }"),
+    ("pauseLabel: st === 'Running' ? 'Draft Pause' : 'Draft Resume'", "pauseLabel: st === 'Running' ? 'Pause' : 'Resume'"),
+    (">Draft Stop</button>", ">Stop</button>"),
+    ("'New Entries Start Again At The Next Heartbeat.'", "'New Entries Start Again At The Next Run.'"),
+    ("<span>Switches Here Write A Draft Only; Nothing Places, Closes Or Sizes A Trade.",
+     "<span>Switches Apply On Confirm (desk/controls.py) And Go Into The Journal; Nothing Places, Closes Or Sizes A Trade."),
+    ("The AurumFunded 1.20 Deploy And The Fidelity", "The AurumFunded Deploy And The Fidelity"),
+]
+
+
 def _patch_controls_page(src, state, positions=None):
     """Controls: pod and pipeline switches, owner locks, the funded risk rows and the change log."""
     try:
@@ -1132,7 +1164,12 @@ def _patch_controls_page(src, state, positions=None):
     except (OSError, ValueError, AttributeError):
         owns = {}
     tickets = [t for t in state.get("tickets") or [] if isinstance(t, dict)]
-    paused = set((state.get("alloc") or {}).get("paused") or [])
+    try:
+        from desk import controls
+        ctl = controls.status()
+    except Exception:
+        ctl = {}
+    paused = set((state.get("alloc") or {}).get("paused") or []) | set(ctl.get("pod") or [])
     sw = []
     for p in state.get("pods") or []:
         n = str(p.get("name") or "")
@@ -1175,7 +1212,13 @@ def _patch_controls_page(src, state, positions=None):
             parts.append(f"{r['empty_streak']} Empty Runs")
         if r.get("failed"):
             parts.append("Last Run Failed")
-        st = "Paused" if halted or int(r.get("fails_in_row") or 0) >= 3 else "Running"
+        if role in (ctl.get("pipeline") or []):
+            parts.insert(0, "Paused By You")
+        elif halted:
+            parts.insert(0, "Whole Pipeline Paused")
+        elif int(r.get("fails_in_row") or 0) >= 3:
+            parts.insert(0, "Auto-Paused After 3 Fails")
+        st = "Paused" if halted or role in (ctl.get("pipeline") or []) or int(r.get("fails_in_row") or 0) >= 3 else "Running"
         sw.append({"id": role, "group": "Pipeline", "name": names[role], "what": _cut(r.get("reason"), 90) or designs[role],
                    "meta": " · ".join(parts), "state": st})
     ver = _ea_versions()
@@ -1188,7 +1231,11 @@ def _patch_controls_page(src, state, positions=None):
         what = f"All Hydra Legs On The Demo. Stops New Entries." if eid == "hydra" else f"AurumFunded {v} On The Demo. Stops New Entries."
         armed = len((state.get("edges") or {}).get("armed") or [])
         meta = f"{ea} {v}" + (f" · {armed} Legs Armed" if eid == "hydra" and armed else "")
-        sw.append({"id": eid, "group": "Demo Legs", "name": nm, "what": what, "meta": meta, "state": desk_st})
+        flag = eid in (ctl.get("demo") or [])
+        if flag:
+            meta += " · Stop Flag Set" + (" · Read From AurumFunded 1.23" if eid == "funded" else " · Read Once Hydra Supports It")
+        sw.append({"id": eid, "group": "Demo Legs", "name": nm, "what": what, "meta": meta,
+                   "state": "Stopped" if flag else desk_st})
     src = re.sub(r"const SWITCHES = \[.*?\n\];", lambda _: "const SWITCHES = " + json.dumps(sw, ensure_ascii=False) + ";",
                  src, count=1, flags=re.S)
 
@@ -1214,7 +1261,8 @@ def _patch_controls_page(src, state, positions=None):
         bal = float(lim.get("day_balance") or lim.get("balance") or 0) or 1.0
         day_used = round(max(0.0, bal - float(lim.get("equity") or bal)) / bal * 100, 2)
         dd = round(float((lim.get("record") or {}).get("max_dd_pct") or 0), 2)
-        live_t = [t for t in tickets if t.get("status") in ("open", "live", "filled", "approved")]
+        live_t = [t for t in tickets if t.get("status") in ("placed", "open")]
+        per_ins = max(collections.Counter(str(t.get("instrument")) for t in live_t).values(), default=0)
         n_open = len(positions) if isinstance(positions, list) else len(live_t)
         per = max((float(t.get("risk_pct") or 0) for t in live_t), default=0.0)
         today = str(lim.get("day") or state.get("t", ""))[:10]
@@ -1227,7 +1275,8 @@ def _patch_controls_page(src, state, positions=None):
                 ["Max Loss", f"Hard Limit {g('max_loss_pct'):g}%; Desk Halts At {g('kill_dd_pct'):g}%", dd, g("kill_dd_pct", 7), "%"],
                 ["Risk Per Trade", "Per Ticket, Of Balance", per, g("per_trade_pct", 0.5), "%"],
                 ["Open Positions", f"At Once; Desk Risk Cap {g('desk_open_pct'):g}%", n_open, cap_n, ""],
-                ["Trades Today", "Across All Pods", n_today, 12, ""],
+                ["Per Instrument", f"Desk Positions On One Symbol · {n_today} Tickets Today", per_ins,
+                 g("max_per_instrument", 3), ""],
                 ["News Blackout", "Minutes Each Side Of High Impact", g("news_window_min"), g("news_window_min", 2), " Min"]]
         block = ("funded: { title: " + json.dumps(title, ensure_ascii=False) + ", tag: " +
                  json.dumps(f"{risk.get('active')} · {_title(prof.get('kind') or '')}", ensure_ascii=False) +
@@ -1239,12 +1288,15 @@ def _patch_controls_page(src, state, positions=None):
     keep = ("ticket_block", "ticket_approve", "ticket_new", "pause", "resume", "halt", "unhalt")
     pick = [j for j in jr if j.get("kind") in keep] or jr
     pick = sorted(pick, key=lambda j: str(j.get("t") or ""), reverse=True)[:8]
-    log = [{"at": _hhmm(j.get("t")), "what": _title(str(j.get("kind") or "").replace("_", " ")),
+    log = [{"at": _hhmm(j.get("t")), "what": _title(str(j.get("kind") or "").replace("_", " ")) +
+            (f" · {_title(str(j['target']))}" if j.get("target") else ""),
             "who": _cut(" · ".join(x for x in (_title(str(j.get("by") or "")), str(j.get("why") or "")) if x), 80),
             "state": "Cancelled" if "block" in str(j.get("kind")) else "Applied"} for j in pick]
     if log:
         src = re.sub(r"const LOG0 = \[.*?\n\];", lambda _: "const LOG0 = " + json.dumps(log, ensure_ascii=False) + ";",
                      src, count=1, flags=re.S)
+    for old, new in _CTRL_JS:
+        src = src.replace(old, new, 1)
     return src
 
 
@@ -1885,3 +1937,8 @@ def cached(bundle_path, get_inputs):
         _CACHE["body"] = build(bundle_path, *get_inputs())
         _CACHE["t"] = now
     return _CACHE["body"]
+
+
+def forget():
+    """Drop the cached page, so the next load shows a switch just changed."""
+    _CACHE["body"] = None

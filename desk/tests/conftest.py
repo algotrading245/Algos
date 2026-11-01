@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TMP = Path(tempfile.mkdtemp(prefix="desk_test_"))
-for name in ("journal", "memory", "inbox", "reports", "playbooks", "logs"):
+for name in ("journal", "memory", "inbox", "reports", "playbooks", "logs", "autopilot", "common"):
     (TMP / name).mkdir()
 shutil.copy(ROOT / "desk" / "risk.json", TMP / "risk.json")
 shutil.copy(ROOT / "desk" / "config.json", TMP / "config.json")
@@ -19,6 +19,7 @@ os.environ.update({
     "AURUM_DESK_CONFIG": str(TMP / "config.json"), "AURUM_DESK_NOLAUNCH": "1",
     "AURUM_DESK_MUTEX_SUFFIX": "_test", "AURUM_DESK_NOW": "2026-10-21T14:00:00",  # a Wednesday, London/NY overlap
     "AURUM_DESK_BOARD": str(TMP / "board.jsonl"),
+    "AURUM_AUTOPILOT_LOGS": str(TMP / "autopilot"), "AURUM_MT5_COMMON": str(TMP / "common"),  # controls.py
 })
 os.environ.pop("AURUM_DESK_ROLE", None)
 os.environ.pop("AURUM_DESK_DRY", None)

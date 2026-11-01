@@ -30,7 +30,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from desk import clocks, command_center, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
+from desk import clocks, command_center, controls, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
 
 PAGE = paths.DESK / "dashboard" / "index.html"
 BUNDLE = paths.DESK / "dashboard" / "command_center.html"
@@ -456,16 +456,35 @@ class Handler(BaseHTTPRequestHandler):
         host = origin.split("//", 1)[-1].split(":")[0].strip("[]")
         return host in ("127.0.0.1", "localhost", "::1")
 
-    def do_POST(self):
-        if self.path.split("?")[0] != "/api/kill":
-            return self._send(404, {"error": "not found"})
-        if self.client_address[0] not in LOCAL or self.headers.get("X-Desk") != "kill" or not self._local_origin():
-            return self._send(403, {"ok": False, "error": "kill only from this PC's dashboard"})
+    def _body(self):
         try:
             n = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(min(n, 4096)) or b"{}") if n else {}
         except ValueError:
             body = {}
+        return body if isinstance(body, dict) else {}
+
+    def do_POST(self):
+        path = self.path.split("?")[0]
+        if path == "/api/control":
+            # The Controls switches: same guard as the kill, its own header value.
+            if self.client_address[0] not in LOCAL or self.headers.get("X-Desk") != "control" or not self._local_origin():
+                return self._send(403, {"ok": False, "error": "switches only from this PC's dashboard"})
+            b = self._body()
+            try:
+                st = controls.apply(b.get("kind"), b.get("target"), b.get("action"), b.get("why"))
+            except controls.Refused as e:
+                return self._send(400, {"ok": False, "error": str(e)})
+            except Exception as e:
+                return self._send(500, {"ok": False, "error": f"{type(e).__name__}: {e}"})
+            self.state.slow = None
+            command_center.forget()
+            return self._send(200, {"ok": True, "status": st})
+        if path != "/api/kill":
+            return self._send(404, {"error": "not found"})
+        if self.client_address[0] not in LOCAL or self.headers.get("X-Desk") != "kill" or not self._local_origin():
+            return self._send(403, {"ok": False, "error": "kill only from this PC's dashboard"})
+        body = self._body()
         why = (str(body.get("why") or "").strip() or "kill switch on the dashboard")[:200]
         try:
             risk_gate.kill(why, by="owner")

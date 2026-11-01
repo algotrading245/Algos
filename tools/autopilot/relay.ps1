@@ -161,8 +161,11 @@ while ($true) {
 
     $r = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $now = Get-Date
+    # Roles the owner paused from the dashboard (desk/controls.py writes logs\autopilot\PAUSE-<role>, owner 2026-11-01):
+    # each is skipped and the next role with work runs; a paused tester also skips tester_step.py.
+    $off = @("finder", "builder", "tester", "judge" | Where-Object { Test-Path (Join-Path $LogDir "PAUSE-$_") })
     # The tester script: collect a finished job, start the next queued one (fast when idle; its own lock).
-    & python.exe (Join-Path $Repo "tools\autopilot\tester_step.py") 2>&1 | Out-Null
+    if ($off -notcontains "tester") { & python.exe (Join-Path $Repo "tools\autopilot\tester_step.py") 2>&1 | Out-Null }
     # Long data fetches run as detached scripts, not inside an agent session (owner 2026-10-24).
     if (-not $DryRun) {
         & python.exe (Join-Path $PSScriptRoot "fetch_runner.py") step 2>&1 | ForEach-Object { if ("$_" -match '^fetch started') { Write-Log "relay" "$_" } }
@@ -192,17 +195,18 @@ while ($true) {
     $judge = @(Get-ToJudge)
     $ev = Get-DemoEvent
     $want = if ($r -and $r.next -and $r.next -ne "none") { "$($r.next)" } else { $null }
-    if (Test-TesterWork) { $role = "tester"; $why = "tester_step.py asked for help" }
-    elseif ($judge.Count) {
+    $onJ = $off -notcontains "judge"
+    if ($off -notcontains "tester" -and (Test-TesterWork)) { $role = "tester"; $why = "tester_step.py asked for help" }
+    elseif ($onJ -and $judge.Count) {
         $role = "judge"; $why = "judge " + (($judge | ForEach-Object { $_.id }) -join ", ")
         $tier = if (@($judge | Where-Object { -not $_.match }).Count) { "judge" } else { "code" }
     }
-    elseif ($ev) { $role = "judge"; $why = "demo $($ev.kind) at $($ev.at): $($ev.line)"; if ($ev.kind -eq "ALERT") { $tier = "judge" } }
-    elseif ($want -eq "judge" -and (Get-Unreviewed) -gt 0) { $role = "judge"; $why = "review: $($r.reason)" }
+    elseif ($onJ -and $ev) { $role = "judge"; $why = "demo $($ev.kind) at $($ev.at): $($ev.line)"; if ($ev.kind -eq "ALERT") { $tier = "judge" } }
+    elseif ($onJ -and $want -eq "judge" -and (Get-Unreviewed) -gt 0) { $role = "judge"; $why = "review: $($r.reason)" }
     # A data item first: an idea that needs the data cannot be built until the finder fetches it (2026-10-22, the
     # builder ran 43 times on paper_fx_value_rer while data_fred_cpi_g10 waited behind it).
     # At most $DataTryCap finder runs per data item (common.ps1), then the builder goes ahead and the doctor reports it.
-    elseif (@(Get-DataDue).Count -gt 0) {
+    elseif ($off -notcontains "finder" -and @(Get-DataDue).Count -gt 0) {
         $role = "finder"; $why = "data item waiting: fetch it before the builder ($((Get-DataDue | ForEach-Object { $_.id }) -join ', '))"
         if (-not $DryRun) { Add-DataTry }
     }
@@ -214,10 +218,14 @@ while ($true) {
             [ordered]@{ legs = $legs; at = (Get-Date).ToString("s") } | ConvertTo-Json | Set-Content $BookSeen -Encoding UTF8
         }
     }
-    elseif ((Get-QueueWaiting) -gt 0 -and (Invoke-Prescreen) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
-    else { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
+    elseif ($off -notcontains "builder" -and (Get-QueueWaiting) -gt 0 -and (Invoke-Prescreen) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
+    elseif ($off -notcontains "finder") { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 
-    if (-not $role) { if ($DryRun) { Write-Output "nothing due" }; break }
+    if (-not $role) {
+        $msg = "nothing due" + $(if ($off.Count) { " (paused from the dashboard: $($off -join ', '))" } else { "" })
+        if ($DryRun) { Write-Output $msg } elseif ($off.Count) { Write-Log "relay" $msg }
+        break
+    }
     if ($blocked -contains $role) { Write-Log "relay" "$role $($blockWhy[$role]) in this tick: waiting for the next tick"; break }
     # 3 failed runs in a row (fails_in_row, run-agent.ps1): the role waits $FailPauseMin minutes after the last one,
     # then gets one try; a further failure pauses it again. Catches a limit message the limit pattern does not know.
