@@ -299,3 +299,38 @@ def test_command_center_controls_shows_live_state(tmp_path, monkeypatch):
     assert '["Daily Loss", "Desk Halts At 4%", 1.0, 4.0, "%"]' in pr and "Funded Account · Demo Co Demo" in pr
     assert '"what": "Ticket Block"' in pr and '"state": "Cancelled"' in pr
     assert "sub: 'Funded · Halts At 4%'" in pr and "fivex: { title: '5x EA" in pr
+
+
+def test_command_center_agents_shows_live_state(tmp_path, monkeypatch):
+    import base64, gzip
+    import datetime as dt
+    from desk import command_center as cc
+    out = cc.build(dashboard.BUNDLE, {}, [], [], {}).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[6]]
+    raw = base64.b64decode(e["data"])
+    tpl = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    auto = tmp_path / "logs" / "autopilot"
+    auto.mkdir(parents=True)
+    (tmp_path / "tools" / "autopilot").mkdir(parents=True)
+    (tmp_path / "tools" / "autopilot" / "router.json").write_text(json.dumps({
+        "provider": "claude", "fallback": {"order": ["claude", "qwen"], "backoff_minutes": 45},
+        "providers": {"claude": {"tiers": {"code": "sonnet", "judge": "opus"}}},
+        "roles": {"builder": {"tier": "judge", "turns": 99, "minutes": 33}}}))
+    today = dt.date.today().isoformat()
+    (auto / "last-finder.json").write_text(json.dumps({"reason": "0 ideas queued", "empty_streak": 4,
+                                                       "runs_day": today, "runs_today": 7}), encoding="utf-8-sig")
+    (auto / "last-judge.json").write_text(json.dumps({"runs_day": today, "runs_today": 3}), encoding="utf-8-sig")
+    (auto / "relay.json").write_text(json.dumps({"next": "judge"}))
+    (auto / f"{today}_relay.log").write_text(f"{today} 10:01:02  start judge (judge j9)\n"
+                                             f"{today} 10:05:00  finder backed off until x: empty\n")
+    monkeypatch.setattr(cc, "ROOT", tmp_path)
+    live = {"budget": {"week_start": today + "T00:00:00"}}
+    usage = [{"ts": today + "T09:00:00", "role": "builder", "input": 1_500_000, "output": 0}]
+    pr = cc._patch_agents_page(tpl, live, usage)
+    assert "tier: 'Judge', model: 'Opus', turns: 99, minutes: 33" in pr and "tokens: 1.50" in pr
+    assert "task: 'Last Run: 0 Ideas Queued'" in pr and "const runsToday = 10;" in pr
+    assert "sub: 'Finder 7, Judge 3'" in pr and "Backoff 45 Min" in pr and "value: '45 Min'" in pr
+    assert "value: 'Judge'" in pr and "value: 'Ready', sub: '4 Empty Runs In A Row'" in pr
+    assert '"who": "Judge", "kind": "Run"' in pr and '"kind": "Backoff"' in pr
+    assert "backoff: true" not in pr.split("const ROLES", 1)[1].split("];", 1)[0]

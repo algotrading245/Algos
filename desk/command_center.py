@@ -20,7 +20,10 @@ queue and beat, and the demo beat are still design text. Live on Research: the f
 gaps, the rejected list and the KPI row from docs/. Live on Controls: the pod, pipeline and demo-leg switches (paused,
 halted, last run), the locks (risk file, halt, live trading, pending approvals), the funded risk block from
 desk/risk.json and the desk limits, and the change log from the journal; the 5x EA risk block, the MT5 lock and the
-trades-per-day limit are still design text. The rest is still the design's sample content.
+trades-per-day limit are still design text. Live on Agents: each role's tier, model, turn and minute caps from the
+router, its runs, tokens and last run this week, its last reason, the finder back-off, runs today, the provider and
+fallback, the next role in the hand-over, the last limit hit and the relay log; the weekly charts, seats, steps, retry
+ladder and empty-run list are still design text. The rest is still the design's sample content.
 """
 import base64
 import collections
@@ -892,6 +895,121 @@ def _patch_controls_page(src, state, positions=None):
     return src
 
 
+def _patch_agents_page(src, live, usage):
+    """Agents: role rows from the router and usage.jsonl, the finder back-off, runs today, the relay rows and the
+    relay log."""
+    auto = ROOT / "logs" / "autopilot"
+    router = _jfile(ROOT / "tools" / "autopilot" / "router.json") or {}
+    prov = str(router.get("provider") or "claude")
+    tiers = ((router.get("providers") or {}).get("claude") or {}).get("tiers") or {}
+    rroles = {k: v for k, v in (router.get("roles") or {}).items() if isinstance(v, dict)}
+    fb = router.get("fallback") or {}
+    order = [_title(str(p)) for p in fb.get("order") or []]
+    bmin = fb.get("backoff_minutes")
+    now = dt.datetime.now()
+    today = now.date().isoformat()
+    boff = _jfile(auto / "finder-backoff.json") or {}
+    try:
+        until = dt.datetime.fromisoformat(str(boff.get("until"))[:19])
+    except ValueError:
+        until = None
+    backed = bool(until and until > now)
+    agg = _week_agg(live, usage)
+    last = {r: _relay(r) for r in ROLES}
+
+    def one(m):
+        rid, body = m.group(1), m.group(0)
+        a, rr, st = agg.get(rid), rroles.get(rid), last.get(rid) or {}
+        body = re.sub(r"runs: \d+", f"runs: {a['runs'] if a else 0}", body, count=1)
+        body = re.sub(r"tokens: [\d.]+", f"tokens: {(a['tok'] / 1e6 if a else 0):.2f}", body, count=1)
+        when = "—"
+        if a and a["last"]:
+            try:
+                when = dt.datetime.fromisoformat(a["last"][:19]).strftime("%a %H:%M")
+            except ValueError:
+                pass
+        body = re.sub(r"last: '[^']*'", lambda _: f"last: '{when}'", body, count=1)
+        if rr:
+            t = str(rr.get("tier") or "")
+            body = re.sub(r"tier: '[^']*'", lambda _: f"tier: '{_title(t)}'", body, count=1)
+            if tiers.get(t):
+                body = re.sub(r"model: '[^']*'", lambda _: f"model: '{_title(str(tiers[t]))}'", body, count=1)
+            for k in ("turns", "minutes"):
+                if isinstance(rr.get(k), int):
+                    body = re.sub(rf"{k}: \d+", f"{k}: {rr[k]}", body, count=1)
+        if st.get("reason"):
+            why = _cut(_title(_js(str(st["reason"]))), 60)
+            body = re.sub(r"task: '[^']*'", lambda _: f"task: 'Last Run: {why}'", body, count=1)
+        body = body.replace(", backoff: true", "")
+        if rid == "finder" and backed:
+            body = body[:-1].rstrip() + ", backoff: true }"
+        return body
+
+    src = re.sub(r"const ROLES = \[.*?\n\];",
+                 lambda m: re.sub(r"\{ id: '(\w+)'[^\n]*\}", one, m.group(0)), src, count=1, flags=re.S)
+    stamp = (until or now).strftime("%Y-%m-%dT%H:%M:%S")
+    src = re.sub(r"const BACKOFF_UNTIL = new Date\('[^']*'\);", f"const BACKOFF_UNTIL = new Date('{stamp}');", src, 1)
+
+    counts = {r: int(st.get("runs_today") or 0) for r, st in last.items() if str(st.get("runs_day")) == today}
+    counts = {r: n for r, n in counts.items() if n}
+    sub = ", ".join(f"{_title(r)} {n}" for r, n in sorted(counts.items(), key=lambda x: -x[1])) or "No Runs Yet"
+    src = re.sub(r"const runsToday = [^\n]*;", f"const runsToday = {sum(counts.values())};", src, count=1)
+    src = src.replace("sub: 'Finder 3, Builder 1, Doctor 1'", f"sub: '{_js(sub)}'", 1)
+    if order:
+        src = src.replace("sub: 'Fallback Order Claude, Qwen · Backoff 60 Min'",
+                          f"sub: 'Fallback Order {', '.join(order)} · Backoff {bmin} Min'", 1)
+        src = src.replace("value: 'Claude, Then Qwen'", f"value: '{', Then '.join(order)}'", 1)
+    if bmin:
+        src = src.replace("value: '60 Min'", f"value: '{bmin} Min'", 1)
+    streak = int(last["finder"].get("empty_streak") or 0)
+    fval = "{ label: 'Finder', value: 'Backed Off', sub: '3 Of 3 Empty Runs · ' + backoffLeft, style: big + '; color: #8A4B00' }"
+    if backed:
+        src = src.replace(fval, fval.replace("'3 Of 3 Empty Runs · '", f"'{streak} Empty Runs In A Row · '"), 1)
+    else:
+        src = src.replace(fval, f"{{ label: 'Finder', value: 'Ready', sub: '{streak} Empty Runs In A Row', style: big }}", 1)
+        src = src.replace("Finder Backed Off · {{backoffLeft}}", "Finder Ready", 1)
+    src = src.replace("provider: 'claude', live: {}", f"provider: '{_js(prov)}', live: {{}}", 1)
+
+    nxt = str((_jfile(auto / "relay.json") or {}).get("next") or "")
+    if nxt:
+        src = src.replace("value: 'Builder (Finder Backed Off)'",
+                          f"value: '{_title(nxt)}{' (Finder Backed Off)' if backed else ''}'", 1)
+    week0 = str((live.get("budget") or {}).get("week_start") or "")
+    hits = [(str((v or {}).get("set") or (v or {}).get("until") or ""), p)
+            for p, v in (_jfile(auto / "provider-backoff.json") or {}).items() if isinstance(v, dict)]
+    hits = sorted(h for h in hits if h[0] and week0 and h[0] >= week0)
+    if hits:
+        at, p = hits[-1]
+        src = src.replace("value: 'None This Week', style: 'font-weight: 600; color: #248A3D'",
+                          f"value: '{_title(p)} · {at[:10]} {at[11:16]}', style: 'font-weight: 600; color: #8A4B00'", 1)
+
+    try:
+        lines = (auto / f"{today}_relay.log").read_text(encoding="utf-8-sig", errors="replace").splitlines()
+    except OSError:
+        lines = [str(x) for x in ((live.get("steps") or {}).get("relay") or [])]
+    log, seen = [], set()
+    for ln in reversed(lines):
+        m = re.match(r"\S+ (\d\d:\d\d):\d\d\s+(.*)", ln)
+        if not m:
+            continue
+        text = m.group(2).strip()
+        key = re.sub(r"\d", "", text)
+        if key in seen:
+            continue
+        seen.add(key)
+        low = text.lower()
+        who = next((w for w in low.split()[:3] if w in ROLES), "")
+        kind = "Backoff" if "backoff" in low or "backed off" in low else "Run" if low.startswith("start") else \
+            "Relay" if "next" in low else "Done"
+        log.append({"t": m.group(1), "who": _title(who) if who else "Relay", "kind": kind, "text": _cut(_title(_js(text)), 90)})
+        if len(log) >= 6:
+            break
+    if log:
+        src = re.sub(r"log: \[\n.*?\n      \] \};", lambda _: "log: " + json.dumps(log, ensure_ascii=False) + " };",
+                     src, count=1, flags=re.S)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -920,6 +1038,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_research_page, src, extra["state"], live)
     elif i == 5 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_controls_page, src, extra["state"], positions)
+    elif i == 6 and live:
+        src = _safe(_patch_agents_page, src, live, usage)
     return src
 
 
