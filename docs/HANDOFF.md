@@ -51,6 +51,15 @@ each finished piece of work.
 
 ## Current state
 
+- **Month-reversal leg v1.22 (judge 2026-11-01 03:40): 5 of 7 fixes check out, 2 blocking items still open.**
+  The reviewer confirmed the 40-day guard (now measured from the last renewal), Good Friday, the FTMO swaps (the gate
+  still passes: halves 0.44 / 0.57, book 3.29 -> 3.36), the magic filter and the stop reset. Still open: (a) no
+  AurumHydra v1.22 compile log, although Hydra includes Legs.mqh; (b) `research/graziani_book_exits.py` models the leg
+  alone, so lesson 21's book exits are still not modelled, and nobody has explained why both index holds were closed
+  at 2024.10.28 00:05 in j19. Minor: closes are retried every tick while the index market is shut (retcode 10018).
+  Builder item `fix_graziani_rev2` (new). j20 was already running, so it was not put on hold. It tests correct EA
+  logic, but it is not counted as PASS or FAIL until `fix_graziani_rev2` is done.
+
 - **Month-reversal leg (graziani_rev, AurumFunded v1.21): review found 4 blocking issues (judge 2026-11-01
   01:14).** (1) `Legs.mqh:2545`: the 40-day guard counts from the position's first open, so a renewed hold is closed
   around day 10 of its second month. (2) `NyseClosed` (`Legs.mqh:1639`) has no Good Friday, so 2024-03-29 is taken as
