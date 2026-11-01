@@ -30,7 +30,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from desk import clocks, command_center, controls, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
+from desk import allowance, clocks, command_center, controls, jobs, journal, live_gate, memory, news, paths, phase, risk_gate, runner, scorekeeper, systematic, tickets
 
 PAGE = paths.DESK / "dashboard" / "index.html"
 BUNDLE = paths.DESK / "dashboard" / "command_center.html"
@@ -205,7 +205,7 @@ def _intel(cfg):
 def _pods(cfg, st, iq=None):
     iq = iq or {}
     alloc = paths.read_json(phase.ALLOC, {}) or {}
-    shares, paused = alloc.get("shares") or {}, set(alloc.get("paused") or [])
+    shares, paused = alloc.get("token_shares") or alloc.get("shares") or {}, set(alloc.get("paused") or [])
     sc = (paths.read_json(scorekeeper.SCORES, {}) or {}).get("pods", {})
     active = set(phase.pods_active(cfg, st.get("phase") if isinstance(st, dict) else None))
     out = []
@@ -219,8 +219,23 @@ def _pods(cfg, st, iq=None):
     return out
 
 
+def _watch(rows):
+    """The watcher's fires and the wakes it was refused, newest first, one row per thing that fired."""
+    out = []
+    for r in rows:
+        if r.get("kind") == "watch_fired":
+            for w in r.get("watch") or []:
+                what = {"level": lambda: f"{w.get('dir')} through {w.get('level')} ({w.get('from')} to {w.get('price')})",
+                        "edge": lambda: f"{w.get('edge')} {'/'.join(s.get('side', '') for s in w.get('signals') or [])}",
+                        "shock": lambda: f"bar range {w.get('range_atr')} x ATR"}.get(w.get("kind"), lambda: "")()
+                out.append({"t": r.get("t"), "pod": r.get("pod"), "kind": w.get("kind"), "market": w.get("market"),
+                            "what": what})
+        elif r.get("kind") == "wake_refused":
+            out.append({"t": r.get("t"), "pod": r.get("pod"), "kind": "refused", "market": "", "what": r.get("why")})
+    return out[-30:][::-1]
+
+
 def _budgets(cfg):
-    from desk import allowance
     return [{"group": g, "spent": runner.spent(g, cfg, key=g), "limit": allowance.pool(cfg) if g == "pod" else lim}
             for g, lim in cfg.get("budgets", {}).items() if not g.startswith("_") and g in cfg.get("models", {})]
 
@@ -366,6 +381,8 @@ class State:
             iq = iq if isinstance(iq, dict) and "error" not in iq else {}
             self.slow = {
                 "pods": _try(_pods, cfg, st, iq.get("pods")), "budgets": _try(_budgets, cfg),
+                "allowance": _try(allowance.status, cfg, t),
+                "watch": _try(_watch, rows),
                 "talk": (iq.get("talk") or [])[::-1], "knowledge": (iq.get("knowledge") or [])[::-1],
                 "level_ups": [r for r in rows if r.get("kind") == "level_up"][-10:][::-1],
                 "scores": _try(paths.read_json, scorekeeper.SCORES, {}),

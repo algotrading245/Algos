@@ -34,12 +34,27 @@ def test_state_has_every_section(monkeypatch):
     monkeypatch.setenv("AURUM_DESK_DRY", "1")
     s = dashboard.State().build()
     for k in ("t", "status", "limits", "live", "equity_series", "pods", "budgets", "board", "journal", "agents",
-              "tickets", "r_series", "news", "runner", "edges", "live_gate", "phase", "schedule", "needs_you"):
+              "tickets", "r_series", "news", "runner", "edges", "live_gate", "phase", "schedule", "needs_you",
+              "allowance", "watch"):
         assert k in s, k
+    assert set(s["allowance"]["pods"]) == set(paths.config()["pods"]) and isinstance(s["watch"], list)
     assert s["live"]["source"] == "heartbeat"
     assert {p["name"] for p in s["pods"]} >= {"systematic", "fxmacro"}
     assert s["phase"]["phase"] == 1
     json.dumps(s, default=str)
+
+
+def test_watch_feed_lists_each_fire_and_refusals_newest_first():
+    rows = [{"t": "1", "kind": "watch_fired", "pod": "metals", "watch": [
+                {"kind": "level", "market": "XAUUSD", "level": 4000.0, "from": 3990, "price": 4005, "dir": "up"},
+                {"kind": "shock", "market": "XAUUSD", "range_atr": 3.1}]},
+            {"t": "2", "kind": "wake_refused", "pod": "crypto", "why": "token slice spent for today"},
+            {"t": "3", "kind": "watch_fired", "pod": "crypto", "watch": [
+                {"kind": "edge", "market": "BTCUSD", "edge": "donchian_trend", "signals": [{"side": "long"}]}]}]
+    w = dashboard._watch(rows)
+    assert [x["kind"] for x in w] == ["edge", "refused", "shock", "level"]
+    assert w[0]["what"] == "donchian_trend long" and w[3]["what"] == "up through 4000.0 (3990 to 4005)"
+    assert w[1]["what"] == "token slice spent for today" and w[2]["what"] == "bar range 3.1 x ATR"
 
 
 def test_page_and_api(srv):
