@@ -34,6 +34,11 @@ from desk import clocks, command_center, controls, jobs, journal, live_gate, mem
 
 PAGE = paths.DESK / "dashboard" / "index.html"
 BUNDLE = paths.DESK / "dashboard" / "command_center.html"
+# The nav's Aurum mark (a cube), gold on dark, as the browser tab icon.
+FAVICON = (b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" '
+           b'fill="#1d1d1f"/><g fill="none" stroke="#e8b84a" stroke-width="2" stroke-linecap="round" '
+           b'stroke-linejoin="round"><path d="M12 4l7 4v8l-7 4-7-4V8z"/><path d="M12 12l7-4M12 12v8M12 12L5 8"/>'
+           b'</g></svg>')
 LIVE_JS = paths.ROOT / "dashboard" / "live.js"
 DATA_JS = paths.ROOT / "dashboard" / "data.js"
 QUEUE = paths.ROOT / "docs" / "ideas" / "queue.jsonl"
@@ -431,6 +436,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, PAGE.read_bytes(), "text/html")
         if path == "/classic":
             return self._send(200, PAGE.read_bytes(), "text/html")
+        if path in ("/favicon.svg", "/favicon.ico"):
+            return self._send(200, FAVICON, "image/svg+xml")
         if path == "/api/state":
             return self._send(200, self.state.build())
         if path == "/api/live":

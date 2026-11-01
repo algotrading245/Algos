@@ -104,6 +104,22 @@ def test_live_aurum_queue_usage_routes(srv, monkeypatch, tmp_path):
     assert "error" in _get(srv + "/api/live")
 
 
+def test_command_center_is_an_app_shell_not_a_canvas(srv):
+    from desk import command_center as cc
+    out = cc.build(dashboard.BUNDLE, {}, [], [], {}).decode("utf-8")
+    order = json.loads(cc._ORDER.search(out).group(1))
+    shell = json.loads(cc._TEMPLATE.search(out).group(2))
+    assert 'class="board"' not in shell and "padding:48px" not in shell and "width:1440px" not in shell
+    assert "overflow:hidden" in shell and "position:fixed" in shell
+    for uid in order:  # every page still mounts from its marker, one frame each
+        assert shell.count(f'src="about:blank#{uid}"') == 1
+    for pid in ("main", "agents", "pods", "eas", "processes", "research", "controls"):
+        assert f'id="f-{pid}"' in shell
+    assert '"file": "Agents.dc.html"' in shell and "hashchange" in shell
+    with urllib.request.urlopen(srv + "/favicon.svg", timeout=10) as r:
+        assert r.status == 200 and r.headers["Content-Type"].startswith("image/svg+xml")
+
+
 def test_new_routes_are_read_only(srv):
     for p in ("/api/live", "/api/aurum", "/api/queue", "/api/usage"):
         req = urllib.request.Request(srv + p, data=b"{}", method="POST")

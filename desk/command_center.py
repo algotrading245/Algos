@@ -1901,6 +1901,102 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
     return src
 
 
+# The app shell (owner 2026-11-01: "feel like an actual dashboard, not an html file"). The export's own template is a
+# design canvas: seven fixed 1440 px boards stacked on a padded beige page, 32,000 px tall, and its nav tabs are links
+# to X.dc.html files that do not exist inside the bundle. The shell shows one page at a time, full window, each
+# scrolling inside its own frame; a tab click (or the Aurum logo) switches pages by hash (#main, #agents, ...), so back
+# and forward work, a reload stays on the tab, and Alt+1..7 jumps in nav order. The loader still mounts every frame from
+# its about:blank#<uuid> marker.
+PAGES = [("main", "Main.dc.html", "Command Center"), ("pods", "Pods.dc.html", "Pods"), ("eas", "EAs.dc.html", "EAs"),
+         ("processes", "Processes.dc.html", "Processes"), ("research", "Research.dc.html", "Research"),
+         ("controls", "Controls.dc.html", "Controls"), ("agents", "Agents.dc.html", "Agents")]
+NAV = ["main", "agents", "pods", "eas", "processes", "research", "controls"]
+_SHELL_JS = r"""
+(function () {
+  var R = __ROUTES__, NAV = __NAV__, frames = {}, byFile = {};
+  R.forEach(function (r) { frames[r.id] = document.getElementById('f-' + r.id); byFile[r.file.toLowerCase()] = r.id; });
+  function cur() { var h = (location.hash || '').replace(/^#\/?/, '').toLowerCase(); return frames[h] ? h : 'main'; }
+  function show() {
+    var id = cur();
+    R.forEach(function (r) {
+      var on = r.id === id, f = frames[r.id];
+      f.classList.toggle('on', on); f.setAttribute('aria-hidden', on ? 'false' : 'true'); f.tabIndex = on ? 0 : -1;
+      if (on) { document.title = 'Aurum · ' + r.label; try { f.contentWindow.focus(); } catch (e) {} }
+    });
+    try { localStorage.setItem('aurum.tab', id); } catch (e) {}
+  }
+  function go(id) { if (!frames[id]) return; if (cur() !== id || !location.hash) location.hash = id; else show(); }
+  function keys(e) {
+    if (!e.altKey || e.ctrlKey || e.metaKey) return;
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= NAV.length) { e.preventDefault(); go(NAV[n - 1]); }
+  }
+  function hook(f) {
+    var d; try { d = f.contentDocument; } catch (e) { return; }
+    if (!d || d.__aurum || !/^blob:/.test(String(d.URL))) return;
+    d.__aurum = 1;
+    d.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      var id = byFile[(a.getAttribute('href') || '').split('#')[0].split('?')[0].split('/').pop().toLowerCase()];
+      if (!id) return;
+      e.preventDefault(); e.stopPropagation(); go(id);
+    }, true);
+    d.addEventListener('keydown', keys, true);
+    f.classList.add('ready');
+  }
+  function hookAll() { R.forEach(function (r) { hook(frames[r.id]); }); }
+  R.forEach(function (r) { frames[r.id].addEventListener('load', hookAll); });
+  setInterval(hookAll, 400);
+  window.addEventListener('hashchange', show);
+  window.addEventListener('keydown', keys, true);
+  if (!location.hash) {
+    var s = null; try { s = localStorage.getItem('aurum.tab'); } catch (e) {}
+    if (s && frames[s]) history.replaceState(null, '', '#' + s);
+  }
+  show(); hookAll();
+})();
+"""
+
+
+def _shell_template(order, heres=None):
+    """The shell HTML for the bundle's outer template. order: the bundle's page uuids; heres: page index -> the
+    page's own HERE file name where it names one (so a re-export that moves pages still routes right)."""
+    heres = heres or {}
+    known = {f.lower(): (pid, f, lab) for pid, f, lab in PAGES}
+    routes, seen = [], set()
+    for i, uid in enumerate(order):
+        pid, f, lab = known.get(str(heres.get(i, "")).lower()) or (PAGES[i] if i < len(PAGES) else (f"p{i}", "", f"Page {i + 1}"))
+        if pid in seen:
+            pid = f"p{i}"
+        seen.add(pid)
+        routes.append({"id": pid, "file": f, "label": lab, "uuid": uid})
+    frames = "\n".join(f'<iframe id="f-{r["id"]}" src="about:blank#{r["uuid"]}" title="Aurum {html.escape(r["label"])}" '
+                       f'loading="eager" aria-hidden="true" tabindex="-1"></iframe>' for r in routes)
+    nav = [n for n in NAV if any(r["id"] == n for r in routes)]
+    js = _SHELL_JS.replace("__ROUTES__", json.dumps(routes)).replace("__NAV__", json.dumps(nav))
+    return ('<!DOCTYPE html>\n<html lang="en"><head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            '<meta name="color-scheme" content="light">\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n<title>Aurum · Command Center</title>\n<style>\n'
+            'html,body{margin:0;height:100%;overflow:hidden;background:#fbfbfd}\n'
+            'iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fbfbfd;'
+            'visibility:hidden;pointer-events:none}\n'
+            'iframe.on{visibility:visible;pointer-events:auto}\n'
+            '</style>\n</head>\n<body>\n' + frames + '\n<script>' + js + '</script>\n</body></html>')
+
+
+def _patch_shell(outer, order, heres=None):
+    """Swap the bundle's outer canvas template for the app shell."""
+    tm = _TEMPLATE.search(outer)
+    if not tm:
+        return outer
+    enc = json.dumps(_shell_template(order, heres), ensure_ascii=False).replace("</", "<\\u002F")
+    return outer[:tm.start(2)] + enc + outer[tm.end(2):]
+
+
+_HERE = re.compile(r"HERE\s*=\s*'([A-Za-z]+\.dc\.html)'")
+
+
 def build(bundle_path, live, usage, positions, extra=None):
     """The bundle bytes with live data in. live: dashboard/live.js as a dict; usage: usage.jsonl rows; positions: the
     desk's open positions (broker dicts) or None."""
@@ -1914,10 +2010,14 @@ def build(bundle_path, live, usage, positions, extra=None):
     except ValueError:
         snap = dt.datetime.now()
     label = "Live Snapshot · " + snap.strftime("%a %d %b %H:%M")
+    heres = {}
     for i, uid in enumerate(order):
         e = man[uid]
         raw = base64.b64decode(e["data"])
         inner = (gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")
+        hm = _HERE.search(inner)
+        if hm:
+            heres[i] = hm.group(1)
         tm = _TEMPLATE.search(inner)
         if not tm:
             continue
@@ -1927,7 +2027,12 @@ def build(bundle_path, live, usage, positions, extra=None):
         b = inner.encode("utf-8")
         e["data"] = base64.b64encode(gzip.compress(b, 6) if e.get("compressed") else b).decode("ascii")
     man_js = json.dumps(man, separators=(",", ":"))
-    return (outer[:m.start(2)] + man_js + outer[m.end(2):]).encode("utf-8")
+    outer = outer[:m.start(2)] + man_js + outer[m.end(2):]
+    try:
+        outer = _patch_shell(outer, order, heres)
+    except Exception:  # the canvas still works; never lose the page over the shell
+        pass
+    return outer.encode("utf-8")
 
 
 def cached(bundle_path, get_inputs):
