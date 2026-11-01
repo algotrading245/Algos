@@ -106,6 +106,14 @@ def build(role, job=None):
                             "against a coin flip) feeds your score and your token share. Only a calibrated PROB pays: "
                             "a confident wrong call costs more than a confident right one earns",
                             forecasts.brief(role, t)))
+        alloc = paths.read_json(paths.STATE / "alloc.json", {})
+        if alloc.get("token_shares"):
+            out.append(_section("Your token share this week: how much of the pods' token pool you get to think "
+                                "with. It follows your token score = trading (once 20 closed trades) + forecast "
+                                "skill + half your contribution (endorsements of what you shared, replies and "
+                                "reviews), moving at most 25% a week inside 5-35%",
+                                {"share": alloc["token_shares"].get(role), "week": alloc.get("week"),
+                                 "score": (alloc.get("token_scores") or {}).get(role)}))
         out.append(_section("Tickets for you to review: one board review ID each, before the head trader judges",
                             to_review(role, owns, state)))
         if not prof["trading"].get("trades") and role != systematic.POD:

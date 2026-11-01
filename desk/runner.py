@@ -69,7 +69,8 @@ def pod_budget(pod, cfg):
     pool = cfg.get("budgets", {}).get("pod")
     if pool is None:
         return None
-    shares = paths.read_json(phase.ALLOC, {}).get("shares") or {}
+    alloc = paths.read_json(phase.ALLOC, {})
+    shares = alloc.get("token_shares") or alloc.get("shares") or {}  # token shares: trading + forecasts + contribution
     share = lambda p: shares.get(p, cfg["pods"].get(p, {}).get("base_share", 0))
     total = sum(share(p) for p in phase.pods_active(cfg)) or share(pod) or 1
     return int(pool * share(pod) / total)

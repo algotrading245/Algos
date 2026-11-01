@@ -5,7 +5,10 @@ daily()   scores every pod over the last 8 weeks into state/scores.json and repo
 weekly()  daily(), then the allocation (state/alloc.json): a pod with fewer than 20 trades keeps its base share; the
           rest move toward base x max(0.25, 1 + score), the score being its R a trade over the rest of the desk's,
           times n / (n + 20), at most 10 points a week, inside 10-30%. A pod below the
-          shadow benchmark 6 weeks running is paused until its playbook is rewritten. Then playbooks.check() for each
+          shadow benchmark 6 weeks running is paused until its playbook is rewritten. Beside the risk shares, the
+          token shares split the pods' daily token pool: base x max(0.25, 1 + token score), the token score being
+          trading (once 20 trades) + forecast skill + half the contribution to other pods, at most 25% of the share
+          a week, inside 5-35% (token_scores below). Then playbooks.check() for each
           pod, and the research bridge: an (edge, instrument) with 30+ closed trades and positive R goes once to
           docs/ideas/queue.jsonl with source "desk".
 
@@ -22,6 +25,8 @@ MIN_TRADES = 20       # below this a pod keeps its base share and is not judged 
 SHRINK = 20           # a pod's edge over the rest of the desk is pulled toward 0 by n / (n + SHRINK)
 FLOOR, CAP, STEP = 0.10, 0.30, 0.10
 PAUSE_WEEKS = 6
+# token shares (owner 2026-11-01): how the pods' daily token pool is split, by trading + forecasts + contribution
+TOKEN_FLOOR, TOKEN_CAP, TOKEN_STEP = 0.05, 0.35, 0.25  # a pod's share moves at most 25% of itself a week
 CITE_SHARE = 0.25
 BRIDGE_TRADES = 30
 SHADOW_DAYS = 5       # a rejected ticket still open after this many days is marked to market
@@ -248,14 +253,14 @@ def daily(t=None, b=None):
     return sc
 
 
-def _normalise(shares, fixed=()):
-    """Clip to [FLOOR, CAP] and rescale to sum 1, a few rounds (clipping and scaling fight each other)."""
+def _normalise(shares, fixed=(), floor=FLOOR, cap=CAP):
+    """Clip to [floor, cap] and rescale to sum 1, a few rounds (clipping and scaling fight each other)."""
     live = {p: s for p, s in shares.items() if p not in fixed}
     for _ in range(20):
         tot = sum(live.values())
         if tot <= 0:
             break
-        live = {p: min(CAP, max(FLOOR, s / tot)) for p, s in live.items()}
+        live = {p: min(cap, max(floor, s / tot)) for p, s in live.items()}
         if abs(sum(live.values()) - 1) < 1e-6:
             break
     return {p: round(live.get(p, 0.0), 4) for p in shares}
@@ -293,8 +298,51 @@ def allocate(sc, prev, cfg):
         target[p] = min(was + STEP, max(was - STEP, want))
     for p in paused:
         target[p] = 0.0
+    tok = token_scores(sc)
+    last_tok = prev.get("token_shares") or prev.get("shares") or base
+    want_tok = {}
+    for p in pods:
+        was = last_tok.get(p) or base[p]
+        want = base[p] * max(0.25, 1 + tok.get(p, {}).get("score", 0))
+        want_tok[p] = min(was * (1 + TOKEN_STEP), max(was * (1 - TOKEN_STEP), want))
+    for p in paused:
+        want_tok[p] = 0.0
     return {"week": clocks.week_key(), "shares": _normalise(target, fixed=paused), "base": {p: round(s, 4) for p, s
-            in base.items()}, "paused": sorted(paused), "weeks_below_shadow": below}
+            in base.items()}, "paused": sorted(paused), "weeks_below_shadow": below,
+            "token_shares": _normalise(want_tok, fixed=paused, floor=TOKEN_FLOOR, cap=TOKEN_CAP),
+            "token_scores": tok}
+
+
+def contribution(pod, start, board=None, know=None):
+    """What a pod gave the other pods in the window: endorsements its knowledge earned from them, plus a quarter
+    point for each reply to another pod's ask and each review of another pod's ticket. 0 to 1 (10 points is 1)."""
+    board = memory.board(10 ** 9) if board is None else board
+    know = paths.read_jsonl(memory.KNOWLEDGE) if know is None else know
+    author = {k["id"]: k.get("pod") for k in know if k.get("kind") != "endorse" and k.get("id")}
+    ends = sum(1 for k in know if k.get("kind") == "endorse" and k.get("t", "") >= start
+               and author.get(k.get("id")) == pod and k.get("pod") != pod)
+    talk = sum(1 for b in board if b.get("pod") == pod and b.get("kind") in ("reply", "review")
+               and b.get("t", "") >= start)
+    return {"endorsed": ends, "replies_reviews": talk, "points": min(1.0, round((ends + 0.25 * talk) / 10, 3))}
+
+
+def token_scores(sc, t=None, board=None, know=None):
+    """The score behind a pod's token share (owner 2026-11-01): what it adds in trading (only once it has MIN_TRADES
+    closed, so an untested pod is neither rewarded nor punished), plus its forecast skill, plus half its
+    contribution to the other pods. Each of the first two is clipped to [-1, 1]."""
+    start = sc.get("window", [None])[0] or ((t or clocks.now()) - WINDOW).date().isoformat()
+    board = memory.board(10 ** 9) if board is None else board
+    know = paths.read_jsonl(memory.KNOWLEDGE) if know is None else know
+    clip = lambda x: max(-1.0, min(1.0, float(x or 0)))
+    out = {}
+    for p, s in sc.get("pods", {}).items():
+        trading = clip(s.get("score")) if s.get("trades", 0) >= MIN_TRADES else 0.0
+        fc = clip((sc.get("forecasts") or {}).get(p, {}).get("skill", s.get("forecast_skill")))
+        con = contribution(p, start, board, know)
+        out[p] = {"trading": round(trading, 3), "forecast": round(fc, 3), "contribution": con["points"],
+                  "endorsed": con["endorsed"], "replies_reviews": con["replies_reviews"],
+                  "score": round(trading + fc + 0.5 * con["points"], 3)}
+    return out
 
 
 def bridge(state=None, t=None):

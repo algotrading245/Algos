@@ -271,7 +271,11 @@ def test_allocation_moves_at_most_a_step():
                        "crypto": 0.1}}
     raw = {}
     orig = scorekeeper._normalise
-    scorekeeper._normalise = lambda target, fixed=(): raw.update(target) or orig(target, fixed)
+    def spy(target, fixed=(), **kw):  # the risk shares only; the token shares pass their own floor and cap
+        if not kw:
+            raw.update(target)
+        return orig(target, fixed, **kw)
+    scorekeeper._normalise = spy
     try:
         scorekeeper.allocate(_sc(fxmacro=(40, 5.0)), prev, _cfg())
     finally:
