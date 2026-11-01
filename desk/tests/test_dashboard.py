@@ -741,3 +741,78 @@ def test_command_center_main_ticket_lane_and_debrief(tmp_path):
     out = cc._patch_main_debrief(src, state, tmp_path)
     assert "['Last', 'Fri 17:20 NY'], ['This Week', '2 Of 5'], ['Trades Read', '1'], ['Lessons', '1']" in out
     assert "'Debriefs This Week', '2 Of 5', 40)" in out and "Sample" not in out.split("Tickets<", 1)[1]
+
+
+# --- Command Center: no design text where a live source exists (2026-11-01) ---
+import datetime as _dt
+
+from desk import command_center as cc
+
+_UTC = _dt.timezone.utc
+
+
+def test_funded_deploy_takes_latest_dated_deploy_header():
+    log = ("## 2026-10-30, 09:10: AurumFunded 1.22 deployed on T16\n"
+           "## 2026-11-01 (Sun), 21:57: AurumFunded 1.23 deployed on T16\n"
+           "## 2026-10-31, 12:00: AurumFunded 1.21 on T16\n"
+           "## 2026-11-02, 08:00: AurumFunded 1.24 built, not deployed\n")
+    assert cc._funded_deploy(log) == {"ver": "1.23", "date": "2026-11-01", "time": "21:57"}
+    assert cc._funded_deploy("no headers") is None
+
+
+def test_patch_versions_replaces_design_versions():
+    src = "AurumFunded v1.19 · ver: '1.19' · 1.20 Waits On Owner · AurumHydra 1.42"
+    out = cc._patch_versions(src, "1.23", "1.43", "1.23", {"ver": "1.23", "date": "2026-11-01", "time": "21:57"})
+    assert "1.19" not in out and "1.20" not in out and "1.42" not in out
+    assert "AurumFunded v1.23" in out and "T16 Matches The Source" in out
+    assert "Source 1.24 Not On T16" in cc._patch_versions(src, "1.23", "1.43", "1.24")
+
+
+@pytest.mark.parametrize("now,want", [
+    (_dt.datetime(2026, 11, 1, 21, 0, tzinfo=_UTC), "Markets Closed · FX Opens Sun 22:00 UTC"),   # Sun 16:00 NY
+    (_dt.datetime(2026, 11, 1, 23, 0, tzinfo=_UTC), "FX Open · Closes Fri 22:00 UTC"),           # Sun 18:00 NY
+    (_dt.datetime(2026, 10, 30, 21, 30, tzinfo=_UTC), "Markets Closed · FX Opens Sun 22:00 UTC"),  # Fri 17:30 NY, EDT
+    (_dt.datetime(2026, 10, 30, 19, 0, tzinfo=_UTC), "FX Open · Closes Fri 21:00 UTC"),           # Fri 15:00 NY, EDT
+    (_dt.datetime(2026, 10, 31, 12, 0, tzinfo=_UTC), "Markets Closed · FX Opens Sun 22:00 UTC"),  # Sat
+])
+def test_market_pill(now, want):
+    assert cc._market_pill(now) == want
+
+
+def test_heartbeat_pill_marks_stale_and_not_ok():
+    now = _dt.datetime(2026, 11, 1, 22, 0, tzinfo=_UTC)
+    assert cc._heartbeat_pill({"t": "2026-11-01T21:55:00+00:00", "ok": True}, now) == ("MT5 Heartbeat OK · 21:55 UTC", "#248A3D")
+    assert cc._heartbeat_pill({"t": "2026-11-01T21:40:00+00:00", "ok": True}, now)[0] == "MT5 Heartbeat Stale · 21:40 UTC"
+    assert cc._heartbeat_pill({"t": "2026-11-01T21:58:00+00:00", "ok": False}, now)[1] == "#D70015"
+    assert cc._heartbeat_pill({}, now)[0] == "MT5 Heartbeat Missing"
+
+
+def test_patch_phase_and_scores():
+    st = {"status": {"phase": 3, "phase_day": 6}}
+    assert cc._patch_phase("Desk Phase 3 · Day 4 | Phase 3, Day 4", st) == "Desk Phase 3 · Day 6 | Phase 3, Day 6"
+    assert cc._patch_phase("Phase 3, Day 4", {}) == "Phase 3, Day 4"
+    out = cc._patch_scores("score: Math.min(99, r.score + doneCount) [5, 'Level 5 · Deep Reasoning']")
+    assert out == "score: r.score [5, 'Deep Reasoning']"
+
+
+def test_patch_roles_shows_runs_not_invented_scores():
+    src = "{ id: 'finder', runs: 9, tokens: 1.5, last: '10:00', task: 'x', thought: 'Invented', perf: [['71%', 'Pass Rate']], score: 88 }"
+    agg = {"finder": {"runs": 4, "tok": 2_500_000, "last": "2026-11-01T21:30:00"}}
+    out = cc._patch_roles(src, {"roles": {}}, agg)
+    assert "score: 4 }" in out and "Invented" not in out and "71%" not in out
+    assert "['4', 'Runs This Week']" in out and "['2.50M', 'Tokens This Week']" in out and "['21:30', 'Last Run']" in out
+
+
+def test_weeks_tokens_buckets_last_four_iso_weeks():
+    import datetime as _dt
+    now = _dt.datetime(2026, 11, 1, 12)  # Sunday, ISO week 44
+    rows = [{"ts": "2026-11-01T09:00:00", "role": "finder", "input": 1_000_000, "output": 500_000},
+            {"ts": "2026-10-20T09:00:00", "role": "finder", "cache_read": 2_000_000},
+            {"ts": "2026-10-27T09:00:00", "role": "builder", "input": 3_000_000},
+            {"ts": "2026-09-01T09:00:00", "role": "judge", "input": 9_000_000}]
+    weeks, got = cc._weeks_tokens(rows, now)
+    assert weeks == [41, 42, 43, 44]
+    assert got == [("builder", [0, 0, 0, 3.0]), ("finder", [0, 0, 2.0, 1.5])]
+    src = "const WEEKS = [\n  ['Finder', [9.8, 11.2, 12.4, 15.20]]\n];\n<span>Weeks 41 To 44, Millions Of Tokens</span>"
+    out = cc._patch_weeks(src, rows, now)
+    assert "15.20" not in out and '["Builder", [0.0, 0.0, 0.0, 3.0]]' in out

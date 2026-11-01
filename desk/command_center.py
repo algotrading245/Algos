@@ -54,6 +54,35 @@ def _js(s):
     return s.replace("\\", "/").replace("'", "’").replace("\n", " ")
 
 
+def _weeks_tokens(usage, now=None, n=4):
+    """Tokens per role (millions) for the last n ISO weeks, oldest first, from usage.jsonl rows. Returns
+    (week numbers, [(role, [m1..mn])]) with roles that used any tokens, most tokens this week first."""
+    now = now or dt.datetime.now()
+    mon = (now - dt.timedelta(days=now.weekday())).date()
+    starts = [mon - dt.timedelta(weeks=n - 1 - i) for i in range(n)]
+    tok = collections.defaultdict(lambda: [0] * n)
+    for r in usage or []:
+        try:
+            d = dt.date.fromisoformat(str(r.get("ts") or "")[:10])
+        except ValueError:
+            continue
+        i = (d - starts[0]).days // 7
+        if 0 <= i < n:
+            tok[r.get("role") or "?"][i] += sum(int(r.get(k) or 0) for k in ("input", "output", "cache_read", "cache_create"))
+    rows = [(role, [round(x / 1e6, 2) for x in v]) for role, v in tok.items() if any(v)]
+    rows.sort(key=lambda x: (-x[1][-1], -sum(x[1])))
+    return [s.isocalendar()[1] for s in starts], rows
+
+
+def _patch_weeks(src, usage, now=None):
+    weeks, rows = _weeks_tokens(usage, now)
+    if not rows:
+        return src
+    arr = "const WEEKS = " + json.dumps([[_title(r), v] for r, v in rows], ensure_ascii=False) + ";"
+    src = re.sub(r"const WEEKS = \[\n.*?\n\];", lambda _: arr, src, count=1, flags=re.S)
+    return src.replace("Weeks 41 To 44, Millions Of Tokens", f"Weeks {weeks[0]} To {weeks[-1]}, Millions Of Tokens", 1)
+
+
 def _week_agg(live, usage):
     week0 = (live.get("budget") or {}).get("week_start") or ""
     agg = collections.defaultdict(lambda: {"runs": 0, "tok": 0, "last": ""})
@@ -84,6 +113,15 @@ def _patch_roles(src, live, agg):
         if st.get("reason"):
             reason = _js(str(st["reason"]))[:60].title()
             body = re.sub(r"task: '[^']*'", lambda _: f"task: 'Last Run: {reason}'", body, count=1)
+            note = f"Last Run: {reason}"
+        else:
+            note = "No Note From The Last Run"
+        # The design's perf triples, scores and thoughts are invented; these are the measured ones.
+        body = re.sub(r"thought: '[^']*'", lambda _: f"thought: '{note}'", body, count=1)
+        perf = [[str(runs), "Runs This Week"], [f"{tok:.2f}M", "Tokens This Week"], [last, "Last Run"]]
+        body = re.sub(r"perf: \[\[.*?\]\]", lambda _: "perf: " + json.dumps(perf, ensure_ascii=False).replace('"', "'"),
+                      body, count=1, flags=re.S)
+        body = re.sub(r"score: \d+ \}$", f"score: {runs} }}", body)
         return body
 
     return re.sub(r"\{ id: '(\w+)'.*?score: \d+ \}", one, src, flags=re.S)
@@ -316,13 +354,144 @@ def _patch_main_fidelity(src, week):
     return src
 
 
-def _deployed_funded():
-    """The AurumFunded version on T16, from the last 'AurumFunded X on T16' change in docs/demo_log.md."""
+_DEPLOY_HDR = re.compile(r"^## (\d{4}-\d\d-\d\d)(?: \([^)\n]*\))?(?:, (\d\d:\d\d))?[^\n]*?AurumFunded (\d+\.\d+) (?:deployed )?on T16", re.M)
+
+
+def _funded_deploy(text=None):
+    """The last AurumFunded deploy to T16 in docs/demo_log.md: {'ver', 'date', 'time'} from the latest-dated
+    '## <date> ..., HH:MM...: AurumFunded X [deployed ]on T16' header (headers are not always in date order;
+    'built, not deployed' headers do not match). None when the log or a header is missing."""
     try:
-        found = re.findall(r"^##.*AurumFunded (\d+\.\d+) on T16", (DOCS / "demo_log.md").read_text(encoding="utf-8"), re.M)
+        text = text if text is not None else (DOCS / "demo_log.md").read_text(encoding="utf-8")
     except OSError:
         return None
-    return found[-1] if found else None
+    found = [(m.group(1), m.group(2) or "", i, m.group(3)) for i, m in enumerate(_DEPLOY_HDR.finditer(text))]
+    if not found:
+        return None
+    date, time, _, ver = max(found)
+    return {"ver": ver, "date": date, "time": time}
+
+
+def _deployed_funded(text=None):
+    """The AurumFunded version on T16 (see _funded_deploy)."""
+    d = _funded_deploy(text)
+    return d["ver"] if d else None
+
+
+def _patch_versions(src, funded, hydra, funded_src=None, deploy=None):
+    """Every page: the design's AurumFunded 1.19 / 1.20 and AurumHydra 1.42 strings become the version T16 runs
+    (demo_log) and the Hydra source version; the '1.20 waits for the owner' items say whether T16 matches the source."""
+    rep = []
+    if funded:
+        same = not funded_src or funded_src == funded
+        status = "T16 Matches The Source" if same else f"Source {funded_src} Not On T16"
+        when = f"{deploy['date'][5:]} {deploy['time']}".strip() if deploy else ""
+        rep += [("AurumFunded v1.19", f"AurumFunded v{funded}"), ("AurumFunded 1.19", f"AurumFunded {funded}"),
+                ("ver: '1.19'", f"ver: '{funded}'"), ("1.20 Waits On Owner", status), ("1.20 Committed, Not Deployed", status),
+                ("1.20 Waits For The Owner", status), ("1.19 Live Vs 1.20 Committed", f"{funded} On T16 · Source {funded_src or funded}"),
+                ("First 1.19 Draft", f"AurumFunded {funded}")]
+        if same:
+            rep += [("{ name: 'AurumFunded 1.20 Deploy', why: 'Built And Reviewed. Waits For The Owner’s Yes.', where: 'mql5/Experts/AurumFunded', state: 'Waiting' }",
+                     f"{{ name: 'AurumFunded {funded} Deploy', why: 'Deployed On T16{(' ' + when) if when else ''}. The Next Deploy Waits For The Owner’s Yes.', where: 'mql5/Experts/AurumFunded', state: 'Done' }}"),
+                    ("{ at: 'Sat', what: 'AurumFunded 1.20 Ready To Deploy', who: 'Reviewer · Waits For The Owner', state: 'Waiting' }",
+                     f"{{ at: '{when[:5] or '—'}', what: 'AurumFunded {funded} Deployed On T16', who: 'Owner’s Yes · demo_log', state: 'Applied' }}")]
+    if hydra:
+        rep += [("AurumHydra 1.42", f"AurumHydra {hydra}"), ("Hydra 1.42.", f"Hydra {hydra}."), ("Matches 1.42 Run", f"Source {hydra}"),
+                ("ver: '1.42'", f"ver: '{hydra}'")]
+    rep += [("Deploying 1.20 To T16 And The Fidelity Pairing Are The Owner’s Call.", "EA Deploys To T16 Are The Owner’s Call."),
+            ("The AurumFunded 1.20 Deploy And The Fidelity Pairing Stay With The Owner.", "EA Deploys To T16 Stay With The Owner."),
+            (" · Connected · Ping 38 ms", ""), (" · Connected · Ping 44 ms", " · Tester Only, No Demo Terminal")]
+    for old, new in rep:
+        src = src.replace(old, new)
+    return src
+
+
+def _market_pill(now):
+    """FX is open Sun 17:00 to Fri 17:00 New York; the pill gives the next open or close in UTC."""
+    from zoneinfo import ZoneInfo
+    ny = ZoneInfo("America/New_York")
+    n = now.astimezone(ny)
+    wd = n.weekday()
+    closed = wd == 5 or (wd == 4 and n.hour >= 17) or (wd == 6 and n.hour < 17)
+    target = 6 if closed else 4
+    at = dt.datetime.combine(n.date() + dt.timedelta(days=(target - wd) % 7), dt.time(17), tzinfo=ny)
+    if at <= n:
+        at += dt.timedelta(days=7)
+    u = at.astimezone(dt.timezone.utc)
+    return f"Markets Closed · FX Opens {u:%a %H:%M} UTC" if closed else f"FX Open · Closes {u:%a %H:%M} UTC"
+
+
+def _heartbeat_pill(hb, now, stale=dt.timedelta(minutes=10)):
+    """(text, color) for the MT5 heartbeat pill: red when the beat is not ok, missing or older than `stale`."""
+    t = _ts((hb or {}).get("t"))
+    if t is None:
+        return "MT5 Heartbeat Missing", "#D70015"
+    hm = t.astimezone(dt.timezone.utc).strftime("%H:%M")
+    if not hb.get("ok"):
+        return f"MT5 Heartbeat Not OK · {hm} UTC", "#D70015"
+    if now - t > stale:
+        return f"MT5 Heartbeat Stale · {hm} UTC", "#D70015"
+    return f"MT5 Heartbeat OK · {hm} UTC", "#248A3D"
+
+
+def _patch_phase(src, state):
+    """Every page: the design's 'Phase 3, Day 4' becomes the desk phase and day from /api/state."""
+    st = (state or {}).get("status") or {}
+    p, d = st.get("phase"), st.get("phase_day")
+    if p is None or d is None:
+        return src
+    return (src.replace("Phase 3, Day 4", f"Phase {p}, Day {d}").replace("Desk Phase 3 · Day 4", f"Desk Phase {p} · Day {d}")
+            .replace("Phase 3 · Day 4 · T16", f"Phase {p} · Day {d} · T16"))
+
+
+def _patch_main_status(src, state, now=None):
+    """Main: the market and heartbeat pills, the Monitor card's beat, and the design text with no source behind it
+    (Chance Of 5x, the funded legs' 'None Since 18:11', the Design v6 footer, the heatmap's 'Sample Values')."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    hb = ((state or {}).get("status") or {}).get("heartbeat") or {}
+    src = src.replace("Markets Closed · FX Opens Sun 23:00", _market_pill(now), 1)
+    text, color = _heartbeat_pill(hb, now)
+    src = src.replace('color: #248A3D">MT5 Heartbeat OK · 17:26 UTC', f'color: {color}">{text}', 1)
+    src = src.replace("st('Chance Of 5x', '10% · 3x 43%', accent)", "st('Chance Of 5x', '—', '#6E6E73')", 1)
+    src = src.replace("'None Since 18:11'", "'—'")
+    src = src.replace("<span>Aurum Command Center · Design v6</span>", "<span>Aurum Command Center</span>", 1)
+    src = src.replace("Eight Legs, Sample Values", "Eight Legs, From docs/book.json", 1)
+    t = _ts(hb.get("t"))
+    if t is not None:
+        age = max(0, int((now - t).total_seconds() // 60))
+        fresh = hb.get("ok") and age <= 10
+        beat = t.astimezone(dt.timezone.utc).strftime("%H:%M")
+        issues = len(((state or {}).get("monitor") or {}).get("issues") or [])
+        src = src.replace(
+            "[['Last Beat', pad(d.getHours()) + ':' + pad(Math.floor(d.getMinutes() / 5) * 5)], ['Alerts Open', String(alertOpenN)], ['Caught', 'Sample'], ['Missed', 'Sample']],\n"
+            "        'Beats Today', beats + ' Of 288', beats / 288 * 100)",
+            f"[['Last Beat', '{beat} UTC'], ['Alerts Open', String(alertOpenN)], ['Code Issues', '{issues}'], ['Missed', '—']],\n"
+            f"        'Heartbeat', '{'OK' if fresh else 'Stale'} · {age} Min Ago', {100 if fresh else 0})", 1)
+    return src
+
+
+def _patch_scores(src):
+    """Main: the design's invented 0-99 agent scores become runs this week (ROLES score, set by _patch_roles); the
+    rank, bars and leaderboard follow runs, and the IQ labels drop the made-up 'Level N'."""
+    rep = [("score: Math.min(99, r.score + doneCount)", "score: r.score"),
+           ("const scoreColor = (n) => n >= 85 ? '#248A3D' : n >= 75 ? '#0066CC' : '#B25000';",
+            "const scoreColor = (n) => n > 0 ? '#1D1D1F' : '#AEAEB2';"),
+           ("const ranked = ROLES.map((r) => r.id)", "const RUNMAX = Math.max(1, ...ROLES.map((r) => r.score)); const ranked = ROLES.map((r) => r.id)"),
+           ("scoreBar: bar(score, scoreColor(score))", "scoreBar: bar(score / RUNMAX * 100, '#0071E3')"),
+           ("bar: bar(score, scoreColor(score)), score: String(score)", "bar: bar(score / RUNMAX * 100, '#0071E3'), score: String(score)"),
+           ("Score · Rank {{a.rank}}", "Runs This Week · Rank {{a.rank}}"),
+           ('font-size: 12px">Scores</a>', 'font-size: 12px">Activity</a>'),
+           ('letter-spacing: -0.012em">Scores</h3>', 'letter-spacing: -0.012em">Activity</h3>'),
+           ("Performance, Intelligence And Score, Best First.", "Runs This Week From usage.jsonl, Most First."),
+           (">Measured Scores<", ">What Is Measured<"),
+           ("Finder: Share Of Its Ideas That Pass The Gates. Builder: Gate Passes And Clean Compiles. Judge: Agreement With "
+            "The Reviewer. Monitor: Alerts Caught. Pods: R And Profit Factor Against Their Benchmark. Intelligence Follows "
+            "The Model. Values Stay Sample Until The Wiring Reads The Logs.",
+            "Runs, Tokens And The Last Run Per Agent Since The Week Start, From usage.jsonl. No Quality Score Is Measured "
+            "Yet, So None Is Shown. The Intelligence Bar Follows The Model Tier.")]
+    for old, new in rep:
+        src = src.replace(old, new)
+    return re.sub(r"\[(\d), 'Level \d · ([^']*)'\]", r"[\1, '\2']", src)
 
 
 def _patch_main_funded(src, t16, version=None):
@@ -905,6 +1074,8 @@ def _patch_processes_page(src, state, live):
             age["sched"] = max(0, int((now - max(ran)).total_seconds()))
             detail["sched"] = f"{len(ran)} Jobs Tracked"
         age["data"] = 0
+        detail["data"] = "Built On Each Page Load"
+        detail.setdefault("tester", "—")  # the design's 'Running Job 1 Of 4' had no source
         src = src[:m.start()] + "const age = " + json.dumps(age) + ";" + src[m.end():]
         for bid, lim in (("relay", 7200), ("mt5", 120), ("sched", 3900), ("data", 60)):
             src = re.sub(r"(\{ id: '" + bid + r"', [^\n]*?limit: )\d+", lambda g: g.group(1) + str(lim), src, count=1)
@@ -1374,6 +1545,10 @@ def _patch_agents_page(src, live, usage):
         src = src.replace(fval, f"{{ label: 'Finder', value: 'Ready', sub: '{streak} Empty Runs In A Row', style: big }}", 1)
         src = src.replace("Finder Backed Off · {{backoffLeft}}", "Finder Ready", 1)
     src = src.replace("provider: 'claude', live: {}", f"provider: '{_js(prov)}', live: {{}}", 1)
+    # The empty-run list held three made-up commits; the real streak count is in the router state.
+    src = re.sub(r"const empties = \[\[.*?\]\]\.map", "const empties = [].map", src, count=1, flags=re.S)
+    src = src.replace("Three Empty Runs In A Row, Sun 1 Nov", f"Finder Empty Runs In A Row: {streak}", 1)
+    src = _safe(_patch_weeks, src, usage)
 
     nxt = str((_jfile(auto / "relay.json") or {}).get("next") or "")
     if nxt:
@@ -1861,6 +2036,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
     src = _stop_sim(src)
     if i == 0:
         src = _patch_roles(src, live, _week_agg(live, usage))
+        src = _safe(_patch_scores, src)
         src = _patch_talk(src, live)
         src = _patch_positions(src, positions)
         src = src.replace("t: 'Sample'", "t: 'Live'")
@@ -1874,6 +2050,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_main_debrief, src, state, ROOT)
             src = _safe(_patch_main_podxp, src, state)
             src = _safe(lambda s: _patch_main_feed(s, state, usage, _git_today()), src)
+            src = _safe(_patch_main_status, src, state)
             src = _patch_sources(src)
         src = _safe(_patch_alerts, src, state if isinstance(state, dict) else {}, ROOT)
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
@@ -1898,6 +2075,10 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_controls_page, src, extra["state"], positions)
     elif i == 6 and live:
         src = _safe(_patch_agents_page, src, live, usage)
+    if isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_phase, src, extra["state"])
+    vers, dep = _ea_versions(), _funded_deploy()
+    src = _safe(lambda s: _patch_versions(s, dep and dep["ver"], vers.get("AurumHydra"), vers.get("AurumFunded"), dep), src)
     return src
 
 
