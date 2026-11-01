@@ -44,7 +44,7 @@ function Save-Results($job, $out) {
     $lines = Get-ChildItem (Join-Path $job.DataFolder "Tester") -Filter *.log -Recurse -ErrorAction SilentlyContinue |
         Where-Object { $_.LastWriteTime -ge $t0 } |
         ForEach-Object { Get-Content $_.FullName -Encoding Unicode } |
-        Where-Object { $_ -match "$($job.Expert):|final balance|stopped|failed|not found|cannot|error" } |
+        Where-Object { $_ -match "$($job.Expert):|Aurum\w*:|final balance|stopped|failed|not found|cannot|error" } |
         Where-Object { $_ -notmatch "authoriz|login|account \d" }
     $lines | Set-Content (Join-Path $out "summary.txt")
     $lines | Select-Object -Last 15 | ForEach-Object { Write-Host $_ }
