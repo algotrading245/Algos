@@ -574,3 +574,4 @@
 {"id": "noise_gj", "when": "2026-10-31T10:52:56", "verdict": "FAIL at costs"}
 {"id": "paper_fast_alpha_pullback_entry_dualthrust", "when": "2026-11-01T00:13:44", "verdict": "FAIL at corr"}
 {"id": "graziani_rev", "when": "2026-11-01T00:45:32", "verdict": "PASS"}
+{"id": "graziani_rev", "when": "2026-11-01T01:56:29", "verdict": "PASS"}
