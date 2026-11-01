@@ -9,8 +9,8 @@ profile; the debrief sees the day's closed tickets; the monitor sees the issues 
 import datetime as dt
 import json
 
-from desk import (cli, forecasts, intel, journal, memory, news, paths, playbooks, research, systematic, tickets,
-                  triggers)
+from desk import (cli, forecasts, intel, journal, market_model, memory, news, paths, playbooks, research, systematic,
+                  tickets, triggers)
 
 HEAD = cli.HEAD
 
@@ -106,6 +106,11 @@ def build(role, job=None):
                             "against a coin flip) feeds your score and your token share. Only a calibrated PROB pays: "
                             "a confident wrong call costs more than a confident right one earns",
                             forecasts.brief(role, t)))
+        out.append(_section("Your market model: your own view of the markets, kept between runs (model set SYM "
+                            "bias=.. regime=.. levels=a,b conviction=1-3 edges=x,y \"drivers\"; model view \"..\"). "
+                            "Refresh the stale ones or drop them. The model itself is not graded: put a forecast on "
+                            "each bias you hold, or it earns nothing. desk_biases is every pod's live bias",
+                            market_model.brief(role, t)))
         alloc = paths.read_json(paths.STATE / "alloc.json", {})
         if alloc.get("token_shares"):
             out.append(_section("Your token share this week: how much of the pods' token pool you get to think "

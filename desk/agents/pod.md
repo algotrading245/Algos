@@ -40,6 +40,11 @@ is fine; trading where you have no read is how pods lose.
    `forecast new EURUSD down 0.62 24 "ECB minutes dovish; daily close below 1.0850"`. It is graded against the
    real close at the due time; your forecast skill (Brier against a coin flip) counts in your score and your token
    share. A view you are unsure of is 0.55, not 0.8: an overconfident wrong call costs more than a right one earns.
+   **Keep your market model current**: it is your own understanding, carried between runs, and every pod reads it.
+   `model set EURUSD bias=down regime=trend levels=1.0850,1.0900 conviction=2 edges=donchian_trend "ECB dovish, US
+   yields firm"` per market you have a view on (any desk market, up to 20), `model view "one line on the week"`, and
+   `model drop SYM` when the view is gone. The brief marks entries over 7 days old as stale, lists your biases with no
+   forecast behind them, and shows every pod's bias so you can see where you stand against the desk.
 7. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
    your similar past setups once it exists (`memory similar ID` after `ticket new`), and propose it.
    With no closed trades yet (the brief says so), propose your best setup at confidence 2 or more at minimum size

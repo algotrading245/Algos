@@ -24,12 +24,16 @@ forecast new SYM up|down PROB HOURS "why" [level=PRICE]   a pod's call: SYM clos
                                                    graded daily against the real price, the skill feeds the pod's
                                                    score and token share
 forecast list [POD] [open|graded|void] [n=20] | forecast skill [POD]
+model set SYM bias=up|down|flat [regime=trend|range|breakout|volatile|quiet] [levels=a,b] [conviction=1-3]
+          [edges=x,y] ["drivers"]                  a pod's own view of a market (any desk market), kept between runs
+model view "text" | drop SYM                       the pod's one-line view of the week; forget a market
+model show [POD] | log [POD] | consensus           a pod's model (stale after 7 days), its changes, every pod's bias
 scores                                            the scorekeeper's last scores and the pod allocation
 live-gate                                          the live gate, evaluated now (it also writes reports/live_gate.md)
 """
 from pathlib import Path
 
-from desk import cli, forecasts, live_gate, memory, paths, playbooks, scorekeeper, tickets
+from desk import cli, forecasts, live_gate, market_model, memory, paths, playbooks, scorekeeper, tickets
 from desk.cli import HEAD, Refused
 
 EDITORS = (HEAD, "")  # the head trader, or the owner (no role)
@@ -284,6 +288,48 @@ def forecast(args):
         raise Refused(str(e))
 
 
+def _me(kv, cfg, what):
+    """The pod acting: a pod as itself, or the owner naming one with pod=POD."""
+    me = cli._pod_role(cfg)
+    if me is None:
+        if cli.role() != "":
+            raise Refused(f"only a pod (or the owner, with pod=POD) {what}")
+        return _pod(kv.get("pod", ""), cfg)
+    if kv.get("pod", me) != me:
+        raise Refused(f"a pod {what} as itself")
+    return me
+
+
+def model(args):
+    pos, kv = _kv_split(args)
+    usage = ('model show [POD] | set SYM bias=up|down|flat [regime=..] [levels=a,b] [conviction=1-3] [edges=x,y] '
+             '["drivers"] | view "text" | drop SYM | log [POD] | consensus')
+    if not pos or pos[0] not in ("show", "set", "view", "drop", "log", "consensus"):
+        raise Refused(usage)
+    op, rest = pos[0], pos[1:]
+    if op == "consensus":
+        return market_model.consensus()
+    cfg = paths.config()
+    if op in ("show", "log"):
+        pod = _pod(rest[0], cfg) if rest else (cli._pod_role(cfg) or _pod(kv.get("pod", ""), cfg))
+        return market_model.brief(pod) if op == "show" else market_model.history(pod, int(kv.get("n", 20)))
+    me = _me(kv, cfg, "edits its market model")
+    try:
+        if op == "view":
+            return {"ok": True, "view": market_model.set_view(me, " ".join(rest))["view"]}
+        if not rest:
+            raise Refused(usage)
+        if op == "drop":
+            market_model.drop(me, rest[0])
+            return {"ok": True, "dropped": rest[0].upper()}
+        fields = {k: v for k, v in kv.items() if k != "pod"}
+        if len(rest) > 1:
+            fields["drivers"] = " ".join(rest[1:])
+        return {"ok": True, rest[0].upper(): market_model.set_market(me, rest[0], **fields)}
+    except ValueError as e:
+        raise Refused(str(e))
+
+
 def scores(_args):
     return {"scores": paths.read_json(scorekeeper.SCORES, {}), "alloc": paths.read_json(scorekeeper.ALLOC, {})}
 
@@ -293,5 +339,6 @@ def gate(_args):
 
 
 for _name, _fn in (("board", board), ("memory", memory_cmd), ("playbook", playbook), ("edge", edge),
-                   ("scores", scores), ("live-gate", gate), ("intel", intel_cmd), ("forecast", forecast)):
+                   ("scores", scores), ("live-gate", gate), ("intel", intel_cmd), ("forecast", forecast),
+                   ("model", model)):
     cli.register(_name, _fn)
