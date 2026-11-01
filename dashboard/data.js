@@ -1,197 +1,59 @@
 window.AURUM = {
- "generated": "2026-10-19T04:17",
+ "generated": "2026-11-01T02:34",
  "pipeline": {
-  "about": "The 20 steps every idea goes through, in order; an idea stops at the first failed gate. 'agent' is the role file in .claude/agents/, 'orchestrator' is the main Opus session. The dashboard (python tools/dashboard.py) reads this file.",
+  "about": "The 5 steps every idea goes through, one idea after another (owner 2026-10-22); an idea stops at the first failed gate and the next starts at once. The one queue is docs/ideas/queue.jsonl (new -> testing -> tester -> hydra/funded/both, or rejected). 'agent' is the role file in .claude/agents/ or the prompt in tools/autopilot/prompts/. The dashboard (python tools/dashboard.py) reads this file.",
   "phases": {
-   "A": "Measure",
-   "B": "Ideas and data",
-   "C": "Prototype",
-   "D": "Proof",
-   "E": "Fit with the book",
-   "F": "Build",
-   "G": "Live test",
-   "H": "Go live"
+   "A": "Find",
+   "B": "Test",
+   "C": "Verify",
+   "D": "Integrate",
+   "E": "Judge"
   },
   "steps": [
    {
     "n": 1,
     "phase": "A",
-    "name": "Set the measure",
-    "detail": "P(5x in a month) = N(N^-1(0.2) + Sharpe sqrt(1/12)) for Hydra; first-payout time and failure rate for Funded",
-    "model": "opus",
-    "agent": "orchestrator",
+    "name": "Find the next idea",
+    "detail": "Rotates four sources: prebuilt edges (GitHub, MQL5 CodeBase, Quantpedia, QuantConnect) to improve, research papers read in full, ML models and DRL models. Checks each against the rejected families and queues it in docs/ideas/queue.jsonl; simple rules go to docs/ideas/specs/ for idea_engine.py. Also fetches data the queue asks for. Aims at the book's gaps (tools/gaps.py) and the portfolio manager's weekly docs/ideas/steer.md (owner 2026-10-22).",
+    "model": "sonnet",
+    "agent": "finder",
     "gate": null
    },
    {
     "n": 2,
     "phase": "B",
-    "name": "Find ideas",
-    "detail": "Papers and concepts, checked against the rejected list in docs/HANDOFF.md and docs/candidates.json; up to 5 a week",
-    "model": "haiku searches, opus picks",
-    "agent": "researcher",
-    "gate": null
+    "name": "Build and test in Python with the gates",
+    "detail": "Builds the idea (or the improved prebuilt edge) in research/ on all the data before the holdout (2025-10-13), at 1x, 1.5x and 2x costs, and runs tools/gates.py (portfolio rule, owner 2026-10-22): Sharpe >= 0.2 in both halves, profitable at 1.5x costs, correlation <= 0.30 with the book and with each leg, a reason to believe (a published source, or the same parameters profitable on 3+ markets), the equal-risk book Sharpe from 2018 up by >= 0.03, and book DSR >= 0.90 over all trials. A FAIL is logged and the next idea starts; a PASS gets a standalone MQL5 EA compiled to 0/0 and a queued tester job.",
+    "model": "sonnet",
+    "agent": "builder",
+    "gate": "halves, costs, corr, belief, book, dsr"
    },
    {
     "n": 3,
-    "phase": "B",
-    "name": "Read the full paper",
-    "detail": "Definitions, tables, costs, sample; no testing from an abstract",
-    "model": "opus",
-    "agent": "orchestrator",
-    "gate": null
+    "phase": "C",
+    "name": "Strategy Tester to 2025-09-30",
+    "detail": "tools/autopilot/tester_step.py runs the queued job in C:\\MetaTrader 5 - Tester on FTMO's real ticks and compares it with the Python figures; the tester agent only starts when the script asks for help.",
+    "model": "script, haiku when asked",
+    "agent": "tester",
+    "gate": "tester"
    },
    {
     "n": 4,
-    "phase": "B",
-    "name": "Get the data",
-    "detail": "tools/ downloaders into marketdata/",
-    "model": "haiku",
-    "agent": "researcher",
+    "phase": "D",
+    "name": "Integrate switched off",
+    "detail": "The leg goes into the EA it suits best, AurumHydra (5x goal), AurumFunded (prop rules) or both, as an input that is off by default, compiled to 0/0; a leg on vs off tester run shows what it adds.",
+    "model": "sonnet",
+    "agent": "builder",
     "gate": null
    },
    {
     "n": 5,
-    "phase": "C",
-    "name": "Check the data",
-    "detail": "Time zone, 23:00-01:00 rollover quotes, gaps, duplicates",
-    "model": "sonnet",
-    "agent": "quant-coder",
-    "gate": null
-   },
-   {
-    "n": 6,
-    "phase": "C",
-    "name": "Prototype",
-    "detail": "research/<idea>.py; for ML: replicate the paper, purge and embargo, several seeds, simple baselines",
-    "model": "sonnet",
-    "agent": "quant-coder",
-    "gate": null
-   },
-   {
-    "n": 7,
-    "phase": "C",
-    "name": "Real costs, then 1.5-2x",
-    "detail": "Measured spreads and fills; writes marketdata/candidates/<id>.csv and <id>_stress.csv",
-    "model": "sonnet",
-    "agent": "quant-coder",
-    "gate": "costs"
-   },
-   {
-    "n": 8,
-    "phase": "D",
-    "name": "Out of sample",
-    "detail": "Settings fitted to 2017, judged from 2018; shifted windows, every year, random-entry baseline",
-    "model": "opus",
-    "agent": "reviewer",
-    "gate": "halves"
-   },
-   {
-    "n": 9,
-    "phase": "D",
-    "name": "Deflated Sharpe",
-    "detail": "Every trial counted (docs/trials.jsonl + 47 before the log)",
-    "model": "opus",
-    "agent": "reviewer",
-    "gate": "dsr"
-   },
-   {
-    "n": 10,
     "phase": "E",
-    "name": "Correlation and book Sharpe",
-    "detail": "Against the Hydra book and each leg; weight fitted to 2017",
+    "name": "Judge and review",
+    "detail": "The judge reads the tester results against the Python figures, has the reviewer check the EA change with a fresh context, and records the verdict on the queue item (hydra, funded, both or rejected). It also handles demo orders and ALERTs; the monitor checks the FTMO demo nightly. Nothing goes live without the owner.",
     "model": "opus",
-    "agent": "reviewer",
-    "gate": "corr"
-   },
-   {
-    "n": 11,
-    "phase": "E",
-    "name": "Goal simulation",
-    "detail": "Hydra's P(5x) and the prop simulators (tools/backtest_prop.py, prop_candidates.py)",
-    "model": "sonnet runs, opus judges",
-    "agent": "quant-coder",
-    "gate": "goal"
-   },
-   {
-    "n": 12,
-    "phase": "F",
-    "name": "Standalone MQL5 EA",
-    "detail": "Broker stops, unique magic, state that survives a restart, server-clock check",
-    "model": "sonnet",
-    "agent": "quant-coder",
-    "gate": null
-   },
-   {
-    "n": 13,
-    "phase": "F",
-    "name": "Compile 0/0",
-    "detail": "metaeditor64 /compile: 0 errors, 0 warnings",
-    "model": "sonnet",
-    "agent": "quant-coder",
-    "gate": null
-   },
-   {
-    "n": 14,
-    "phase": "F",
-    "name": "Merge into Hydra and Funded",
-    "detail": "Off by default, through SizeMult() and the prop guards",
-    "model": "sonnet, opus reviews",
-    "agent": "quant-coder",
-    "gate": null
-   },
-   {
-    "n": 15,
-    "phase": "G",
-    "name": "Strategy Tester",
-    "detail": "Real ticks from 2024-01 on FTMO's data; must match the Python figures",
-    "model": "sonnet runs, opus judges gaps",
-    "agent": "tester-operator",
-    "gate": null
-   },
-   {
-    "n": 16,
-    "phase": "G",
-    "name": "Leg on vs off in the main EA",
-    "detail": "Return per drawdown must rise; no day stop in Funded",
-    "model": "sonnet runs, opus decides",
-    "agent": "tester-operator",
-    "gate": null
-   },
-   {
-    "n": 17,
-    "phase": "G",
-    "name": "Demo forward test 2-4 weeks",
-    "detail": "FTMO demo terminal; daily check-ins in docs/demo_log.md, weekly review",
-    "model": "haiku daily, opus weekly",
-    "agent": "monitor",
-    "gate": null
-   },
-   {
-    "n": 18,
-    "phase": "H",
-    "name": "Recheck firm rules, pick preset",
-    "detail": "The firm's own pages on the day",
-    "model": "opus",
-    "agent": "orchestrator",
-    "gate": null
-   },
-   {
-    "n": 19,
-    "phase": "H",
-    "name": "Buy or go live",
-    "detail": "The owner only",
-    "model": "owner",
-    "agent": "owner",
-    "gate": null
-   },
-   {
-    "n": 20,
-    "phase": "H",
-    "name": "Monitor, handoff, push",
-    "detail": "Daily check-ins; docs/HANDOFF.md; commit and push",
-    "model": "haiku monitors, sonnet writes",
-    "agent": "monitor",
-    "gate": null
+    "agent": "judge",
+    "gate": "review"
    }
   ]
  },
@@ -201,9 +63,10 @@ window.AURUM = {
    {
     "id": "breakout",
     "name": "USD/JPY London breakout",
+    "belief_recheck": "2026-10-23 builder: same parameters, real costs, 9 markets (research/breakout_markets.py, marketdata/candidates/breakout_markets.csv): 7 profitable, AUDJPY -0.32 and AUDUSD -0.26 lose; gates.py belief FAIL (needs all of 3+). Other gates pass. Leg already runs in the demo at step 17 and was left at status tester: the judge decides whether it stays on the published/own-test belief or is pulled.",
     "source": "retail London-breakout concept, own test; research/london_breakout.py, research/breakout_ticks.py",
     "status": "tester",
-    "step": 17,
+    "step": 5,
     "ea": "mql5/Experts/AurumBreakout/ (standalone), AurumFunded 1.03 and AurumHydra 1.33 off by default (InpBreakRiskPct)",
     "summary": "Range 01:00-09:00 server, each side once a day on a break 10:00-18:00, stop at the far side, flat at 18:00. Sharpe 1.18 to 2017 / 0.83 from 2018 at the measured 1.2 bp, 0.59 at 1.5 bp; |corr| with Hydra <= 0.03.",
     "stress_sharpe": 0.59,
@@ -221,47 +84,52 @@ window.AURUM = {
     "notes": "The gates' own 2017-fitted weight (k=0.5 of Hydra's volatility) adds nothing from 2018 (3.37 -> 3.36): the leg was stronger to 2017 (1.18) than after (0.83), so the fit over-weights it. At AurumFunded's tested size (weight 1 = 0.125% risk) Hydra 3.37 -> 3.43. HANDOFF's 0.5% risk for Hydra (weight 4) gives about 3.46. The tester run decides whether it stays. Step 16 base: j3 legs off (AurumFunded 1.03, backtests/2026-10-17_0505_AurumFunded_funded_off) +167.7%, 6.67% eq DD, 17 day stops - matches the model once the 1.4 cushion cap of 1.01 is counted (research/funded_tester_gap.py). The legs-on run (both candidates) should give about +185-190% and 7.5-8% DD; well under the base's growth would count against the legs. Legs-on run (2026-10-17 07:10): +221.5% / 8.28%, step 16 passed in AurumFunded. j4 (AurumHydra 5x preset) was a set-up fault: 12 of 16 symbol inputs on another broker's names, one goal round at a 100 deposit; j5 reruns Hydra at size 1 from 10,000 on FTMO names (preset AurumHydra_FTMO_size1.set; model legs off +1184% / 10.7%, on +1574% / 11.5%, research/hydra_tester_expect.py). Step 17 (demo with the legs on) needs the owner: a3. j5 (2026-10-17 10:05): no valid pair - the tester kept j4's inputs that the size1 preset left out, so both runs had the legs on plus InpMonthEndBoost=2 and no halt: +1460.44% / 13.11% eq DD both times (return per DD 111, ~97% of the legs-on model's log growth). The preset now pins those inputs at the EA defaults; j6 reruns the pair and decides Hydra's step 16. j6 (2026-10-17 13:10): step 16 passed in AurumHydra too (off +725.1% / 12.48% -> on +1076.2% / 15.54%, return per DD 58.1 -> 69.2), USDJPY 9,695 -> 25,860; the breakout lost about 1 point in 2026-01, the legs-on run's deepest month, and gave +4.1 points in 2024-07, the legs-off run's. Step 16 done in both EAs; step 17 (demo forward test) waits on the owner's a3.",
     "gates": {
      "id": "breakout",
-     "when": "2026-10-17T01:19:58",
-     "verdict": "PASS",
+     "when": "2026-10-23T01:13:14",
+     "verdict": "FAIL at belief",
      "gates": [
       {
        "gate": "halves",
        "pass": true,
-       "figure": "1.18 / 0.83",
-       "rule": ">= 0.5 to 2017 and from 2018"
+       "figure": "1.10 / 0.84 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
       },
       {
        "gate": "costs",
        "pass": true,
        "figure": "0.59",
-       "rule": ">= 0.3 at 1.5x cost"
-      },
-      {
-       "gate": "dsr",
-       "pass": true,
-       "figure": "0.969 (N=47, luck bar 0.55)",
-       "rule": ">= 0.9"
+       "rule": "> 0.0 at 1.5x cost"
       },
       {
        "gate": "corr",
        "pass": true,
-       "figure": "book -0.00, max leg hold -0.03",
-       "rule": "|book| <= 0.2, |leg| <= 0.3"
+       "figure": "book -0.00, max leg grid +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
       },
       {
-       "gate": "goal",
+       "gate": "belief",
+       "pass": false,
+       "figure": "7/9 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
        "pass": true,
-       "figure": "Hydra 2018+ 3.37 -> 3.43 at weight 1; P(5x) 55.2% -> 55.9%",
-       "rule": "Sharpe gain >= 0.03, weight fixed by --weight"
+       "figure": "book 2018+ 3.27 -> 3.34",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=27117, luck bar 1.01)",
+       "rule": ">= 0.9"
       }
      ],
-     "weight": 1.0,
-     "p5x": [
-      0.5522581158607921,
-      0.5588167045143293
-     ],
-     "dry_run": true,
-     "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.809,
+      0.798
+     ]
     },
     "tester": [
      {
@@ -294,14 +162,15 @@ window.AURUM = {
       "eq_dd_max_pct": 15.54,
       "verdict": "step 16 passed in AurumHydra: legs off +725.13% / 12.48% -> on +1076.18% / 15.54%, return per drawdown 58.1 -> 69.2 (model 110 -> 136); the tester kept 83% / 87% of the model's log growth. USDJPY +9,695 -> +25,860. Legs on, the deepest stretch is 2026-01 (breakout -1.0, noise -3.9 points); legs off it is 2024-07/08, which the legs offset (research/hydra_j6_compare.py)."
      }
-    ]
+    ],
+    "judge_2026_10_23": "Judge: gate verdict stands, FAIL at belief (7/9 markets; AUDJPY -0.32, AUDUSD -0.18 whole sample, both about -0.4 from 2018). No AUD-session story is counted as belief (post hoc). Status stays tester (step 17 demo, approved a3), frozen: no weight increase, no new EA use. Keep or pull is the owner call, approvals a6 (pending); judge recommends keep until 3 demo months of breakout trades, then judge against expected_tester."
    },
    {
     "id": "noise",
     "name": "Noise-area intraday momentum, S&P 500 and Nasdaq",
     "source": "Zarattini, Aziz, Barbon 2025 (read in full); research/noise_area_index.py",
     "status": "tester",
-    "step": 17,
+    "step": 5,
     "ea": "mql5/Experts/AurumNoise/ (standalone), AurumFunded 1.03 and AurumHydra 1.33 off by default (InpNoiseMult)",
     "summary": "Bands of the average move from the 9:30 open, checked each half hour from 10:00 New York, trailing stop, flat at 16:00, 2% daily vol. Sharpe 0.88 at 0.75 bp (0.61 / 1.08), 0.57 at 1.5 bp; corr with Hydra -0.02.",
     "stress_sharpe": 0.57,
@@ -328,47 +197,52 @@ window.AURUM = {
     "notes": "Weight fitted to 2017: 0.61 (EA uses 0.55, 0.275 per index). Hydra from 2018 3.37 -> 3.56. Step 16 base: j3 legs off +167.7%, 6.67% eq DD, 17 day stops - matches (see the breakout's note); legs on expected about +185-190%, 7.5-8% DD. Legs-on run: +221.5% / 8.28%, step 16 passed in AurumFunded; US500.cash -57 there, flat again - look at it once Hydra's j5 is in, without refitting weights on the tester window. j4 did not test the noise leg (SP500.r / NAS100.r not found); j5 did, but legs on in both runs (inherited inputs, see the breakout's note): by symbol US100.cash +5,890, US500.cash -1,036 there (all of Hydra's legs on those symbols together, with the month-end boost, so not the noise leg's own share). j6 decides Hydra's step 16. j6 (2026-10-17 13:10): step 16 passed in AurumHydra (return per DD 58.1 -> 69.2, see the breakout's note). The legs-off run has no US100/US500 trades, so the on run's US100.cash +4,181 and US500.cash -1,092 are the noise leg's own share: the S&P half negative for the third time, but on the same 2024-26 window that Python already had flat (+1.3%), so not new evidence and the weights stay. The noise leg cost about 3.9 points in 2026-01 (the legs-on run's deepest month) and gave +3.5 in 2024-07. Step 17 waits on the owner's a3.",
     "gates": {
      "id": "noise",
-     "when": "2026-10-17T01:19:58",
+     "when": "2026-10-22T22:19:22",
      "verdict": "PASS",
      "gates": [
       {
        "gate": "halves",
        "pass": true,
-       "figure": "0.64 / 1.10",
-       "rule": ">= 0.5 to 2017 and from 2018"
+       "figure": "0.66 / 1.31 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
       },
       {
        "gate": "costs",
        "pass": true,
        "figure": "0.57",
-       "rule": ">= 0.3 at 1.5x cost"
-      },
-      {
-       "gate": "dsr",
-       "pass": true,
-       "figure": "0.938 (N=47, luck bar 0.55)",
-       "rule": ">= 0.9"
+       "rule": "> 0.0 at 1.5x cost"
       },
       {
        "gate": "corr",
        "pass": true,
-       "figure": "book -0.02, max leg cross -0.03",
-       "rule": "|book| <= 0.2, |leg| <= 0.3"
+       "figure": "book -0.02, max leg hold +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
       },
       {
-       "gate": "goal",
+       "gate": "belief",
        "pass": true,
-       "figure": "Hydra 2018+ 3.37 -> 3.56 at weight 0.609; P(5x) 55.2% -> 57.4%",
-       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+       "figure": "published Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.12 -> 3.34",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=27071, luck bar 1.01)",
+       "rule": ">= 0.9"
       }
      ],
-     "weight": 0.6088017801888469,
-     "p5x": [
-      0.5522581158607921,
-      0.5736192480341962
-     ],
-     "dry_run": true,
-     "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+     "replaces": [],
+     "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+     "profitable_months_2018": [
+      0.766,
+      0.798
+     ]
     },
     "tester": [
      {
@@ -411,13 +285,14 @@ window.AURUM = {
       "eq_dd_max_pct": 15.54,
       "verdict": "step 16 passed in AurumHydra (see the breakout's entry): return per drawdown 58.1 -> 69.2. The noise leg's own share (no index trades with the legs off): US100.cash +4,181.31, US500.cash -1,092.30 - the S&P half negative for the third time on 2024-26 data, not refitted."
      }
-    ]
+    ],
+    "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172"
    },
    {
     "id": "scan_slot_EURUSD_s25_L4_short",
     "name": "scan_slot_EURUSD_s25_L4_short",
     "status": "rejected",
-    "step": 9,
+    "step": 2,
     "notes": "Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed DSR (0.403 against 0.9), correlation (book +0.25) and goal (Hydra 2018+ 3.37 -> 3.36); no flow or paper gives it a reason. The status 'testing' was stale.",
     "gates": {
      "id": "scan_slot_EURUSD_s25_L4_short",
@@ -466,7 +341,7 @@ window.AURUM = {
     "id": "scan_slot_EURUSD_s21_L8_short",
     "name": "scan_slot_EURUSD_s21_L8_short",
     "status": "rejected",
-    "step": 9,
+    "step": 2,
     "notes": "Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed DSR (0.471 against 0.9) and goal (Hydra 2018+ 3.37 -> 3.36); no flow or paper gives it a reason. The status 'testing' was stale.",
     "gates": {
      "id": "scan_slot_EURUSD_s21_L8_short",
@@ -515,7 +390,7 @@ window.AURUM = {
     "id": "scan_cal_wed_EURUSD_s25_L2_short",
     "name": "scan_cal_wed_EURUSD_s25_L2_short",
     "status": "rejected",
-    "step": 9,
+    "step": 2,
     "notes": "Rejected 2026-10-18 (orchestrator housekeeping): gates.py 2026-10-17 failed halves (1.03 / 0.41), DSR (0.125 against 0.9) and goal (Hydra 2018+ 3.37 -> 3.33), as the scans record already said. The status 'testing' was stale.",
     "gates": {
      "id": "scan_cal_wed_EURUSD_s25_L2_short",
@@ -565,7 +440,7 @@ window.AURUM = {
     "name": "Round-number stop cascades (Osler)",
     "source": "Osler, NY Fed Staff Reports 150 (2002, 'Stop-loss orders and price cascades') and 125 (2001, 'Currency orders and exchange-rate dynamics'), both read in full 2026-10-18; PDFs in marketdata/papers/",
     "status": "rejected",
-    "step": 7,
+    "step": 2,
     "summary": "After price crosses a 00 or 50 level (last two quoted digits) it keeps going for 1-2 hours, because stop-loss buys sit just above round numbers (01-10, 51-60) and stop-loss sells just below (90-99, 40-49), while take-profits sit exactly on 00. Touches without a cross reverse more often than at arbitrary levels. Test: enter in the cross's direction once price is k pips past the level, hold 15-120 minutes.",
     "notes": "Paper facts. SR150 (Reuters minute quotes, USD/DEM, USD/JPY, GBP/USD, New York 9:00-16:00, 1996-98): 'reach' = within 0.01% of the level; 'cross' = beyond it 15 minutes after reaching it (ex post, not tradeable as defined); moves signed in the approach direction. Table V, average move 15 min after a cross, round vs arbitrary levels: DEM 6.08 vs 5.37 bp, JPY 6.89 vs 5.98, GBP 4.92 vs 4.59 (excess +0.3 to +0.9 bp). Table VI.A, crossing minus reversing episodes: JPY +1.30 bp at 15 min, +1.34 at 30, +1.26 at 1 h, +2.35 at 2 h; DEM +1.12/+0.89/+0.57/+0.85; GBP +0.77/+0.80/+0.27/+0.35; negative at 1-2 days. Stronger after 12:30 New York (thinner market), no buy/sell asymmetry, weaker on 00-only levels, survives dropping BoJ intervention months. Large cascades about once a week vs about 5 round-number crosses a day, so the average is mostly ordinary crosses. Reversal on touch: round 58-60% vs arbitrary 55-57%. Order book (RBS, 9,667 orders, 1999-2000): stop-loss buys 14.4% at 01-10 vs 7.4% at 90-99, about 17-18% at 51-60 vs 6% at 40-49 (SR125's Table I prints the 50 rows in the other order, but its difference row and SR150's Table III agree); take-profits cluster exactly at 00; stops of $50m and over are 62% within 10 points of 00. SR125 adds a simulation only (order flow calibrated to the book reproduces both effects) and says the papers are 'silent on market efficiency... no attempt to evaluate risk-adjusted profits'. SR125 quotes the actual 30-min excess after a failed bounce as 0.0014% (0.14 bp) over 0.0063% for arbitrary levels, smaller still than SR150's tables. Prior: low. The gross edge is 0.3-2.4 bp, measured with an ex post cross; our USD/JPY cost is about 1.2 bp; the data are 25+ years old, from before algorithmic stop-running. Step 5-7 test spec (quant-coder, research/osler_round.py): USDJPY and EURUSD histdata M1 2009-2026 (marketdata/histdata/*_M1.csv.gz, bid quotes, so add the spread on entry); levels at 00 and 50 (JPY xx.00/xx.50, EUR 1.xx00/1.xx50), a 00-only variant; entry at the first M1 close k = 1, 3, 5 or 10 pips beyond a level after the price was on the other side within the last 15 minutes (a real-time cross); direction = the cross; exit after 15, 30, 60 or 120 minutes, or at a stop k pips back through the level; one trade per level per hour; sessions: all hours, London, New York, New York after 12:30 ET, no entries 21:00-23:00 UTC (rollover). Null: the same rule on arbitrary levels (10,000 random level grids shifted off 00/50, as in the papers); report round minus arbitrary per trade in bp, per 10-day block win count (binomial), and the reversal rate on touch. Pass to step 8 only if round minus arbitrary is positive in both halves (to 2017, from 2018) and the net Sharpe at 1.2 bp is >= 0.5 in both halves; then gates.py with 1.5x cost. Check overlap: correlation of daily returns with the breakout leg (USD/JPY London 10:00-18:00 server) and how many trades share its hours; rejected list has 'channel breakout', so a result that is just the generic breakout in disguise (arbitrary levels as good) is a fail. Result 2026-10-18 (research/osler_round.py, full run 710 s, USDJPY and EURUSD M1 2009-01 to 2026-10, 512 variants = 2 pairs x 2 level sets x k 1/3/5/10 x hold 15/30/60/120 x stop on/off x 4 sessions, 300 arbitrary grids each, costs 1.2 / 0.8 bp; trials line osler_round:grid count 512): REJECTED at steps 5-7. Step 5 data clean (no duplicates, 96-98% of weekday minutes, volatility peak at server 15:00 = 8:30 ET, so the clock is NY+7). No variant has net Sharpe >= 0.5 in both halves (0 of 512); the median gross per trade is negative (-0.46 / -0.22 bp) and the median round minus arbitrary is negative in both halves (-0.14 / -0.09 bp), so round levels do no better than arbitrary ones. Chosen on data to 2017: USDJPY 00-only, k=1, hold 120, no stop, NY after 12:30 ET: net Sharpe -0.16 to 2017, -0.69 from 2018; round minus arbitrary +0.86 then -0.46 bp; 10-day blocks 194/372 (p 0.22); 1.5x cost -0.53; correlation with the breakout leg -0.003, no shared hours. Reference k=3 / 30 min: gross -0.4 to +0.1 bp in every session, round at the 1st-89th percentile of arbitrary grids. Touch reversal goes against the paper on both pairs and in both halves: round 56-60% vs arbitrary 58-61% (-0.9 to -2.9 pp). Whatever SR150 saw in 1996-98 is not in 2009-26 M1 data, before or after costs."
    },
@@ -574,20 +449,5013 @@ window.AURUM = {
     "name": "AurumHydra margin-aware goal size cap",
     "source": "Decision 47 (2026-10-18): the round-5 margin model research/hydra_goal_margin_model.py and the tester's broker stop-outs in 7/10/9 of 21 months at 3x/4x/5x",
     "status": "rejected",
-    "step": 5,
+    "step": 2,
     "runs": 3,
     "summary": "Choose InpGoalCap (now 50 in the target presets) so the goal sizing stops asking for sizes that end in a broker stop-out (margin level < 50%). Candidate caps are fixed sizes below the round-5 hit size (min 15, p5 20). The hit size is a ceiling and is never used as the cap value. Chosen on 2010-06..2017 month-start rounds, confirmed on 2018..2025-09, and the 21 tester months 2024.01-2025.09 are a check only. The cap is an existing input, so it is a preset value and needs no new EA code.",
-    "notes": "Run 1 2026-10-18: research/hydra_size_cap.py (quant-coder), reusing the round-5 engine with the round-5 REDO fixes: C1 explicit no-clip branch returning 1.0 plus a five-parts unit test, fix parts clipped before cross parts in the same bar (Legs.mqh:1093-1098), boost extra haircut at edge 0.7, stated limits for noise P&L (round 4's constant ticket, NSXUSD M1 missing) and balance-vs-equity sizing. Result: all checks pass (copy check diff 0, round-5 replication 39.7/28.8/22.3, C1 PASS, unit tests PASS); with fixes 3+4 cap 50 gives 39.7/28.8/22.8% over 184 months. The rule picked cap 50 (the preset) at every goal: every static cap 3-14 loses 19-25 pp of P(goal) on 'to 2017' (3x all months: cap 14 20.7% vs 50 39.7%) for near-zero stop-outs. Cap 50 binds in 55/66/76% of rounds, and the median day-1 size asked is 36/43/47. Reviewer PASS WITH CHANGES: the conclusion covers caps <=14 only, not a static cap in general. Caps 15-49 were not tested (the hit size is a fixed-size stop-out level, not a bound on a capped schedule), so a static 20-45 test is a new pre-registered trial. The identity check is true by construction. The margin rates were fitted on the tester months' stop-outs (a broker measurement). Run 2 (next): a dynamic margin-aware cap that limits size so the margin level projected after the day's orders stays above a threshold fixed before the run; it must beat static caps 20-45 as well as 50. EA input off by default, judged in the tester on 2024.01-2025.09; model figures are an upper bound only. Run 2 2026-10-19: research/hydra_size_cap2.py (+ .out.txt, quant-coder), 12 variants pre-registered (static caps 20/25/30/35/40/45/50; dynamic min(50, s_dyn) at margin-level thresholds 1.5/2/3/4/6, OM_MAX = p95 of daily ticket margin to 2017 = 0.2337), chosen to 2017, confirmed 2018-2025.09. Checks 1-5 PASS (dyn off == cap 50 on 1104 rounds, s_dyn unit test, run-1 replication 39.7/28.8/22.8, holdout). Pick cap 50 at 3x/4x/5x: no variant better than the preset. Static: caps 20-40 trade P(goal) for fewer stop-outs steadily (3x to 2017: 27.5/31.9/38.5/39.6/42.9% vs 50 44.0%); cap 45 ties 50 at 3x (44.0/15.4) and misses the edge-0.7 floor at 4x by one month. Reviewer PASS WITH CHANGES: the static result stands, but the dynamic arm was degenerate by construction and is NOT a test of a margin-aware cap: it projected margin before the EA's 50% free-margin clip and summed all the day's tickets whether open together or not, so s_dyn <= 2.9 at every threshold (binds 100% of days, ~0% goal). 36 trials (63 with run 1, 60 unique). Run 3 (the last): a corrected dynamic cap \u2014 projected margin after the clip in the EA's order (hold, grid, tickets by open_ratio), leg margin as the peak of segments open together (legs_margin basis), thresholds near 1-2, a unit test running ea_day at s_dyn with no clip checking min open margin level >= thr on to-2017 days, and a degeneracy guard printed before the sweep (stop with no verdict if s_dyn binds on >90% or <5% of to-2017 days or its median is below 15). If it cannot be built cleanly, close the idea with cap 50 kept. Run 3 2026-10-19 (the last): research/hydra_size_cap3.py (+ .out.txt, quant-coder): clip-aware projection in the EA order (hold, grid, tickets via open_ratio; peak of open-together legs_margin; per-leg plan fitted to 2017, no look-ahead), thresholds 1.1/1.25/1.5/2/3 and degeneracy guard pre-registered. Checks 1-5 PASS (cap 50 reproduces 39.7/28.8/22.8; U2 engine agreement 276908 order-instant levels, 0 below thr). Guard: ALL DEGENERATE (bind 97.8-99.2% of 4281 to-2017 days, median bound s_dyn 3.0/2.0/1.2/0.1/0.0), no sweep, 0 new trials. Reviewer PASS WITH CHANGES: the degeneracy is real, not an artefact: the legs alone cap s_dyn(1.1) at about 0.909/0.128 = 7, and the projection differs from the engine only conservatively (grid before tickets, a full fresh grid, every leg every day), which would need a 6-8x smaller book to reach 15; the carried grid drives thr >= 2. The goal preset fits only through the 50% free-margin clip, so any margin-level cap above 1 is a static cap of about 0-3, which run 1 rejected. CLOSED: keep InpGoalCap 50, no tester job, no EA change. A sizing rule on another quantity would be a new candidate (reviewer does not recommend one)."
+    "notes": "Run 1 2026-10-18: research/hydra_size_cap.py (quant-coder), reusing the round-5 engine with the round-5 REDO fixes: C1 explicit no-clip branch returning 1.0 plus a five-parts unit test, fix parts clipped before cross parts in the same bar (Legs.mqh:1093-1098), boost extra haircut at edge 0.7, stated limits for noise P&L (round 4's constant ticket, NSXUSD M1 missing) and balance-vs-equity sizing. Result: all checks pass (copy check diff 0, round-5 replication 39.7/28.8/22.3, C1 PASS, unit tests PASS); with fixes 3+4 cap 50 gives 39.7/28.8/22.8% over 184 months. The rule picked cap 50 (the preset) at every goal: every static cap 3-14 loses 19-25 pp of P(goal) on 'to 2017' (3x all months: cap 14 20.7% vs 50 39.7%) for near-zero stop-outs. Cap 50 binds in 55/66/76% of rounds, and the median day-1 size asked is 36/43/47. Reviewer PASS WITH CHANGES: the conclusion covers caps <=14 only, not a static cap in general. Caps 15-49 were not tested (the hit size is a fixed-size stop-out level, not a bound on a capped schedule), so a static 20-45 test is a new pre-registered trial. The identity check is true by construction. The margin rates were fitted on the tester months' stop-outs (a broker measurement). Run 2 (next): a dynamic margin-aware cap that limits size so the margin level projected after the day's orders stays above a threshold fixed before the run; it must beat static caps 20-45 as well as 50. EA input off by default, judged in the tester on 2024.01-2025.09; model figures are an upper bound only. Run 2 2026-10-19: research/hydra_size_cap2.py (+ .out.txt, quant-coder), 12 variants pre-registered (static caps 20/25/30/35/40/45/50; dynamic min(50, s_dyn) at margin-level thresholds 1.5/2/3/4/6, OM_MAX = p95 of daily ticket margin to 2017 = 0.2337), chosen to 2017, confirmed 2018-2025.09. Checks 1-5 PASS (dyn off == cap 50 on 1104 rounds, s_dyn unit test, run-1 replication 39.7/28.8/22.8, holdout). Pick cap 50 at 3x/4x/5x: no variant better than the preset. Static: caps 20-40 trade P(goal) for fewer stop-outs steadily (3x to 2017: 27.5/31.9/38.5/39.6/42.9% vs 50 44.0%); cap 45 ties 50 at 3x (44.0/15.4) and misses the edge-0.7 floor at 4x by one month. Reviewer PASS WITH CHANGES: the static result stands, but the dynamic arm was degenerate by construction and is NOT a test of a margin-aware cap: it projected margin before the EA's 50% free-margin clip and summed all the day's tickets whether open together or not, so s_dyn <= 2.9 at every threshold (binds 100% of days, ~0% goal). 36 trials (63 with run 1, 60 unique). Run 3 (the last): a corrected dynamic cap \u00e2\u20ac\u201d projected margin after the clip in the EA's order (hold, grid, tickets by open_ratio), leg margin as the peak of segments open together (legs_margin basis), thresholds near 1-2, a unit test running ea_day at s_dyn with no clip checking min open margin level >= thr on to-2017 days, and a degeneracy guard printed before the sweep (stop with no verdict if s_dyn binds on >90% or <5% of to-2017 days or its median is below 15). If it cannot be built cleanly, close the idea with cap 50 kept. Run 3 2026-10-19 (the last): research/hydra_size_cap3.py (+ .out.txt, quant-coder): clip-aware projection in the EA order (hold, grid, tickets via open_ratio; peak of open-together legs_margin; per-leg plan fitted to 2017, no look-ahead), thresholds 1.1/1.25/1.5/2/3 and degeneracy guard pre-registered. Checks 1-5 PASS (cap 50 reproduces 39.7/28.8/22.8; U2 engine agreement 276908 order-instant levels, 0 below thr). Guard: ALL DEGENERATE (bind 97.8-99.2% of 4281 to-2017 days, median bound s_dyn 3.0/2.0/1.2/0.1/0.0), no sweep, 0 new trials. Reviewer PASS WITH CHANGES: the degeneracy is real, not an artefact: the legs alone cap s_dyn(1.1) at about 0.909/0.128 = 7, and the projection differs from the engine only conservatively (grid before tickets, a full fresh grid, every leg every day), which would need a 6-8x smaller book to reach 15; the carried grid drives thr >= 2. The goal preset fits only through the 50% free-margin clip, so any margin-level cap above 1 is a static cap of about 0-3, which run 1 rejected. CLOSED: keep InpGoalCap 50, no tester job, no EA change. A sizing rule on another quantity would be a new candidate (reviewer does not recommend one)."
    },
    {
     "id": "china_release_aud",
     "name": "AUD/USD break after Chinese macro releases (RBA 2016)",
     "source": "T. Mathews, The Effect of Chinese Macroeconomic News on Australian Financial Markets, RBA Bulletin Dec 2016, read in full 2026-10-19 (tools/pdf_text.py; PDF in marketdata/papers/)",
-    "status": "testing",
-    "step": 4,
-    "runs": 1,
+    "status": "rejected",
+    "step": 2,
+    "runs": 2,
     "summary": "On scheduled China releases (GDP, activity, trade, CPI) take the 10-minute pre-release AUDUSD range; from the release to +60 min enter once per side on a break of it, stop at the other side, flat at +60 min or 06:00 server. AUDCAD as a second check. The direction is ours: the paper measures volatility only.",
-    "notes": "Paper facts (Table A1, AUD/USD, extra absolute move in a 20-min window, -10 to +10 min, Thomson Reuters intraday, Jan 2000-Nov 2016, bootstrapped SEs): China GDP 0.01 / 0.06*** / 0.05*** % (2000-07 / 2008-16 / full); activity -0.01 / 0.04*** / 0.02**; trade 0.01* / 0.03***; CPI 0.03*** / 0.04*** / 0.01 (full n.s.); US labour force 0.16 / 0.20 / 0.18 for comparison. Rolling 5-year regressions: activity-day volatility about double the same-time normal by 2016; GDP, CPI, trade similar late in the sample. No surprise measure (no consensus series), no direction, no cost, no trading rule; GDP release times start 2003; the text warns of pre-release leaks (Orlik 2011), so the window starts 10 min early. Figures in docs/ideas/2026-10-18.md idea 1 match the PDF. Prior low-medium: 3-6 bp extra absolute move against about 1 bp round trip, but a breakout needs continuation after the first move, which the paper does not test; the rejected post-payroll/FOMC drift and channel breakout are the nearest families, so the test must report event days against same-time non-event days. Step 5 blocked on data: China release dates and times 2010-2025.09 (NBS GDP/activity/CPI, customs trade) are not in the repo; researcher to fetch (e.g. a dated economic-calendar archive with CNY events), then holdout.drop(). AUDUSD/AUDCAD M1 are in marketdata/histdata. Runs: 1 (2026-10-19, full read)."
+    "notes": "Paper facts (Table A1, AUD/USD, extra absolute move in a 20-min window, -10 to +10 min, Thomson Reuters intraday, Jan 2000-Nov 2016, bootstrapped SEs): China GDP 0.01 / 0.06*** / 0.05*** % (2000-07 / 2008-16 / full); activity -0.01 / 0.04*** / 0.02**; trade 0.01* / 0.03***; CPI 0.03*** / 0.04*** / 0.01 (full n.s.); US labour force 0.16 / 0.20 / 0.18 for comparison. Rolling 5-year regressions: activity-day volatility about double the same-time normal by 2016; GDP, CPI, trade similar late in the sample. No surprise measure (no consensus series), no direction, no cost, no trading rule; GDP release times start 2003; the text warns of pre-release leaks (Orlik 2011), so the window starts 10 min early. Figures in docs/ideas/2026-10-18.md idea 1 match the PDF. Prior low-medium: 3-6 bp extra absolute move against about 1 bp round trip, but a breakout needs continuation after the first move, which the paper does not test; the rejected post-payroll/FOMC drift and channel breakout are the nearest families, so the test must report event days against same-time non-event days. Step 5 blocked on data: China release dates and times 2010-2025.09 (NBS GDP/activity/CPI, customs trade) are not in the repo; researcher to fetch (e.g. a dated economic-calendar archive with CNY events), then holdout.drop(). AUDUSD/AUDCAD M1 are in marketdata/histdata. Runs: 1 (2026-10-19, full read). Run 2 (2026-10-19, research/china_release_aud.py + .out.txt; researcher's NBS calendar marketdata/china_calendar_nbs.csv, 2015-2025.09 only, no trade, 220 events 57/163 by half): step 5 replicates the volatility for GDP and activity, not CPI (extra |move| -10..+10 min GDP 0.059/0.029 %, activity 0.044/0.027 %, CPI -0.012/-0.006 %; minute-profile peak at minute 0 in both halves, so the clock is right). Step 6-7 rule fixed before the run (10-min pre-range break, stop at the other side, flat at +60, 1.1 bp): AUDUSD net +0.099 / -0.017 R a trade (+0.23 / -0.24 bp), net Sharpe +0.30 / -0.06, event minus control +0.19 / +0.13 R per event with 90% CIs spanning 0; at 2.2 bp -0.06 / -0.19 R; AUDCAD -0.30 / -0.37 R. REJECTED at step 7: fails net R from 2018 and Sharpe >= 0.5 in both halves. The extra move is real but a breakout earns less than the spread. Per-series and narrow-range splits looked better but are diagnostics, not selected (narrow tercile 2018-on Sharpe 0.30 anyway). Control days gross +0.08-0.15 R before cost (bid-only fill-at-level bias, if any, favours the rule, so the rejection is not a bias artefact). 2 trials (docs/trials.jsonl china_release_aud:run2)."
+   },
+   {
+    "id": "gsr_meanrev",
+    "name": "gsr_meanrev",
+    "status": "rejected",
+    "step": 2,
+    "gates": {
+     "id": "gsr_meanrev",
+     "when": "2026-10-22T00:48:32",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.16 / -0.05",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "0.02",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.000 (N=26678, luck bar 1.74)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.04, max leg grid +0.03",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0.393; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.39299478276872335,
+     "p5x": [
+      0.5618464571293371,
+      0.5617212864369671
+     ]
+    },
+    "reason": "Gold-silver log-ratio z-score mean reversion, D1, 18 configs: best net Sharpe 0.07 (halves 0.16/-0.05, 1.5x cost 0.02). Gate FAIL at halves, costs, DSR.",
+    "evidence": "research/gsr_meanrev.py"
+   },
+   {
+    "id": "near_miss_basket",
+    "name": "near_miss_basket",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Six near-miss rule streams (USDJPY tsmom/donchian, NZDCAD meanrev, AUDCAD/SPXUSD/USDCAD rsi) vol-scaled to 10% and equal-weighted: halves 1.06/1.02, 1.5x cost 0.81, corr and goal pass, but DSR 0.525 < 0.9 at N=27027 (luck bar Sharpe 1.03; basket Sharpe about 1.04). Diversification lifts Sharpe, not enough over the trial count. Evidence: research/near_miss_basket.py, docs/gates/near_miss_basket.json. Belief recheck 2026-10-23: each rule, parameters unchanged, on 3-4 other markets (FX rules on EURUSD/GBPUSD/AUDUSD/USDCHF, SPX rule on GRXEUR/JPXJPY/XAUUSD): all six rules lose on at least one market (e.g. USDJPY tsmom AUDUSD -0.32, NZDCAD meanrev USDCHF -0.13, SPX rsi GRXEUR -0.25), no survivor, no basket. Evidence: research/near_miss_markets.py",
+    "gates": {
+     "id": "near_miss_basket",
+     "when": "2026-10-22T01:27:28",
+     "verdict": "FAIL at dsr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.06 / 1.02",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.81",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.525 (N=27027, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.12, max leg grid +0.18",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": true,
+       "figure": "Hydra 2018+ 3.45 -> 3.57 at weight 0.946; P(5x) 56.2% -> 57.4%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.9458763568218541,
+     "p5x": [
+      0.5618464571293371,
+      0.5744182939832989
+     ]
+    }
+   },
+   {
+    "id": "gsr_meanrev_h1",
+    "name": "gsr_meanrev_h1",
+    "status": "rejected",
+    "step": 2,
+    "reason": "H1 gold-silver log-ratio z-score mean reversion, 18 configs (L 120/480/1200, entry 2-3, exit 0/0.5), 4bp-class assumed silver cost: all 18 net Sharpe negative (best -0.19). FAIL halves, costs, DSR, goal. Evidence research/gsr_meanrev_h1.py",
+    "gates": {
+     "id": "gsr_meanrev_h1",
+     "when": "2026-10-22T01:32:55",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.33 / -0.12",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.21",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.000 (N=27028, luck bar 2.08)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.09, max leg grid +0.02",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.0,
+     "p5x": [
+      0.5618464571293371,
+      0.5618464571293371
+     ]
+    }
+   },
+   {
+    "id": "tod_weekday_scan",
+    "name": "tod_weekday_scan",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at goal. 5 of 480 hour x weekday cells cleared Bonferroni (t>3.88) on the train half; 3 sit in the 23:00-01:00 rollover (XAUUSD Fri 23h, USDJPY 00h Mon and Fri; lesson 9: quote spikes, not tradeable), SPX Wed 07h died in test (t -0.09). Equal-weight stream: Hydra 3.45 -> 3.09, so no weight. Evidence: research/tod_weekday_scan.py",
+    "gates": {
+     "id": "tod_weekday_scan",
+     "when": "2026-10-22T01:44:14",
+     "verdict": "FAIL at goal",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "2.23 / 0.71",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.99",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "0.969 (N=27062, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.02, max leg quartet +0.06",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.09 at weight 54.3; P(5x) 56.2% -> 52.1%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 54.25282616739338,
+     "p5x": [
+      0.5618464571293371,
+      0.5205781707175714
+     ]
+    }
+   },
+   {
+    "id": "volforecast_sizing",
+    "name": "volforecast_sizing",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (0.04/0.96) and DSR 0.035. Gold long resized by EWMA/HAR/GARCH/LightGBM vol forecast: forecasters tie on QLIKE (-8.55 to -8.56 train); resizing adds only +0.03 to +0.06 Sharpe over fixed size and deepens max drawdown (-0.30 to -0.37); the carrier (long gold) has no edge to 2017. Evidence research/volforecast_sizing.py",
+    "gates": {
+     "id": "volforecast_sizing",
+     "when": "2026-10-22T01:48:08",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.04 / 0.96",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.61",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.035 (N=27063, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg fix +0.01",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": true,
+       "figure": "Hydra 2018+ 3.45 -> 3.51 at weight 0.0985; P(5x) 56.2% -> 56.8%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.09854107817762223,
+     "p5x": [
+      0.5618464571293371,
+      0.5677190335511603
+     ]
+    }
+   },
+   {
+    "id": "silver_legs_port",
+    "name": "silver_legs_port",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Gold bell/Tokyo/midday rules on XAGUSD M1: every leg negative net Sharpe at 4-10 bp (bell -0.11, Tokyo -0.80, midday -0.51 at 4 bp, assumed cost, silver spread unmeasured); even gross the mean is ~0 or negative. Evidence research/silver_legs_port.py",
+    "gates": {
+     "id": "silver_legs_port",
+     "when": "2026-10-22T01:51:45",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.49 / -1.02",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-1.79",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.000 (N=27064, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.00, max leg quartet +0.08",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.0,
+     "p5x": [
+      0.5618464571293371,
+      0.5618464571293371
+     ]
+    }
+   },
+   {
+    "id": "index_legs_funded",
+    "name": "index_legs_funded",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves",
+    "gates": {
+     "id": "index_legs_funded",
+     "when": "2026-10-22T02:01:41",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.73 / 0.48",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.43",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.033 (N=27065, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.06, max leg morning +0.11",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.25 at weight 1.34; P(5x) 56.2% -> 53.8%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 1.3368291177988307,
+     "p5x": [
+      0.5618464571293371,
+      0.538317884020412
+     ]
+    }
+   },
+   {
+    "id": "nn_gold_m15",
+    "name": "nn_gold_m15",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. 1D CNN and LightGBM (3 seeds each, walk-forward yearly 2012-2025-09) on gold M15 next-hour direction: accuracy 50.6-53% (CNN) and 50.5-53% (LGBM), net Sharpe at 2 bp round trip -2.49 (CNN) / -2.67 (LGBM) / -4.28 (momentum), turnover 12 position changes a day; fails halves, costs, DSR, goal. Evidence: research/nn_gold_m15.py",
+    "gates": {
+     "id": "nn_gold_m15",
+     "when": "2026-10-22T02:26:20",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-2.14 / -2.53",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-3.68",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.000 (N=27066, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg morning +0.01",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.0,
+     "p5x": [
+      0.5618464571293371,
+      0.5618464571293371
+     ]
+    }
+   },
+   {
+    "id": "rl_leg_sizing",
+    "name": "rl_leg_sizing",
+    "status": "rejected",
+    "step": 2,
+    "reason": "PPO leg sizing (3 seeds, 13 yearly folds, 36 trials) collapses to mean size ~0.11 and cuts Sharpe below fixed size 1 and vol-target in both halves (2014-17 1.03 vs 1.95; 2018+ 1.67 vs 2.57, worst seed 1.13); gates: FAIL at corr (resized copy of the book) and goal (no gain). Evidence research/rl_leg_sizing.py",
+    "gates": {
+     "id": "rl_leg_sizing",
+     "when": "2026-10-22T03:29:15",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.74 / 1.67",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.84",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "0.920 (N=27067, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.42, max leg fix +0.56",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.0,
+     "p5x": [
+      0.5618464571293371,
+      0.5618464571293371
+     ]
+    }
+   },
+   {
+    "id": "meta_label_hydra",
+    "name": "meta_label_hydra",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves",
+    "gates": {
+     "id": "meta_label_hydra",
+     "when": "2026-10-22T03:38:21",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.00 / 1.55",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "4.19",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.694 (N=27068, luck bar 4.14)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.18, max leg after +0.13",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.0,
+     "p5x": [
+      0.5618464571293371,
+      0.5618464571293371
+     ]
+    }
+   },
+   {
+    "id": "carver_breakout",
+    "name": "carver_breakout",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Carver range-position forecast (6 lookbacks, 7 markets, 2010-2025.10): net Sharpe 0.14 at 1x (0.09 to 2017, 0.18 from 2018), 0.01 at 1.5x, -0.12 at 2x; only gold (0.45) and WTI/SPX (0.2) positive, AUDCAD -0.70. Evidence: research/carver_range_breakout.py",
+    "gates": {
+     "id": "carver_breakout",
+     "when": "2026-10-22T15:00:14",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.08 / 0.18",
+       "rule": ">= 0.5 to 2017 and from 2018"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "0.01",
+       "rule": ">= 0.3 at 1.5x cost"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.000 (N=27069, luck bar 1.03)",
+       "rule": ">= 0.9"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.07, max leg hold +0.37",
+       "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "goal",
+       "pass": false,
+       "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+       "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+      }
+     ],
+     "weight": 0.0,
+     "p5x": [
+      0.5618464571293371,
+      0.5618464571293371
+     ]
+    }
+   },
+   {
+    "id": "volmanaged_mm",
+    "name": "volmanaged_mm",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Rechecked 2026-10-23 with FTMO swaps (US500.cash long -2.45 bp/night, from docs/ftmo_specs.json; research/volmanaged_mm_ftmo.py): halves -0.21/-0.07, 1.5x costs -0.47, book 3.34 -> 3.31; the real index swap alone takes buy-and-hold Sharpe to 0.14 and the managed cap-2 stream below it. Earlier: gates: FAIL at halves (0.40/0.44) and DSR 0.008, goal gain 0.03 not met. Moreira-Muir 22-day RV scaling, c fit to 2017, cap 2: SPX Sharpe delta vs buy-and-hold -0.24/-0.09 (to 2017/2018 on), XAU -0.14/+0.05, USDJPY -0.09/+0.07, EURUSD +0.09/-0.17; cap 1 collapses to buy-and-hold. The stream is long SPX, whose own Sharpe is ~0.5. Evidence: research/volmanaged_mm.py",
+    "gates": {
+     "id": "volmanaged_mm",
+     "when": "2026-10-23T01:02:45",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.21 / -0.07 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.47",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.09, max leg morning +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.31",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=27092, luck bar 1.01)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+     "profitable_months_2018": [
+      0.798,
+      0.777
+     ]
+    },
+    "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf"
+   },
+   {
+    "id": "tod_eurusd",
+    "name": "tod_eurusd",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Breedon-Ranaldo EURUSD time-of-day (short 07-13 GMT, long 13-21 GMT, hours as published, 0.8 bp/trade). Net Sharpe 0.63 to 2017 but -0.30 from 2018 (0.26 all; 0.00 at 1.5x); before cost 1.09 / 0.29: the effect decayed since the paper's 1997-2007 sample and the spread eats the rest. Years 2018-21, 2024, 2025 negative. Also fails book gain (3.34 -> 3.07). Evidence: research/tod_eurusd.py, gates.",
+    "tag": "halves",
+    "published": "https://swlb1.aeaweb.org/conference/2009/retrieve.php?pdfid=301",
+    "gates": {
+     "id": "tod_eurusd",
+     "when": "2026-10-23T01:26:35",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.63 / -0.30 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.00",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.06, max leg after +0.10",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://swlb1.aeaweb.org/conference/2009/retrieve.php?pdfid=301",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.07",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=27118, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://swlb1.aeaweb.org/conference/2009/retrieve.php?pdfid=301",
+     "profitable_months_2018": [
+      0.798,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_metalabel_breakout_size",
+    "name": "ml_metalabel_breakout_size",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Meta-label sizing of the USDJPY London breakout adds nothing: walk-forward from 2012 (logit and LightGBM, pooled 5 markets, past-only features) AUC 0.51-0.53; sized leg Sharpe 1.06 against plain 1.04 (1.30/0.89 vs 1.27/0.88), within the random-keep spread (0.87-1.01) at the same skip rate. Book from 2018 3.34 -> 3.32 replacing breakout (needs +0.03). Evidence: research/metalabel_breakout.py",
+    "tag": "book",
+    "published": "https://en.wikipedia.org/wiki/Meta-Labeling",
+    "gates": {
+     "id": "ml_metalabel_breakout_size",
+     "when": "2026-10-23T01:50:50",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.18 / 0.89 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.67",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.00, max leg grid +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://en.wikipedia.org/wiki/Meta-Labeling",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.32 replacing breakout",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=27119, luck bar 1.01)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "breakout"
+     ],
+     "published": "https://en.wikipedia.org/wiki/Meta-Labeling",
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "rebalancing_signal",
+    "name": "rebalancing_signal",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (0.19/0.32) and book gain (3.34 -> 3.26). Equity-only US500 short/long on the Harvey-Mazzoleni-Melone 60/40 rebalancing signal, threshold+calendar combined (threshold alone 0.17 full, -0.03 to 2017; calendar alone 0.19). Data from 2009 only (SPX D1), so the paper's 1997-2002 part is missing. Other markets with the same signal: NSX 0.08, GRX -0.20, JPX -0.04. Bond half of the spread is not tradable on FTMO. Evidence: research/rebalancing_signal.py, marketdata/candidates/rebalancing_signal_markets.csv",
+    "tag": "halves",
+    "published": "https://www.edhec.edu/sites/default/files/2026-03/Scientific%20paper.%20ssrn-5122748.pdf",
+    "gates": {
+     "id": "rebalancing_signal",
+     "when": "2026-10-23T02:36:50",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.19 / 0.32 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.18",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.05, max leg morning +0.08",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.edhec.edu/sites/default/files/2026-03/Scientific%20paper.%20ssrn-5122748.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.26",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26711, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.edhec.edu/sites/default/files/2026-03/Scientific%20paper.%20ssrn-5122748.pdf",
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "ma200_pullback",
+    "name": "ma200_pullback",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Quantpedia MA200 + 2 down days, 1-day hold, long only, fixed params, real costs: 6-market basket halves -0.13 / -0.01, 1.5x -0.31; singles only NSX (0.54/0.13) and USDJPY (0.33/0.11) positive in both halves, GRX/AUDCAD/JPX negative; the article's 0.95 does not reproduce on CFD costs. Evidence research/ma200_pullback.py",
+    "tag": "halves",
+    "gates": {
+     "id": "ma200_pullback",
+     "when": "2026-10-23T02:54:56",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.13 / -0.01 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.31",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.03, max leg hold +0.12",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "5/8 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.28",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26712, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "gold_bond_regime",
+    "name": "gold_bond_regime",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (Sharpe -0.37 to 2017 / 0.56 from 2018), also costs (-0.19 at 1.5x; gold swap ~5%/yr eats the edge) and corr to hold leg +0.68. Evidence research/gold_bond_regime.py",
+    "tag": "halves",
+    "published": "https://quantpedia.com/cross-asset-price-based-regimes-for-gold/",
+    "gates": {
+     "id": "gold_bond_regime",
+     "when": "2026-10-23T08:46:12",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.37 / 0.56 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.19",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.12, max leg hold +0.68",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://quantpedia.com/cross-asset-price-based-regimes-for-gold/",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.24",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26722, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://quantpedia.com/cross-asset-price-based-regimes-for-gold/",
+     "profitable_months_2018": [
+      0.798,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "opex_week_indices",
+    "name": "opex_week_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Opex-week long Mon open-Fri close, 2010-11 to 2025-10-12: gross Sharpe SPX 0.22, NSX 0.40, GRX 0.28, JPX 0.68, but index spread plus FTMO swap (long -1.6 to -10 pts/night, Wed x3, about 6 nights a week) erases it: net Sharpe SPX -0.52, NSX -0.80, GRX -0.33, JPX +0.19 (-0.06 at 1.5x). US basket halves -1.17/-0.33. Evidence: research/opex_week_indices.py",
+    "tag": "halves",
+    "gates": {
+     "id": "opex_week_indices",
+     "when": "2026-10-23T15:58:25",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-1.17 / -0.33 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-1.17",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg breakout +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "1/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.16",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26723, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.755
+     ]
+    }
+   },
+   {
+    "id": "dao_gap",
+    "name": "dao_gap",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Dao et al weekend-gap reversal, 8 FX pairs, 5% rolling-260-week gap, Mon open to Fri close, equal weight: Sharpe 0.02 to 2017 / 0.32 from 2018 (1.5x: -0.03 / 0.25; 2x 0.07 all); book 2018+ 3.34 -> 3.32. Per pair all-sample: EURUSD 0.46, NZDUSD 0.38, USDCAD 0.28, others about 0 or negative; the effect is concentrated in the second half. research/dao_weekend_gap.py",
+    "tag": "halves",
+    "published": "https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+    "gates": {
+     "id": "dao_gap",
+     "when": "2026-10-23T16:35:19",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.02 / 0.32 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.13",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.05, max leg quartet +0.15",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.32",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26724, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+     "profitable_months_2018": [
+      0.798,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "totm_us",
+    "name": "totm_us",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Turn-of-month long (buy close last day, sell close day +3) on SPXUSD+NSXUSD 2010-2025.09, 1 bp / 0.5 bp spread + 2 bp/night swap: Sharpe -0.11 to 2017 / 0.14 from 2018, -0.01 all at 1x; gross 0.12 (S&P) / 0.18 (Nasdaq); the effect is gone after costs (as Maberly-Waggoner found post-1990). Variant -2..+3 (secondary trial): S&P 0.08, Nasdaq 0.15 net. Evidence research/totm_indices.py.",
+    "tag": "halves",
+    "published": "https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+    "gates": {
+     "id": "totm_us",
+     "when": "2026-10-23T20:56:55",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.11 / 0.14 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.01",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg morning +0.07",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.23",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26725, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "overreaction_fx",
+    "name": "overreaction_fx",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (book Sharpe 0.62 to 2017, -0.00 from 2018) and book gain (3.34 -> 3.24). 5 pairs, 2sd/n=20 fade, 01:00-08:00 server, ~270 trades a pair (not the paper's ~60); gross edge 2-4 bp/trade fades in 2018+ (AUDUSD -2.7 bp, EURJPY net 0.08); the paper's effect was no-cost and decayed. Evidence: research/overreaction_fx.py output, 2026-10-23.",
+    "tag": "halves",
+    "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+    "gates": {
+     "id": "overreaction_fx",
+     "when": "2026-10-23T21:38:48",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.62 / -0.00 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.26",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.17, max leg quartet +0.25",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.24",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26726, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+     "profitable_months_2018": [
+      0.798,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "vrp_gap",
+    "name": "vrp_gap",
+    "status": "rejected",
+    "step": 2,
+    "reason": "IV-RV gap (GVZ/VIX/EVZ) top-third timing, hold 10d fixed (5/20 reported): halves -0.03/0.39, belief 2/3 markets, corr to hold leg +0.32, book 3.34->3.29. Only US500 works (SR 0.61, long-equity beta, 0.4 in market); gold negative to 2017 (-0.25), EURUSD negative everywhere (-0.36). Holds 5/20 same pattern. Paper: Bollerslev-Zhou FEDS 2007-11 read (abstract+intro; daily close-to-close RV, not high-frequency as paper needs).",
+    "tag": "halves",
+    "gates": {
+     "id": "vrp_gap",
+     "when": "2026-10-24T01:36:59",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.03 / 0.39 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.10",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.03, max leg hold +0.32",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.29",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26727, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "fx_carry_g10",
+    "name": "fx_carry_g10",
+    "status": "rejected",
+    "step": 2,
+    "reason": "G10 monthly carry net of 0.7% swap markup, spot data from 2009 only: SR -0.13 (halves -0.11/-0.16), 1.5x -0.23, 3/7 pairs profitable. Vol-cut variant B (not headline) SR 0.14, 1.5x 0.03. Evidence research/fx_carry_g10.py. NBER w14013 link unreadable, rule taken from the queue item.",
+    "tag": "halves",
+    "gates": {
+     "id": "fx_carry_g10",
+     "when": "2026-10-24T01:41:17",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.11 / -0.16 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.23",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg quartet +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "3/7 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.21",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26728, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "policy_gap",
+    "name": "policy_gap",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Policy-rate gap 63d change as weekly trend on EURUSD/GBPUSD/USDJPY: SR -0.15 (halves 0.12/-0.44, 1.5x -0.22, 1/3 pairs profitable); 126d variant 0.12 only, also fails. Evidence research/policy_gap.py, gates halves/costs/belief/book.",
+    "tag": "halves",
+    "gates": {
+     "id": "policy_gap",
+     "when": "2026-10-24T01:44:14",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.12 / -0.44 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.22",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.04, max leg cross +0.01",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "1/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.18",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26729, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "vix_vxv_spike",
+    "name": "vix_vxv_spike",
+    "status": "rejected",
+    "step": 2,
+    "reason": "VIX/VIX3M z>1.5 spike long (BSIC), US500/US100/GRXEUR 2010-2025: halves 0.66/-0.25, 2/3 markets, book 3.34->3.19; no better than a random same-length long (control SR 0.24/0.40/0.09). research/vix_vxv_spike.py",
+    "tag": "halves",
+    "gates": {
+     "id": "vix_vxv_spike",
+     "when": "2026-10-24T01:55:28",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.66 / -0.25 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.14",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.05, max leg morning +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.19",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26730, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "fx_value_rer",
+    "name": "fx_value_rer",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates FAIL at halves: net Sharpe -0.10 to 2017 / -0.53 from 2018, 1.5x -0.42, 2/7 pairs profitable. Spot-only SR -0.04 (h1 0.25, h2 -0.31); swap/markup drag makes it worse. Evidence research/fx_value_rer.py",
+    "tag": "halves",
+    "gates": {
+     "id": "fx_value_rer",
+     "when": "2026-10-24T07:22:40",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.10 / -0.53 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.42",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.00, max leg breakout +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/7 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.14",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26731, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "samehour_fx",
+    "name": "samehour_fx",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Same-half-hour continuation (5-day mean slot return, 26 slots/day, 4 markets): gross edge 0.45 bp/day EURUSD, -0.06 USDJPY, 3.3 XAUUSD, -1.06 SPX against 20-34 bp/day of round-trip cost from 26 trades a day; net Sharpe -10 both halves, 0/4 markets profitable at 1x. Evidence: research/samehour_fx.py, docs/gates/samehour_fx.json.",
+    "tag": "halves",
+    "gates": {
+     "id": "samehour_fx",
+     "when": "2026-10-24T08:09:34",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-10.32 / -10.35 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-15.53",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.04, max leg quartet +0.06",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 0.52",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.000 (book, N=26732, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.479
+     ]
+    }
+   },
+   {
+    "id": "cot_contrarian",
+    "name": "cot_contrarian",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (SR -0.04 to 2017 / 0.28 from 2018), belief 4/7 markets profitable, book 3.34->3.24; CAD and CHF carry it, EUR -0.30, gold -0.08. Evidence research/cot_contrarian.py",
+    "tag": "halves",
+    "gates": {
+     "id": "cot_contrarian",
+     "when": "2026-10-24T11:43:54",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.04 / 0.28 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.10",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.04, max leg quartet +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "4/7 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.24",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26739, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "hau_rey_fx",
+    "name": "hau_rey_fx",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Hau-Rey relative-equity flow rule (20d/1sd/10d, EURUSD/USDJPY/EURJPY, 2010-11..2025-10-10) has no edge: book Sharpe -0.09 (to 2017) / 0.07 (2018+), -0.05 at 1.5x. Per pair: EURUSD -0.41, USDJPY 0.07, EURJPY 0.35; contrarian sign -0.20 (EURUSD +0.26 only), so the sign is not consistent on 3/3. Paper shows contemporaneous, not predictive, evidence. Evidence research/hau_rey_equity_fx.py",
+    "tag": "halves",
+    "published": "https://www.nber.org/system/files/working_papers/w9398/w9398.pdf",
+    "gates": {
+     "id": "hau_rey_fx",
+     "when": "2026-10-24T12:19:54",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.09 / 0.07 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.05",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.00, max leg hold +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/system/files/working_papers/w9398/w9398.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.27",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26740, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/system/files/working_papers/w9398/w9398.pdf",
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "baltussen_mac5",
+    "name": "baltussen_mac5",
+    "status": "rejected",
+    "step": 2,
+    "reason": "MAC(5) reversal on US500/US100 daily (2010-11 to 2025-10-10): book SR -0.26 / -0.18 by halves, -0.34 at 1.5x; DAX -0.32, Nikkei -0.50 (belief markets also negative); sign-only -0.38. Reversal gross edge is ~0 after 2010 (paper sample from 1999); costs make it negative. Evidence research/baltussen_mac5.py",
+    "tag": "halves",
+    "published": "https://personal.eur.nl/vanbekkum/2018%20JFE%20BaltussenVanBekkumDa.pdf",
+    "gates": {
+     "id": "baltussen_mac5",
+     "when": "2026-10-24T12:23:05",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.26 / -0.18 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.34",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg cross +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://personal.eur.nl/vanbekkum/2018%20JFE%20BaltussenVanBekkumDa.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.18",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26741, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://personal.eur.nl/vanbekkum/2018%20JFE%20BaltussenVanBekkumDa.pdf",
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "chen_tsang_slope_fx",
+    "name": "chen_tsang_slope_fx",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Relative term-spread (10y-3m) monthly FX rule has the wrong sign: book SR -0.81/-0.14 by halves, -0.60 at 1.5x, 1/5 pairs profitable (AUDUSD only, and AUDUSD positions agree 95% with carry). Flipped sign +0.53/-0.26 is a post-hoc variant that fails h2. Matches the paper note that out-of-sample it does not beat the random walk.",
+    "tag": "halves",
+    "gates": {
+     "id": "chen_tsang_slope_fx",
+     "when": "2026-10-24T12:27:12",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.81 / -0.14 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.60",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg hold +0.00",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "1/5 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.25",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26742, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    },
+    "evidence": "research/chen_tsang_slope_fx.py, marketdata/candidates/chen_tsang_slope_fx.csv"
+   },
+   {
+    "id": "safari_cubic",
+    "name": "safari_cubic",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Published-parameter cubic trend rule (b 1.29, c -0.62) on 7 markets 2010-2025: book SR -0.77/-0.58 by halves, -0.94 at 1.5x, 1/7 markets profitable. Extreme-only fade version: +0.17 overall but h1 -0.09 (fails halves), AUDCAD no h2 data; weak-trend side -0.61.",
+    "evidence": "research/safari_cubic.py, marketdata/candidates/safari_cubic.csv",
+    "tag": "halves",
+    "gates": {
+     "id": "safari_cubic",
+     "when": "2026-10-24T12:31:15",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.77 / -0.58 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.94",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg hold +0.10",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "1/7 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.06",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26743, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "ml_regime_filter_gold_hold",
+    "name": "ml_regime_filter_gold_hold",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (0.22 / 0.15), belief and book (3.34 -> 3.23 replacing hold). Walk-forward GBM/logit AUC 0.59-0.60 but the filter skips 69-73% of signal days and the filtered hold falls from SR 0.53 to 0.11-0.34 from 2018 (2013-17 also worse for 3 of 4 models). Evidence research/ml_regime_filter_gold_hold.py",
+    "tag": "halves",
+    "gates": {
+     "id": "ml_regime_filter_gold_hold",
+     "when": "2026-10-24T12:35:49",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.22 / 0.15 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.08",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.06, max leg quartet +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.23 replacing hold",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26744, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "hold"
+     ],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "btc_hour_2123",
+    "name": "btc_hour_2123",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Padysak-Vojtko long 21-23 UTC: gross edge halves (12bp/day to 2022-02, 6bp after); at 5bp spread, swap left OUT, SR 1.48 / -0.08 by halves; with the -30%/yr swap (hold crosses rollover) negative in both halves (BTC -0.73, 1.5x -1.96). ETH, LTC the same. Evidence research/btc_hour_2123.py",
+    "tag": "halves",
+    "published": "https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+    "gates": {
+     "id": "btc_hour_2123",
+     "when": "2026-10-24T13:31:50",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "1.48 / -0.08 (split at its middle 2021-09-09)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.44",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.03, max leg fall +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.34 -> 3.43",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26745, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+     "profitable_months_2018": [
+      0.798,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "btc_weekend_1521",
+    "name": "btc_weekend_1521",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Long BTC 15-21 UTC on Sat/Sun/NYSE holidays: gross 14.7bp/trade (Sun 22, Sat 5), SR 0.70 at 1x but halves 1.16 / -0.27 (edge gone after 2022: SR 0.14 BTC, -0.02 ETH, -0.09 LTC); book 2018+ 3.34 -> 3.36 (+0.02 < 0.03). Evidence research/btc_weekend_1521.py",
+    "tag": "halves",
+    "gates": {
+     "id": "btc_weekend_1521",
+     "when": "2026-10-24T13:34:15",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "1.16 / -0.27 (split at its middle 2021-09-10)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.42",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg breakout +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "3/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.36",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26746, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.819
+     ]
+    }
+   },
+   {
+    "id": "commod_same_month",
+    "name": "commod_same_month",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Keloharju same-calendar-month commodity L/S (top3/bottom3 of 15, 2010+): gross SR 0.47 (halves 0.22/0.69) but financing 4%/yr + 8bp turnover leaves 1x SR 0.05 (-0.24/0.30), 1.5x -0.16. Placebo gross -0.54 as the paper says, so the effect is real in sign but too small after costs. Evidence research/commod_same_month.py",
+    "tag": "halves",
+    "gates": {
+     "id": "commod_same_month",
+     "when": "2026-10-24T13:37:19",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.24 / 0.30 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.16",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.00, max leg hold +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.28",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26747, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "crypto_xs_mom",
+    "name": "crypto_xs_mom",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Rejected at halves (-0.29/-0.58) and costs (1.5x SR -0.75). Gross SR 0.69 (6.5bp/day) from 2018-06 (no pre-2018 half: XLM/ADA start later), no-swap net 0.60, but -30%/yr swap on both legs (gross 1.0) turns 1x to -0.27; 2022+ no-swap 0.22 vs gross 0.33. 7/21/28d and broad-universe variants no better (broad gross 0.29). Evidence research/crypto_xs_mom.py",
+    "tag": "halves",
+    "gates": {
+     "id": "crypto_xs_mom",
+     "when": "2026-10-24T13:40:13",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.29 / -0.58 (split at its middle 2022-02-03)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.75",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg grid +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.15",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26748, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.819
+     ]
+    }
+   },
+   {
+    "id": "ml_har_rv_leg_sizing",
+    "name": "ml_har_rv_leg_sizing",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at book. HAR-RV multiplier (clip 0.5-1.5) on breakout (USDJPY RV) and noise (SPXUSD RV) lowers book 2018+ 3.01 -> 2.95 (gate view 3.34 -> 3.24); breakout Sharpe 0.97->0.87, noise 1.00->0.88; losing months unchanged 40/182, worst month -7.80% -> -7.94%; trailing vol-target control 2.94 and random-multiplier control 2.99 (max 3.07) do as well or better. Evidence research/ml_har_rv_leg_sizing.py",
+    "tag": "book",
+    "published": "https://doi.org/10.1093/jjfinec/nbp001",
+    "gates": {
+     "id": "ml_har_rv_leg_sizing",
+     "when": "2026-10-24T13:49:36",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.18 / 1.27 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.73",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg grid +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://doi.org/10.1093/jjfinec/nbp001",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.24 replacing breakout,noise",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26749, luck bar 1.04)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "breakout",
+      "noise"
+     ],
+     "published": "https://doi.org/10.1093/jjfinec/nbp001",
+     "profitable_months_2018": [
+      0.798,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_regime_hmm_book",
+    "name": "ml_regime_hmm_book",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Own-numpy 2-state HMM (hmmlearn missing) on book return+10d vol, yearly refit, filtered P(bad)>0.6 -> 0.5x: book 2018+ 3.006->2.907, worst month -7.8%->-8.9%, losing months 40->39; random halving control 2.88 (max 3.08); gate book 3.34->3.32. Evidence research/ml_regime_hmm_book.py",
+    "tag": "corr",
+    "gates": {
+     "id": "ml_regime_hmm_book",
+     "when": "2026-10-24T13:54:42",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "2.55 / 3.19 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "2.04",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.95, max leg cross +0.51",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.32",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26750, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "drl_leg_sizing_ppo",
+    "name": "drl_leg_sizing_ppo",
+    "status": "rejected",
+    "step": 2,
+    "reason": "PPO leg-weight sizing (5 seeds, train to 2019, test 2022+): book Sharpe with risk layer 2.35/1.87/1.07/1.29/0.48 vs equal risk 4.11 and vol-target 3.71; policies collapse to mean multiplier ~0.05; gates: FAIL at costs, corr, belief, book (3.34->3.30). Evidence research/drl_leg_sizing_ppo.py",
+    "tag": "costs",
+    "gates": {
+     "id": "drl_leg_sizing_ppo",
+     "when": "2026-10-24T14:04:46",
+     "verdict": "FAIL at costs",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.64 / 2.41 (split at its middle 2023-12-06)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-3.35",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.53, max leg after +0.75",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.30",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26751, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_monday_dip_ibs_indices",
+    "name": "prebuilt_monday_dip_ibs_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Monday Dip fixed rule on US500+US100 (63 trades 2010-2025): book SR 0.09, halves 0.18/0.05, only 2 of 4 markets profitable (GER40 -0.36, JPN225 -0.14); book 2018+ 3.34->3.20. Evidence research/prebuilt_monday_dip_ibs_indices.py",
+    "tag": "halves",
+    "gates": {
+     "id": "prebuilt_monday_dip_ibs_indices",
+     "when": "2026-10-24T14:14:29",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.18 / 0.05 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.06",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg fall +0.05",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.34 -> 3.20",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26752, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.798,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_grid_er_start_filter",
+    "name": "ml_grid_er_start_filter",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at belief (no source for the filter on grids, no 3+ profitable markets: grids on other crosses are unprofitable, grid_crosses.py). Also the filtered grid is weaker alone than the plain one (2018+ Sharpe 0.83 vs 0.94; robustness N=20/0.4: 0.66 to 2017 vs 0.89), the filter skips ~69% of start attempts (pre-registered limit 30%), and the book gain 3.11->3.15 is within noise. Evidence: research/grid_er_filter.py",
+    "tag": "belief",
+    "gates": {
+     "id": "ml_grid_er_start_filter",
+     "when": "2026-10-24T22:27:45",
+     "verdict": "FAIL at belief",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.92 / 0.76 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.75",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.04, max leg quartet +0.07",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.15 replacing grid",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26753, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "grid"
+     ],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "hks_periodicity",
+    "name": "hks_periodicity",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. HKS hourly periodicity (20-day same-hour mean, tercile of trailing 250d, hold 1h, ~12 trades/day, 5 markets): gross edge -4.8 to +1.1 bp/day, cost 10-25 bp/day; net Sharpe -6.2/-7.3, 0/5 markets profitable at 1x. Paper unreadable (403), rule from queue item. Evidence: research/hks_periodicity.py, docs/gates/hks_periodicity.json.",
+    "tag": "halves",
+    "gates": {
+     "id": "hks_periodicity",
+     "when": "2026-10-24T22:35:58",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-6.21 / -7.25 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-9.52",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg hold +0.08",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/5 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 0.97",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.138 (book, N=26754, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.596
+     ]
+    }
+   },
+   {
+    "id": "erb_yield_shock",
+    "name": "erb_yield_shock",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. DGS10 5d-change z>1 shock rule on XAUUSD/USDJPY/US100, 5-day hold: equal-weight Sharpe 0.09 to 2017 / 0.45 from 2018; gold 0.36/-0.03, USDJPY -0.39/0.65, NSX 0.03/0.36 net. Also book gain -0.02. Evidence research/erb_yield_shock.py",
+    "tag": "halves",
+    "published": "https://doi.org/10.2469/faj.v69.n4.1",
+    "gates": {
+     "id": "erb_yield_shock",
+     "when": "2026-10-24T22:42:29",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.09 / 0.45 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.26",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg noise +0.07",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://doi.org/10.2469/faj.v69.n4.1",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.09",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26755, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://doi.org/10.2469/faj.v69.n4.1",
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_crabel_nr7_orb_gold",
+    "name": "prebuilt_crabel_nr7_orb_gold",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves",
+    "tag": "halves",
+    "published": "https://www.mql5.com/en/code/78259",
+    "gates": {
+     "id": "prebuilt_crabel_nr7_orb_gold",
+     "when": "2026-10-25T15:52:18",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.05 / -0.06 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.22",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.03, max leg breakout +0.09",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.mql5.com/en/code/78259",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.97",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26756, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.mql5.com/en/code/78259",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "paper_gatev_ratio_xau_xag",
+    "name": "paper_gatev_ratio_xau_xag",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Gatev z-rule (60d z, in 2, out 0, stop 4, 20d) XAU/XAG: Sharpe -0.35/-0.45 per half, -0.50 at 1.5x; spreads trend, not revert (research/paper_gatev_ratio.py)",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w7032",
+    "gates": {
+     "id": "paper_gatev_ratio_xau_xag",
+     "when": "2026-10-25T16:16:00",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.35 / -0.45 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.50",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.05, max leg fix +0.01",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w7032",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.01",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26757, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w7032",
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "paper_gatev_ratio_fx_pairs",
+    "name": "paper_gatev_ratio_fx_pairs",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Gatev rule EUR/GBP, AUD/NZD, EUR/CHF: book -1.36/-0.29 per half, -1.27 at 1.5x; every pair negative (research/paper_gatev_ratio.py)",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w7032",
+    "gates": {
+     "id": "paper_gatev_ratio_fx_pairs",
+     "when": "2026-10-25T16:16:05",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-1.36 / -0.29 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-1.27",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg morning +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w7032",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.00",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26758, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w7032",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "paper_gatev_ratio_nsx_spx",
+    "name": "paper_gatev_ratio_nsx_spx",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Gatev rule NSX/SPX, GRX/SPX: book -0.73/+0.08, -0.25 at 1.5x; not profitable on any of 6 spreads (research/paper_gatev_ratio.py)",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w7032",
+    "gates": {
+     "id": "paper_gatev_ratio_nsx_spx",
+     "when": "2026-10-25T16:16:10",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.73 / 0.08 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.25",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg grid +0.01",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w7032",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.63",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26759, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w7032",
+     "profitable_months_2018": [
+      0.777,
+      0.734
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_dual_thrust_fx_gold",
+    "name": "prebuilt_dual_thrust_fx_gold",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at book. Dual Thrust N=4 k=0.5 on EURUSD/USDJPY/XAUUSD (EW book): halves 0.64/0.27, 1.5x 0.21, corr book +0.10 (breakout leg +0.22), 5/5 markets profitable, DSR 1.0, but book Sharpe 2018+ 3.11 -> 3.12 (needs +0.03). Gold fails second half (-0.21), 2x costs kill it. Evidence: research/prebuilt_dual_thrust_fx_gold.py",
+    "tag": "book",
+    "gates": {
+     "id": "prebuilt_dual_thrust_fx_gold",
+     "when": "2026-10-25T17:10:05",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.64 / 0.27 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.21",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.10, max leg breakout +0.22",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "5/5 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.12",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26760, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_dual_thrust_indices_overnight_free",
+    "name": "prebuilt_dual_thrust_indices_overnight_free",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at corr only. Dual Thrust N=4 k_long 0.3 / k_short 0.7 on SPX+NSX: halves 0.22/0.96, 1.5x 0.46, book 2018+ 3.11->3.23, DSR 1.0, but corr to noise leg +0.31 (limit 0.30; it is the same Nasdaq/S&P open-momentum). Not tuned to pass. Evidence: research/prebuilt_dual_thrust_indices.py",
+    "tag": "corr",
+    "published": "https://github.com/je-suis-tm/quant-trading",
+    "gates": {
+     "id": "prebuilt_dual_thrust_indices_overnight_free",
+     "when": "2026-10-25T17:13:07",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.22 / 0.96 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.46",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.08, max leg noise +0.31",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://github.com/je-suis-tm/quant-trading",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.23",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26761, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://github.com/je-suis-tm/quant-trading",
+     "profitable_months_2018": [
+      0.777,
+      0.819
+     ]
+    }
+   },
+   {
+    "id": "ml_regime_grid_audcad",
+    "name": "ml_regime_grid_audcad",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Pre-registered judge failed first: walk-forward logistic regression out-of-fold AUC 0.513 (< 0.55) on 688 cycles; loss share 0.25 so P(loss)>0.5 never fires, filter = plain grid (0 skip days). Gates: corr (grid +0.97), belief, book 3.11->3.01 fail. Evidence: research/ml_regime_grid_audcad.py",
+    "tag": "corr",
+    "gates": {
+     "id": "ml_regime_grid_audcad",
+     "when": "2026-10-25T17:15:39",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.89 / 0.87 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.79",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.30, max leg grid +0.97",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.01",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26762, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "paper_melvin_prins_eom_equity_hedge",
+    "name": "paper_melvin_prins_eom_equity_hedge",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at corr. Variant A (15:00-16:00 London hour on last business day, equity-conditioned, 5 pairs pooled, 2011-2025, 417 events): halves 1.02/0.51, 1.5x 0.61, but corr with the cross leg +0.53 (limit 0.30) and book 2018+ 3.11 -> 3.03. Duplicates the month-end fix flow already in the book. Variant B (reversion) SR 0.10, dies at 1.5x. Not tuned. Evidence: research/paper_melvin_prins_eom_equity_hedge.py",
+    "tag": "corr",
+    "published": "https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+    "gates": {
+     "id": "paper_melvin_prins_eom_equity_hedge",
+     "when": "2026-10-25T17:20:26",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.02 / 0.51 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.61",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.21, max leg cross +0.53",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.03",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26763, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "paper_moreira_muir_hold_sizing",
+    "name": "paper_moreira_muir_hold_sizing",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Fails book: 3.11 -> 2.96 replacing hold. Vol-managed hold (22d own-pnl variance, clip 0.25-2) halves SR 0.42/0.23 vs unmanaged 0.03/0.53; 2018+ gets worse (hold's gains come in high-vol trends), losing months 78->75, worst month not smaller. XAUUSD buy-and-hold managed 0.54 vs 0.57 (no help). Evidence research/paper_moreira_muir_hold_sizing.py",
+    "tag": "book",
+    "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+    "gates": {
+     "id": "paper_moreira_muir_hold_sizing",
+     "when": "2026-10-25T17:56:06",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.42 / 0.23 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.21",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.00, max leg quartet +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.96 replacing hold",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26764, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "hold"
+     ],
+     "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "ml_hold_ridge_sizing",
+    "name": "ml_hold_ridge_sizing",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Ridge sizing of hold: walk-forward IC 0.21 (>0.05) but sized-hold SR 0.14 to 2017 (<0.2) / 0.82 from 2018, and no belief (no paper, no other markets). Passes costs, corr, book 3.11->3.14, DSR. Gain is all 2018+ (gold trend regime); evidence research/ml_hold_ridge_sizing.py",
+    "tag": "halves",
+    "gates": {
+     "id": "ml_hold_ridge_sizing",
+     "when": "2026-10-25T18:02:57",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.14 / 0.82 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.38",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.02, max leg quartet +0.07",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.14 replacing hold",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26765, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "hold"
+     ],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "paper_nagel_vix_reversal_index",
+    "name": "paper_nagel_vix_reversal_index",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Fails halves (SR 0.41 to 2017, -0.24 from 2018) and costs (-0.02 at 1.5x). VIX-conditioned 5d reversal, hold 3d, on S&P+Nasdaq CFDs; edge is 2011-17 only, S&P -0.38 and Nasdaq -0.08 from 2018. Gold and EURUSD no better. Evidence research/paper_nagel_vix_reversal_index.py",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w17653",
+    "gates": {
+     "id": "paper_nagel_vix_reversal_index",
+     "when": "2026-10-25T18:11:06",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.41 / -0.24 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.02",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.08, max leg morning +0.05",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w17653",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.90",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26766, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w17653",
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_ger40_evening_coil",
+    "name": "prebuilt_ger40_evening_coil",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves 0.22/-0.50, 1.5x costs -0.60, 0/2 markets profitable (SPX, DAX; NSXUSD missing). Coil filter barely selects (signal trades ~= plain late-window long control); positive mean only from index drift, dies 2018+. Evidence research/prebuilt_ger40_evening_coil.py",
+    "tag": "halves",
+    "gates": {
+     "id": "prebuilt_ger40_evening_coil",
+     "when": "2026-10-25T18:20:39",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.22 / -0.50 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.60",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg fix +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/2 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.99",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26767, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_jpn225_quiet_drift",
+    "name": "prebuilt_jpn225_quiet_drift",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Halves -0.76/-0.93, 1.5x -1.57, 0/3 markets (JPX, DAX, SPX); gross edge ~0 vs cost, signal no better than plain in-window long (research/prebuilt_jpn225_quiet_drift.py; 2 window cells counted)",
+    "tag": "halves",
+    "gates": {
+     "id": "prebuilt_jpn225_quiet_drift",
+     "when": "2026-10-25T18:24:28",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.76 / -0.93 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-1.57",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg noise +0.05",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.75",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26768, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.713
+     ]
+    }
+   },
+   {
+    "id": "paper_hamao_us_close_to_asia_eu_open",
+    "name": "paper_hamao_us_close_to_asia_eu_open",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Halves -1.98/-1.29, 1.5x -2.15, 0/3 markets (GER40 am, JPN225, GER40 pm); gross mean -1.5 to -3.6bp, hit rate 46-49%: no US-lead effect in intraday 4h windows (research/paper_hamao_us_close_to_asia_eu_open.py; 1 cell, sign not flipped after the fact)",
+    "tag": "halves",
+    "gates": {
+     "id": "paper_hamao_us_close_to_asia_eu_open",
+     "when": "2026-10-25T18:28:37",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-1.98 / -1.29 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-2.15",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.07, max leg breakout +0.01",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.76",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26769, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.745
+     ]
+    }
+   },
+   {
+    "id": "paper_rapach_us_lead_weekly_indices",
+    "name": "paper_rapach_us_lead_weekly_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Weekly SPX-lead (1-week vs 52w median) on GER40/JPN225/NSX: halves -0.61/-0.07, 1.5x -0.35, 0/3 markets; 4-week cell 0.24/-0.22 also fails (2 cells counted). Evidence research/paper_rapach_us_lead_weekly_indices.py",
+    "tag": "halves",
+    "gates": {
+     "id": "paper_rapach_us_lead_weekly_indices",
+     "when": "2026-10-25T18:34:30",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.61 / -0.07 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.35",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.05, max leg cross +0.10",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.00",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26770, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "variant_index_open_gap_fade_4mkts",
+    "name": "variant_index_open_gap_fade_4mkts",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Gap fade z>=1 on SPX/NSX/GRX/JPX: halves -0.84/-0.53, 1.5x -0.90, 0/4 markets; gross mean -4.3/-1.2/-5.0bp on US/DE (gaps continue intraday), JPX +4.3bp but SR ~0 after costs; z>=1.5 cell also fails (-0.70/-0.10). Evidence: research/variant_index_open_gap_fade_4mkts.py",
+    "tag": "halves",
+    "gates": {
+     "id": "variant_index_open_gap_fade_4mkts",
+     "when": "2026-10-25T18:40:27",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.84 / -0.53 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.90",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.06, max leg quartet +0.16",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.88",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26771, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "variant_asian_range_london_fade_eurusd",
+    "name": "variant_asian_range_london_fade_eurusd",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Halves -2.15/-3.16, 1.5x -3.59, 0/3 markets; gross mean -1.3/-0.1/-0.6bp (hit 39-41%): London excursion beyond the Asian range does not mean-revert; k=0.5 cell also fails (-2.05/-3.03)",
+    "tag": "halves",
+    "gates": {
+     "id": "variant_asian_range_london_fade_eurusd",
+     "when": "2026-10-25T18:48:04",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-2.15 / -3.16 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-3.59",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg cross +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.33",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26772, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.691
+     ]
+    }
+   },
+   {
+    "id": "variant_yield_shock_gold_usdjpy_nextday",
+    "name": "variant_yield_shock_gold_usdjpy_nextday",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves 0.43/-0.06 (also belief 2/3 markets, book gain -0.01). 1-day DGS10 shock z>=1.5, 3-day hold on XAUUSD/USDJPY/EURUSD; gold 0.6/-0.03, EURUSD 0.42/-0.18, USDJPY -0.25/0.03; H=1 cell -0.08/0.29 also fails. Same family as erb_yield_shock. Evidence research/variant_yield_shock_gold_usdjpy_nextday.py",
+    "tag": "halves",
+    "gates": {
+     "id": "variant_yield_shock_gold_usdjpy_nextday",
+     "when": "2026-10-25T18:49:55",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.43 / -0.06 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.19",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg hold +0.08",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.10",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26773, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_metalabel_after_morning_fall",
+    "name": "ml_metalabel_after_morning_fall",
+    "status": "rejected",
+    "reason": "Gates PASS only as an artefact of merging three legs into one series. The meta-label has no skill: walk-forward AUC 0.465 (after 0.46, fall 0.40, morning 0.48), skips 2.7% of events, filtered Sharpe 1.49 vs plain 1.59, losing months from 2018 27 vs 27. Book 2018+ replacing the three legs: unfiltered merge 3.52 vs filtered 3.50, so the filter adds nothing. Evidence: research/metalabel_afmofa.py.",
+    "step": 2,
+    "published": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+    "gates": {
+     "id": "ml_metalabel_after_morning_fall",
+     "when": "2026-10-25T19:01:50",
+     "verdict": "PASS",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.15 / 1.89 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "1.35",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg grid +0.01",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.25 replacing after,morning,fall",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26774, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "after",
+      "morning",
+      "fall"
+     ],
+     "published": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "paper_lunar_new_moon_indices",
+    "name": "paper_lunar_new_moon_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (0.34 / -0.02); book gain +0.02 (needs 0.03). New-moon window N=3 on SPX/NSX/GER/JPN: 0.55/0.68/-0.06/0.24 to 2017, 0.06/0.07/-0.09/-0.13 from 2018; full-moon windows earn as much or more (the paper's effect is reversed), and holding every day beats both. N=7 also fails (-0.11 from 2018). Evidence research/lunar_new_moon.py",
+    "tag": "halves",
+    "published": "https://personal.lse.ac.uk/yuan/papers/lunar.pdf",
+    "gates": {
+     "id": "paper_lunar_new_moon_indices",
+     "when": "2026-10-25T19:06:11",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.34 / -0.02 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.12",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.08, max leg grid -0.01",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://personal.lse.ac.uk/yuan/papers/lunar.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.13",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26775, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://personal.lse.ac.uk/yuan/papers/lunar.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "vrp_gap_equity_indices",
+    "name": "vrp_gap_equity_indices",
+    "status": "rejected",
+    "job": "j17",
+    "ea": "funded",
+    "note": "BLOCKED (judge 2026-10-25 20:30): j16 measured nothing, because VIX.cash is not on the FTMO tester server and the leg was off from OnInit (summary.txt line 45). Not integrated, not rejected; fix_vrp_leg_fidelity2 step 8 needs a VIX source, j17 on hold. v1.14 fixes (fix_vrp_leg_fidelity): j17 requeued, j16 = v1.13 first look. Controls (3 random-long seeds, research/vrp_gap_equity_indices.out.txt): Sharpe 0.19/0.64/0.34 vs 0.73, book gain -0.02/+0.15/-0.59 vs +0.09 - beats on average, not decisive. AurumFunded v1.13 leg InpVrpMult (off by default, magic +30/+31), preset AurumFunded_FTMO_phase1_vrp.set. EA trades US500+US100 only (DAX not on the list). Note: long equity beta - random-entry control Sharpe 0.41+-0.21 vs 0.73; needs a VIX symbol on the broker.",
+    "step": 2,
+    "gates": {
+     "id": "vrp_gap_equity_indices",
+     "when": "2026-10-25T19:52:35",
+     "verdict": "PASS",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.12 / 0.38 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.70",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.09, max leg morning +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "3/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.20",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26776, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    },
+    "tag": "tester",
+    "reason": "Tester FAIL j17 (AurumFunded v1.15, 2024.01-2025.09, 10k, 1:33): the 26 VRP trades net +0.31 USD against the model +2.6% (0% of it, lesson 4 range 67-87%); equity DD 4.16% -> 5.99% with the leg on, return/DD 32.2 -> 22.9. 14 of 26 trades closed early by a CloseAll (risk layer) lost 972.60. 50-seed control: Sharpe 2018+ at the 44th percentile of random longs (equity beta). Leg stays in v1.15 off by default (InpVrpMult 0), preset AurumFunded_FTMO_phase1_vrp.set not for use. Evidence backtests/2026-10-25_2049_AurumFunded_vrp2_on/summary.md, research/vrp_ctrl50.py."
+   },
+   {
+    "id": "prebuilt_gold_holiday_drift",
+    "name": "prebuilt_gold_holiday_drift",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at book (3.11 -> 3.02); halves 0.40/0.34, 1.5x 0.35, corr book +0.05; Diwali 0, LNY negative 2018+, gold long beta not a distinct edge. research/prebuilt_gold_holiday_drift.py",
+    "tag": "book",
+    "published": "https://quantpedia.com/cultural-calendars-and-the-gold-drift-are-holidays-moving-gld-etf/",
+    "gates": {
+     "id": "prebuilt_gold_holiday_drift",
+     "when": "2026-10-25T23:08:44",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.40 / 0.34 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.35",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.05, max leg hold +0.16",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://quantpedia.com/cultural-calendars-and-the-gold-drift-are-holidays-moving-gld-etf/",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.02",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26777, luck bar 0.86)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://quantpedia.com/cultural-calendars-and-the-gold-drift-are-holidays-moving-gld-etf/",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "gold_eur_resid",
+    "name": "gold_eur_resid",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. XAU/EUR residual fade (z>2, 5d hold) Sharpe -0.30 to 2017 / +0.14 from 2018 at 1x; single legs xau -0.15/+0.10, eur -0.41/+0.12; silver/gold futures +0.31/-0.07. Evidence research/gold_eur_residual.py",
+    "tag": "halves",
+    "gates": {
+     "id": "gold_eur_resid",
+     "when": "2026-10-25T23:53:44",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.30 / 0.14 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.11",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.08, max leg morning +0.05",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "1/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.09",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26778, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_hold_gvz_regime",
+    "name": "ml_hold_gvz_regime",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (0.18 / 0.84, replacing hold) and belief (no source, own leg only). Pre-registered rule (GVZ 250d pct > 0.8 AND 20d/60d sign disagree = flat) flags 6.2% of signal days; hold SR 2018+ 0.53 -> 0.84 (random-keep p95 0.62) but to 2017 only 0.03 -> 0.18, and the two named losing months (2021-11, 2023-05) are unchanged, so the gain comes from other days. Book 3.11 -> 3.15, DSR 1.0. Not tuned. Evidence research/ml_hold_gvz_regime.py",
+    "tag": "halves",
+    "gates": {
+     "id": "ml_hold_gvz_regime",
+     "when": "2026-10-25T23:57:26",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.18 / 0.84 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.38",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.03, max leg quartet +0.06",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.15 replacing hold",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26779, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "hold"
+     ],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "var_overreaction_fx_crosses",
+    "name": "var_overreaction_fx_crosses",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves, corr, book. Same 2sd/n=20 fade on crosses (EURJPY, GBPJPY, AUDJPY, AUDCAD, EURGBP): book Sharpe 0.54 to 2017, -0.35 from 2018 (1.5x: 0.48/-0.51); only AUDJPY barely positive after 2017; corr with leg quartet +0.39; book 3.11 -> 2.87. Same decay as the dollar-pair version. Evidence research/overreaction_fx_crosses.py.",
+    "tag": "halves",
+    "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+    "gates": {
+     "id": "var_overreaction_fx_crosses",
+     "when": "2026-10-26T00:28:27",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.54 / -0.35 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.21",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.22, max leg quartet +0.39",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.87",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26780, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "ml_book_turbulence_scaler",
+    "name": "ml_book_turbulence_scaler",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Overlay on the whole book (risk-layered): 2018+ Sharpe 3.11 -> 2.91 scaled (3.07 in gates book), maxDD -0.165 -> -0.143 but -0.176 at equal vol, losing months 21/94 unchanged, worst month -0.085 -> -0.075; paired equal-vol diff t -3.7. Corr 0.90 is structural for an overlay; real failure is no gain. Evidence research/ml_book_turbulence_scaler.py",
+    "tag": "corr",
+    "published": "https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf",
+    "gates": {
+     "id": "ml_book_turbulence_scaler",
+     "when": "2026-10-26T00:47:00",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.96 / 2.91 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "2.66",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.90, max leg fix +0.37",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.07",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26781, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "paper_announcement_day_long_indices",
+    "name": "paper_announcement_day_long_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (Sharpe 0.13 / 0.07) and book (3.11 -> 3.04). Long SPXUSD 09:30-16:00 on NFP/GDP/ISM/FOMC days earns 2.5 bp (t 0.6) to 2017 and 2.1 bp (t 0.4) from 2018 against 1.7 / 2.0 bp on other days: the premium is gone on the CFD. NFP 0.4 / 1.7 bp, ISM -2 / -3.6, FOMC 4 / -8. Only GDP (a post-hoc pick, three estimates a quarter) keeps 9-15 bp at t 1.2. CPI/PPI dates not held; NSXUSD not held. Evidence: research/paper_announcement_day_long_indices.py",
+    "tag": "halves",
+    "published": "https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Draft20111128p_edited.pdf",
+    "gates": {
+     "id": "paper_announcement_day_long_indices",
+     "when": "2026-10-26T00:52:49",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.13 / 0.07 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.06",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg fall +0.06",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Draft20111128p_edited.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.04",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26782, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Draft20111128p_edited.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_dual_thrust_basket_crosses",
+    "name": "prebuilt_dual_thrust_basket_crosses",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves",
+    "tag": "halves",
+    "gates": {
+     "id": "prebuilt_dual_thrust_basket_crosses",
+     "when": "2026-10-27T10:55:01",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.27 / -0.50 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.46",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.07, max leg breakout +0.11",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "6/12 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.92",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26783, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.755
+     ]
+    }
+   },
+   {
+    "id": "grain_harvest_short",
+    "name": "Grain harvest seasonal short (ZC+ZS+ZW, 1 Jun-30 Sep)",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at book (3.11 -> 3.11); see docs/ideas/queue.jsonl paper_sorensen_grain_harvest_seasonal_short",
+    "tag": "book",
+    "gates": {
+     "id": "grain_harvest_short",
+     "when": "2026-10-27T11:03:45",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.22 / 0.34 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.25",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.04, max leg fix +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "4/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.11",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26784, luck bar 0.90)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "paper_driesprong_oil_predicts_index",
+    "name": "paper_driesprong_oil_predicts_index",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Paper rule (eq.1 regression fitted to 2017, long if fitted return > 0) with ftmo_specs costs: oil slope t ~0 so it is always long (index beta). Halves 0.27/0.18, 1.5x -0.01, corr -0.09, book 2018+ 3.11 -> 3.08 (needs +0.03), DSR 1.0. Finder oil<0 variant (not the paper rule) halves 0.18/0.34, 1.5x 0.12, book 3.10.",
+    "tag": "book",
+    "published": "https://repub.eur.nl/pub/1017/ERS%20082%20Jacobsen.pdf",
+    "gates": {
+     "id": "paper_driesprong_oil_predicts_index",
+     "when": "2026-10-27T11:11:50",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.27 / 0.18 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.01",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.09, max leg morning +0.06",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://repub.eur.nl/pub/1017/ERS%20082%20Jacobsen.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.08",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26787, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://repub.eur.nl/pub/1017/ERS%20082%20Jacobsen.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    },
+    "evidence": "research/driesprong_oil_index.py; marketdata/candidates/paper_driesprong_oil_predicts_index.csv"
+   },
+   {
+    "id": "chen_rogoff_rossi_fx_commod",
+    "name": "chen_rogoff_rossi_fx_commod",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Monthly sign of AUD/NZD/CAD basket traded on CL/HG/SI: Sharpe -0.45 / -0.57 (halves), -0.74 at 1.5x costs, book 2018+ 3.11 -> 2.86. The paper's quarterly lead does not trade monthly after costs; copper short side loses most (-0.9 in 2018+). Evidence: research/chen_rogoff_rossi_fx_commod.py",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w13901",
+    "gates": {
+     "id": "chen_rogoff_rossi_fx_commod",
+     "when": "2026-10-27T11:07:29",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.45 / -0.57 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.74",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.01, max leg hold +0.05",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w13901",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.86",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26786, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w13901",
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_cross_skip_fix_overlap",
+    "name": "ml_cross_skip_fix_overlap",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Skip filter has no skill: walk-forward logistic from 2012 (147 test events) AUC 0.398, skips 6% of events; filtered cross Sharpe 2018+ 1.18 vs plain 1.24 (random-keep 1.16-1.24); own book 2018+ 3.394 vs 3.398 plain. Gates: corr cross +0.96 (it is the same leg), book 3.11 -> 2.77 in the gate (replaces nothing, adds a duplicate). Overlap feature degenerate: fix and cross trade the same month-end day every time. Evidence: research/ml_cross_skip.py.",
+    "tag": "corr",
+    "published": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+    "gates": {
+     "id": "ml_cross_skip_fix_overlap",
+     "when": "2026-10-28T00:09:08",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "1.00 / 1.18 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "1.01",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.33, max leg cross +0.96",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.77",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26788, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "ml_metalabel_quartet_skip",
+    "name": "ml_metalabel_quartet_skip",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at corr (0.92 with quartet, it is the quartet) and belief. Meta-label skip (lightgbm d3, P<0.45) on the four sub-legs: AUC 0.48/0.49/0.55/0.51 (chance); quartet Sharpe 2018+ 2.22 plain vs 2.26/2.18/2.13 over 3 seeds, random-keep controls 2.00-2.09; swapped into the book 2018+ 3.398 -> 3.35/3.33/3.31 (worse). Quartet already carries a ridge sizing meta-label. Fourth ML-on-leg rejection.",
+    "tag": "corr",
+    "gates": {
+     "id": "ml_metalabel_quartet_skip",
+     "when": "2026-10-28T00:15:26",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "2.11 / 2.13 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "1.50",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.33, max leg quartet +0.92",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.40",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26789, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    },
+    "evidence": "research/ml_metalabel_quartet_skip.py; docs/gates/ml_metalabel_quartet_skip.json"
+   },
+   {
+    "id": "paper_huang_gold_platinum_us500",
+    "name": "paper_huang_gold_platinum_us500",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Long ES/NQ when log(gold/platinum) is above its 120-month mean: Sharpe 0.17 to 2017 / 0.36 from 2018 at 1x (buy-and-hold 0.54 / 0.78), 0.01 / 0.15 at 1.5x, negative at 2x (swap 2.5bp a night eats it). Book 3.11 -> 3.13, below +0.03. Skill is only being long about half the time, not timing. Weight variant B same. Evidence: research/huang_gp_us500.py",
+    "tag": "halves",
+    "published": "https://conference.nber.org/conf_papers/f80928.pdf",
+    "gates": {
+     "id": "paper_huang_gold_platinum_us500",
+     "when": "2026-10-28T00:23:12",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.17 / 0.36 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.09",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.06, max leg morning +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://conference.nber.org/conf_papers/f80928.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.13",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26790, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://conference.nber.org/conf_papers/f80928.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "commod_skew_ls",
+    "name": "commod_skew_ls",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Gross no-swap Sharpe -0.08 (halves -0.23/+0.15): the paper's skew premium is absent in our 15 FTMO-set futures; FTMO CFD swap (about -49%/yr on this book) makes it far worse. research/commod_skew_ls.py",
+    "tag": "halves",
+    "published": "https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+    "gates": {
+     "id": "commod_skew_ls",
+     "when": "2026-10-28T12:07:27",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-1.31 / -2.78 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-1.92",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.03, max leg hold +0.07",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.48",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": false,
+       "figure": "0.047 (book, N=26791, luck bar 0.92)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.691
+     ]
+    }
+   },
+   {
+    "id": "prebuilt_dual_thrust_four_indices_ew",
+    "name": "prebuilt_dual_thrust_four_indices_ew",
+    "status": "integrated",
+    "job": "j18",
+    "reason": "j18 tester PASS (judge 2026-10-28 13:40): on-off +1,766 USD on 10k (2024.01-2025.09); the leg's own index closes add +7.3% of the running balance (on 15.28% minus off 7.98%, research/j18_by_symbol.py) against the Python's +5.45% at size 0.5, profitable on all four indices (US100 +340, US500 +296, JP225 +328, GER40 +148); relative equity DD 6.91% -> 7.59%, return/DD 19.4 -> 20.0; months positive 18 -> 17 (2025-03 +8 -> -109). Leg stays off by default (InpDualMult 0), on only in AurumFunded_FTMO_phase1_dual.set. Earlier: gates PASS (rerun 2026-10-28 with the EA's 01:15 open rule, fix_dual_thrust_dax_open): halves 0.64/0.95, 1.5x 0.61, corr book +0.07 / noise leg +0.26, book 2018+ 3.11->3.26, DSR 1.0. Belief now by published source only: market Sharpe SPX 0.48, NSX 0.68, JPX 0.79, GRXEUR -0.04 (3/4, no longer 4/4). Built into AurumFunded v1.18 (InpDualMult, off by default, magics +32..+35); tester job j18.",
+    "step": 2,
+    "gates": {
+     "id": "prebuilt_dual_thrust_four_indices_ew",
+     "when": "2026-10-28T12:28:30",
+     "verdict": "PASS",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.64 / 0.95 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.61",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.07, max leg noise +0.26",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://github.com/je-suis-tm/quant-trading",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.26",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26794, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://github.com/je-suis-tm/quant-trading",
+     "profitable_months_2018": [
+      0.777,
+      0.819
+     ]
+    },
+    "published": "https://github.com/je-suis-tm/quant-trading"
+   },
+   {
+    "id": "ml_jump_model_regime_long_indices",
+    "name": "ml_jump_model_regime_long_indices",
+    "status": "rejected",
+    "reason": "Gates PASS (book 3.11->3.33) but the ML baseline rule fails: the jump-model filter does not beat buy-and-hold on the same days (3000d window: 2018on Sharpe 0.53 vs 0.66; 1250d variant 0.42 vs 0.66, to2017 0.27 vs 0.87). The book gain is index beta, not the filter. The 3000d burn-in leaves no pre-2018 test days (first signal 2016-11). Evidence: research/ml_jump_model_regime_long_indices.py, marketdata/candidates/ml_jump_model_regime_long_indices.csv",
+    "step": 2,
+    "published": "https://arxiv.org/abs/2402.05272",
+    "gates": {
+     "id": "ml_jump_model_regime_long_indices",
+     "when": "2026-10-31T00:17:26",
+     "verdict": "PASS",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.72 / 0.61 (split at its middle 2021-05-07)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.66",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.07, max leg fall +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://arxiv.org/abs/2402.05272",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.33",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26795, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://arxiv.org/abs/2402.05272",
+     "profitable_months_2018": [
+      0.777,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "paper_thomakos_pairs_country_indices",
+    "name": "paper_thomakos_pairs_country_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Gatev/Thomakos index pairs (SPX, GRX, JPX; no NSX data), 3 pairs, K=0.5 and 2 sd. Halves -0.31 / +0.29 at the 2sd pick (0.5 sd: -0.57 / +0.06); fails 0.2 to 2017, 2/3 pairs profitable. Evidence research/paper_thomakos_pairs_country_indices.py",
+    "tag": "halves",
+    "gates": {
+     "id": "paper_thomakos_pairs_country_indices",
+     "when": "2026-10-31T04:43:50",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.31 / 0.29 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.06",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg quartet +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.37",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26796, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "leg_cross_dailyz_meanrev_3mkts",
+    "name": "leg_cross_dailyz_meanrev_3mkts",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. 20d z +-2, exit 0, 5d stop, 4 crosses with real spread + 1bp/day swap: Sharpe -0.26 to 2017, -0.14 from 2018, -0.40 at 1.5x; only EURGBP and EURCHF positive pre-2018 (AUDNZD, NZDCAD negative both halves). Evidence: research/leg_cross_dailyz_meanrev_3mkts.py output.",
+    "tag": "halves",
+    "gates": {
+     "id": "leg_cross_dailyz_meanrev_3mkts",
+     "when": "2026-10-31T04:48:05",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.26 / -0.14 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.40",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg grid +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "2/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 2.97",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26813, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "ml_volmanaged_grid_hold_sizing",
+    "name": "ml_volmanaged_grid_hold_sizing",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Fails halves and book: grid sizing worse both halves (0.92/0.75 -> 0.72/0.57); hold 0.13/0.69, book 3.11 -> 3.14 (<0.03). Evidence research/ml_volmanaged_grid_hold_sizing.py",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w22208",
+    "gates": {
+     "id": "ml_volmanaged_grid_hold_sizing",
+     "when": "2026-10-31T04:54:09",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.13 / 0.69 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.06",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg quartet +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w22208",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.14 replacing hold",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26814, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [
+      "hold"
+     ],
+     "published": "https://www.nber.org/papers/w22208",
+     "profitable_months_2018": [
+      0.777,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "paper_jones_pyun_vix_conditional_index_reversal",
+    "name": "paper_jones_pyun_vix_conditional_index_reversal",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Fails halves (SR 0.05 to 2017, 0.34 from 2018) and book gain (3.11 -> 3.09). Long-only, down day, VIX>19, 2-day hold on S&P+Nasdaq CFDs; 1.5x cost SR 0.17 (K=25: 0.01/0.03). Same family as rejected paper_nagel_vix_reversal_index. Evidence research/paper_jones_pyun_vix_conditional_index_reversal.py",
+    "tag": "halves",
+    "published": "https://sjpyun.github.io/Rev.pdf",
+    "gates": {
+     "id": "paper_jones_pyun_vix_conditional_index_reversal",
+     "when": "2026-10-31T05:07:42",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.05 / 0.34 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.17",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.05, max leg morning +0.09",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://sjpyun.github.io/Rev.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.11 -> 3.09",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26815, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://sjpyun.github.io/Rev.pdf",
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "noise_gj",
+    "name": "noise_gj",
+    "status": "rejected",
+    "step": 2,
+    "reason": "FAIL at costs: half DAX (1.0bp) + half Nikkei (2.0bp), paper params VM1, Sharpe -0.05 at 1.5x (DAX 0.25->0.02, Nikkei 0.32->-0.03; Nikkei 2018+ 0.01 at 1x). Evidence research/noise_ger_jpn.py",
+    "tag": "costs",
+    "gates": {
+     "id": "noise_gj",
+     "when": "2026-10-31T10:52:56",
+     "verdict": "FAIL at costs",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.49 / 0.22 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.05",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.04, max leg noise +0.07",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "4/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.11 -> 3.19",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26816, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.777,
+      0.766
+     ],
+     "reason": "FAIL at costs: half DAX (1.0bp) + half Nikkei (2.0bp), paper params VM1, Sharpe -0.05 at 1.5x (DAX 0.25->0.02, Nikkei 0.32->-0.03; Nikkei 2018+ 0.01 at 1x). Evidence research/noise_ger_jpn.py"
+    }
+   },
+   {
+    "id": "paper_fast_alpha_pullback_entry_dualthrust",
+    "name": "paper_fast_alpha_pullback_entry_dualthrust",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at corr and book. Pullback overlay (fill at first counter-direction 5-min close) on the four-index Dual Thrust leg makes it worse than its own baseline: Sharpe 0.81 -> 0.69, halves 0.64/0.95 -> 0.51/0.85, 1.5x 0.61 -> 0.49, 2x 0.42 -> 0.30; JP225 0.79 -> 0.59. Corr to the base leg +0.97 (by design), book 2018+ 3.29 -> 3.14. Not a better fill with CFD spreads. Evidence: research/paper_fast_alpha_pullback_entry_dualthrust.py, docs/gates/",
+    "tag": "corr",
+    "published": "https://concretumgroup.com/wp-content/uploads/2026/02/Improving-Performance-with-Fast-Alphas-A-Tactical-Overlay-for-Intraday-Trend-Trading.pdf",
+    "gates": {
+     "id": "paper_fast_alpha_pullback_entry_dualthrust",
+     "when": "2026-11-01T00:13:44",
+     "verdict": "FAIL at corr",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.51 / 0.85 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.49",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": false,
+       "figure": "book +0.29, max leg prebuilt_dual_thrust_four_indices_ew +0.97",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://concretumgroup.com/wp-content/uploads/2026/02/Improving-Performance-with-Fast-Alphas-A-Tactical-Overlay-for-Intraday-Trend-Trading.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.14",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26817, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://concretumgroup.com/wp-content/uploads/2026/02/Improving-Performance-with-Fast-Alphas-A-Tactical-Overlay-for-Intraday-Trend-Trading.pdf",
+     "profitable_months_2018": [
+      0.809,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "graziani_rev",
+    "name": "graziani_rev",
+    "status": "tester",
+    "job": "j20",
+    "step": 2,
+    "published": "https://afajof.org/management/viewp.php?n=133448",
+    "gates": {
+     "id": "graziani_rev",
+     "when": "2026-11-01T01:56:29",
+     "verdict": "PASS",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.44 / 0.57 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.36",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.04, max leg morning +0.06",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://afajof.org/management/viewp.php?n=133448",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": true,
+       "figure": "book 2018+ 3.29 -> 3.36",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26819, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://afajof.org/management/viewp.php?n=133448",
+     "profitable_months_2018": [
+      0.809,
+      0.777
+     ]
+    },
+    "note": "2026-11-01 builder: rerun with FTMO swaps per symbol (2.38/2.91 bp/night, triple Friday), gates PASS; EA v1.22 fixes the review findings; j19 diagnostic only, j20 is the Step 15 job."
    }
   ],
   "rejected": [
@@ -644,93 +5512,3694 @@ window.AURUM = {
   ]
  },
  "gates": {
+  "baltussen_mac5": {
+   "id": "baltussen_mac5",
+   "when": "2026-10-24T12:23:05",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.26 / -0.18 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.34",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg cross +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://personal.eur.nl/vanbekkum/2018%20JFE%20BaltussenVanBekkumDa.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.18",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26741, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://personal.eur.nl/vanbekkum/2018%20JFE%20BaltussenVanBekkumDa.pdf",
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
   "breakout": {
    "id": "breakout",
-   "when": "2026-10-17T01:19:58",
-   "verdict": "PASS",
+   "when": "2026-10-23T01:13:14",
+   "verdict": "FAIL at belief",
    "gates": [
     {
      "gate": "halves",
      "pass": true,
-     "figure": "1.18 / 0.83",
-     "rule": ">= 0.5 to 2017 and from 2018"
+     "figure": "1.10 / 0.84 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
     },
     {
      "gate": "costs",
      "pass": true,
      "figure": "0.59",
-     "rule": ">= 0.3 at 1.5x cost"
-    },
-    {
-     "gate": "dsr",
-     "pass": true,
-     "figure": "0.969 (N=47, luck bar 0.55)",
-     "rule": ">= 0.9"
+     "rule": "> 0.0 at 1.5x cost"
     },
     {
      "gate": "corr",
      "pass": true,
-     "figure": "book -0.00, max leg hold -0.03",
-     "rule": "|book| <= 0.2, |leg| <= 0.3"
+     "figure": "book -0.00, max leg grid +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "7/9 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.27 -> 3.34",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=27117, luck bar 1.01)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.809,
+    0.798
+   ]
+  },
+  "btc_hour_2123": {
+   "id": "btc_hour_2123",
+   "when": "2026-10-24T13:31:50",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "1.48 / -0.08 (split at its middle 2021-09-09)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.44",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.03, max leg fall +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.34 -> 3.43",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26745, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/",
+   "profitable_months_2018": [
+    0.798,
+    0.809
+   ]
+  },
+  "btc_weekend_1521": {
+   "id": "btc_weekend_1521",
+   "when": "2026-10-24T13:34:15",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "1.16 / -0.27 (split at its middle 2021-09-10)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.42",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg breakout +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "3/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.36",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26746, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.819
+   ]
+  },
+  "carver_breakout": {
+   "id": "carver_breakout",
+   "when": "2026-10-22T15:00:14",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.08 / 0.18",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "0.01",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.000 (N=27069, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.07, max leg hold +0.37",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
     },
     {
      "gate": "goal",
-     "pass": true,
-     "figure": "Hydra 2018+ 3.37 -> 3.43 at weight 1; P(5x) 55.2% -> 55.9%",
-     "rule": "Sharpe gain >= 0.03, weight fixed by --weight"
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
     }
    ],
-   "weight": 1.0,
+   "weight": 0.0,
    "p5x": [
-    0.5522581158607921,
-    0.5588167045143293
-   ],
-   "dry_run": true,
-   "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+    0.5618464571293371,
+    0.5618464571293371
+   ]
   },
-  "noise": {
-   "id": "noise",
-   "when": "2026-10-17T01:19:58",
+  "chen_rogoff_rossi_fx_commod": {
+   "id": "chen_rogoff_rossi_fx_commod",
+   "when": "2026-10-27T11:07:29",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.45 / -0.57 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.74",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg hold +0.05",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w13901",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.86",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26786, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w13901",
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "chen_tsang_slope_fx": {
+   "id": "chen_tsang_slope_fx",
+   "when": "2026-10-24T12:27:12",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.81 / -0.14 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.60",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg hold +0.00",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "1/5 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.25",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26742, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "commod_same_month": {
+   "id": "commod_same_month",
+   "when": "2026-10-24T13:37:19",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.24 / 0.30 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.16",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.00, max leg hold +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.28",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26747, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.787
+   ]
+  },
+  "commod_skew_ls": {
+   "id": "commod_skew_ls",
+   "when": "2026-10-28T12:07:27",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-1.31 / -2.78 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-1.92",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg hold +0.07",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.48",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.047 (book, N=26791, luck bar 0.92)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.691
+   ]
+  },
+  "cot_contrarian": {
+   "id": "cot_contrarian",
+   "when": "2026-10-24T11:43:54",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.04 / 0.28 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.10",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.04, max leg quartet +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "4/7 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.24",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26739, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.809
+   ]
+  },
+  "crypto_xs_mom": {
+   "id": "crypto_xs_mom",
+   "when": "2026-10-24T13:40:13",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.29 / -0.58 (split at its middle 2022-02-03)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.75",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg grid +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.15",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26748, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.819
+   ]
+  },
+  "dao_gap": {
+   "id": "dao_gap",
+   "when": "2026-10-23T16:35:19",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.02 / 0.32 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.13",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.05, max leg quartet +0.15",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.32",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26724, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+   "profitable_months_2018": [
+    0.798,
+    0.809
+   ]
+  },
+  "drl_leg_sizing_ppo": {
+   "id": "drl_leg_sizing_ppo",
+   "when": "2026-10-24T14:04:46",
+   "verdict": "FAIL at costs",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.64 / 2.41 (split at its middle 2023-12-06)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-3.35",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.53, max leg after +0.75",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.30",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26751, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "erb_yield_shock": {
+   "id": "erb_yield_shock",
+   "when": "2026-10-24T22:42:29",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.09 / 0.45 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.26",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg noise +0.07",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://doi.org/10.2469/faj.v69.n4.1",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.09",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26755, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://doi.org/10.2469/faj.v69.n4.1",
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "fx_carry_g10": {
+   "id": "fx_carry_g10",
+   "when": "2026-10-24T01:41:17",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.11 / -0.16 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.23",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg quartet +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "3/7 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.21",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26728, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.809
+   ]
+  },
+  "fx_value_rer": {
+   "id": "fx_value_rer",
+   "when": "2026-10-24T07:22:40",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.10 / -0.53 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.42",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.00, max leg breakout +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/7 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.14",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26731, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "gold_bond_regime": {
+   "id": "gold_bond_regime",
+   "when": "2026-10-23T08:46:12",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.37 / 0.56 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.19",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.12, max leg hold +0.68",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://quantpedia.com/cross-asset-price-based-regimes-for-gold/",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.24",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26722, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://quantpedia.com/cross-asset-price-based-regimes-for-gold/",
+   "profitable_months_2018": [
+    0.798,
+    0.787
+   ]
+  },
+  "gold_eur_resid": {
+   "id": "gold_eur_resid",
+   "when": "2026-10-25T23:53:44",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.30 / 0.14 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.11",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.08, max leg morning +0.05",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "1/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.09",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26778, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "grain_harvest_short": {
+   "id": "grain_harvest_short",
+   "when": "2026-10-27T11:03:45",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.22 / 0.34 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.25",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.04, max leg fix +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "4/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.11",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26784, luck bar 0.90)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "graziani_rev": {
+   "id": "graziani_rev",
+   "when": "2026-11-01T01:56:29",
    "verdict": "PASS",
    "gates": [
     {
      "gate": "halves",
      "pass": true,
-     "figure": "0.64 / 1.10",
-     "rule": ">= 0.5 to 2017 and from 2018"
+     "figure": "0.44 / 0.57 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
     },
     {
      "gate": "costs",
      "pass": true,
-     "figure": "0.57",
-     "rule": ">= 0.3 at 1.5x cost"
+     "figure": "0.36",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.04, max leg morning +0.06",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://afajof.org/management/viewp.php?n=133448",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.29 -> 3.36",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
     },
     {
      "gate": "dsr",
      "pass": true,
-     "figure": "0.938 (N=47, luck bar 0.55)",
+     "figure": "1.000 (book, N=26819, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://afajof.org/management/viewp.php?n=133448",
+   "profitable_months_2018": [
+    0.809,
+    0.777
+   ]
+  },
+  "gsr_meanrev": {
+   "id": "gsr_meanrev",
+   "when": "2026-10-22T00:48:32",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.16 / -0.05",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "0.02",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.000 (N=26678, luck bar 1.74)",
      "rule": ">= 0.9"
     },
     {
      "gate": "corr",
      "pass": true,
-     "figure": "book -0.02, max leg cross -0.03",
-     "rule": "|book| <= 0.2, |leg| <= 0.3"
+     "figure": "book -0.04, max leg grid +0.03",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0.393; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 0.39299478276872335,
+   "p5x": [
+    0.5618464571293371,
+    0.5617212864369671
+   ]
+  },
+  "gsr_meanrev_h1": {
+   "id": "gsr_meanrev_h1",
+   "when": "2026-10-22T01:32:55",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.33 / -0.12",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.21",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.000 (N=27028, luck bar 2.08)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.09, max leg grid +0.02",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 0.0,
+   "p5x": [
+    0.5618464571293371,
+    0.5618464571293371
+   ]
+  },
+  "hau_rey_fx": {
+   "id": "hau_rey_fx",
+   "when": "2026-10-24T12:19:54",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.09 / 0.07 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.05",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.00, max leg hold +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/system/files/working_papers/w9398/w9398.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.27",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26740, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/system/files/working_papers/w9398/w9398.pdf",
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "hks_periodicity": {
+   "id": "hks_periodicity",
+   "when": "2026-10-24T22:35:58",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-6.21 / -7.25 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-9.52",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg hold +0.08",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/5 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 0.97",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.138 (book, N=26754, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.596
+   ]
+  },
+  "index_legs_funded": {
+   "id": "index_legs_funded",
+   "when": "2026-10-22T02:01:41",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.73 / 0.48",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.43",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.033 (N=27065, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.06, max leg morning +0.11",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.25 at weight 1.34; P(5x) 56.2% -> 53.8%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 1.3368291177988307,
+   "p5x": [
+    0.5618464571293371,
+    0.538317884020412
+   ]
+  },
+  "leg_cross_dailyz_meanrev_3mkts": {
+   "id": "leg_cross_dailyz_meanrev_3mkts",
+   "when": "2026-10-31T04:48:05",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.26 / -0.14 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.40",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg grid +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.97",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26813, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "ma200_pullback": {
+   "id": "ma200_pullback",
+   "when": "2026-10-23T02:54:56",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.13 / -0.01 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.31",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.03, max leg hold +0.12",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "5/8 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.28",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26712, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.787
+   ]
+  },
+  "meta_label_hydra": {
+   "id": "meta_label_hydra",
+   "when": "2026-10-22T03:38:21",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.00 / 1.55",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "4.19",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.694 (N=27068, luck bar 4.14)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.18, max leg after +0.13",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 0.0,
+   "p5x": [
+    0.5618464571293371,
+    0.5618464571293371
+   ]
+  },
+  "ml_book_turbulence_scaler": {
+   "id": "ml_book_turbulence_scaler",
+   "when": "2026-10-26T00:47:00",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.96 / 2.91 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "2.66",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.90, max leg fix +0.37",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.07",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26781, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "ml_cross_skip_fix_overlap": {
+   "id": "ml_cross_skip_fix_overlap",
+   "when": "2026-10-28T00:09:08",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.00 / 1.18 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "1.01",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.33, max leg cross +0.96",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.77",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26788, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
+  },
+  "ml_grid_er_start_filter": {
+   "id": "ml_grid_er_start_filter",
+   "when": "2026-10-24T22:27:45",
+   "verdict": "FAIL at belief",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.92 / 0.76 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.75",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.04, max leg quartet +0.07",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.15 replacing grid",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26753, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "grid"
+   ],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "ml_har_rv_leg_sizing": {
+   "id": "ml_har_rv_leg_sizing",
+   "when": "2026-10-24T13:49:36",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.18 / 1.27 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.73",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg grid +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://doi.org/10.1093/jjfinec/nbp001",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.24 replacing breakout,noise",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26749, luck bar 1.04)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "breakout",
+    "noise"
+   ],
+   "published": "https://doi.org/10.1093/jjfinec/nbp001",
+   "profitable_months_2018": [
+    0.798,
+    0.787
+   ]
+  },
+  "ml_hold_gvz_regime": {
+   "id": "ml_hold_gvz_regime",
+   "when": "2026-10-25T23:57:26",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.18 / 0.84 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.38",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.03, max leg quartet +0.06",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.15 replacing hold",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26779, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "hold"
+   ],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
+  },
+  "ml_hold_ridge_sizing": {
+   "id": "ml_hold_ridge_sizing",
+   "when": "2026-10-25T18:02:57",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.14 / 0.82 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.38",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.02, max leg quartet +0.07",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.14 replacing hold",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26765, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "hold"
+   ],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.809
+   ]
+  },
+  "ml_jump_model_regime_long_indices": {
+   "id": "ml_jump_model_regime_long_indices",
+   "when": "2026-10-31T00:17:26",
+   "verdict": "PASS",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.72 / 0.61 (split at its middle 2021-05-07)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.66",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.07, max leg fall +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://arxiv.org/abs/2402.05272",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.33",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26795, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://arxiv.org/abs/2402.05272",
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
+  },
+  "ml_metalabel_after_morning_fall": {
+   "id": "ml_metalabel_after_morning_fall",
+   "when": "2026-10-25T19:01:50",
+   "verdict": "PASS",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.15 / 1.89 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "1.35",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg grid +0.01",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.25 replacing after,morning,fall",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26774, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "after",
+    "morning",
+    "fall"
+   ],
+   "published": "https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086",
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
+  },
+  "ml_metalabel_breakout_size": {
+   "id": "ml_metalabel_breakout_size",
+   "when": "2026-10-23T01:50:50",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.18 / 0.89 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.67",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.00, max leg grid +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://en.wikipedia.org/wiki/Meta-Labeling",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.32 replacing breakout",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=27119, luck bar 1.01)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "breakout"
+   ],
+   "published": "https://en.wikipedia.org/wiki/Meta-Labeling",
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "ml_metalabel_quartet_skip": {
+   "id": "ml_metalabel_quartet_skip",
+   "when": "2026-10-28T00:15:26",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "2.11 / 2.13 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "1.50",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.33, max leg quartet +0.92",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.40",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26789, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
+  },
+  "ml_regime_filter_gold_hold": {
+   "id": "ml_regime_filter_gold_hold",
+   "when": "2026-10-24T12:35:49",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.22 / 0.15 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.08",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.06, max leg quartet +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.23 replacing hold",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26744, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "hold"
+   ],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.766
+   ]
+  },
+  "ml_regime_grid_audcad": {
+   "id": "ml_regime_grid_audcad",
+   "when": "2026-10-25T17:15:39",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.89 / 0.87 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.79",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.30, max leg grid +0.97",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.01",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26762, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.809
+   ]
+  },
+  "ml_regime_hmm_book": {
+   "id": "ml_regime_hmm_book",
+   "when": "2026-10-24T13:54:42",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "2.55 / 3.19 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "2.04",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.95, max leg cross +0.51",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.32",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26750, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "ml_volmanaged_grid_hold_sizing": {
+   "id": "ml_volmanaged_grid_hold_sizing",
+   "when": "2026-10-31T04:54:09",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.13 / 0.69 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.06",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg quartet +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w22208",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.14 replacing hold",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26814, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "hold"
+   ],
+   "published": "https://www.nber.org/papers/w22208",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "near_miss_basket": {
+   "id": "near_miss_basket",
+   "when": "2026-10-22T01:27:28",
+   "verdict": "FAIL at dsr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.06 / 1.02",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.81",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.525 (N=27027, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.12, max leg grid +0.18",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
     },
     {
      "gate": "goal",
      "pass": true,
-     "figure": "Hydra 2018+ 3.37 -> 3.56 at weight 0.609; P(5x) 55.2% -> 57.4%",
+     "figure": "Hydra 2018+ 3.45 -> 3.57 at weight 0.946; P(5x) 56.2% -> 57.4%",
      "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
     }
    ],
-   "weight": 0.6088017801888469,
+   "weight": 0.9458763568218541,
    "p5x": [
-    0.5522581158607921,
-    0.5736192480341962
+    0.5618464571293371,
+    0.5744182939832989
+   ]
+  },
+  "nn_gold_m15": {
+   "id": "nn_gold_m15",
+   "when": "2026-10-22T02:26:20",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-2.14 / -2.53",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-3.68",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.000 (N=27066, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg morning +0.01",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
    ],
-   "dry_run": true,
-   "note": "seeded from a dry run (no trial logged: both legs are inside the 47 counted before the log)"
+   "weight": 0.0,
+   "p5x": [
+    0.5618464571293371,
+    0.5618464571293371
+   ]
+  },
+  "noise": {
+   "id": "noise",
+   "when": "2026-10-22T22:19:22",
+   "verdict": "PASS",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.66 / 1.31 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.57",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg hold +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.12 -> 3.34",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=27071, luck bar 1.01)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+   "profitable_months_2018": [
+    0.766,
+    0.798
+   ]
+  },
+  "noise_gj": {
+   "id": "noise_gj",
+   "when": "2026-10-31T10:52:56",
+   "verdict": "FAIL at costs",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.49 / 0.22 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.05",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.04, max leg noise +0.07",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "4/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.19",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26816, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "opex_week_indices": {
+   "id": "opex_week_indices",
+   "when": "2026-10-23T15:58:25",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-1.17 / -0.33 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-1.17",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg breakout +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "1/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.16",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26723, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.755
+   ]
+  },
+  "overreaction_fx": {
+   "id": "overreaction_fx",
+   "when": "2026-10-23T21:38:48",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.62 / -0.00 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.26",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.17, max leg quartet +0.25",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.24",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26726, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+   "profitable_months_2018": [
+    0.798,
+    0.809
+   ]
+  },
+  "paper_announcement_day_long_indices": {
+   "id": "paper_announcement_day_long_indices",
+   "when": "2026-10-26T00:52:49",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.13 / 0.07 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.06",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg fall +0.06",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Draft20111128p_edited.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.04",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26782, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Draft20111128p_edited.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "paper_driesprong_oil_predicts_index": {
+   "id": "paper_driesprong_oil_predicts_index",
+   "when": "2026-10-27T11:11:50",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.27 / 0.18 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.01",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.09, max leg morning +0.06",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://repub.eur.nl/pub/1017/ERS%20082%20Jacobsen.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.08",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26787, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://repub.eur.nl/pub/1017/ERS%20082%20Jacobsen.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "paper_gatev_ratio_fx_pairs": {
+   "id": "paper_gatev_ratio_fx_pairs",
+   "when": "2026-10-25T16:16:05",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-1.36 / -0.29 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-1.27",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg morning +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w7032",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.00",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26758, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w7032",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "paper_gatev_ratio_nsx_spx": {
+   "id": "paper_gatev_ratio_nsx_spx",
+   "when": "2026-10-25T16:16:10",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.73 / 0.08 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.25",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg grid +0.01",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w7032",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.63",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26759, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w7032",
+   "profitable_months_2018": [
+    0.777,
+    0.734
+   ]
+  },
+  "paper_gatev_ratio_xau_xag": {
+   "id": "paper_gatev_ratio_xau_xag",
+   "when": "2026-10-25T16:16:00",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.35 / -0.45 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.50",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.05, max leg fix +0.01",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w7032",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.01",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26757, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w7032",
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "paper_hamao_us_close_to_asia_eu_open": {
+   "id": "paper_hamao_us_close_to_asia_eu_open",
+   "when": "2026-10-25T18:28:37",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-1.98 / -1.29 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-2.15",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.07, max leg breakout +0.01",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.76",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26769, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.745
+   ]
+  },
+  "paper_huang_gold_platinum_us500": {
+   "id": "paper_huang_gold_platinum_us500",
+   "when": "2026-10-28T00:23:12",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.17 / 0.36 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.09",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.06, max leg morning +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://conference.nber.org/conf_papers/f80928.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.13",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26790, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://conference.nber.org/conf_papers/f80928.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "paper_jones_pyun_vix_conditional_index_reversal": {
+   "id": "paper_jones_pyun_vix_conditional_index_reversal",
+   "when": "2026-10-31T05:07:42",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.05 / 0.34 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.17",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.05, max leg morning +0.09",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://sjpyun.github.io/Rev.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.09",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26815, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://sjpyun.github.io/Rev.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "paper_lunar_new_moon_indices": {
+   "id": "paper_lunar_new_moon_indices",
+   "when": "2026-10-25T19:06:11",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.34 / -0.02 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.12",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.08, max leg grid -0.01",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://personal.lse.ac.uk/yuan/papers/lunar.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.13",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26775, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://personal.lse.ac.uk/yuan/papers/lunar.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
+  },
+  "paper_melvin_prins_eom_equity_hedge": {
+   "id": "paper_melvin_prins_eom_equity_hedge",
+   "when": "2026-10-25T17:20:26",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.02 / 0.51 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.61",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.21, max leg cross +0.53",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.03",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26763, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "paper_moreira_muir_hold_sizing": {
+   "id": "paper_moreira_muir_hold_sizing",
+   "when": "2026-10-25T17:56:06",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.42 / 0.23 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.21",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.00, max leg quartet +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.96 replacing hold",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26764, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [
+    "hold"
+   ],
+   "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "paper_nagel_vix_reversal_index": {
+   "id": "paper_nagel_vix_reversal_index",
+   "when": "2026-10-25T18:11:06",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.41 / -0.24 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.02",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.08, max leg morning +0.05",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w17653",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.90",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26766, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w17653",
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "paper_rapach_us_lead_weekly_indices": {
+   "id": "paper_rapach_us_lead_weekly_indices",
+   "when": "2026-10-25T18:34:30",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.61 / -0.07 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.35",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.05, max leg cross +0.10",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.00",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26770, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "paper_thomakos_pairs_country_indices": {
+   "id": "paper_thomakos_pairs_country_indices",
+   "when": "2026-10-31T04:43:50",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.31 / 0.29 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.06",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg quartet +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.37",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26796, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "policy_gap": {
+   "id": "policy_gap",
+   "when": "2026-10-24T01:44:14",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.12 / -0.44 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.22",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.04, max leg cross +0.01",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "1/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.18",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26729, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.777
+   ]
+  },
+  "prebuilt_crabel_nr7_orb_gold": {
+   "id": "prebuilt_crabel_nr7_orb_gold",
+   "when": "2026-10-25T15:52:18",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.05 / -0.06 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.22",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.03, max leg breakout +0.09",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.mql5.com/en/code/78259",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.97",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26756, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.mql5.com/en/code/78259",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "prebuilt_dual_thrust_basket_crosses": {
+   "id": "prebuilt_dual_thrust_basket_crosses",
+   "when": "2026-10-27T10:55:01",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.27 / -0.50 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.46",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.07, max leg breakout +0.11",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "6/12 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.92",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26783, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.755
+   ]
+  },
+  "prebuilt_dual_thrust_four_indices_ew": {
+   "id": "prebuilt_dual_thrust_four_indices_ew",
+   "when": "2026-10-28T12:28:30",
+   "verdict": "PASS",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.64 / 0.95 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.61",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.07, max leg noise +0.26",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://github.com/je-suis-tm/quant-trading",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.26",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26794, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://github.com/je-suis-tm/quant-trading",
+   "profitable_months_2018": [
+    0.777,
+    0.819
+   ]
+  },
+  "prebuilt_dual_thrust_fx_gold": {
+   "id": "prebuilt_dual_thrust_fx_gold",
+   "when": "2026-10-25T17:10:05",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.64 / 0.27 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.21",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.10, max leg breakout +0.22",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "5/5 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.12",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26760, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "prebuilt_dual_thrust_indices_overnight_free": {
+   "id": "prebuilt_dual_thrust_indices_overnight_free",
+   "when": "2026-10-25T17:13:07",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.22 / 0.96 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.46",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.08, max leg noise +0.31",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://github.com/je-suis-tm/quant-trading",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.23",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26761, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://github.com/je-suis-tm/quant-trading",
+   "profitable_months_2018": [
+    0.777,
+    0.819
+   ]
+  },
+  "prebuilt_ger40_evening_coil": {
+   "id": "prebuilt_ger40_evening_coil",
+   "when": "2026-10-25T18:20:39",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.22 / -0.50 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.60",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg fix +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/2 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.99",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26767, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "prebuilt_gold_holiday_drift": {
+   "id": "prebuilt_gold_holiday_drift",
+   "when": "2026-10-25T23:08:44",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.40 / 0.34 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.35",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.05, max leg hold +0.16",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://quantpedia.com/cultural-calendars-and-the-gold-drift-are-holidays-moving-gld-etf/",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.02",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26777, luck bar 0.86)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://quantpedia.com/cultural-calendars-and-the-gold-drift-are-holidays-moving-gld-etf/",
+   "profitable_months_2018": [
+    0.777,
+    0.777
+   ]
+  },
+  "prebuilt_jpn225_quiet_drift": {
+   "id": "prebuilt_jpn225_quiet_drift",
+   "when": "2026-10-25T18:24:28",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.76 / -0.93 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-1.57",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg noise +0.05",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.75",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26768, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.713
+   ]
+  },
+  "prebuilt_monday_dip_ibs_indices": {
+   "id": "prebuilt_monday_dip_ibs_indices",
+   "when": "2026-10-24T14:14:29",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.18 / 0.05 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.06",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg fall +0.05",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.20",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26752, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.787
+   ]
+  },
+  "rebalancing_signal": {
+   "id": "rebalancing_signal",
+   "when": "2026-10-23T02:36:50",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.19 / 0.32 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.18",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.05, max leg morning +0.08",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.edhec.edu/sites/default/files/2026-03/Scientific%20paper.%20ssrn-5122748.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.26",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26711, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.edhec.edu/sites/default/files/2026-03/Scientific%20paper.%20ssrn-5122748.pdf",
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "rl_leg_sizing": {
+   "id": "rl_leg_sizing",
+   "when": "2026-10-22T03:29:15",
+   "verdict": "FAIL at corr",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.74 / 1.67",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.84",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "0.920 (N=27067, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.42, max leg fix +0.56",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 0.0,
+   "p5x": [
+    0.5618464571293371,
+    0.5618464571293371
+   ]
+  },
+  "safari_cubic": {
+   "id": "safari_cubic",
+   "when": "2026-10-24T12:31:15",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.77 / -0.58 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.94",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.01, max leg hold +0.10",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "1/7 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.06",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26743, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.777
+   ]
+  },
+  "samehour_fx": {
+   "id": "samehour_fx",
+   "when": "2026-10-24T08:09:34",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-10.32 / -10.35 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-15.53",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.04, max leg quartet +0.06",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 0.52",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.000 (book, N=26732, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.479
+   ]
   },
   "scan_cal_wed_EURUSD_s25_L2_short": {
    "id": "scan_cal_wed_EURUSD_s25_L2_short",
@@ -857,9 +9326,625 @@ window.AURUM = {
     0.5522581158607921,
     0.550616350003269
    ]
+  },
+  "silver_legs_port": {
+   "id": "silver_legs_port",
+   "when": "2026-10-22T01:51:45",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.49 / -1.02",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-1.79",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.000 (N=27064, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.00, max leg quartet +0.08",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 0.0,
+   "p5x": [
+    0.5618464571293371,
+    0.5618464571293371
+   ]
+  },
+  "tod_eurusd": {
+   "id": "tod_eurusd",
+   "when": "2026-10-23T01:26:35",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.63 / -0.30 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.00",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.06, max leg after +0.10",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://swlb1.aeaweb.org/conference/2009/retrieve.php?pdfid=301",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.07",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=27118, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://swlb1.aeaweb.org/conference/2009/retrieve.php?pdfid=301",
+   "profitable_months_2018": [
+    0.798,
+    0.787
+   ]
+  },
+  "tod_weekday_scan": {
+   "id": "tod_weekday_scan",
+   "when": "2026-10-22T01:44:14",
+   "verdict": "FAIL at goal",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "2.23 / 0.71",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.99",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "0.969 (N=27062, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.02, max leg quartet +0.06",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": false,
+     "figure": "Hydra 2018+ 3.45 -> 3.09 at weight 54.3; P(5x) 56.2% -> 52.1%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 54.25282616739338,
+   "p5x": [
+    0.5618464571293371,
+    0.5205781707175714
+   ]
+  },
+  "totm_us": {
+   "id": "totm_us",
+   "when": "2026-10-23T20:56:55",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.11 / 0.14 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.01",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg morning +0.07",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.23",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26725, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "var_overreaction_fx_crosses": {
+   "id": "var_overreaction_fx_crosses",
+   "when": "2026-10-26T00:28:27",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.54 / -0.35 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.21",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.22, max leg quartet +0.39",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.87",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26780, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf",
+   "profitable_months_2018": [
+    0.777,
+    0.766
+   ]
+  },
+  "variant_asian_range_london_fade_eurusd": {
+   "id": "variant_asian_range_london_fade_eurusd",
+   "when": "2026-10-25T18:48:04",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-2.15 / -3.16 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-3.59",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg cross +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.33",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26772, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.691
+   ]
+  },
+  "variant_index_open_gap_fade_4mkts": {
+   "id": "variant_index_open_gap_fade_4mkts",
+   "when": "2026-10-25T18:40:27",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.84 / -0.53 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.90",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.06, max leg quartet +0.16",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 2.88",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26771, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "variant_yield_shock_gold_usdjpy_nextday": {
+   "id": "variant_yield_shock_gold_usdjpy_nextday",
+   "when": "2026-10-25T18:49:55",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.43 / -0.06 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.19",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.03, max leg hold +0.08",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.11 -> 3.10",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26773, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.787
+   ]
+  },
+  "vix_vxv_spike": {
+   "id": "vix_vxv_spike",
+   "when": "2026-10-24T01:55:28",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.66 / -0.25 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.14",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.05, max leg morning +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.19",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26730, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.798
+   ]
+  },
+  "volforecast_sizing": {
+   "id": "volforecast_sizing",
+   "when": "2026-10-22T01:48:08",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.04 / 0.96",
+     "rule": ">= 0.5 to 2017 and from 2018"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.61",
+     "rule": ">= 0.3 at 1.5x cost"
+    },
+    {
+     "gate": "dsr",
+     "pass": false,
+     "figure": "0.035 (N=27063, luck bar 1.03)",
+     "rule": ">= 0.9"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg fix +0.01",
+     "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "goal",
+     "pass": true,
+     "figure": "Hydra 2018+ 3.45 -> 3.51 at weight 0.0985; P(5x) 56.2% -> 56.8%",
+     "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+    }
+   ],
+   "weight": 0.09854107817762223,
+   "p5x": [
+    0.5618464571293371,
+    0.5677190335511603
+   ]
+  },
+  "volmanaged_mm": {
+   "id": "volmanaged_mm",
+   "when": "2026-10-23T01:02:45",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.21 / -0.07 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.47",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.09, max leg morning +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.31",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=27092, luck bar 1.01)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+   "profitable_months_2018": [
+    0.798,
+    0.777
+   ]
+  },
+  "vrp_gap": {
+   "id": "vrp_gap",
+   "when": "2026-10-24T01:36:59",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.03 / 0.39 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.10",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": false,
+     "figure": "book +0.03, max leg hold +0.32",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "2/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.34 -> 3.29",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26727, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.798,
+    0.777
+   ]
+  },
+  "vrp_gap_equity_indices": {
+   "id": "vrp_gap_equity_indices",
+   "when": "2026-10-25T19:52:35",
+   "verdict": "PASS",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "1.12 / 0.38 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.70",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.09, max leg morning +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "3/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": true,
+     "figure": "book 2018+ 3.11 -> 3.20",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26776, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.777,
+    0.798
+   ]
   }
  },
- "trials": 7,
+ "trials": 577,
  "props": {
   "about": "Prop routes for AurumFunded, from docs/HANDOFF.md (simulators in tools/prop_*.py, 70% of the back-tested edge). Firm rules were read on the firms' own pages on 2026-10-14/15; check again before buying. The dashboard reads this file.",
   "chosen": "FTMO 2-Step Challenge, Swing account",
@@ -916,6 +10001,9555 @@ window.AURUM = {
   ]
  },
  "runs": [
+  {
+   "name": "2026-11-01_0220_AurumFunded_grz1_on",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-11-01_0143_AurumFunded_grz1_off",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-11-01T01:43:15.9413737+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13339.78,
+    "gross_profit": 33854.32,
+    "gross_loss": -20514.54,
+    "profit_factor": 1.65,
+    "recovery": 16.09,
+    "sharpe": 6.71,
+    "trades": 2289.0,
+    "won": "1198 (52.34%)",
+    "eq_dd_max": "829.33 (7.06%)",
+    "eq_dd_rel": "7.06% (829.33)",
+    "bal_dd_max": "723.95 (6.17%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.34,
+    "eq_dd_max_pct": 7.06,
+    "bal_dd_max_pct": 6.17,
+    "eq_dd_rel_pct": 7.06,
+    "deals": 4579,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10535.02
+     ],
+     [
+      "2024-02-01",
+      10501.11
+     ],
+     [
+      "2024-02-02",
+      10622.52
+     ],
+     [
+      "2024-02-05",
+      10696.61
+     ],
+     [
+      "2024-02-06",
+      10667.81
+     ],
+     [
+      "2024-02-07",
+      10614.87
+     ],
+     [
+      "2024-02-08",
+      10635.63
+     ],
+     [
+      "2024-02-09",
+      10697.12
+     ],
+     [
+      "2024-02-12",
+      10683.16
+     ],
+     [
+      "2024-02-13",
+      10660.1
+     ],
+     [
+      "2024-02-14",
+      10643.51
+     ],
+     [
+      "2024-02-15",
+      10666.69
+     ],
+     [
+      "2024-02-16",
+      10690.68
+     ],
+     [
+      "2024-02-19",
+      10730.29
+     ],
+     [
+      "2024-02-20",
+      10557.99
+     ],
+     [
+      "2024-02-21",
+      10523.78
+     ],
+     [
+      "2024-02-22",
+      10550.6
+     ],
+     [
+      "2024-02-23",
+      10495.74
+     ],
+     [
+      "2024-02-26",
+      10478.76
+     ],
+     [
+      "2024-02-27",
+      10462.19
+     ],
+     [
+      "2024-02-28",
+      10476.16
+     ],
+     [
+      "2024-02-29",
+      10527.52
+     ],
+     [
+      "2024-03-01",
+      10580.0
+     ],
+     [
+      "2024-03-04",
+      10594.99
+     ],
+     [
+      "2024-03-05",
+      10588.49
+     ],
+     [
+      "2024-03-06",
+      10599.71
+     ],
+     [
+      "2024-03-07",
+      10614.92
+     ],
+     [
+      "2024-03-08",
+      10575.97
+     ],
+     [
+      "2024-04-01",
+      10517.16
+     ],
+     [
+      "2024-04-02",
+      10456.6
+     ],
+     [
+      "2024-04-03",
+      10394.5
+     ],
+     [
+      "2024-04-04",
+      10549.07
+     ],
+     [
+      "2024-04-05",
+      10697.63
+     ],
+     [
+      "2024-04-08",
+      10724.79
+     ],
+     [
+      "2024-04-09",
+      10673.31
+     ],
+     [
+      "2024-04-10",
+      10795.22
+     ],
+     [
+      "2024-04-11",
+      10820.98
+     ],
+     [
+      "2024-04-12",
+      10820.6
+     ],
+     [
+      "2024-04-15",
+      10846.29
+     ],
+     [
+      "2024-04-16",
+      10733.76
+     ],
+     [
+      "2024-04-17",
+      10825.36
+     ],
+     [
+      "2024-04-18",
+      10793.15
+     ],
+     [
+      "2024-04-19",
+      10986.42
+     ],
+     [
+      "2024-04-22",
+      10963.63
+     ],
+     [
+      "2024-04-23",
+      10948.45
+     ],
+     [
+      "2024-04-24",
+      10954.61
+     ],
+     [
+      "2024-04-25",
+      11050.86
+     ],
+     [
+      "2024-04-26",
+      11143.82
+     ],
+     [
+      "2024-04-29",
+      11116.09
+     ],
+     [
+      "2024-04-30",
+      11225.55
+     ],
+     [
+      "2024-05-01",
+      11245.26
+     ],
+     [
+      "2024-05-02",
+      11237.16
+     ],
+     [
+      "2024-05-03",
+      11227.07
+     ],
+     [
+      "2024-05-06",
+      11220.01
+     ],
+     [
+      "2024-05-07",
+      11191.56
+     ],
+     [
+      "2024-05-08",
+      11205.89
+     ],
+     [
+      "2024-05-09",
+      11201.06
+     ],
+     [
+      "2024-05-10",
+      11107.97
+     ],
+     [
+      "2024-05-13",
+      11073.31
+     ],
+     [
+      "2024-05-14",
+      11066.47
+     ],
+     [
+      "2024-05-15",
+      11109.39
+     ],
+     [
+      "2024-05-16",
+      11117.24
+     ],
+     [
+      "2024-05-17",
+      11089.4
+     ],
+     [
+      "2024-05-20",
+      11045.38
+     ],
+     [
+      "2024-05-21",
+      11058.85
+     ],
+     [
+      "2024-05-22",
+      11097.22
+     ],
+     [
+      "2024-05-23",
+      11061.3
+     ],
+     [
+      "2024-05-24",
+      11155.66
+     ],
+     [
+      "2024-05-27",
+      11146.04
+     ],
+     [
+      "2024-05-28",
+      11047.46
+     ],
+     [
+      "2024-05-29",
+      11032.29
+     ],
+     [
+      "2024-05-30",
+      11032.1
+     ],
+     [
+      "2024-05-31",
+      11034.86
+     ],
+     [
+      "2024-06-03",
+      11011.78
+     ],
+     [
+      "2024-06-04",
+      11034.65
+     ],
+     [
+      "2024-06-05",
+      11003.86
+     ],
+     [
+      "2024-06-06",
+      11033.24
+     ],
+     [
+      "2024-06-07",
+      10995.86
+     ],
+     [
+      "2024-06-10",
+      10957.69
+     ],
+     [
+      "2024-06-11",
+      10949.47
+     ],
+     [
+      "2024-06-12",
+      10881.5
+     ],
+     [
+      "2024-06-13",
+      10945.72
+     ],
+     [
+      "2024-06-14",
+      10918.18
+     ],
+     [
+      "2024-06-17",
+      10932.71
+     ],
+     [
+      "2024-06-18",
+      10935.23
+     ],
+     [
+      "2024-06-19",
+      10870.38
+     ],
+     [
+      "2024-06-20",
+      11085.9
+     ],
+     [
+      "2024-06-21",
+      11073.49
+     ],
+     [
+      "2024-06-24",
+      11018.66
+     ],
+     [
+      "2024-06-25",
+      11092.59
+     ],
+     [
+      "2024-06-26",
+      11054.43
+     ],
+     [
+      "2024-06-27",
+      11039.13
+     ],
+     [
+      "2024-06-28",
+      11179.16
+     ],
+     [
+      "2024-07-01",
+      11182.66
+     ],
+     [
+      "2024-07-02",
+      11208.2
+     ],
+     [
+      "2024-07-03",
+      11237.45
+     ],
+     [
+      "2024-07-04",
+      11221.59
+     ],
+     [
+      "2024-07-05",
+      11341.82
+     ],
+     [
+      "2024-07-08",
+      11340.34
+     ],
+     [
+      "2024-07-09",
+      11404.15
+     ],
+     [
+      "2024-07-10",
+      11354.61
+     ],
+     [
+      "2024-07-11",
+      11565.13
+     ],
+     [
+      "2024-07-12",
+      11581.62
+     ],
+     [
+      "2024-07-15",
+      11579.71
+     ],
+     [
+      "2024-07-16",
+      11550.93
+     ],
+     [
+      "2024-07-17",
+      11615.4
+     ],
+     [
+      "2024-07-18",
+      11615.83
+     ],
+     [
+      "2024-07-19",
+      11429.38
+     ],
+     [
+      "2024-07-22",
+      11436.17
+     ],
+     [
+      "2024-07-23",
+      11425.49
+     ],
+     [
+      "2024-07-24",
+      11592.09
+     ],
+     [
+      "2024-07-25",
+      11291.72
+     ],
+     [
+      "2024-07-26",
+      11243.77
+     ],
+     [
+      "2024-07-29",
+      11249.13
+     ],
+     [
+      "2024-07-30",
+      11291.01
+     ],
+     [
+      "2024-07-31",
+      11299.42
+     ],
+     [
+      "2024-08-01",
+      11468.05
+     ],
+     [
+      "2024-08-02",
+      11661.98
+     ],
+     [
+      "2024-08-05",
+      11439.83
+     ],
+     [
+      "2024-08-06",
+      11213.12
+     ],
+     [
+      "2024-08-07",
+      11196.55
+     ],
+     [
+      "2024-08-08",
+      11124.38
+     ],
+     [
+      "2024-08-09",
+      11254.51
+     ],
+     [
+      "2024-08-12",
+      11277.23
+     ],
+     [
+      "2024-08-13",
+      11168.41
+     ],
+     [
+      "2024-08-14",
+      11175.75
+     ],
+     [
+      "2024-08-15",
+      11107.83
+     ],
+     [
+      "2024-08-16",
+      11108.58
+     ],
+     [
+      "2024-08-19",
+      11096.46
+     ],
+     [
+      "2024-08-20",
+      11069.06
+     ],
+     [
+      "2024-08-21",
+      11031.37
+     ],
+     [
+      "2024-08-22",
+      11036.95
+     ],
+     [
+      "2024-08-23",
+      11042.16
+     ],
+     [
+      "2024-08-26",
+      11053.99
+     ],
+     [
+      "2024-08-27",
+      11057.77
+     ],
+     [
+      "2024-08-28",
+      11043.07
+     ],
+     [
+      "2024-08-29",
+      11027.83
+     ],
+     [
+      "2024-08-30",
+      11040.04
+     ],
+     [
+      "2024-09-02",
+      11056.27
+     ],
+     [
+      "2024-09-03",
+      11263.08
+     ],
+     [
+      "2024-09-04",
+      11305.86
+     ],
+     [
+      "2024-09-05",
+      11250.35
+     ],
+     [
+      "2024-09-06",
+      11362.4
+     ],
+     [
+      "2024-09-09",
+      11421.78
+     ],
+     [
+      "2024-09-10",
+      11450.39
+     ],
+     [
+      "2024-09-11",
+      11449.52
+     ],
+     [
+      "2024-09-12",
+      11453.04
+     ],
+     [
+      "2024-09-13",
+      11598.39
+     ],
+     [
+      "2024-09-16",
+      11603.31
+     ],
+     [
+      "2024-09-17",
+      11588.17
+     ],
+     [
+      "2024-09-18",
+      11888.48
+     ],
+     [
+      "2024-09-19",
+      11936.76
+     ],
+     [
+      "2024-09-20",
+      12021.61
+     ],
+     [
+      "2024-09-23",
+      11984.63
+     ],
+     [
+      "2024-09-24",
+      11991.57
+     ],
+     [
+      "2024-09-25",
+      11881.02
+     ],
+     [
+      "2024-09-26",
+      11817.58
+     ],
+     [
+      "2024-09-27",
+      11791.93
+     ],
+     [
+      "2024-09-30",
+      11793.24
+     ],
+     [
+      "2024-10-01",
+      11817.1
+     ],
+     [
+      "2024-10-02",
+      11813.32
+     ],
+     [
+      "2024-10-03",
+      11780.32
+     ],
+     [
+      "2024-10-04",
+      11858.69
+     ],
+     [
+      "2024-10-07",
+      11806.97
+     ],
+     [
+      "2024-10-08",
+      11824.93
+     ],
+     [
+      "2024-10-09",
+      11923.46
+     ],
+     [
+      "2024-10-10",
+      11971.62
+     ],
+     [
+      "2024-10-11",
+      12010.53
+     ],
+     [
+      "2024-10-14",
+      12113.75
+     ],
+     [
+      "2024-10-15",
+      12106.85
+     ],
+     [
+      "2024-10-16",
+      12077.8
+     ],
+     [
+      "2024-10-17",
+      12074.29
+     ],
+     [
+      "2024-10-18",
+      12061.73
+     ],
+     [
+      "2024-10-21",
+      12039.0
+     ],
+     [
+      "2024-10-22",
+      12070.03
+     ],
+     [
+      "2024-10-23",
+      12184.04
+     ],
+     [
+      "2024-10-24",
+      12208.46
+     ],
+     [
+      "2024-10-25",
+      12287.82
+     ],
+     [
+      "2024-11-04",
+      12262.59
+     ],
+     [
+      "2024-11-05",
+      12402.0
+     ],
+     [
+      "2024-11-06",
+      12101.62
+     ],
+     [
+      "2024-11-07",
+      12015.18
+     ],
+     [
+      "2024-11-08",
+      12097.03
+     ],
+     [
+      "2024-11-11",
+      12132.49
+     ],
+     [
+      "2024-11-12",
+      12152.88
+     ],
+     [
+      "2024-11-13",
+      12002.91
+     ],
+     [
+      "2024-11-14",
+      11854.01
+     ],
+     [
+      "2024-11-15",
+      12068.69
+     ],
+     [
+      "2024-11-18",
+      12014.63
+     ],
+     [
+      "2024-11-19",
+      11970.31
+     ],
+     [
+      "2024-11-20",
+      11929.59
+     ],
+     [
+      "2024-11-21",
+      11889.38
+     ],
+     [
+      "2024-11-22",
+      11903.09
+     ],
+     [
+      "2024-11-25",
+      11948.85
+     ],
+     [
+      "2024-11-26",
+      11961.08
+     ],
+     [
+      "2024-11-27",
+      11925.29
+     ],
+     [
+      "2024-11-28",
+      11962.15
+     ],
+     [
+      "2024-11-29",
+      12394.72
+     ],
+     [
+      "2024-12-02",
+      12424.35
+     ],
+     [
+      "2024-12-03",
+      12494.39
+     ],
+     [
+      "2024-12-04",
+      12549.25
+     ],
+     [
+      "2024-12-05",
+      12492.51
+     ],
+     [
+      "2024-12-06",
+      12723.44
+     ],
+     [
+      "2024-12-09",
+      12777.01
+     ],
+     [
+      "2024-12-10",
+      12968.6
+     ],
+     [
+      "2024-12-11",
+      12954.83
+     ],
+     [
+      "2024-12-12",
+      12988.38
+     ],
+     [
+      "2024-12-13",
+      12863.05
+     ],
+     [
+      "2024-12-16",
+      12899.62
+     ],
+     [
+      "2024-12-17",
+      12877.91
+     ],
+     [
+      "2024-12-18",
+      13177.04
+     ],
+     [
+      "2024-12-19",
+      13391.67
+     ],
+     [
+      "2024-12-20",
+      13970.16
+     ],
+     [
+      "2024-12-23",
+      13984.98
+     ],
+     [
+      "2024-12-24",
+      14073.99
+     ],
+     [
+      "2024-12-26",
+      14187.03
+     ],
+     [
+      "2024-12-27",
+      14168.45
+     ],
+     [
+      "2024-12-30",
+      14230.83
+     ],
+     [
+      "2024-12-31",
+      14190.7
+     ],
+     [
+      "2025-01-02",
+      14570.82
+     ],
+     [
+      "2025-01-03",
+      14532.57
+     ],
+     [
+      "2025-01-06",
+      14531.02
+     ],
+     [
+      "2025-01-07",
+      14603.88
+     ],
+     [
+      "2025-01-08",
+      14675.55
+     ],
+     [
+      "2025-01-09",
+      14652.85
+     ],
+     [
+      "2025-01-10",
+      14584.61
+     ],
+     [
+      "2025-01-13",
+      14565.03
+     ],
+     [
+      "2025-01-14",
+      14577.36
+     ],
+     [
+      "2025-01-15",
+      14628.41
+     ],
+     [
+      "2025-01-16",
+      14870.67
+     ],
+     [
+      "2025-01-17",
+      14956.62
+     ],
+     [
+      "2025-01-20",
+      14969.96
+     ],
+     [
+      "2025-01-21",
+      15031.05
+     ],
+     [
+      "2025-01-22",
+      15054.25
+     ],
+     [
+      "2025-01-23",
+      15098.88
+     ],
+     [
+      "2025-01-24",
+      15139.25
+     ],
+     [
+      "2025-01-27",
+      15128.55
+     ],
+     [
+      "2025-01-28",
+      15157.34
+     ],
+     [
+      "2025-01-29",
+      15106.72
+     ],
+     [
+      "2025-01-30",
+      15112.14
+     ],
+     [
+      "2025-01-31",
+      15031.21
+     ],
+     [
+      "2025-02-03",
+      15000.47
+     ],
+     [
+      "2025-02-04",
+      14972.43
+     ],
+     [
+      "2025-02-05",
+      15150.13
+     ],
+     [
+      "2025-02-06",
+      15143.54
+     ],
+     [
+      "2025-02-07",
+      15241.31
+     ],
+     [
+      "2025-02-10",
+      15275.8
+     ],
+     [
+      "2025-02-11",
+      15218.67
+     ],
+     [
+      "2025-02-12",
+      15259.09
+     ],
+     [
+      "2025-02-13",
+      15383.73
+     ],
+     [
+      "2025-02-14",
+      15413.31
+     ],
+     [
+      "2025-02-17",
+      15746.8
+     ],
+     [
+      "2025-02-18",
+      15863.84
+     ],
+     [
+      "2025-02-19",
+      15855.67
+     ],
+     [
+      "2025-02-20",
+      15922.33
+     ],
+     [
+      "2025-02-21",
+      16100.22
+     ],
+     [
+      "2025-02-24",
+      16149.25
+     ],
+     [
+      "2025-02-25",
+      16130.33
+     ],
+     [
+      "2025-02-26",
+      16122.26
+     ],
+     [
+      "2025-02-27",
+      16190.53
+     ],
+     [
+      "2025-02-28",
+      16018.91
+     ],
+     [
+      "2025-03-03",
+      15997.56
+     ],
+     [
+      "2025-03-04",
+      15959.92
+     ],
+     [
+      "2025-03-05",
+      15907.12
+     ],
+     [
+      "2025-03-06",
+      15892.83
+     ],
+     [
+      "2025-03-07",
+      15900.6
+     ],
+     [
+      "2025-03-31",
+      15972.83
+     ],
+     [
+      "2025-04-01",
+      16005.14
+     ],
+     [
+      "2025-04-02",
+      15909.09
+     ],
+     [
+      "2025-04-03",
+      15813.86
+     ],
+     [
+      "2025-04-04",
+      16007.95
+     ],
+     [
+      "2025-04-07",
+      16782.8
+     ],
+     [
+      "2025-04-08",
+      17054.07
+     ],
+     [
+      "2025-04-09",
+      17682.4
+     ],
+     [
+      "2025-04-10",
+      17996.18
+     ],
+     [
+      "2025-04-11",
+      18018.8
+     ],
+     [
+      "2025-04-14",
+      18184.27
+     ],
+     [
+      "2025-04-15",
+      18304.45
+     ],
+     [
+      "2025-04-16",
+      18301.29
+     ],
+     [
+      "2025-04-17",
+      18685.77
+     ],
+     [
+      "2025-04-18",
+      18638.42
+     ],
+     [
+      "2025-04-21",
+      18663.78
+     ],
+     [
+      "2025-04-22",
+      19084.3
+     ],
+     [
+      "2025-04-23",
+      19155.67
+     ],
+     [
+      "2025-04-24",
+      19275.42
+     ],
+     [
+      "2025-04-25",
+      19205.23
+     ],
+     [
+      "2025-04-28",
+      19210.18
+     ],
+     [
+      "2025-04-29",
+      19217.48
+     ],
+     [
+      "2025-04-30",
+      19123.12
+     ],
+     [
+      "2025-05-01",
+      18820.39
+     ],
+     [
+      "2025-05-02",
+      18827.7
+     ],
+     [
+      "2025-05-05",
+      19198.89
+     ],
+     [
+      "2025-05-06",
+      19126.72
+     ],
+     [
+      "2025-05-07",
+      19117.54
+     ],
+     [
+      "2025-05-08",
+      19061.41
+     ],
+     [
+      "2025-05-09",
+      18902.45
+     ],
+     [
+      "2025-05-12",
+      18930.25
+     ],
+     [
+      "2025-05-13",
+      19059.97
+     ],
+     [
+      "2025-05-14",
+      19153.29
+     ],
+     [
+      "2025-05-15",
+      19255.48
+     ],
+     [
+      "2025-05-16",
+      19390.15
+     ],
+     [
+      "2025-05-19",
+      19395.0
+     ],
+     [
+      "2025-05-20",
+      19410.23
+     ],
+     [
+      "2025-05-21",
+      19491.6
+     ],
+     [
+      "2025-05-22",
+      19229.36
+     ],
+     [
+      "2025-05-23",
+      19471.16
+     ],
+     [
+      "2025-05-26",
+      19481.56
+     ],
+     [
+      "2025-05-27",
+      19792.36
+     ],
+     [
+      "2025-05-28",
+      19873.88
+     ],
+     [
+      "2025-05-29",
+      19941.67
+     ],
+     [
+      "2025-05-30",
+      20184.79
+     ],
+     [
+      "2025-06-02",
+      20218.04
+     ],
+     [
+      "2025-06-03",
+      20293.81
+     ],
+     [
+      "2025-06-04",
+      20296.51
+     ],
+     [
+      "2025-06-05",
+      20194.87
+     ],
+     [
+      "2025-06-06",
+      20124.44
+     ],
+     [
+      "2025-06-09",
+      20188.47
+     ],
+     [
+      "2025-06-10",
+      19960.35
+     ],
+     [
+      "2025-06-11",
+      19934.88
+     ],
+     [
+      "2025-06-12",
+      19932.98
+     ],
+     [
+      "2025-06-13",
+      19950.97
+     ],
+     [
+      "2025-06-16",
+      19978.05
+     ],
+     [
+      "2025-06-17",
+      19929.08
+     ],
+     [
+      "2025-06-18",
+      19880.12
+     ],
+     [
+      "2025-06-19",
+      19799.04
+     ],
+     [
+      "2025-06-20",
+      19806.53
+     ],
+     [
+      "2025-06-23",
+      19852.18
+     ],
+     [
+      "2025-06-24",
+      19814.75
+     ],
+     [
+      "2025-06-25",
+      19880.85
+     ],
+     [
+      "2025-06-26",
+      20018.07
+     ],
+     [
+      "2025-06-27",
+      19900.61
+     ],
+     [
+      "2025-06-30",
+      20167.64
+     ],
+     [
+      "2025-07-01",
+      20151.28
+     ],
+     [
+      "2025-07-02",
+      20319.27
+     ],
+     [
+      "2025-07-03",
+      20489.36
+     ],
+     [
+      "2025-07-04",
+      20481.31
+     ],
+     [
+      "2025-07-07",
+      20778.38
+     ],
+     [
+      "2025-07-08",
+      20826.34
+     ],
+     [
+      "2025-07-09",
+      20859.38
+     ],
+     [
+      "2025-07-10",
+      20942.24
+     ],
+     [
+      "2025-07-11",
+      20985.79
+     ],
+     [
+      "2025-07-14",
+      21008.58
+     ],
+     [
+      "2025-07-15",
+      21099.83
+     ],
+     [
+      "2025-07-16",
+      21138.79
+     ],
+     [
+      "2025-07-17",
+      21275.4
+     ],
+     [
+      "2025-07-18",
+      21205.71
+     ],
+     [
+      "2025-07-21",
+      21106.56
+     ],
+     [
+      "2025-07-22",
+      21039.93
+     ],
+     [
+      "2025-07-23",
+      21087.52
+     ],
+     [
+      "2025-07-24",
+      21041.44
+     ],
+     [
+      "2025-07-25",
+      21036.76
+     ],
+     [
+      "2025-07-28",
+      21066.65
+     ],
+     [
+      "2025-07-29",
+      21269.03
+     ],
+     [
+      "2025-07-30",
+      21477.17
+     ],
+     [
+      "2025-07-31",
+      21624.46
+     ],
+     [
+      "2025-08-01",
+      21630.94
+     ],
+     [
+      "2025-08-04",
+      21773.29
+     ],
+     [
+      "2025-08-05",
+      21611.72
+     ],
+     [
+      "2025-08-06",
+      21606.26
+     ],
+     [
+      "2025-08-07",
+      21628.73
+     ],
+     [
+      "2025-08-08",
+      21586.25
+     ],
+     [
+      "2025-08-11",
+      21574.22
+     ],
+     [
+      "2025-08-12",
+      21597.28
+     ],
+     [
+      "2025-08-13",
+      21630.94
+     ],
+     [
+      "2025-08-14",
+      21658.31
+     ],
+     [
+      "2025-08-15",
+      21661.45
+     ],
+     [
+      "2025-08-18",
+      21689.35
+     ],
+     [
+      "2025-08-19",
+      21788.79
+     ],
+     [
+      "2025-08-20",
+      21898.31
+     ],
+     [
+      "2025-08-21",
+      22003.79
+     ],
+     [
+      "2025-08-22",
+      22052.56
+     ],
+     [
+      "2025-08-25",
+      21922.44
+     ],
+     [
+      "2025-08-26",
+      21863.97
+     ],
+     [
+      "2025-08-27",
+      21858.8
+     ],
+     [
+      "2025-08-28",
+      21934.84
+     ],
+     [
+      "2025-08-29",
+      22331.89
+     ],
+     [
+      "2025-09-01",
+      22388.83
+     ],
+     [
+      "2025-09-02",
+      23119.3
+     ],
+     [
+      "2025-09-03",
+      23080.1
+     ],
+     [
+      "2025-09-04",
+      23540.33
+     ],
+     [
+      "2025-09-05",
+      23620.68
+     ],
+     [
+      "2025-09-08",
+      23604.26
+     ],
+     [
+      "2025-09-09",
+      23703.7
+     ],
+     [
+      "2025-09-10",
+      23712.22
+     ],
+     [
+      "2025-09-11",
+      23697.77
+     ],
+     [
+      "2025-09-12",
+      23779.66
+     ],
+     [
+      "2025-09-15",
+      23723.0
+     ],
+     [
+      "2025-09-16",
+      23726.15
+     ],
+     [
+      "2025-09-17",
+      23591.0
+     ],
+     [
+      "2025-09-18",
+      23546.59
+     ],
+     [
+      "2025-09-19",
+      23717.46
+     ],
+     [
+      "2025-09-22",
+      23756.13
+     ],
+     [
+      "2025-09-23",
+      23876.01
+     ],
+     [
+      "2025-09-24",
+      23737.79
+     ],
+     [
+      "2025-09-25",
+      23620.68
+     ],
+     [
+      "2025-09-26",
+      23459.51
+     ],
+     [
+      "2025-09-29",
+      23339.78
+     ]
+    ],
+    "by_year": {
+     "2024": 4190.7,
+     "2025": 9149.08
+    },
+    "by_month": {
+     "2024-01": 535.02,
+     "2024-02": -7.5,
+     "2024-03": 48.45,
+     "2024-04": 649.58,
+     "2024-05": -190.69,
+     "2024-06": 144.3,
+     "2024-07": 120.26,
+     "2024-08": -259.38,
+     "2024-09": 753.2,
+     "2024-10": 494.58,
+     "2024-11": 106.9,
+     "2024-12": 1795.98,
+     "2025-01": 840.51,
+     "2025-02": 987.7,
+     "2025-03": -46.08,
+     "2025-04": 3150.29,
+     "2025-05": 1061.67,
+     "2025-06": -17.15,
+     "2025-07": 1456.82,
+     "2025-08": 707.43,
+     "2025-09": 1007.89
+    },
+    "by_symbol": {
+     "EURUSD": 2859.84,
+     "GBPUSD": 863.23,
+     "AUDUSD": 702.31,
+     "USDCAD": 697.46,
+     "USDCHF": 1032.94,
+     "USDJPY": 2286.91,
+     "US100.cash": 209.38,
+     "US500.cash": 254.16,
+     "XAUUSD": 2639.11,
+     "AUDJPY": 221.11,
+     "CADJPY": 660.14,
+     "GBPJPY": 597.61,
+     "EURJPY": 315.58
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.59
+    },
+    "months_positive": 16,
+    "months": 21,
+    "return_pct": 133.4
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-01_0053_AurumFunded_grz1_off",
+   "state": "no report (run killed or still going)"
+  },
+  {
+   "name": "2026-10-28_1245_AurumFunded_dual1_on",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpDualMult=0.25",
+    "Started": "2026-10-28T12:45:27.3533399+01:00"
+   },
+   "summary": "# j18: AurumFunded dual1 on XAUUSD M15\n\nWritten by tools/autopilot/tester_step.py 2026-10-28 13:27: figures only, the judge judges.\nPreset `mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_dual.set`, deposit 10000, leverage 1:33, 2024.01.01 to 2025.09.30, set none, compare_set ['InpDualMult=0.25'].\n\n## legs off (`2026-10-28_1213_AurumFunded_dual1_off`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,416.12 (+134.2%) |\n| Trades / win rate | 2280.0 / 52.11% |\n| Profit factor | 1.62 |\n| Max equity drawdown | 4.16% |\n| Worst day | 2024-07-25 -2.55% |\n| Return per unit of drawdown | 32.2 |\n| By year | 2024 +4,562, 2025 +8,854 |\n| History quality | 99% real ticks |\n\n## legs on (`2026-10-28_1245_AurumFunded_dual1_on`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +15,182.14 (+151.8%) |\n| Trades / win rate | 3046.0 / 53.74% |\n| Profit factor | 1.6 |\n| Max equity drawdown | 7.59% |\n| Worst day | 2024-07-25 -2.5% |\n| Return per unit of drawdown | 20.0 |\n| By year | 2024 +5,213, 2025 +9,970 |\n| History quality | 99% real ticks |\n\n## On against off\n\nReturn per unit of equity drawdown: off 32.2, on 20.0 (not higher with the legs on).\n\n## Expected (from the job)\n\nStep 15 for AurumFunded v1.18 (Dual Thrust index leg, magics +32 S&P 500 / +33 Nasdaq / +34 GER40.cash / +35 JP225.cash). Preset = OFF run; compare_set adds InpDualMult=0.25 (ON run). Python (research/prebuilt_dual_thrust_four_indices_ew.py, four indices equal weight at size 1): +12.6% over 2024.01-2025.10 with annual vol 3.8% and max DD 2.3%; the preset runs it at SizeMult 0.5, so about +6% and 1.2% DD on 10k, i.e. about +600 USD, 67-87% of that in the tester (lesson 4). Rule: 4-day range, buy at 01:00 open + 0.3 x range, sell at open - 0.7 x range, broker stop at the opposite level (reverses), flat 22:00, several trades a day expected (reversals). Check the log shows the four symbols selected and 'Dual Thrust ... bought/sold' lines; if GER40.cash or JP225.cash is not on the tester server the log says the leg leaves it out (then judge on the two US indices). Differences from the Python: D1 bars of the broker, stop = reversal level, cap of 8 entries per day and index. Lesson 21: the book CloseEverything (day stop etc.) can close trades early; this leg is intraday so the effect is small, but check for off-schedule closes. Do not tune on this window.\n\n## Log lines worth a look\n\n- None matched (not found, cannot, failed, margin, invalid, error).\n",
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 15182.14,
+    "gross_profit": 40301.6,
+    "gross_loss": -25119.46,
+    "profit_factor": 1.6,
+    "recovery": 16.13,
+    "sharpe": 5.68,
+    "trades": 3046.0,
+    "won": "1637 (53.74%)",
+    "eq_dd_max": "941.33 (7.59%)",
+    "eq_dd_rel": "7.59% (941.33)",
+    "bal_dd_max": "829.62 (6.71%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 53.74,
+    "eq_dd_max_pct": 7.59,
+    "bal_dd_max_pct": 6.71,
+    "deals": 6093,
+    "curve": [
+     [
+      "2024-01-02",
+      10321.03
+     ],
+     [
+      "2024-01-03",
+      10342.05
+     ],
+     [
+      "2024-01-04",
+      10343.23
+     ],
+     [
+      "2024-01-05",
+      10367.28
+     ],
+     [
+      "2024-01-08",
+      10500.49
+     ],
+     [
+      "2024-01-09",
+      10518.26
+     ],
+     [
+      "2024-01-10",
+      10487.56
+     ],
+     [
+      "2024-01-11",
+      10435.24
+     ],
+     [
+      "2024-01-12",
+      10473.24
+     ],
+     [
+      "2024-01-15",
+      10471.38
+     ],
+     [
+      "2024-01-16",
+      10577.99
+     ],
+     [
+      "2024-01-17",
+      10569.49
+     ],
+     [
+      "2024-01-18",
+      10628.84
+     ],
+     [
+      "2024-01-19",
+      10608.14
+     ],
+     [
+      "2024-01-22",
+      10562.5
+     ],
+     [
+      "2024-01-23",
+      10550.34
+     ],
+     [
+      "2024-01-24",
+      10559.27
+     ],
+     [
+      "2024-01-25",
+      10572.83
+     ],
+     [
+      "2024-01-26",
+      10570.24
+     ],
+     [
+      "2024-01-29",
+      10597.77
+     ],
+     [
+      "2024-01-30",
+      10549.21
+     ],
+     [
+      "2024-01-31",
+      10639.94
+     ],
+     [
+      "2024-02-01",
+      10622.84
+     ],
+     [
+      "2024-02-02",
+      10763.76
+     ],
+     [
+      "2024-02-05",
+      10837.56
+     ],
+     [
+      "2024-02-06",
+      10808.4
+     ],
+     [
+      "2024-02-07",
+      10769.53
+     ],
+     [
+      "2024-02-08",
+      10807.52
+     ],
+     [
+      "2024-02-09",
+      10879.5
+     ],
+     [
+      "2024-02-12",
+      10855.42
+     ],
+     [
+      "2024-02-13",
+      10852.6
+     ],
+     [
+      "2024-02-14",
+      10839.22
+     ],
+     [
+      "2024-02-15",
+      10871.06
+     ],
+     [
+      "2024-02-16",
+      10896.54
+     ],
+     [
+      "2024-02-19",
+      10937.04
+     ],
+     [
+      "2024-02-20",
+      10756.97
+     ],
+     [
+      "2024-02-21",
+      10721.33
+     ],
+     [
+      "2024-02-22",
+      10817.38
+     ],
+     [
+      "2024-02-23",
+      10761.3
+     ],
+     [
+      "2024-02-26",
+      10743.9
+     ],
+     [
+      "2024-02-27",
+      10731.86
+     ],
+     [
+      "2024-02-28",
+      10745.83
+     ],
+     [
+      "2024-02-29",
+      10860.29
+     ],
+     [
+      "2024-03-01",
+      10958.63
+     ],
+     [
+      "2024-03-04",
+      10973.85
+     ],
+     [
+      "2024-03-05",
+      10968.41
+     ],
+     [
+      "2024-03-06",
+      10975.36
+     ],
+     [
+      "2024-03-07",
+      11004.42
+     ],
+     [
+      "2024-03-08",
+      10933.66
+     ],
+     [
+      "2024-04-01",
+      10863.44
+     ],
+     [
+      "2024-04-02",
+      10805.25
+     ],
+     [
+      "2024-04-03",
+      10738.36
+     ],
+     [
+      "2024-04-04",
+      10859.81
+     ],
+     [
+      "2024-04-05",
+      11008.94
+     ],
+     [
+      "2024-04-08",
+      11035.94
+     ],
+     [
+      "2024-04-09",
+      10985.91
+     ],
+     [
+      "2024-04-10",
+      11090.2
+     ],
+     [
+      "2024-04-11",
+      11149.51
+     ],
+     [
+      "2024-04-12",
+      11151.6
+     ],
+     [
+      "2024-04-15",
+      11090.01
+     ],
+     [
+      "2024-04-16",
+      10974.08
+     ],
+     [
+      "2024-04-17",
+      11067.86
+     ],
+     [
+      "2024-04-18",
+      11034.35
+     ],
+     [
+      "2024-04-19",
+      11196.36
+     ],
+     [
+      "2024-04-22",
+      11189.52
+     ],
+     [
+      "2024-04-23",
+      11189.85
+     ],
+     [
+      "2024-04-24",
+      11191.23
+     ],
+     [
+      "2024-04-25",
+      11287.23
+     ],
+     [
+      "2024-04-26",
+      11392.28
+     ],
+     [
+      "2024-04-29",
+      11363.84
+     ],
+     [
+      "2024-04-30",
+      11461.07
+     ],
+     [
+      "2024-05-01",
+      11493.37
+     ],
+     [
+      "2024-05-02",
+      11478.84
+     ],
+     [
+      "2024-05-03",
+      11475.27
+     ],
+     [
+      "2024-05-06",
+      11478.39
+     ],
+     [
+      "2024-05-07",
+      11460.95
+     ],
+     [
+      "2024-05-08",
+      11475.28
+     ],
+     [
+      "2024-05-09",
+      11473.75
+     ],
+     [
+      "2024-05-10",
+      11360.5
+     ],
+     [
+      "2024-05-13",
+      11320.03
+     ],
+     [
+      "2024-05-14",
+      11324.95
+     ],
+     [
+      "2024-05-15",
+      11385.5
+     ],
+     [
+      "2024-05-16",
+      11383.12
+     ],
+     [
+      "2024-05-17",
+      11349.33
+     ],
+     [
+      "2024-05-20",
+      11315.2
+     ],
+     [
+      "2024-05-21",
+      11328.8
+     ],
+     [
+      "2024-05-22",
+      11367.9
+     ],
+     [
+      "2024-05-23",
+      11279.19
+     ],
+     [
+      "2024-05-24",
+      11382.26
+     ],
+     [
+      "2024-05-27",
+      11374.2
+     ],
+     [
+      "2024-05-28",
+      11272.71
+     ],
+     [
+      "2024-05-29",
+      11237.61
+     ],
+     [
+      "2024-05-30",
+      11237.45
+     ],
+     [
+      "2024-05-31",
+      11269.97
+     ],
+     [
+      "2024-06-03",
+      11231.16
+     ],
+     [
+      "2024-06-04",
+      11246.04
+     ],
+     [
+      "2024-06-05",
+      11247.73
+     ],
+     [
+      "2024-06-06",
+      11269.04
+     ],
+     [
+      "2024-06-07",
+      11224.09
+     ],
+     [
+      "2024-06-10",
+      11195.53
+     ],
+     [
+      "2024-06-11",
+      11178.62
+     ],
+     [
+      "2024-06-12",
+      11139.66
+     ],
+     [
+      "2024-06-13",
+      11212.28
+     ],
+     [
+      "2024-06-14",
+      11168.26
+     ],
+     [
+      "2024-06-17",
+      11194.8
+     ],
+     [
+      "2024-06-18",
+      11197.32
+     ],
+     [
+      "2024-06-19",
+      11130.38
+     ],
+     [
+      "2024-06-20",
+      11353.21
+     ],
+     [
+      "2024-06-21",
+      11333.12
+     ],
+     [
+      "2024-06-24",
+      11275.55
+     ],
+     [
+      "2024-06-25",
+      11362.46
+     ],
+     [
+      "2024-06-26",
+      11303.97
+     ],
+     [
+      "2024-06-27",
+      11285.89
+     ],
+     [
+      "2024-06-28",
+      11442.67
+     ],
+     [
+      "2024-07-01",
+      11444.46
+     ],
+     [
+      "2024-07-02",
+      11488.87
+     ],
+     [
+      "2024-07-03",
+      11543.39
+     ],
+     [
+      "2024-07-04",
+      11527.24
+     ],
+     [
+      "2024-07-05",
+      11646.74
+     ],
+     [
+      "2024-07-08",
+      11631.46
+     ],
+     [
+      "2024-07-09",
+      11703.15
+     ],
+     [
+      "2024-07-10",
+      11693.18
+     ],
+     [
+      "2024-07-11",
+      11906.18
+     ],
+     [
+      "2024-07-12",
+      11955.86
+     ],
+     [
+      "2024-07-15",
+      11949.13
+     ],
+     [
+      "2024-07-16",
+      11919.1
+     ],
+     [
+      "2024-07-17",
+      12008.27
+     ],
+     [
+      "2024-07-18",
+      12005.38
+     ],
+     [
+      "2024-07-19",
+      11814.41
+     ],
+     [
+      "2024-07-22",
+      11833.76
+     ],
+     [
+      "2024-07-23",
+      11818.56
+     ],
+     [
+      "2024-07-24",
+      12031.77
+     ],
+     [
+      "2024-07-25",
+      11731.53
+     ],
+     [
+      "2024-07-26",
+      11679.1
+     ],
+     [
+      "2024-07-29",
+      11683.8
+     ],
+     [
+      "2024-07-30",
+      11722.46
+     ],
+     [
+      "2024-07-31",
+      11817.34
+     ],
+     [
+      "2024-08-01",
+      12082.42
+     ],
+     [
+      "2024-08-02",
+      12299.78
+     ],
+     [
+      "2024-08-05",
+      11999.28
+     ],
+     [
+      "2024-08-06",
+      11762.2
+     ],
+     [
+      "2024-08-07",
+      11667.0
+     ],
+     [
+      "2024-08-08",
+      11634.61
+     ],
+     [
+      "2024-08-09",
+      11767.25
+     ],
+     [
+      "2024-08-12",
+      11790.43
+     ],
+     [
+      "2024-08-13",
+      11689.3
+     ],
+     [
+      "2024-08-14",
+      11697.34
+     ],
+     [
+      "2024-08-15",
+      11673.8
+     ],
+     [
+      "2024-08-16",
+      11675.16
+     ],
+     [
+      "2024-08-19",
+      11663.04
+     ],
+     [
+      "2024-08-20",
+      11634.16
+     ],
+     [
+      "2024-08-21",
+      11589.17
+     ],
+     [
+      "2024-08-22",
+      11582.12
+     ],
+     [
+      "2024-08-23",
+      11593.45
+     ],
+     [
+      "2024-08-26",
+      11602.01
+     ],
+     [
+      "2024-08-27",
+      11607.57
+     ],
+     [
+      "2024-08-28",
+      11578.33
+     ],
+     [
+      "2024-08-29",
+      11564.83
+     ],
+     [
+      "2024-08-30",
+      11596.52
+     ],
+     [
+      "2024-09-02",
+      11613.27
+     ],
+     [
+      "2024-09-03",
+      11857.14
+     ],
+     [
+      "2024-09-04",
+      11901.37
+     ],
+     [
+      "2024-09-05",
+      11843.33
+     ],
+     [
+      "2024-09-06",
+      11960.32
+     ],
+     [
+      "2024-09-09",
+      12009.57
+     ],
+     [
+      "2024-09-10",
+      12030.6
+     ],
+     [
+      "2024-09-11",
+      12033.98
+     ],
+     [
+      "2024-09-12",
+      12035.47
+     ],
+     [
+      "2024-09-13",
+      12191.35
+     ],
+     [
+      "2024-09-16",
+      12196.69
+     ],
+     [
+      "2024-09-17",
+      12180.35
+     ],
+     [
+      "2024-09-18",
+      12486.05
+     ],
+     [
+      "2024-09-19",
+      12597.93
+     ],
+     [
+      "2024-09-20",
+      12694.56
+     ],
+     [
+      "2024-09-23",
+      12660.14
+     ],
+     [
+      "2024-09-24",
+      12664.44
+     ],
+     [
+      "2024-09-25",
+      12547.08
+     ],
+     [
+      "2024-09-26",
+      12513.76
+     ],
+     [
+      "2024-09-27",
+      12460.51
+     ],
+     [
+      "2024-09-30",
+      12465.47
+     ],
+     [
+      "2024-10-01",
+      12484.92
+     ],
+     [
+      "2024-10-02",
+      12479.62
+     ],
+     [
+      "2024-10-03",
+      12444.63
+     ],
+     [
+      "2024-10-04",
+      12548.52
+     ],
+     [
+      "2024-10-07",
+      12497.69
+     ],
+     [
+      "2024-10-08",
+      12527.77
+     ],
+     [
+      "2024-10-09",
+      12639.5
+     ],
+     [
+      "2024-10-10",
+      12690.61
+     ],
+     [
+      "2024-10-11",
+      12738.08
+     ],
+     [
+      "2024-10-14",
+      12855.56
+     ],
+     [
+      "2024-10-15",
+      12853.15
+     ],
+     [
+      "2024-10-16",
+      12824.21
+     ],
+     [
+      "2024-10-17",
+      12813.46
+     ],
+     [
+      "2024-10-18",
+      12802.31
+     ],
+     [
+      "2024-10-21",
+      12778.64
+     ],
+     [
+      "2024-10-22",
+      12816.0
+     ],
+     [
+      "2024-10-23",
+      12946.7
+     ],
+     [
+      "2024-10-24",
+      12962.59
+     ],
+     [
+      "2024-10-25",
+      13041.54
+     ],
+     [
+      "2024-11-04",
+      13015.16
+     ],
+     [
+      "2024-11-05",
+      13153.72
+     ],
+     [
+      "2024-11-06",
+      12853.43
+     ],
+     [
+      "2024-11-07",
+      12780.35
+     ],
+     [
+      "2024-11-08",
+      12867.94
+     ],
+     [
+      "2024-11-11",
+      12908.82
+     ],
+     [
+      "2024-11-12",
+      12932.68
+     ],
+     [
+      "2024-11-13",
+      12768.55
+     ],
+     [
+      "2024-11-14",
+      12617.74
+     ],
+     [
+      "2024-11-15",
+      12866.97
+     ],
+     [
+      "2024-11-18",
+      12809.26
+     ],
+     [
+      "2024-11-19",
+      12713.54
+     ],
+     [
+      "2024-11-20",
+      12657.71
+     ],
+     [
+      "2024-11-21",
+      12618.32
+     ],
+     [
+      "2024-11-22",
+      12644.26
+     ],
+     [
+      "2024-11-25",
+      12690.6
+     ],
+     [
+      "2024-11-26",
+      12694.9
+     ],
+     [
+      "2024-11-27",
+      12654.33
+     ],
+     [
+      "2024-11-28",
+      12698.94
+     ],
+     [
+      "2024-11-29",
+      13281.14
+     ],
+     [
+      "2024-12-02",
+      13331.36
+     ],
+     [
+      "2024-12-03",
+      13415.69
+     ],
+     [
+      "2024-12-04",
+      13476.26
+     ],
+     [
+      "2024-12-05",
+      13411.88
+     ],
+     [
+      "2024-12-06",
+      13664.81
+     ],
+     [
+      "2024-12-09",
+      13720.95
+     ],
+     [
+      "2024-12-10",
+      13913.23
+     ],
+     [
+      "2024-12-11",
+      13950.14
+     ],
+     [
+      "2024-12-12",
+      13980.8
+     ],
+     [
+      "2024-12-13",
+      13829.53
+     ],
+     [
+      "2024-12-16",
+      13891.07
+     ],
+     [
+      "2024-12-17",
+      13866.96
+     ],
+     [
+      "2024-12-18",
+      14160.24
+     ],
+     [
+      "2024-12-19",
+      14394.47
+     ],
+     [
+      "2024-12-20",
+      15018.43
+     ],
+     [
+      "2024-12-23",
+      15033.67
+     ],
+     [
+      "2024-12-24",
+      15132.03
+     ],
+     [
+      "2024-12-26",
+      15259.29
+     ],
+     [
+      "2024-12-27",
+      15245.57
+     ],
+     [
+      "2024-12-30",
+      15279.5
+     ],
+     [
+      "2024-12-31",
+      15212.52
+     ],
+     [
+      "2025-01-02",
+      15616.29
+     ],
+     [
+      "2025-01-03",
+      15580.67
+     ],
+     [
+      "2025-01-06",
+      15581.12
+     ],
+     [
+      "2025-01-07",
+      15653.07
+     ],
+     [
+      "2025-01-08",
+      15717.5
+     ],
+     [
+      "2025-01-09",
+      15693.24
+     ],
+     [
+      "2025-01-10",
+      15615.29
+     ],
+     [
+      "2025-01-13",
+      15578.78
+     ],
+     [
+      "2025-01-14",
+      15581.11
+     ],
+     [
+      "2025-01-15",
+      15702.36
+     ],
+     [
+      "2025-01-16",
+      15966.54
+     ],
+     [
+      "2025-01-17",
+      16094.06
+     ],
+     [
+      "2025-01-20",
+      16105.21
+     ],
+     [
+      "2025-01-21",
+      16168.44
+     ],
+     [
+      "2025-01-22",
+      16201.51
+     ],
+     [
+      "2025-01-23",
+      16253.24
+     ],
+     [
+      "2025-01-24",
+      16310.93
+     ],
+     [
+      "2025-01-27",
+      16292.04
+     ],
+     [
+      "2025-01-28",
+      16322.16
+     ],
+     [
+      "2025-01-29",
+      16270.66
+     ],
+     [
+      "2025-01-30",
+      16276.72
+     ],
+     [
+      "2025-01-31",
+      16158.92
+     ],
+     [
+      "2025-02-03",
+      16189.46
+     ],
+     [
+      "2025-02-04",
+      16159.37
+     ],
+     [
+      "2025-02-05",
+      16357.43
+     ],
+     [
+      "2025-02-06",
+      16358.74
+     ],
+     [
+      "2025-02-07",
+      16465.56
+     ],
+     [
+      "2025-02-10",
+      16542.41
+     ],
+     [
+      "2025-02-11",
+      16478.37
+     ],
+     [
+      "2025-02-12",
+      16490.87
+     ],
+     [
+      "2025-02-13",
+      16638.33
+     ],
+     [
+      "2025-02-14",
+      16670.89
+     ],
+     [
+      "2025-02-17",
+      17042.06
+     ],
+     [
+      "2025-02-18",
+      17163.68
+     ],
+     [
+      "2025-02-19",
+      17162.17
+     ],
+     [
+      "2025-02-20",
+      17233.53
+     ],
+     [
+      "2025-02-21",
+      17417.35
+     ],
+     [
+      "2025-02-24",
+      17453.01
+     ],
+     [
+      "2025-02-25",
+      17412.36
+     ],
+     [
+      "2025-02-26",
+      17376.6
+     ],
+     [
+      "2025-02-27",
+      17418.95
+     ],
+     [
+      "2025-02-28",
+      17116.64
+     ],
+     [
+      "2025-03-03",
+      17098.71
+     ],
+     [
+      "2025-03-04",
+      16923.38
+     ],
+     [
+      "2025-03-05",
+      16879.0
+     ],
+     [
+      "2025-03-06",
+      16863.98
+     ],
+     [
+      "2025-03-07",
+      16871.95
+     ],
+     [
+      "2025-03-31",
+      17007.41
+     ],
+     [
+      "2025-04-01",
+      17034.78
+     ],
+     [
+      "2025-04-02",
+      16909.77
+     ],
+     [
+      "2025-04-03",
+      16792.79
+     ],
+     [
+      "2025-04-04",
+      17055.96
+     ],
+     [
+      "2025-04-07",
+      17864.45
+     ],
+     [
+      "2025-04-08",
+      18151.67
+     ],
+     [
+      "2025-04-09",
+      19062.74
+     ],
+     [
+      "2025-04-10",
+      19397.15
+     ],
+     [
+      "2025-04-11",
+      19423.1
+     ],
+     [
+      "2025-04-14",
+      19601.39
+     ],
+     [
+      "2025-04-15",
+      19733.8
+     ],
+     [
+      "2025-04-16",
+      19730.81
+     ],
+     [
+      "2025-04-17",
+      20155.6
+     ],
+     [
+      "2025-04-18",
+      20104.04
+     ],
+     [
+      "2025-04-21",
+      20138.72
+     ],
+     [
+      "2025-04-22",
+      20654.69
+     ],
+     [
+      "2025-04-23",
+      20703.02
+     ],
+     [
+      "2025-04-24",
+      20844.75
+     ],
+     [
+      "2025-04-25",
+      20760.81
+     ],
+     [
+      "2025-04-28",
+      20766.76
+     ],
+     [
+      "2025-04-29",
+      20769.85
+     ],
+     [
+      "2025-04-30",
+      20638.28
+     ],
+     [
+      "2025-05-01",
+      20336.06
+     ],
+     [
+      "2025-05-02",
+      20364.0
+     ],
+     [
+      "2025-05-05",
+      20770.58
+     ],
+     [
+      "2025-05-06",
+      20696.14
+     ],
+     [
+      "2025-05-07",
+      20679.95
+     ],
+     [
+      "2025-05-08",
+      20662.93
+     ],
+     [
+      "2025-05-09",
+      20489.05
+     ],
+     [
+      "2025-05-12",
+      20540.87
+     ],
+     [
+      "2025-05-13",
+      20682.22
+     ],
+     [
+      "2025-05-14",
+      20782.74
+     ],
+     [
+      "2025-05-15",
+      20898.64
+     ],
+     [
+      "2025-05-16",
+      21041.09
+     ],
+     [
+      "2025-05-19",
+      21053.22
+     ],
+     [
+      "2025-05-20",
+      21060.39
+     ],
+     [
+      "2025-05-21",
+      21138.81
+     ],
+     [
+      "2025-05-22",
+      20856.73
+     ],
+     [
+      "2025-05-23",
+      21108.9
+     ],
+     [
+      "2025-05-26",
+      21139.65
+     ],
+     [
+      "2025-05-27",
+      21485.19
+     ],
+     [
+      "2025-05-28",
+      21574.55
+     ],
+     [
+      "2025-05-29",
+      21621.15
+     ],
+     [
+      "2025-05-30",
+      21313.59
+     ],
+     [
+      "2025-06-02",
+      21355.01
+     ],
+     [
+      "2025-06-03",
+      21437.29
+     ],
+     [
+      "2025-06-04",
+      21439.49
+     ],
+     [
+      "2025-06-05",
+      21309.9
+     ],
+     [
+      "2025-06-06",
+      21269.62
+     ],
+     [
+      "2025-06-09",
+      21335.68
+     ],
+     [
+      "2025-06-10",
+      21093.06
+     ],
+     [
+      "2025-06-11",
+      21024.72
+     ],
+     [
+      "2025-06-12",
+      21022.8
+     ],
+     [
+      "2025-06-13",
+      21032.23
+     ],
+     [
+      "2025-06-16",
+      21085.59
+     ],
+     [
+      "2025-06-17",
+      21033.77
+     ],
+     [
+      "2025-06-18",
+      20966.7
+     ],
+     [
+      "2025-06-19",
+      20881.11
+     ],
+     [
+      "2025-06-20",
+      20874.19
+     ],
+     [
+      "2025-06-23",
+      20946.73
+     ],
+     [
+      "2025-06-24",
+      20916.91
+     ],
+     [
+      "2025-06-25",
+      20983.98
+     ],
+     [
+      "2025-06-26",
+      21140.89
+     ],
+     [
+      "2025-06-27",
+      21019.7
+     ],
+     [
+      "2025-06-30",
+      21173.49
+     ],
+     [
+      "2025-07-01",
+      21156.35
+     ],
+     [
+      "2025-07-02",
+      21332.02
+     ],
+     [
+      "2025-07-03",
+      21517.69
+     ],
+     [
+      "2025-07-04",
+      21509.22
+     ],
+     [
+      "2025-07-07",
+      21823.54
+     ],
+     [
+      "2025-07-08",
+      21906.91
+     ],
+     [
+      "2025-07-09",
+      21968.61
+     ],
+     [
+      "2025-07-10",
+      22056.56
+     ],
+     [
+      "2025-07-11",
+      22080.65
+     ],
+     [
+      "2025-07-14",
+      22123.36
+     ],
+     [
+      "2025-07-15",
+      22201.37
+     ],
+     [
+      "2025-07-16",
+      22197.13
+     ],
+     [
+      "2025-07-17",
+      22395.92
+     ],
+     [
+      "2025-07-18",
+      22319.44
+     ],
+     [
+      "2025-07-21",
+      22222.05
+     ],
+     [
+      "2025-07-22",
+      22126.03
+     ],
+     [
+      "2025-07-23",
+      22286.35
+     ],
+     [
+      "2025-07-24",
+      22237.11
+     ],
+     [
+      "2025-07-25",
+      22232.23
+     ],
+     [
+      "2025-07-28",
+      22265.54
+     ],
+     [
+      "2025-07-29",
+      22471.58
+     ],
+     [
+      "2025-07-30",
+      22648.42
+     ],
+     [
+      "2025-07-31",
+      22834.3
+     ],
+     [
+      "2025-08-01",
+      22910.79
+     ],
+     [
+      "2025-08-04",
+      23105.24
+     ],
+     [
+      "2025-08-05",
+      22933.69
+     ],
+     [
+      "2025-08-06",
+      22931.71
+     ],
+     [
+      "2025-08-07",
+      22910.39
+     ],
+     [
+      "2025-08-08",
+      22910.65
+     ],
+     [
+      "2025-08-11",
+      22899.07
+     ],
+     [
+      "2025-08-12",
+      22967.55
+     ],
+     [
+      "2025-08-13",
+      22998.27
+     ],
+     [
+      "2025-08-14",
+      23041.83
+     ],
+     [
+      "2025-08-15",
+      23058.79
+     ],
+     [
+      "2025-08-18",
+      23087.93
+     ],
+     [
+      "2025-08-19",
+      23226.52
+     ],
+     [
+      "2025-08-20",
+      23317.68
+     ],
+     [
+      "2025-08-21",
+      23427.55
+     ],
+     [
+      "2025-08-22",
+      23535.33
+     ],
+     [
+      "2025-08-25",
+      23390.64
+     ],
+     [
+      "2025-08-26",
+      23323.9
+     ],
+     [
+      "2025-08-27",
+      23310.84
+     ],
+     [
+      "2025-08-28",
+      23405.27
+     ],
+     [
+      "2025-08-29",
+      23991.65
+     ],
+     [
+      "2025-09-01",
+      24046.8
+     ],
+     [
+      "2025-09-02",
+      24891.63
+     ],
+     [
+      "2025-09-03",
+      24851.0
+     ],
+     [
+      "2025-09-04",
+      25391.27
+     ],
+     [
+      "2025-09-05",
+      25449.83
+     ],
+     [
+      "2025-09-08",
+      25444.8
+     ],
+     [
+      "2025-09-09",
+      25552.92
+     ],
+     [
+      "2025-09-10",
+      25545.82
+     ],
+     [
+      "2025-09-11",
+      25582.58
+     ],
+     [
+      "2025-09-12",
+      25675.42
+     ],
+     [
+      "2025-09-15",
+      25609.13
+     ],
+     [
+      "2025-09-16",
+      25625.71
+     ],
+     [
+      "2025-09-17",
+      25456.27
+     ],
+     [
+      "2025-09-18",
+      25502.06
+     ],
+     [
+      "2025-09-19",
+      25670.11
+     ],
+     [
+      "2025-09-22",
+      25716.22
+     ],
+     [
+      "2025-09-23",
+      25824.96
+     ],
+     [
+      "2025-09-24",
+      25676.18
+     ],
+     [
+      "2025-09-25",
+      25513.18
+     ],
+     [
+      "2025-09-26",
+      25339.82
+     ],
+     [
+      "2025-09-29",
+      25182.14
+     ]
+    ],
+    "by_year": {
+     "2024": 5212.52,
+     "2025": 9969.62
+    },
+    "by_month": {
+     "2024-01": 639.94,
+     "2024-02": 220.35,
+     "2024-03": 73.37,
+     "2024-04": 527.41,
+     "2024-05": -191.1,
+     "2024-06": 172.7,
+     "2024-07": 374.67,
+     "2024-08": -220.82,
+     "2024-09": 868.95,
+     "2024-10": 576.07,
+     "2024-11": 239.6,
+     "2024-12": 1931.38,
+     "2025-01": 946.4,
+     "2025-02": 957.72,
+     "2025-03": -109.23,
+     "2025-04": 3630.87,
+     "2025-05": 675.31,
+     "2025-06": -140.1,
+     "2025-07": 1660.81,
+     "2025-08": 1157.35,
+     "2025-09": 1190.49
+    },
+    "by_symbol": {
+     "JP225.cash": 327.96,
+     "EURUSD": 3073.37,
+     "GBPUSD": 856.99,
+     "AUDUSD": 750.0,
+     "USDCAD": 752.82,
+     "USDCHF": 1170.79,
+     "USDJPY": 2445.94,
+     "US100.cash": 629.71,
+     "US500.cash": 611.74,
+     "GER40.cash": 148.42,
+     "XAUUSD": 2832.95,
+     "AUDJPY": 123.8,
+     "CADJPY": 583.64,
+     "GBPJPY": 518.84,
+     "EURJPY": 355.17
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.5
+    },
+    "months_positive": 17,
+    "months": 21,
+    "return_pct": 151.82
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-28_1213_AurumFunded_dual1_off",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-28T12:13:27.7190293+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13416.12,
+    "gross_profit": 34906.34,
+    "gross_loss": -21490.22,
+    "profit_factor": 1.62,
+    "recovery": 15.68,
+    "sharpe": 6.53,
+    "trades": 2280.0,
+    "won": "1188 (52.11%)",
+    "eq_dd_max": "855.75 (4.16%)",
+    "eq_dd_rel": "6.91% (824.80)",
+    "bal_dd_max": "742.34 (6.23%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.11,
+    "eq_dd_max_pct": 4.16,
+    "bal_dd_max_pct": 6.23,
+    "deals": 4561,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10605.48
+     ],
+     [
+      "2024-02-01",
+      10571.63
+     ],
+     [
+      "2024-02-02",
+      10695.49
+     ],
+     [
+      "2024-02-05",
+      10769.79
+     ],
+     [
+      "2024-02-06",
+      10740.99
+     ],
+     [
+      "2024-02-07",
+      10687.97
+     ],
+     [
+      "2024-02-08",
+      10708.73
+     ],
+     [
+      "2024-02-09",
+      10770.86
+     ],
+     [
+      "2024-02-12",
+      10757.92
+     ],
+     [
+      "2024-02-13",
+      10734.74
+     ],
+     [
+      "2024-02-14",
+      10718.15
+     ],
+     [
+      "2024-02-15",
+      10742.01
+     ],
+     [
+      "2024-02-16",
+      10766.0
+     ],
+     [
+      "2024-02-19",
+      10805.61
+     ],
+     [
+      "2024-02-20",
+      10626.19
+     ],
+     [
+      "2024-02-21",
+      10590.94
+     ],
+     [
+      "2024-02-22",
+      10617.94
+     ],
+     [
+      "2024-02-23",
+      10563.08
+     ],
+     [
+      "2024-02-26",
+      10546.3
+     ],
+     [
+      "2024-02-27",
+      10529.73
+     ],
+     [
+      "2024-02-28",
+      10543.7
+     ],
+     [
+      "2024-02-29",
+      10641.58
+     ],
+     [
+      "2024-03-01",
+      10694.4
+     ],
+     [
+      "2024-03-04",
+      10709.62
+     ],
+     [
+      "2024-03-05",
+      10702.96
+     ],
+     [
+      "2024-03-06",
+      10714.18
+     ],
+     [
+      "2024-03-07",
+      10729.6
+     ],
+     [
+      "2024-03-08",
+      10690.2
+     ],
+     [
+      "2024-04-01",
+      10630.32
+     ],
+     [
+      "2024-04-02",
+      10568.27
+     ],
+     [
+      "2024-04-03",
+      10504.58
+     ],
+     [
+      "2024-04-04",
+      10660.07
+     ],
+     [
+      "2024-04-05",
+      10806.59
+     ],
+     [
+      "2024-04-08",
+      10834.59
+     ],
+     [
+      "2024-04-09",
+      10781.17
+     ],
+     [
+      "2024-04-10",
+      10904.02
+     ],
+     [
+      "2024-04-11",
+      10930.91
+     ],
+     [
+      "2024-04-12",
+      10930.73
+     ],
+     [
+      "2024-04-15",
+      10956.61
+     ],
+     [
+      "2024-04-16",
+      10842.37
+     ],
+     [
+      "2024-04-17",
+      10935.5
+     ],
+     [
+      "2024-04-18",
+      10902.63
+     ],
+     [
+      "2024-04-19",
+      11095.6
+     ],
+     [
+      "2024-04-22",
+      11074.58
+     ],
+     [
+      "2024-04-23",
+      11059.6
+     ],
+     [
+      "2024-04-24",
+      11065.88
+     ],
+     [
+      "2024-04-25",
+      11161.71
+     ],
+     [
+      "2024-04-26",
+      11255.99
+     ],
+     [
+      "2024-04-29",
+      11228.32
+     ],
+     [
+      "2024-04-30",
+      11324.22
+     ],
+     [
+      "2024-05-01",
+      11345.07
+     ],
+     [
+      "2024-05-02",
+      11336.97
+     ],
+     [
+      "2024-05-03",
+      11325.5
+     ],
+     [
+      "2024-05-06",
+      11318.44
+     ],
+     [
+      "2024-05-07",
+      11289.06
+     ],
+     [
+      "2024-05-08",
+      11303.39
+     ],
+     [
+      "2024-05-09",
+      11298.56
+     ],
+     [
+      "2024-05-10",
+      11205.47
+     ],
+     [
+      "2024-05-13",
+      11170.05
+     ],
+     [
+      "2024-05-14",
+      11163.33
+     ],
+     [
+      "2024-05-15",
+      11206.1
+     ],
+     [
+      "2024-05-16",
+      11213.95
+     ],
+     [
+      "2024-05-17",
+      11182.72
+     ],
+     [
+      "2024-05-20",
+      11138.71
+     ],
+     [
+      "2024-05-21",
+      11152.18
+     ],
+     [
+      "2024-05-22",
+      11190.45
+     ],
+     [
+      "2024-05-23",
+      11154.79
+     ],
+     [
+      "2024-05-24",
+      11248.89
+     ],
+     [
+      "2024-05-27",
+      11239.27
+     ],
+     [
+      "2024-05-28",
+      11138.75
+     ],
+     [
+      "2024-05-29",
+      11123.58
+     ],
+     [
+      "2024-05-30",
+      11123.84
+     ],
+     [
+      "2024-05-31",
+      11165.8
+     ],
+     [
+      "2024-06-03",
+      11142.3
+     ],
+     [
+      "2024-06-04",
+      11165.17
+     ],
+     [
+      "2024-06-05",
+      11133.14
+     ],
+     [
+      "2024-06-06",
+      11162.52
+     ],
+     [
+      "2024-06-07",
+      11124.47
+     ],
+     [
+      "2024-06-10",
+      11086.35
+     ],
+     [
+      "2024-06-11",
+      11079.26
+     ],
+     [
+      "2024-06-12",
+      11011.44
+     ],
+     [
+      "2024-06-13",
+      11075.66
+     ],
+     [
+      "2024-06-14",
+      11048.11
+     ],
+     [
+      "2024-06-17",
+      11062.16
+     ],
+     [
+      "2024-06-18",
+      11064.68
+     ],
+     [
+      "2024-06-19",
+      10998.91
+     ],
+     [
+      "2024-06-20",
+      11216.4
+     ],
+     [
+      "2024-06-21",
+      11203.47
+     ],
+     [
+      "2024-06-24",
+      11148.73
+     ],
+     [
+      "2024-06-25",
+      11223.21
+     ],
+     [
+      "2024-06-26",
+      11183.84
+     ],
+     [
+      "2024-06-27",
+      11168.08
+     ],
+     [
+      "2024-06-28",
+      11356.22
+     ],
+     [
+      "2024-07-01",
+      11362.03
+     ],
+     [
+      "2024-07-02",
+      11389.17
+     ],
+     [
+      "2024-07-03",
+      11418.47
+     ],
+     [
+      "2024-07-04",
+      11402.32
+     ],
+     [
+      "2024-07-05",
+      11525.65
+     ],
+     [
+      "2024-07-08",
+      11524.24
+     ],
+     [
+      "2024-07-09",
+      11588.98
+     ],
+     [
+      "2024-07-10",
+      11538.35
+     ],
+     [
+      "2024-07-11",
+      11749.31
+     ],
+     [
+      "2024-07-12",
+      11766.09
+     ],
+     [
+      "2024-07-15",
+      11763.9
+     ],
+     [
+      "2024-07-16",
+      11734.9
+     ],
+     [
+      "2024-07-17",
+      11800.7
+     ],
+     [
+      "2024-07-18",
+      11801.55
+     ],
+     [
+      "2024-07-19",
+      11611.9
+     ],
+     [
+      "2024-07-22",
+      11618.69
+     ],
+     [
+      "2024-07-23",
+      11607.78
+     ],
+     [
+      "2024-07-24",
+      11775.18
+     ],
+     [
+      "2024-07-25",
+      11474.94
+     ],
+     [
+      "2024-07-26",
+      11426.24
+     ],
+     [
+      "2024-07-29",
+      11430.94
+     ],
+     [
+      "2024-07-30",
+      11473.19
+     ],
+     [
+      "2024-07-31",
+      11489.36
+     ],
+     [
+      "2024-08-01",
+      11661.74
+     ],
+     [
+      "2024-08-02",
+      11852.97
+     ],
+     [
+      "2024-08-05",
+      11627.8
+     ],
+     [
+      "2024-08-06",
+      11399.49
+     ],
+     [
+      "2024-08-07",
+      11381.3
+     ],
+     [
+      "2024-08-08",
+      11309.56
+     ],
+     [
+      "2024-08-09",
+      11439.86
+     ],
+     [
+      "2024-08-12",
+      11462.58
+     ],
+     [
+      "2024-08-13",
+      11346.8
+     ],
+     [
+      "2024-08-14",
+      11354.95
+     ],
+     [
+      "2024-08-15",
+      11287.03
+     ],
+     [
+      "2024-08-16",
+      11288.3
+     ],
+     [
+      "2024-08-19",
+      11276.18
+     ],
+     [
+      "2024-08-20",
+      11247.45
+     ],
+     [
+      "2024-08-21",
+      11207.88
+     ],
+     [
+      "2024-08-22",
+      11213.35
+     ],
+     [
+      "2024-08-23",
+      11217.98
+     ],
+     [
+      "2024-08-26",
+      11229.81
+     ],
+     [
+      "2024-08-27",
+      11233.81
+     ],
+     [
+      "2024-08-28",
+      11219.2
+     ],
+     [
+      "2024-08-29",
+      11203.92
+     ],
+     [
+      "2024-08-30",
+      11239.24
+     ],
+     [
+      "2024-09-02",
+      11255.72
+     ],
+     [
+      "2024-09-03",
+      11465.29
+     ],
+     [
+      "2024-09-04",
+      11508.99
+     ],
+     [
+      "2024-09-05",
+      11453.04
+     ],
+     [
+      "2024-09-06",
+      11566.6
+     ],
+     [
+      "2024-09-09",
+      11628.46
+     ],
+     [
+      "2024-09-10",
+      11655.4
+     ],
+     [
+      "2024-09-11",
+      11653.29
+     ],
+     [
+      "2024-09-12",
+      11657.03
+     ],
+     [
+      "2024-09-13",
+      11807.33
+     ],
+     [
+      "2024-09-16",
+      11812.45
+     ],
+     [
+      "2024-09-17",
+      11797.02
+     ],
+     [
+      "2024-09-18",
+      12104.78
+     ],
+     [
+      "2024-09-19",
+      12153.06
+     ],
+     [
+      "2024-09-20",
+      12237.67
+     ],
+     [
+      "2024-09-23",
+      12200.69
+     ],
+     [
+      "2024-09-24",
+      12208.03
+     ],
+     [
+      "2024-09-25",
+      12096.39
+     ],
+     [
+      "2024-09-26",
+      12027.85
+     ],
+     [
+      "2024-09-27",
+      12002.2
+     ],
+     [
+      "2024-09-30",
+      12021.65
+     ],
+     [
+      "2024-10-01",
+      12046.2
+     ],
+     [
+      "2024-10-02",
+      12041.99
+     ],
+     [
+      "2024-10-03",
+      12008.32
+     ],
+     [
+      "2024-10-04",
+      12088.67
+     ],
+     [
+      "2024-10-07",
+      12034.93
+     ],
+     [
+      "2024-10-08",
+      12053.32
+     ],
+     [
+      "2024-10-09",
+      12153.31
+     ],
+     [
+      "2024-10-10",
+      12201.71
+     ],
+     [
+      "2024-10-11",
+      12241.2
+     ],
+     [
+      "2024-10-14",
+      12345.98
+     ],
+     [
+      "2024-10-15",
+      12337.88
+     ],
+     [
+      "2024-10-16",
+      12308.63
+     ],
+     [
+      "2024-10-17",
+      12305.12
+     ],
+     [
+      "2024-10-18",
+      12292.56
+     ],
+     [
+      "2024-10-21",
+      12269.36
+     ],
+     [
+      "2024-10-22",
+      12300.39
+     ],
+     [
+      "2024-10-23",
+      12416.04
+     ],
+     [
+      "2024-10-24",
+      12440.92
+     ],
+     [
+      "2024-10-25",
+      12520.08
+     ],
+     [
+      "2024-11-04",
+      12494.46
+     ],
+     [
+      "2024-11-05",
+      12635.18
+     ],
+     [
+      "2024-11-06",
+      12334.79
+     ],
+     [
+      "2024-11-07",
+      12246.88
+     ],
+     [
+      "2024-11-08",
+      12330.99
+     ],
+     [
+      "2024-11-11",
+      12367.36
+     ],
+     [
+      "2024-11-12",
+      12389.95
+     ],
+     [
+      "2024-11-13",
+      12237.69
+     ],
+     [
+      "2024-11-14",
+      12088.64
+     ],
+     [
+      "2024-11-15",
+      12307.36
+     ],
+     [
+      "2024-11-18",
+      12252.29
+     ],
+     [
+      "2024-11-19",
+      12207.71
+     ],
+     [
+      "2024-11-20",
+      12165.62
+     ],
+     [
+      "2024-11-21",
+      12124.55
+     ],
+     [
+      "2024-11-22",
+      12139.24
+     ],
+     [
+      "2024-11-25",
+      12187.37
+     ],
+     [
+      "2024-11-26",
+      12199.6
+     ],
+     [
+      "2024-11-27",
+      12161.4
+     ],
+     [
+      "2024-11-28",
+      12198.26
+     ],
+     [
+      "2024-11-29",
+      12748.48
+     ],
+     [
+      "2024-12-02",
+      12779.28
+     ],
+     [
+      "2024-12-03",
+      12852.0
+     ],
+     [
+      "2024-12-04",
+      12908.09
+     ],
+     [
+      "2024-12-05",
+      12846.11
+     ],
+     [
+      "2024-12-06",
+      13076.95
+     ],
+     [
+      "2024-12-09",
+      13130.41
+     ],
+     [
+      "2024-12-10",
+      13326.07
+     ],
+     [
+      "2024-12-11",
+      13312.39
+     ],
+     [
+      "2024-12-12",
+      13345.94
+     ],
+     [
+      "2024-12-13",
+      13215.34
+     ],
+     [
+      "2024-12-16",
+      13253.3
+     ],
+     [
+      "2024-12-17",
+      13229.77
+     ],
+     [
+      "2024-12-18",
+      13540.69
+     ],
+     [
+      "2024-12-19",
+      13758.88
+     ],
+     [
+      "2024-12-20",
+      14353.44
+     ],
+     [
+      "2024-12-23",
+      14368.52
+     ],
+     [
+      "2024-12-24",
+      14461.25
+     ],
+     [
+      "2024-12-26",
+      14580.57
+     ],
+     [
+      "2024-12-27",
+      14561.79
+     ],
+     [
+      "2024-12-30",
+      14626.0
+     ],
+     [
+      "2024-12-31",
+      14562.37
+     ],
+     [
+      "2025-01-02",
+      14945.44
+     ],
+     [
+      "2025-01-03",
+      14906.34
+     ],
+     [
+      "2025-01-06",
+      14905.51
+     ],
+     [
+      "2025-01-07",
+      14977.24
+     ],
+     [
+      "2025-01-08",
+      15051.36
+     ],
+     [
+      "2025-01-09",
+      15027.88
+     ],
+     [
+      "2025-01-10",
+      14958.74
+     ],
+     [
+      "2025-01-13",
+      14939.16
+     ],
+     [
+      "2025-01-14",
+      14951.49
+     ],
+     [
+      "2025-01-15",
+      15003.35
+     ],
+     [
+      "2025-01-16",
+      15247.14
+     ],
+     [
+      "2025-01-17",
+      15335.81
+     ],
+     [
+      "2025-01-20",
+      15349.37
+     ],
+     [
+      "2025-01-21",
+      15409.31
+     ],
+     [
+      "2025-01-22",
+      15433.19
+     ],
+     [
+      "2025-01-23",
+      15479.44
+     ],
+     [
+      "2025-01-24",
+      15521.15
+     ],
+     [
+      "2025-01-27",
+      15509.62
+     ],
+     [
+      "2025-01-28",
+      15538.25
+     ],
+     [
+      "2025-01-29",
+      15485.76
+     ],
+     [
+      "2025-01-30",
+      15491.71
+     ],
+     [
+      "2025-01-31",
+      15379.92
+     ],
+     [
+      "2025-02-03",
+      15349.18
+     ],
+     [
+      "2025-02-04",
+      15320.16
+     ],
+     [
+      "2025-02-05",
+      15508.79
+     ],
+     [
+      "2025-02-06",
+      15502.66
+     ],
+     [
+      "2025-02-07",
+      15603.79
+     ],
+     [
+      "2025-02-10",
+      15640.02
+     ],
+     [
+      "2025-02-11",
+      15577.27
+     ],
+     [
+      "2025-02-12",
+      15618.66
+     ],
+     [
+      "2025-02-13",
+      15746.26
+     ],
+     [
+      "2025-02-14",
+      15776.17
+     ],
+     [
+      "2025-02-17",
+      16110.64
+     ],
+     [
+      "2025-02-18",
+      16230.16
+     ],
+     [
+      "2025-02-19",
+      16221.77
+     ],
+     [
+      "2025-02-20",
+      16290.28
+     ],
+     [
+      "2025-02-21",
+      16466.25
+     ],
+     [
+      "2025-02-24",
+      16515.0
+     ],
+     [
+      "2025-02-25",
+      16495.7
+     ],
+     [
+      "2025-02-26",
+      16489.35
+     ],
+     [
+      "2025-02-27",
+      16559.12
+     ],
+     [
+      "2025-02-28",
+      16336.7
+     ],
+     [
+      "2025-03-03",
+      16311.96
+     ],
+     [
+      "2025-03-04",
+      16274.0
+     ],
+     [
+      "2025-03-05",
+      16220.47
+     ],
+     [
+      "2025-03-06",
+      16206.18
+     ],
+     [
+      "2025-03-07",
+      16213.64
+     ],
+     [
+      "2025-03-31",
+      16344.83
+     ],
+     [
+      "2025-04-01",
+      16380.68
+     ],
+     [
+      "2025-04-02",
+      16281.75
+     ],
+     [
+      "2025-04-03",
+      16183.95
+     ],
+     [
+      "2025-04-04",
+      16392.6
+     ],
+     [
+      "2025-04-07",
+      17220.87
+     ],
+     [
+      "2025-04-08",
+      17495.95
+     ],
+     [
+      "2025-04-09",
+      18136.25
+     ],
+     [
+      "2025-04-10",
+      18458.17
+     ],
+     [
+      "2025-04-11",
+      18480.86
+     ],
+     [
+      "2025-04-14",
+      18650.73
+     ],
+     [
+      "2025-04-15",
+      18775.55
+     ],
+     [
+      "2025-04-16",
+      18772.44
+     ],
+     [
+      "2025-04-17",
+      19169.13
+     ],
+     [
+      "2025-04-18",
+      19120.38
+     ],
+     [
+      "2025-04-21",
+      19146.52
+     ],
+     [
+      "2025-04-22",
+      19630.79
+     ],
+     [
+      "2025-04-23",
+      19700.73
+     ],
+     [
+      "2025-04-24",
+      19828.36
+     ],
+     [
+      "2025-04-25",
+      19742.21
+     ],
+     [
+      "2025-04-28",
+      19747.5
+     ],
+     [
+      "2025-04-29",
+      19755.92
+     ],
+     [
+      "2025-04-30",
+      19628.39
+     ],
+     [
+      "2025-05-01",
+      19323.04
+     ],
+     [
+      "2025-05-02",
+      19329.81
+     ],
+     [
+      "2025-05-05",
+      19711.23
+     ],
+     [
+      "2025-05-06",
+      19637.58
+     ],
+     [
+      "2025-05-07",
+      19628.4
+     ],
+     [
+      "2025-05-08",
+      19575.0
+     ],
+     [
+      "2025-05-09",
+      19411.86
+     ],
+     [
+      "2025-05-12",
+      19439.66
+     ],
+     [
+      "2025-05-13",
+      19576.16
+     ],
+     [
+      "2025-05-14",
+      19671.27
+     ],
+     [
+      "2025-05-15",
+      19777.46
+     ],
+     [
+      "2025-05-16",
+      19908.68
+     ],
+     [
+      "2025-05-19",
+      19913.53
+     ],
+     [
+      "2025-05-20",
+      19925.87
+     ],
+     [
+      "2025-05-21",
+      20009.57
+     ],
+     [
+      "2025-05-22",
+      19743.61
+     ],
+     [
+      "2025-05-23",
+      19995.71
+     ],
+     [
+      "2025-05-26",
+      20006.36
+     ],
+     [
+      "2025-05-27",
+      20316.7
+     ],
+     [
+      "2025-05-28",
+      20400.19
+     ],
+     [
+      "2025-05-29",
+      20469.74
+     ],
+     [
+      "2025-05-30",
+      20160.82
+     ],
+     [
+      "2025-06-02",
+      20194.07
+     ],
+     [
+      "2025-06-03",
+      20269.84
+     ],
+     [
+      "2025-06-04",
+      20272.54
+     ],
+     [
+      "2025-06-05",
+      20170.9
+     ],
+     [
+      "2025-06-06",
+      20100.47
+     ],
+     [
+      "2025-06-09",
+      20164.5
+     ],
+     [
+      "2025-06-10",
+      19936.38
+     ],
+     [
+      "2025-06-11",
+      19910.91
+     ],
+     [
+      "2025-06-12",
+      19909.01
+     ],
+     [
+      "2025-06-13",
+      19927.0
+     ],
+     [
+      "2025-06-16",
+      19954.07
+     ],
+     [
+      "2025-06-17",
+      19905.1
+     ],
+     [
+      "2025-06-18",
+      19856.14
+     ],
+     [
+      "2025-06-19",
+      19775.6
+     ],
+     [
+      "2025-06-20",
+      19783.09
+     ],
+     [
+      "2025-06-23",
+      19828.51
+     ],
+     [
+      "2025-06-24",
+      19791.08
+     ],
+     [
+      "2025-06-25",
+      19857.18
+     ],
+     [
+      "2025-06-26",
+      19991.09
+     ],
+     [
+      "2025-06-27",
+      19873.63
+     ],
+     [
+      "2025-06-30",
+      20019.06
+     ],
+     [
+      "2025-07-01",
+      20002.7
+     ],
+     [
+      "2025-07-02",
+      20168.46
+     ],
+     [
+      "2025-07-03",
+      20337.2
+     ],
+     [
+      "2025-07-04",
+      20329.04
+     ],
+     [
+      "2025-07-07",
+      20620.39
+     ],
+     [
+      "2025-07-08",
+      20668.35
+     ],
+     [
+      "2025-07-09",
+      20702.38
+     ],
+     [
+      "2025-07-10",
+      20784.56
+     ],
+     [
+      "2025-07-11",
+      20827.63
+     ],
+     [
+      "2025-07-14",
+      20850.42
+     ],
+     [
+      "2025-07-15",
+      20941.17
+     ],
+     [
+      "2025-07-16",
+      20979.72
+     ],
+     [
+      "2025-07-17",
+      21114.74
+     ],
+     [
+      "2025-07-18",
+      21045.87
+     ],
+     [
+      "2025-07-21",
+      20949.86
+     ],
+     [
+      "2025-07-22",
+      20883.31
+     ],
+     [
+      "2025-07-23",
+      20930.12
+     ],
+     [
+      "2025-07-24",
+      20884.84
+     ],
+     [
+      "2025-07-25",
+      20880.78
+     ],
+     [
+      "2025-07-28",
+      20909.98
+     ],
+     [
+      "2025-07-29",
+      21112.36
+     ],
+     [
+      "2025-07-30",
+      21319.98
+     ],
+     [
+      "2025-07-31",
+      21570.92
+     ],
+     [
+      "2025-08-01",
+      21575.12
+     ],
+     [
+      "2025-08-04",
+      21717.47
+     ],
+     [
+      "2025-08-05",
+      21555.96
+     ],
+     [
+      "2025-08-06",
+      21550.5
+     ],
+     [
+      "2025-08-07",
+      21572.97
+     ],
+     [
+      "2025-08-08",
+      21531.19
+     ],
+     [
+      "2025-08-11",
+      21519.16
+     ],
+     [
+      "2025-08-12",
+      21541.88
+     ],
+     [
+      "2025-08-13",
+      21575.54
+     ],
+     [
+      "2025-08-14",
+      21602.91
+     ],
+     [
+      "2025-08-15",
+      21604.65
+     ],
+     [
+      "2025-08-18",
+      21632.23
+     ],
+     [
+      "2025-08-19",
+      21731.67
+     ],
+     [
+      "2025-08-20",
+      21840.26
+     ],
+     [
+      "2025-08-21",
+      21944.85
+     ],
+     [
+      "2025-08-22",
+      21993.3
+     ],
+     [
+      "2025-08-25",
+      21863.79
+     ],
+     [
+      "2025-08-26",
+      21806.46
+     ],
+     [
+      "2025-08-27",
+      21801.29
+     ],
+     [
+      "2025-08-28",
+      21875.55
+     ],
+     [
+      "2025-08-29",
+      22407.75
+     ],
+     [
+      "2025-09-01",
+      22464.69
+     ],
+     [
+      "2025-09-02",
+      23195.16
+     ],
+     [
+      "2025-09-03",
+      23155.96
+     ],
+     [
+      "2025-09-04",
+      23617.49
+     ],
+     [
+      "2025-09-05",
+      23697.84
+     ],
+     [
+      "2025-09-08",
+      23681.57
+     ],
+     [
+      "2025-09-09",
+      23783.17
+     ],
+     [
+      "2025-09-10",
+      23791.69
+     ],
+     [
+      "2025-09-11",
+      23777.17
+     ],
+     [
+      "2025-09-12",
+      23859.06
+     ],
+     [
+      "2025-09-15",
+      23802.4
+     ],
+     [
+      "2025-09-16",
+      23805.25
+     ],
+     [
+      "2025-09-17",
+      23670.1
+     ],
+     [
+      "2025-09-18",
+      23624.9
+     ],
+     [
+      "2025-09-19",
+      23795.21
+     ],
+     [
+      "2025-09-22",
+      23834.19
+     ],
+     [
+      "2025-09-23",
+      23954.1
+     ],
+     [
+      "2025-09-24",
+      23815.73
+     ],
+     [
+      "2025-09-25",
+      23699.15
+     ],
+     [
+      "2025-09-26",
+      23537.67
+     ],
+     [
+      "2025-09-29",
+      23416.12
+     ]
+    ],
+    "by_year": {
+     "2024": 4562.37,
+     "2025": 8853.75
+    },
+    "by_month": {
+     "2024-01": 605.48,
+     "2024-02": 36.1,
+     "2024-03": 48.62,
+     "2024-04": 634.02,
+     "2024-05": -158.42,
+     "2024-06": 190.42,
+     "2024-07": 133.14,
+     "2024-08": -250.12,
+     "2024-09": 782.41,
+     "2024-10": 498.43,
+     "2024-11": 228.4,
+     "2024-12": 1813.89,
+     "2025-01": 817.55,
+     "2025-02": 956.78,
+     "2025-03": 8.13,
+     "2025-04": 3283.56,
+     "2025-05": 532.43,
+     "2025-06": -141.76,
+     "2025-07": 1551.86,
+     "2025-08": 836.83,
+     "2025-09": 1008.37
+    },
+    "by_symbol": {
+     "EURUSD": 2898.68,
+     "GBPUSD": 807.1,
+     "AUDUSD": 724.23,
+     "USDCAD": 720.91,
+     "USDCHF": 1137.95,
+     "USDJPY": 2325.99,
+     "US100.cash": 289.27,
+     "US500.cash": 315.76,
+     "XAUUSD": 2699.42,
+     "AUDJPY": 118.6,
+     "CADJPY": 565.11,
+     "GBPJPY": 489.7,
+     "EURJPY": 323.4
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.55
+    },
+    "months_positive": 18,
+    "months": 21,
+    "return_pct": 134.16
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-25_2049_AurumFunded_vrp2_on",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpVrpMult=0.5",
+    "Started": "2026-10-25T20:49:37.3827226+01:00"
+   },
+   "summary": "# j17: AurumFunded vrp2 on XAUUSD M15\n\nWritten by tools/autopilot/tester_step.py 2026-10-25 21:23: figures only, the judge judges.\nPreset `mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_vrp.set`, deposit 10000, leverage 1:33, 2024.01.01 to 2025.09.30, set none, compare_set ['InpVrpMult=0.5'].\n\n## legs off (`2026-10-25_2025_AurumFunded_vrp2_off`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,416.12 (+134.2%) |\n| Trades / win rate | 2280.0 / 52.11% |\n| Profit factor | 1.62 |\n| Max equity drawdown | 4.16% |\n| Worst day | 2024-07-25 -2.55% |\n| Return per unit of drawdown | 32.2 |\n| By year | 2024 +4,562, 2025 +8,854 |\n| History quality | 99% real ticks |\n\n## legs on (`2026-10-25_2049_AurumFunded_vrp2_on`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,737.34 (+137.4%) |\n| Trades / win rate | 2301.0 / 52.15% |\n| Profit factor | 1.61 |\n| Max equity drawdown | 5.99% |\n| Worst day | 2024-04-16 -2.74% |\n| Return per unit of drawdown | 22.9 |\n| By year | 2024 +4,817, 2025 +8,921 |\n| History quality | 99% real ticks |\n\n## On against off\n\nReturn per unit of equity drawdown: off 32.2, on 22.9 (not higher with the legs on).\n\n## Expected (from the job)\n\nStep 15 for AurumFunded v1.15 (VRP leg: NYSE holiday list, 3-weekday stale limit, VIX from the file vixcls.csv because FTMO has no VIX symbol; fix_vrp_leg_fidelity2). Preset = OFF run (InpVrpMult=0, funded style, InpPropTargetPct 0 so it does not stop at +10% as j16 did); compare_set adds InpVrpMult=0.5 (ON run). Python (research/vrp_gap_equity_indices.py, US500+US100 at 0.5): about +2.6% / 3.7% DD on 10k over 2024.01-2025.09, about 11 entries a year per index, magics +30/+31. Differences from the Python: size fixed at the entry (Python rescales daily), broker stop 5% of equity, 10 D1 bars. Judge against 67-87% of the model (lesson 4). Check the log shows \"uses the VIX from the file vixcls.csv\" and a VIX line each Monday check; if it says no VIX source, the file is missing (python research/vrp_vix_file.py). Random-long control (research/vrp_gap_equity_indices.out.txt, 50 seeds): VRP Sharpe 2018+ is the median of random longs, so expect mostly equity beta. Do not tune on this window.\n\n## Log lines worth a look\n\n- `2026-10-25_2049_AurumFunded_vrp2_on`: IL\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:01   failed market sell 0.44 US500.cash, close #2048 buy 0.44 US500.cash 5699.15 [Market closed]\n- `2026-10-25_2049_AurumFunded_vrp2_on`: KG\t0\t21:09:06.245\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-10-25_2049_AurumFunded_vrp2_on`: MO\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:01   failed market sell 0.08 US100.cash, close #2049 buy 0.08 US100.cash 19804.95 [Market closed]\n- `2026-10-25_2049_AurumFunded_vrp2_on`: LM\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:11   failed market sell 0.44 US500.cash, close #2048 buy 0.44 US500.cash 5699.15 [Market closed]\n- `2026-10-25_2049_AurumFunded_vrp2_on`: RG\t0\t21:09:06.245\tCore 1\t2024.10.28 00:05:11   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-10-25_2049_AurumFunded_vrp2_on`: DN\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:11   failed market sell 0.08 US100.cash, close #2049 buy 0.08 US100.cash 19804.95 [Market closed]\n- `2026-10-25_2049_AurumFunded_vrp2_on`: JG\t0\t21:09:06.245\tCore 1\t2024.10.28 00:05:11   AurumFunded: close on US100.cash failed, retcode 10018 (market closed)\n- `2026-10-25_2049_AurumFunded_vrp2_on`: FM\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:22   failed market sell 0.44 US500.cash, close #2048 buy 0.44 US500.cash 5699.15 [Market closed]\n- `2026-10-25_2049_AurumFunded_vrp2_on`: HG\t0\t21:09:06.245\tCore 1\t2024.10.28 00:05:22   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-10-25_2049_AurumFunded_vrp2_on`: RN\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:22   failed market sell 0.08 US100.cash, close #2049 buy 0.08 US100.cash 19804.95 [Market closed]\n- `2026-10-25_2049_AurumFunded_vrp2_on`: PF\t0\t21:09:06.245\tCore 1\t2024.10.28 00:05:22   AurumFunded: close on US100.cash failed, retcode 10018 (market closed)\n- `2026-10-25_2049_AurumFunded_vrp2_on`: GM\t2\t21:09:06.245\tCore 1\t2024.10.28 00:05:32   failed market sell 0.44 US500.cash, close #2048 buy 0.44 US500.cash 5699.15 [Market closed]\n",
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13737.34,
+    "gross_profit": 36348.02,
+    "gross_loss": -22610.68,
+    "profit_factor": 1.61,
+    "recovery": 13.52,
+    "sharpe": 4.87,
+    "trades": 2301.0,
+    "won": "1200 (52.15%)",
+    "eq_dd_max": "1 015.75 (5.99%)",
+    "eq_dd_rel": "8.25% (1 000.57)",
+    "bal_dd_max": "989.14 (5.82%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.15,
+    "eq_dd_max_pct": 5.99,
+    "bal_dd_max_pct": 5.82,
+    "deals": 4603,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10605.48
+     ],
+     [
+      "2024-02-01",
+      10571.63
+     ],
+     [
+      "2024-02-02",
+      10695.49
+     ],
+     [
+      "2024-02-05",
+      10769.79
+     ],
+     [
+      "2024-02-06",
+      10740.99
+     ],
+     [
+      "2024-02-07",
+      10687.97
+     ],
+     [
+      "2024-02-08",
+      10708.73
+     ],
+     [
+      "2024-02-09",
+      10770.86
+     ],
+     [
+      "2024-02-12",
+      10757.92
+     ],
+     [
+      "2024-02-13",
+      10734.74
+     ],
+     [
+      "2024-02-14",
+      10718.15
+     ],
+     [
+      "2024-02-15",
+      10742.01
+     ],
+     [
+      "2024-02-16",
+      10766.0
+     ],
+     [
+      "2024-02-19",
+      10805.61
+     ],
+     [
+      "2024-02-20",
+      10626.19
+     ],
+     [
+      "2024-02-21",
+      10590.94
+     ],
+     [
+      "2024-02-22",
+      10617.94
+     ],
+     [
+      "2024-02-23",
+      10563.08
+     ],
+     [
+      "2024-02-26",
+      10546.3
+     ],
+     [
+      "2024-02-27",
+      10529.73
+     ],
+     [
+      "2024-02-28",
+      10543.7
+     ],
+     [
+      "2024-02-29",
+      10641.58
+     ],
+     [
+      "2024-03-01",
+      10694.4
+     ],
+     [
+      "2024-03-04",
+      10709.62
+     ],
+     [
+      "2024-03-05",
+      10702.96
+     ],
+     [
+      "2024-03-06",
+      10714.18
+     ],
+     [
+      "2024-03-07",
+      10729.6
+     ],
+     [
+      "2024-03-08",
+      10690.2
+     ],
+     [
+      "2024-04-01",
+      10630.32
+     ],
+     [
+      "2024-04-02",
+      10568.27
+     ],
+     [
+      "2024-04-03",
+      10504.58
+     ],
+     [
+      "2024-04-04",
+      10660.07
+     ],
+     [
+      "2024-04-05",
+      10806.59
+     ],
+     [
+      "2024-04-08",
+      10834.59
+     ],
+     [
+      "2024-04-09",
+      10784.99
+     ],
+     [
+      "2024-04-10",
+      10907.84
+     ],
+     [
+      "2024-04-11",
+      10935.88
+     ],
+     [
+      "2024-04-12",
+      10935.6
+     ],
+     [
+      "2024-04-15",
+      10960.37
+     ],
+     [
+      "2024-04-16",
+      10659.99
+     ],
+     [
+      "2024-04-17",
+      10751.73
+     ],
+     [
+      "2024-04-18",
+      10719.52
+     ],
+     [
+      "2024-04-19",
+      10907.8
+     ],
+     [
+      "2024-04-22",
+      10885.65
+     ],
+     [
+      "2024-04-23",
+      10871.51
+     ],
+     [
+      "2024-04-24",
+      10877.67
+     ],
+     [
+      "2024-04-25",
+      10973.3
+     ],
+     [
+      "2024-04-26",
+      11065.79
+     ],
+     [
+      "2024-04-29",
+      11039.63
+     ],
+     [
+      "2024-04-30",
+      11131.39
+     ],
+     [
+      "2024-05-01",
+      11149.69
+     ],
+     [
+      "2024-05-02",
+      11141.59
+     ],
+     [
+      "2024-05-03",
+      11131.42
+     ],
+     [
+      "2024-05-06",
+      11290.04
+     ],
+     [
+      "2024-05-07",
+      11260.66
+     ],
+     [
+      "2024-05-08",
+      11274.99
+     ],
+     [
+      "2024-05-09",
+      11270.16
+     ],
+     [
+      "2024-05-10",
+      11177.07
+     ],
+     [
+      "2024-05-13",
+      11141.65
+     ],
+     [
+      "2024-05-14",
+      11134.81
+     ],
+     [
+      "2024-05-15",
+      11177.48
+     ],
+     [
+      "2024-05-16",
+      11185.33
+     ],
+     [
+      "2024-05-17",
+      11154.1
+     ],
+     [
+      "2024-05-20",
+      11110.08
+     ],
+     [
+      "2024-05-21",
+      11123.55
+     ],
+     [
+      "2024-05-22",
+      11161.92
+     ],
+     [
+      "2024-05-23",
+      11126.08
+     ],
+     [
+      "2024-05-24",
+      11220.18
+     ],
+     [
+      "2024-05-27",
+      11210.56
+     ],
+     [
+      "2024-05-28",
+      11110.04
+     ],
+     [
+      "2024-05-29",
+      11094.87
+     ],
+     [
+      "2024-05-30",
+      11095.13
+     ],
+     [
+      "2024-05-31",
+      11134.87
+     ],
+     [
+      "2024-06-03",
+      11111.37
+     ],
+     [
+      "2024-06-04",
+      11134.24
+     ],
+     [
+      "2024-06-05",
+      11102.21
+     ],
+     [
+      "2024-06-06",
+      11131.59
+     ],
+     [
+      "2024-06-07",
+      11093.54
+     ],
+     [
+      "2024-06-10",
+      11055.42
+     ],
+     [
+      "2024-06-11",
+      11047.0
+     ],
+     [
+      "2024-06-12",
+      10978.93
+     ],
+     [
+      "2024-06-13",
+      11043.15
+     ],
+     [
+      "2024-06-14",
+      11015.6
+     ],
+     [
+      "2024-06-17",
+      11030.82
+     ],
+     [
+      "2024-06-18",
+      11033.34
+     ],
+     [
+      "2024-06-19",
+      10967.57
+     ],
+     [
+      "2024-06-20",
+      11185.06
+     ],
+     [
+      "2024-06-21",
+      11172.13
+     ],
+     [
+      "2024-06-24",
+      11117.47
+     ],
+     [
+      "2024-06-25",
+      11191.95
+     ],
+     [
+      "2024-06-26",
+      11152.58
+     ],
+     [
+      "2024-06-27",
+      11136.76
+     ],
+     [
+      "2024-06-28",
+      11323.91
+     ],
+     [
+      "2024-07-01",
+      11329.72
+     ],
+     [
+      "2024-07-02",
+      11357.03
+     ],
+     [
+      "2024-07-03",
+      11386.39
+     ],
+     [
+      "2024-07-04",
+      11370.53
+     ],
+     [
+      "2024-07-05",
+      11494.03
+     ],
+     [
+      "2024-07-08",
+      11492.62
+     ],
+     [
+      "2024-07-09",
+      11557.36
+     ],
+     [
+      "2024-07-10",
+      11508.32
+     ],
+     [
+      "2024-07-11",
+      11722.9
+     ],
+     [
+      "2024-07-12",
+      11739.89
+     ],
+     [
+      "2024-07-15",
+      11737.49
+     ],
+     [
+      "2024-07-16",
+      11707.9
+     ],
+     [
+      "2024-07-17",
+      11773.7
+     ],
+     [
+      "2024-07-18",
+      11774.43
+     ],
+     [
+      "2024-07-19",
+      11584.78
+     ],
+     [
+      "2024-07-22",
+      11712.73
+     ],
+     [
+      "2024-07-23",
+      11701.79
+     ],
+     [
+      "2024-07-24",
+      11868.74
+     ],
+     [
+      "2024-07-25",
+      11567.96
+     ],
+     [
+      "2024-07-26",
+      11519.07
+     ],
+     [
+      "2024-07-29",
+      11523.77
+     ],
+     [
+      "2024-07-30",
+      11565.4
+     ],
+     [
+      "2024-07-31",
+      11581.86
+     ],
+     [
+      "2024-08-01",
+      11754.36
+     ],
+     [
+      "2024-08-02",
+      11945.59
+     ],
+     [
+      "2024-08-05",
+      11643.91
+     ],
+     [
+      "2024-08-06",
+      11412.56
+     ],
+     [
+      "2024-08-07",
+      11394.37
+     ],
+     [
+      "2024-08-08",
+      11322.62
+     ],
+     [
+      "2024-08-09",
+      11455.26
+     ],
+     [
+      "2024-08-12",
+      11477.98
+     ],
+     [
+      "2024-08-13",
+      11362.2
+     ],
+     [
+      "2024-08-14",
+      11370.35
+     ],
+     [
+      "2024-08-15",
+      11300.77
+     ],
+     [
+      "2024-08-16",
+      11302.04
+     ],
+     [
+      "2024-08-19",
+      11289.92
+     ],
+     [
+      "2024-08-20",
+      11261.19
+     ],
+     [
+      "2024-08-21",
+      11221.62
+     ],
+     [
+      "2024-08-22",
+      11227.09
+     ],
+     [
+      "2024-08-23",
+      11231.72
+     ],
+     [
+      "2024-08-26",
+      11243.55
+     ],
+     [
+      "2024-08-27",
+      11247.55
+     ],
+     [
+      "2024-08-28",
+      11232.94
+     ],
+     [
+      "2024-08-29",
+      11217.66
+     ],
+     [
+      "2024-08-30",
+      11252.36
+     ],
+     [
+      "2024-09-02",
+      11268.84
+     ],
+     [
+      "2024-09-03",
+      11479.09
+     ],
+     [
+      "2024-09-04",
+      11522.96
+     ],
+     [
+      "2024-09-05",
+      11467.01
+     ],
+     [
+      "2024-09-06",
+      11580.57
+     ],
+     [
+      "2024-09-09",
+      11642.43
+     ],
+     [
+      "2024-09-10",
+      11669.37
+     ],
+     [
+      "2024-09-11",
+      11667.26
+     ],
+     [
+      "2024-09-12",
+      11671.0
+     ],
+     [
+      "2024-09-13",
+      11821.3
+     ],
+     [
+      "2024-09-16",
+      11826.42
+     ],
+     [
+      "2024-09-17",
+      11810.68
+     ],
+     [
+      "2024-09-18",
+      12113.53
+     ],
+     [
+      "2024-09-19",
+      12161.81
+     ],
+     [
+      "2024-09-20",
+      12246.42
+     ],
+     [
+      "2024-09-23",
+      12314.73
+     ],
+     [
+      "2024-09-24",
+      12322.07
+     ],
+     [
+      "2024-09-25",
+      12208.14
+     ],
+     [
+      "2024-09-26",
+      12139.6
+     ],
+     [
+      "2024-09-27",
+      12112.94
+     ],
+     [
+      "2024-09-30",
+      12131.26
+     ],
+     [
+      "2024-10-01",
+      12156.06
+     ],
+     [
+      "2024-10-02",
+      12151.44
+     ],
+     [
+      "2024-10-03",
+      12117.12
+     ],
+     [
+      "2024-10-04",
+      12197.03
+     ],
+     [
+      "2024-10-07",
+      12143.17
+     ],
+     [
+      "2024-10-08",
+      12161.59
+     ],
+     [
+      "2024-10-09",
+      12261.86
+     ],
+     [
+      "2024-10-10",
+      12311.37
+     ],
+     [
+      "2024-10-11",
+      12350.79
+     ],
+     [
+      "2024-10-14",
+      12456.79
+     ],
+     [
+      "2024-10-15",
+      12446.71
+     ],
+     [
+      "2024-10-16",
+      12416.37
+     ],
+     [
+      "2024-10-17",
+      12412.6
+     ],
+     [
+      "2024-10-18",
+      12399.46
+     ],
+     [
+      "2024-10-21",
+      12376.11
+     ],
+     [
+      "2024-10-22",
+      12407.73
+     ],
+     [
+      "2024-10-23",
+      12523.42
+     ],
+     [
+      "2024-10-24",
+      12548.74
+     ],
+     [
+      "2024-10-25",
+      12630.01
+     ],
+     [
+      "2024-10-28",
+      12711.7
+     ],
+     [
+      "2024-11-04",
+      12685.71
+     ],
+     [
+      "2024-11-05",
+      12828.37
+     ],
+     [
+      "2024-11-06",
+      12585.09
+     ],
+     [
+      "2024-11-07",
+      12496.57
+     ],
+     [
+      "2024-11-08",
+      12580.75
+     ],
+     [
+      "2024-11-11",
+      12617.12
+     ],
+     [
+      "2024-11-12",
+      12638.43
+     ],
+     [
+      "2024-11-13",
+      12483.9
+     ],
+     [
+      "2024-11-14",
+      12332.35
+     ],
+     [
+      "2024-11-15",
+      12555.12
+     ],
+     [
+      "2024-11-18",
+      12647.48
+     ],
+     [
+      "2024-11-19",
+      12600.89
+     ],
+     [
+      "2024-11-20",
+      12556.72
+     ],
+     [
+      "2024-11-21",
+      12514.5
+     ],
+     [
+      "2024-11-22",
+      12529.95
+     ],
+     [
+      "2024-11-25",
+      12580.46
+     ],
+     [
+      "2024-11-26",
+      12590.03
+     ],
+     [
+      "2024-11-27",
+      12552.12
+     ],
+     [
+      "2024-11-28",
+      12593.4
+     ],
+     [
+      "2024-11-29",
+      13158.21
+     ],
+     [
+      "2024-12-02",
+      13192.66
+     ],
+     [
+      "2024-12-03",
+      13266.73
+     ],
+     [
+      "2024-12-04",
+      13324.03
+     ],
+     [
+      "2024-12-05",
+      13260.87
+     ],
+     [
+      "2024-12-06",
+      13518.34
+     ],
+     [
+      "2024-12-09",
+      13574.51
+     ],
+     [
+      "2024-12-10",
+      13776.34
+     ],
+     [
+      "2024-12-11",
+      13762.66
+     ],
+     [
+      "2024-12-12",
+      13797.54
+     ],
+     [
+      "2024-12-13",
+      13661.67
+     ],
+     [
+      "2024-12-16",
+      13700.92
+     ],
+     [
+      "2024-12-17",
+      13676.81
+     ],
+     [
+      "2024-12-18",
+      13994.95
+     ],
+     [
+      "2024-12-19",
+      14224.28
+     ],
+     [
+      "2024-12-20",
+      14835.98
+     ],
+     [
+      "2024-12-23",
+      14851.2
+     ],
+     [
+      "2024-12-24",
+      14945.59
+     ],
+     [
+      "2024-12-26",
+      15070.26
+     ],
+     [
+      "2024-12-27",
+      15050.31
+     ],
+     [
+      "2024-12-30",
+      15116.69
+     ],
+     [
+      "2024-12-31",
+      14816.58
+     ],
+     [
+      "2025-01-02",
+      15203.34
+     ],
+     [
+      "2025-01-03",
+      15163.78
+     ],
+     [
+      "2025-01-06",
+      15163.05
+     ],
+     [
+      "2025-01-07",
+      15236.62
+     ],
+     [
+      "2025-01-08",
+      15312.5
+     ],
+     [
+      "2025-01-09",
+      15289.02
+     ],
+     [
+      "2025-01-10",
+      15218.99
+     ],
+     [
+      "2025-01-13",
+      15199.41
+     ],
+     [
+      "2025-01-14",
+      15211.74
+     ],
+     [
+      "2025-01-15",
+      15264.82
+     ],
+     [
+      "2025-01-16",
+      15515.26
+     ],
+     [
+      "2025-01-17",
+      15605.28
+     ],
+     [
+      "2025-01-20",
+      15619.22
+     ],
+     [
+      "2025-01-21",
+      15681.13
+     ],
+     [
+      "2025-01-22",
+      15705.01
+     ],
+     [
+      "2025-01-23",
+      15751.88
+     ],
+     [
+      "2025-01-24",
+      15794.54
+     ],
+     [
+      "2025-01-27",
+      15886.23
+     ],
+     [
+      "2025-01-28",
+      15915.43
+     ],
+     [
+      "2025-01-29",
+      15862.16
+     ],
+     [
+      "2025-01-30",
+      15868.68
+     ],
+     [
+      "2025-01-31",
+      15749.38
+     ],
+     [
+      "2025-02-03",
+      15718.64
+     ],
+     [
+      "2025-02-04",
+      15689.57
+     ],
+     [
+      "2025-02-05",
+      15882.81
+     ],
+     [
+      "2025-02-06",
+      15876.68
+     ],
+     [
+      "2025-02-07",
+      15979.88
+     ],
+     [
+      "2025-02-10",
+      16016.51
+     ],
+     [
+      "2025-02-11",
+      15953.18
+     ],
+     [
+      "2025-02-12",
+      15995.56
+     ],
+     [
+      "2025-02-13",
+      16125.96
+     ],
+     [
+      "2025-02-14",
+      16155.23
+     ],
+     [
+      "2025-02-17",
+      16508.38
+     ],
+     [
+      "2025-02-18",
+      16631.0
+     ],
+     [
+      "2025-02-19",
+      16622.37
+     ],
+     [
+      "2025-02-20",
+      16695.67
+     ],
+     [
+      "2025-02-21",
+      16883.08
+     ],
+     [
+      "2025-02-24",
+      16931.81
+     ],
+     [
+      "2025-02-25",
+      16911.94
+     ],
+     [
+      "2025-02-26",
+      16904.15
+     ],
+     [
+      "2025-02-27",
+      16604.1
+     ],
+     [
+      "2025-02-28",
+      16381.68
+     ],
+     [
+      "2025-03-03",
+      16357.97
+     ],
+     [
+      "2025-03-04",
+      16320.2
+     ],
+     [
+      "2025-03-05",
+      16266.51
+     ],
+     [
+      "2025-03-06",
+      16252.22
+     ],
+     [
+      "2025-03-07",
+      16259.89
+     ],
+     [
+      "2025-03-10",
+      16132.24
+     ],
+     [
+      "2025-03-31",
+      16261.97
+     ],
+     [
+      "2025-04-01",
+      16295.84
+     ],
+     [
+      "2025-04-02",
+      16198.71
+     ],
+     [
+      "2025-04-03",
+      16101.61
+     ],
+     [
+      "2025-04-04",
+      16307.08
+     ],
+     [
+      "2025-04-07",
+      17126.17
+     ],
+     [
+      "2025-04-08",
+      17400.11
+     ],
+     [
+      "2025-04-09",
+      18040.41
+     ],
+     [
+      "2025-04-10",
+      18357.37
+     ],
+     [
+      "2025-04-11",
+      18379.12
+     ],
+     [
+      "2025-04-14",
+      18549.51
+     ],
+     [
+      "2025-04-15",
+      18674.33
+     ],
+     [
+      "2025-04-16",
+      18671.22
+     ],
+     [
+      "2025-04-17",
+      19062.05
+     ],
+     [
+      "2025-04-18",
+      19013.3
+     ],
+     [
+      "2025-04-21",
+      19039.44
+     ],
+     [
+      "2025-04-22",
+      19758.99
+     ],
+     [
+      "2025-04-23",
+      19829.43
+     ],
+     [
+      "2025-04-24",
+      19956.51
+     ],
+     [
+      "2025-04-25",
+      19870.28
+     ],
+     [
+      "2025-04-28",
+      19875.57
+     ],
+     [
+      "2025-04-29",
+      19883.99
+     ],
+     [
+      "2025-04-30",
+      19756.15
+     ],
+     [
+      "2025-05-01",
+      19450.8
+     ],
+     [
+      "2025-05-02",
+      19457.57
+     ],
+     [
+      "2025-05-05",
+      19838.99
+     ],
+     [
+      "2025-05-06",
+      19765.34
+     ],
+     [
+      "2025-05-07",
+      19756.16
+     ],
+     [
+      "2025-05-08",
+      19702.41
+     ],
+     [
+      "2025-05-09",
+      19538.28
+     ],
+     [
+      "2025-05-12",
+      19566.08
+     ],
+     [
+      "2025-05-13",
+      19702.64
+     ],
+     [
+      "2025-05-14",
+      19797.75
+     ],
+     [
+      "2025-05-15",
+      19903.13
+     ],
+     [
+      "2025-05-16",
+      20041.17
+     ],
+     [
+      "2025-05-19",
+      20046.02
+     ],
+     [
+      "2025-05-20",
+      20061.42
+     ],
+     [
+      "2025-05-21",
+      20144.69
+     ],
+     [
+      "2025-05-22",
+      19875.68
+     ],
+     [
+      "2025-05-23",
+      20131.84
+     ],
+     [
+      "2025-05-26",
+      20142.49
+     ],
+     [
+      "2025-05-27",
+      20459.52
+     ],
+     [
+      "2025-05-28",
+      20544.96
+     ],
+     [
+      "2025-05-29",
+      20616.25
+     ],
+     [
+      "2025-05-30",
+      20310.98
+     ],
+     [
+      "2025-06-02",
+      20344.23
+     ],
+     [
+      "2025-06-03",
+      20421.08
+     ],
+     [
+      "2025-06-04",
+      20423.78
+     ],
+     [
+      "2025-06-05",
+      20320.21
+     ],
+     [
+      "2025-06-06",
+      20249.78
+     ],
+     [
+      "2025-06-09",
+      20313.81
+     ],
+     [
+      "2025-06-10",
+      20083.34
+     ],
+     [
+      "2025-06-11",
+      20058.12
+     ],
+     [
+      "2025-06-12",
+      20056.22
+     ],
+     [
+      "2025-06-13",
+      20074.21
+     ],
+     [
+      "2025-06-16",
+      20101.29
+     ],
+     [
+      "2025-06-17",
+      20051.89
+     ],
+     [
+      "2025-06-18",
+      20002.87
+     ],
+     [
+      "2025-06-19",
+      19921.52
+     ],
+     [
+      "2025-06-20",
+      19929.01
+     ],
+     [
+      "2025-06-23",
+      19974.86
+     ],
+     [
+      "2025-06-24",
+      19936.32
+     ],
+     [
+      "2025-06-25",
+      20002.42
+     ],
+     [
+      "2025-06-26",
+      20139.64
+     ],
+     [
+      "2025-06-27",
+      20020.86
+     ],
+     [
+      "2025-06-30",
+      20168.74
+     ],
+     [
+      "2025-07-01",
+      20152.38
+     ],
+     [
+      "2025-07-02",
+      20320.37
+     ],
+     [
+      "2025-07-03",
+      20490.57
+     ],
+     [
+      "2025-07-04",
+      20482.52
+     ],
+     [
+      "2025-07-07",
+      20779.59
+     ],
+     [
+      "2025-07-08",
+      20827.55
+     ],
+     [
+      "2025-07-09",
+      20860.49
+     ],
+     [
+      "2025-07-10",
+      20943.35
+     ],
+     [
+      "2025-07-11",
+      20986.9
+     ],
+     [
+      "2025-07-14",
+      21009.83
+     ],
+     [
+      "2025-07-15",
+      21101.08
+     ],
+     [
+      "2025-07-16",
+      21140.04
+     ],
+     [
+      "2025-07-17",
+      21277.7
+     ],
+     [
+      "2025-07-18",
+      21207.9
+     ],
+     [
+      "2025-07-21",
+      21108.78
+     ],
+     [
+      "2025-07-22",
+      21041.27
+     ],
+     [
+      "2025-07-23",
+      21088.86
+     ],
+     [
+      "2025-07-24",
+      21042.78
+     ],
+     [
+      "2025-07-25",
+      21037.84
+     ],
+     [
+      "2025-07-28",
+      21067.73
+     ],
+     [
+      "2025-07-29",
+      21270.11
+     ],
+     [
+      "2025-07-30",
+      21477.74
+     ],
+     [
+      "2025-07-31",
+      21732.96
+     ],
+     [
+      "2025-08-01",
+      21750.4
+     ],
+     [
+      "2025-08-04",
+      21893.79
+     ],
+     [
+      "2025-08-05",
+      21730.36
+     ],
+     [
+      "2025-08-06",
+      21724.7
+     ],
+     [
+      "2025-08-07",
+      21747.17
+     ],
+     [
+      "2025-08-08",
+      21703.92
+     ],
+     [
+      "2025-08-11",
+      21694.74
+     ],
+     [
+      "2025-08-12",
+      21717.83
+     ],
+     [
+      "2025-08-13",
+      21751.49
+     ],
+     [
+      "2025-08-14",
+      21779.55
+     ],
+     [
+      "2025-08-15",
+      21781.34
+     ],
+     [
+      "2025-08-18",
+      22026.71
+     ],
+     [
+      "2025-08-19",
+      22126.57
+     ],
+     [
+      "2025-08-20",
+      22239.19
+     ],
+     [
+      "2025-08-21",
+      22345.54
+     ],
+     [
+      "2025-08-22",
+      22404.31
+     ],
+     [
+      "2025-08-25",
+      22271.9
+     ],
+     [
+      "2025-08-26",
+      22213.43
+     ],
+     [
+      "2025-08-27",
+      22207.47
+     ],
+     [
+      "2025-08-28",
+      22282.96
+     ],
+     [
+      "2025-08-29",
+      22821.38
+     ],
+     [
+      "2025-09-01",
+      22879.17
+     ],
+     [
+      "2025-09-02",
+      23635.42
+     ],
+     [
+      "2025-09-03",
+      23595.75
+     ],
+     [
+      "2025-09-04",
+      24074.46
+     ],
+     [
+      "2025-09-05",
+      24155.69
+     ],
+     [
+      "2025-09-08",
+      24138.94
+     ],
+     [
+      "2025-09-09",
+      24240.54
+     ],
+     [
+      "2025-09-10",
+      24250.2
+     ],
+     [
+      "2025-09-11",
+      24235.74
+     ],
+     [
+      "2025-09-12",
+      24319.25
+     ],
+     [
+      "2025-09-15",
+      24261.51
+     ],
+     [
+      "2025-09-16",
+      24264.36
+     ],
+     [
+      "2025-09-17",
+      24127.63
+     ],
+     [
+      "2025-09-18",
+      24081.01
+     ],
+     [
+      "2025-09-19",
+      24254.98
+     ],
+     [
+      "2025-09-22",
+      24294.64
+     ],
+     [
+      "2025-09-23",
+      24414.61
+     ],
+     [
+      "2025-09-24",
+      24275.91
+     ],
+     [
+      "2025-09-25",
+      24156.46
+     ],
+     [
+      "2025-09-26",
+      23856.08
+     ],
+     [
+      "2025-09-29",
+      23737.34
+     ]
+    ],
+    "by_year": {
+     "2024": 4816.58,
+     "2025": 8920.76
+    },
+    "by_month": {
+     "2024-01": 605.48,
+     "2024-02": 36.1,
+     "2024-03": 48.62,
+     "2024-04": 441.19,
+     "2024-05": 3.48,
+     "2024-06": 189.04,
+     "2024-07": 257.95,
+     "2024-08": -329.5,
+     "2024-09": 878.9,
+     "2024-10": 580.44,
+     "2024-11": 446.51,
+     "2024-12": 1658.37,
+     "2025-01": 932.8,
+     "2025-02": 632.3,
+     "2025-03": -119.71,
+     "2025-04": 3494.18,
+     "2025-05": 554.83,
+     "2025-06": -142.24,
+     "2025-07": 1564.22,
+     "2025-08": 1088.42,
+     "2025-09": 915.96
+    },
+    "by_symbol": {
+     "EURUSD": 3034.18,
+     "GBPUSD": 832.08,
+     "AUDUSD": 728.08,
+     "USDCAD": 725.75,
+     "USDCHF": 1147.01,
+     "USDJPY": 2379.54,
+     "US100.cash": 299.55,
+     "US500.cash": 203.12,
+     "XAUUSD": 2830.82,
+     "AUDJPY": 118.23,
+     "CADJPY": 581.9,
+     "GBPJPY": 498.02,
+     "EURJPY": 359.06
+    },
+    "worst_day": {
+     "day": "2024-04-16",
+     "pct": -2.74
+    },
+    "months_positive": 18,
+    "months": 21,
+    "return_pct": 137.37
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-25_2025_AurumFunded_vrp2_off",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-25T20:25:00.1871067+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13416.12,
+    "gross_profit": 34906.34,
+    "gross_loss": -21490.22,
+    "profit_factor": 1.62,
+    "recovery": 15.68,
+    "sharpe": 6.53,
+    "trades": 2280.0,
+    "won": "1188 (52.11%)",
+    "eq_dd_max": "855.75 (4.16%)",
+    "eq_dd_rel": "6.91% (824.80)",
+    "bal_dd_max": "742.34 (6.23%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.11,
+    "eq_dd_max_pct": 4.16,
+    "bal_dd_max_pct": 6.23,
+    "deals": 4561,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10605.48
+     ],
+     [
+      "2024-02-01",
+      10571.63
+     ],
+     [
+      "2024-02-02",
+      10695.49
+     ],
+     [
+      "2024-02-05",
+      10769.79
+     ],
+     [
+      "2024-02-06",
+      10740.99
+     ],
+     [
+      "2024-02-07",
+      10687.97
+     ],
+     [
+      "2024-02-08",
+      10708.73
+     ],
+     [
+      "2024-02-09",
+      10770.86
+     ],
+     [
+      "2024-02-12",
+      10757.92
+     ],
+     [
+      "2024-02-13",
+      10734.74
+     ],
+     [
+      "2024-02-14",
+      10718.15
+     ],
+     [
+      "2024-02-15",
+      10742.01
+     ],
+     [
+      "2024-02-16",
+      10766.0
+     ],
+     [
+      "2024-02-19",
+      10805.61
+     ],
+     [
+      "2024-02-20",
+      10626.19
+     ],
+     [
+      "2024-02-21",
+      10590.94
+     ],
+     [
+      "2024-02-22",
+      10617.94
+     ],
+     [
+      "2024-02-23",
+      10563.08
+     ],
+     [
+      "2024-02-26",
+      10546.3
+     ],
+     [
+      "2024-02-27",
+      10529.73
+     ],
+     [
+      "2024-02-28",
+      10543.7
+     ],
+     [
+      "2024-02-29",
+      10641.58
+     ],
+     [
+      "2024-03-01",
+      10694.4
+     ],
+     [
+      "2024-03-04",
+      10709.62
+     ],
+     [
+      "2024-03-05",
+      10702.96
+     ],
+     [
+      "2024-03-06",
+      10714.18
+     ],
+     [
+      "2024-03-07",
+      10729.6
+     ],
+     [
+      "2024-03-08",
+      10690.2
+     ],
+     [
+      "2024-04-01",
+      10630.32
+     ],
+     [
+      "2024-04-02",
+      10568.27
+     ],
+     [
+      "2024-04-03",
+      10504.58
+     ],
+     [
+      "2024-04-04",
+      10660.07
+     ],
+     [
+      "2024-04-05",
+      10806.59
+     ],
+     [
+      "2024-04-08",
+      10834.59
+     ],
+     [
+      "2024-04-09",
+      10781.17
+     ],
+     [
+      "2024-04-10",
+      10904.02
+     ],
+     [
+      "2024-04-11",
+      10930.91
+     ],
+     [
+      "2024-04-12",
+      10930.73
+     ],
+     [
+      "2024-04-15",
+      10956.61
+     ],
+     [
+      "2024-04-16",
+      10842.37
+     ],
+     [
+      "2024-04-17",
+      10935.5
+     ],
+     [
+      "2024-04-18",
+      10902.63
+     ],
+     [
+      "2024-04-19",
+      11095.6
+     ],
+     [
+      "2024-04-22",
+      11074.58
+     ],
+     [
+      "2024-04-23",
+      11059.6
+     ],
+     [
+      "2024-04-24",
+      11065.88
+     ],
+     [
+      "2024-04-25",
+      11161.71
+     ],
+     [
+      "2024-04-26",
+      11255.99
+     ],
+     [
+      "2024-04-29",
+      11228.32
+     ],
+     [
+      "2024-04-30",
+      11324.22
+     ],
+     [
+      "2024-05-01",
+      11345.07
+     ],
+     [
+      "2024-05-02",
+      11336.97
+     ],
+     [
+      "2024-05-03",
+      11325.5
+     ],
+     [
+      "2024-05-06",
+      11318.44
+     ],
+     [
+      "2024-05-07",
+      11289.06
+     ],
+     [
+      "2024-05-08",
+      11303.39
+     ],
+     [
+      "2024-05-09",
+      11298.56
+     ],
+     [
+      "2024-05-10",
+      11205.47
+     ],
+     [
+      "2024-05-13",
+      11170.05
+     ],
+     [
+      "2024-05-14",
+      11163.33
+     ],
+     [
+      "2024-05-15",
+      11206.1
+     ],
+     [
+      "2024-05-16",
+      11213.95
+     ],
+     [
+      "2024-05-17",
+      11182.72
+     ],
+     [
+      "2024-05-20",
+      11138.71
+     ],
+     [
+      "2024-05-21",
+      11152.18
+     ],
+     [
+      "2024-05-22",
+      11190.45
+     ],
+     [
+      "2024-05-23",
+      11154.79
+     ],
+     [
+      "2024-05-24",
+      11248.89
+     ],
+     [
+      "2024-05-27",
+      11239.27
+     ],
+     [
+      "2024-05-28",
+      11138.75
+     ],
+     [
+      "2024-05-29",
+      11123.58
+     ],
+     [
+      "2024-05-30",
+      11123.84
+     ],
+     [
+      "2024-05-31",
+      11165.8
+     ],
+     [
+      "2024-06-03",
+      11142.3
+     ],
+     [
+      "2024-06-04",
+      11165.17
+     ],
+     [
+      "2024-06-05",
+      11133.14
+     ],
+     [
+      "2024-06-06",
+      11162.52
+     ],
+     [
+      "2024-06-07",
+      11124.47
+     ],
+     [
+      "2024-06-10",
+      11086.35
+     ],
+     [
+      "2024-06-11",
+      11079.26
+     ],
+     [
+      "2024-06-12",
+      11011.44
+     ],
+     [
+      "2024-06-13",
+      11075.66
+     ],
+     [
+      "2024-06-14",
+      11048.11
+     ],
+     [
+      "2024-06-17",
+      11062.16
+     ],
+     [
+      "2024-06-18",
+      11064.68
+     ],
+     [
+      "2024-06-19",
+      10998.91
+     ],
+     [
+      "2024-06-20",
+      11216.4
+     ],
+     [
+      "2024-06-21",
+      11203.47
+     ],
+     [
+      "2024-06-24",
+      11148.73
+     ],
+     [
+      "2024-06-25",
+      11223.21
+     ],
+     [
+      "2024-06-26",
+      11183.84
+     ],
+     [
+      "2024-06-27",
+      11168.08
+     ],
+     [
+      "2024-06-28",
+      11356.22
+     ],
+     [
+      "2024-07-01",
+      11362.03
+     ],
+     [
+      "2024-07-02",
+      11389.17
+     ],
+     [
+      "2024-07-03",
+      11418.47
+     ],
+     [
+      "2024-07-04",
+      11402.32
+     ],
+     [
+      "2024-07-05",
+      11525.65
+     ],
+     [
+      "2024-07-08",
+      11524.24
+     ],
+     [
+      "2024-07-09",
+      11588.98
+     ],
+     [
+      "2024-07-10",
+      11538.35
+     ],
+     [
+      "2024-07-11",
+      11749.31
+     ],
+     [
+      "2024-07-12",
+      11766.09
+     ],
+     [
+      "2024-07-15",
+      11763.9
+     ],
+     [
+      "2024-07-16",
+      11734.9
+     ],
+     [
+      "2024-07-17",
+      11800.7
+     ],
+     [
+      "2024-07-18",
+      11801.55
+     ],
+     [
+      "2024-07-19",
+      11611.9
+     ],
+     [
+      "2024-07-22",
+      11618.69
+     ],
+     [
+      "2024-07-23",
+      11607.78
+     ],
+     [
+      "2024-07-24",
+      11775.18
+     ],
+     [
+      "2024-07-25",
+      11474.94
+     ],
+     [
+      "2024-07-26",
+      11426.24
+     ],
+     [
+      "2024-07-29",
+      11430.94
+     ],
+     [
+      "2024-07-30",
+      11473.19
+     ],
+     [
+      "2024-07-31",
+      11489.36
+     ],
+     [
+      "2024-08-01",
+      11661.74
+     ],
+     [
+      "2024-08-02",
+      11852.97
+     ],
+     [
+      "2024-08-05",
+      11627.8
+     ],
+     [
+      "2024-08-06",
+      11399.49
+     ],
+     [
+      "2024-08-07",
+      11381.3
+     ],
+     [
+      "2024-08-08",
+      11309.56
+     ],
+     [
+      "2024-08-09",
+      11439.86
+     ],
+     [
+      "2024-08-12",
+      11462.58
+     ],
+     [
+      "2024-08-13",
+      11346.8
+     ],
+     [
+      "2024-08-14",
+      11354.95
+     ],
+     [
+      "2024-08-15",
+      11287.03
+     ],
+     [
+      "2024-08-16",
+      11288.3
+     ],
+     [
+      "2024-08-19",
+      11276.18
+     ],
+     [
+      "2024-08-20",
+      11247.45
+     ],
+     [
+      "2024-08-21",
+      11207.88
+     ],
+     [
+      "2024-08-22",
+      11213.35
+     ],
+     [
+      "2024-08-23",
+      11217.98
+     ],
+     [
+      "2024-08-26",
+      11229.81
+     ],
+     [
+      "2024-08-27",
+      11233.81
+     ],
+     [
+      "2024-08-28",
+      11219.2
+     ],
+     [
+      "2024-08-29",
+      11203.92
+     ],
+     [
+      "2024-08-30",
+      11239.24
+     ],
+     [
+      "2024-09-02",
+      11255.72
+     ],
+     [
+      "2024-09-03",
+      11465.29
+     ],
+     [
+      "2024-09-04",
+      11508.99
+     ],
+     [
+      "2024-09-05",
+      11453.04
+     ],
+     [
+      "2024-09-06",
+      11566.6
+     ],
+     [
+      "2024-09-09",
+      11628.46
+     ],
+     [
+      "2024-09-10",
+      11655.4
+     ],
+     [
+      "2024-09-11",
+      11653.29
+     ],
+     [
+      "2024-09-12",
+      11657.03
+     ],
+     [
+      "2024-09-13",
+      11807.33
+     ],
+     [
+      "2024-09-16",
+      11812.45
+     ],
+     [
+      "2024-09-17",
+      11797.02
+     ],
+     [
+      "2024-09-18",
+      12104.78
+     ],
+     [
+      "2024-09-19",
+      12153.06
+     ],
+     [
+      "2024-09-20",
+      12237.67
+     ],
+     [
+      "2024-09-23",
+      12200.69
+     ],
+     [
+      "2024-09-24",
+      12208.03
+     ],
+     [
+      "2024-09-25",
+      12096.39
+     ],
+     [
+      "2024-09-26",
+      12027.85
+     ],
+     [
+      "2024-09-27",
+      12002.2
+     ],
+     [
+      "2024-09-30",
+      12021.65
+     ],
+     [
+      "2024-10-01",
+      12046.2
+     ],
+     [
+      "2024-10-02",
+      12041.99
+     ],
+     [
+      "2024-10-03",
+      12008.32
+     ],
+     [
+      "2024-10-04",
+      12088.67
+     ],
+     [
+      "2024-10-07",
+      12034.93
+     ],
+     [
+      "2024-10-08",
+      12053.32
+     ],
+     [
+      "2024-10-09",
+      12153.31
+     ],
+     [
+      "2024-10-10",
+      12201.71
+     ],
+     [
+      "2024-10-11",
+      12241.2
+     ],
+     [
+      "2024-10-14",
+      12345.98
+     ],
+     [
+      "2024-10-15",
+      12337.88
+     ],
+     [
+      "2024-10-16",
+      12308.63
+     ],
+     [
+      "2024-10-17",
+      12305.12
+     ],
+     [
+      "2024-10-18",
+      12292.56
+     ],
+     [
+      "2024-10-21",
+      12269.36
+     ],
+     [
+      "2024-10-22",
+      12300.39
+     ],
+     [
+      "2024-10-23",
+      12416.04
+     ],
+     [
+      "2024-10-24",
+      12440.92
+     ],
+     [
+      "2024-10-25",
+      12520.08
+     ],
+     [
+      "2024-11-04",
+      12494.46
+     ],
+     [
+      "2024-11-05",
+      12635.18
+     ],
+     [
+      "2024-11-06",
+      12334.79
+     ],
+     [
+      "2024-11-07",
+      12246.88
+     ],
+     [
+      "2024-11-08",
+      12330.99
+     ],
+     [
+      "2024-11-11",
+      12367.36
+     ],
+     [
+      "2024-11-12",
+      12389.95
+     ],
+     [
+      "2024-11-13",
+      12237.69
+     ],
+     [
+      "2024-11-14",
+      12088.64
+     ],
+     [
+      "2024-11-15",
+      12307.36
+     ],
+     [
+      "2024-11-18",
+      12252.29
+     ],
+     [
+      "2024-11-19",
+      12207.71
+     ],
+     [
+      "2024-11-20",
+      12165.62
+     ],
+     [
+      "2024-11-21",
+      12124.55
+     ],
+     [
+      "2024-11-22",
+      12139.24
+     ],
+     [
+      "2024-11-25",
+      12187.37
+     ],
+     [
+      "2024-11-26",
+      12199.6
+     ],
+     [
+      "2024-11-27",
+      12161.4
+     ],
+     [
+      "2024-11-28",
+      12198.26
+     ],
+     [
+      "2024-11-29",
+      12748.48
+     ],
+     [
+      "2024-12-02",
+      12779.28
+     ],
+     [
+      "2024-12-03",
+      12852.0
+     ],
+     [
+      "2024-12-04",
+      12908.09
+     ],
+     [
+      "2024-12-05",
+      12846.11
+     ],
+     [
+      "2024-12-06",
+      13076.95
+     ],
+     [
+      "2024-12-09",
+      13130.41
+     ],
+     [
+      "2024-12-10",
+      13326.07
+     ],
+     [
+      "2024-12-11",
+      13312.39
+     ],
+     [
+      "2024-12-12",
+      13345.94
+     ],
+     [
+      "2024-12-13",
+      13215.34
+     ],
+     [
+      "2024-12-16",
+      13253.3
+     ],
+     [
+      "2024-12-17",
+      13229.77
+     ],
+     [
+      "2024-12-18",
+      13540.69
+     ],
+     [
+      "2024-12-19",
+      13758.88
+     ],
+     [
+      "2024-12-20",
+      14353.44
+     ],
+     [
+      "2024-12-23",
+      14368.52
+     ],
+     [
+      "2024-12-24",
+      14461.25
+     ],
+     [
+      "2024-12-26",
+      14580.57
+     ],
+     [
+      "2024-12-27",
+      14561.79
+     ],
+     [
+      "2024-12-30",
+      14626.0
+     ],
+     [
+      "2024-12-31",
+      14562.37
+     ],
+     [
+      "2025-01-02",
+      14945.44
+     ],
+     [
+      "2025-01-03",
+      14906.34
+     ],
+     [
+      "2025-01-06",
+      14905.51
+     ],
+     [
+      "2025-01-07",
+      14977.24
+     ],
+     [
+      "2025-01-08",
+      15051.36
+     ],
+     [
+      "2025-01-09",
+      15027.88
+     ],
+     [
+      "2025-01-10",
+      14958.74
+     ],
+     [
+      "2025-01-13",
+      14939.16
+     ],
+     [
+      "2025-01-14",
+      14951.49
+     ],
+     [
+      "2025-01-15",
+      15003.35
+     ],
+     [
+      "2025-01-16",
+      15247.14
+     ],
+     [
+      "2025-01-17",
+      15335.81
+     ],
+     [
+      "2025-01-20",
+      15349.37
+     ],
+     [
+      "2025-01-21",
+      15409.31
+     ],
+     [
+      "2025-01-22",
+      15433.19
+     ],
+     [
+      "2025-01-23",
+      15479.44
+     ],
+     [
+      "2025-01-24",
+      15521.15
+     ],
+     [
+      "2025-01-27",
+      15509.62
+     ],
+     [
+      "2025-01-28",
+      15538.25
+     ],
+     [
+      "2025-01-29",
+      15485.76
+     ],
+     [
+      "2025-01-30",
+      15491.71
+     ],
+     [
+      "2025-01-31",
+      15379.92
+     ],
+     [
+      "2025-02-03",
+      15349.18
+     ],
+     [
+      "2025-02-04",
+      15320.16
+     ],
+     [
+      "2025-02-05",
+      15508.79
+     ],
+     [
+      "2025-02-06",
+      15502.66
+     ],
+     [
+      "2025-02-07",
+      15603.79
+     ],
+     [
+      "2025-02-10",
+      15640.02
+     ],
+     [
+      "2025-02-11",
+      15577.27
+     ],
+     [
+      "2025-02-12",
+      15618.66
+     ],
+     [
+      "2025-02-13",
+      15746.26
+     ],
+     [
+      "2025-02-14",
+      15776.17
+     ],
+     [
+      "2025-02-17",
+      16110.64
+     ],
+     [
+      "2025-02-18",
+      16230.16
+     ],
+     [
+      "2025-02-19",
+      16221.77
+     ],
+     [
+      "2025-02-20",
+      16290.28
+     ],
+     [
+      "2025-02-21",
+      16466.25
+     ],
+     [
+      "2025-02-24",
+      16515.0
+     ],
+     [
+      "2025-02-25",
+      16495.7
+     ],
+     [
+      "2025-02-26",
+      16489.35
+     ],
+     [
+      "2025-02-27",
+      16559.12
+     ],
+     [
+      "2025-02-28",
+      16336.7
+     ],
+     [
+      "2025-03-03",
+      16311.96
+     ],
+     [
+      "2025-03-04",
+      16274.0
+     ],
+     [
+      "2025-03-05",
+      16220.47
+     ],
+     [
+      "2025-03-06",
+      16206.18
+     ],
+     [
+      "2025-03-07",
+      16213.64
+     ],
+     [
+      "2025-03-31",
+      16344.83
+     ],
+     [
+      "2025-04-01",
+      16380.68
+     ],
+     [
+      "2025-04-02",
+      16281.75
+     ],
+     [
+      "2025-04-03",
+      16183.95
+     ],
+     [
+      "2025-04-04",
+      16392.6
+     ],
+     [
+      "2025-04-07",
+      17220.87
+     ],
+     [
+      "2025-04-08",
+      17495.95
+     ],
+     [
+      "2025-04-09",
+      18136.25
+     ],
+     [
+      "2025-04-10",
+      18458.17
+     ],
+     [
+      "2025-04-11",
+      18480.86
+     ],
+     [
+      "2025-04-14",
+      18650.73
+     ],
+     [
+      "2025-04-15",
+      18775.55
+     ],
+     [
+      "2025-04-16",
+      18772.44
+     ],
+     [
+      "2025-04-17",
+      19169.13
+     ],
+     [
+      "2025-04-18",
+      19120.38
+     ],
+     [
+      "2025-04-21",
+      19146.52
+     ],
+     [
+      "2025-04-22",
+      19630.79
+     ],
+     [
+      "2025-04-23",
+      19700.73
+     ],
+     [
+      "2025-04-24",
+      19828.36
+     ],
+     [
+      "2025-04-25",
+      19742.21
+     ],
+     [
+      "2025-04-28",
+      19747.5
+     ],
+     [
+      "2025-04-29",
+      19755.92
+     ],
+     [
+      "2025-04-30",
+      19628.39
+     ],
+     [
+      "2025-05-01",
+      19323.04
+     ],
+     [
+      "2025-05-02",
+      19329.81
+     ],
+     [
+      "2025-05-05",
+      19711.23
+     ],
+     [
+      "2025-05-06",
+      19637.58
+     ],
+     [
+      "2025-05-07",
+      19628.4
+     ],
+     [
+      "2025-05-08",
+      19575.0
+     ],
+     [
+      "2025-05-09",
+      19411.86
+     ],
+     [
+      "2025-05-12",
+      19439.66
+     ],
+     [
+      "2025-05-13",
+      19576.16
+     ],
+     [
+      "2025-05-14",
+      19671.27
+     ],
+     [
+      "2025-05-15",
+      19777.46
+     ],
+     [
+      "2025-05-16",
+      19908.68
+     ],
+     [
+      "2025-05-19",
+      19913.53
+     ],
+     [
+      "2025-05-20",
+      19925.87
+     ],
+     [
+      "2025-05-21",
+      20009.57
+     ],
+     [
+      "2025-05-22",
+      19743.61
+     ],
+     [
+      "2025-05-23",
+      19995.71
+     ],
+     [
+      "2025-05-26",
+      20006.36
+     ],
+     [
+      "2025-05-27",
+      20316.7
+     ],
+     [
+      "2025-05-28",
+      20400.19
+     ],
+     [
+      "2025-05-29",
+      20469.74
+     ],
+     [
+      "2025-05-30",
+      20160.82
+     ],
+     [
+      "2025-06-02",
+      20194.07
+     ],
+     [
+      "2025-06-03",
+      20269.84
+     ],
+     [
+      "2025-06-04",
+      20272.54
+     ],
+     [
+      "2025-06-05",
+      20170.9
+     ],
+     [
+      "2025-06-06",
+      20100.47
+     ],
+     [
+      "2025-06-09",
+      20164.5
+     ],
+     [
+      "2025-06-10",
+      19936.38
+     ],
+     [
+      "2025-06-11",
+      19910.91
+     ],
+     [
+      "2025-06-12",
+      19909.01
+     ],
+     [
+      "2025-06-13",
+      19927.0
+     ],
+     [
+      "2025-06-16",
+      19954.07
+     ],
+     [
+      "2025-06-17",
+      19905.1
+     ],
+     [
+      "2025-06-18",
+      19856.14
+     ],
+     [
+      "2025-06-19",
+      19775.6
+     ],
+     [
+      "2025-06-20",
+      19783.09
+     ],
+     [
+      "2025-06-23",
+      19828.51
+     ],
+     [
+      "2025-06-24",
+      19791.08
+     ],
+     [
+      "2025-06-25",
+      19857.18
+     ],
+     [
+      "2025-06-26",
+      19991.09
+     ],
+     [
+      "2025-06-27",
+      19873.63
+     ],
+     [
+      "2025-06-30",
+      20019.06
+     ],
+     [
+      "2025-07-01",
+      20002.7
+     ],
+     [
+      "2025-07-02",
+      20168.46
+     ],
+     [
+      "2025-07-03",
+      20337.2
+     ],
+     [
+      "2025-07-04",
+      20329.04
+     ],
+     [
+      "2025-07-07",
+      20620.39
+     ],
+     [
+      "2025-07-08",
+      20668.35
+     ],
+     [
+      "2025-07-09",
+      20702.38
+     ],
+     [
+      "2025-07-10",
+      20784.56
+     ],
+     [
+      "2025-07-11",
+      20827.63
+     ],
+     [
+      "2025-07-14",
+      20850.42
+     ],
+     [
+      "2025-07-15",
+      20941.17
+     ],
+     [
+      "2025-07-16",
+      20979.72
+     ],
+     [
+      "2025-07-17",
+      21114.74
+     ],
+     [
+      "2025-07-18",
+      21045.87
+     ],
+     [
+      "2025-07-21",
+      20949.86
+     ],
+     [
+      "2025-07-22",
+      20883.31
+     ],
+     [
+      "2025-07-23",
+      20930.12
+     ],
+     [
+      "2025-07-24",
+      20884.84
+     ],
+     [
+      "2025-07-25",
+      20880.78
+     ],
+     [
+      "2025-07-28",
+      20909.98
+     ],
+     [
+      "2025-07-29",
+      21112.36
+     ],
+     [
+      "2025-07-30",
+      21319.98
+     ],
+     [
+      "2025-07-31",
+      21570.92
+     ],
+     [
+      "2025-08-01",
+      21575.12
+     ],
+     [
+      "2025-08-04",
+      21717.47
+     ],
+     [
+      "2025-08-05",
+      21555.96
+     ],
+     [
+      "2025-08-06",
+      21550.5
+     ],
+     [
+      "2025-08-07",
+      21572.97
+     ],
+     [
+      "2025-08-08",
+      21531.19
+     ],
+     [
+      "2025-08-11",
+      21519.16
+     ],
+     [
+      "2025-08-12",
+      21541.88
+     ],
+     [
+      "2025-08-13",
+      21575.54
+     ],
+     [
+      "2025-08-14",
+      21602.91
+     ],
+     [
+      "2025-08-15",
+      21604.65
+     ],
+     [
+      "2025-08-18",
+      21632.23
+     ],
+     [
+      "2025-08-19",
+      21731.67
+     ],
+     [
+      "2025-08-20",
+      21840.26
+     ],
+     [
+      "2025-08-21",
+      21944.85
+     ],
+     [
+      "2025-08-22",
+      21993.3
+     ],
+     [
+      "2025-08-25",
+      21863.79
+     ],
+     [
+      "2025-08-26",
+      21806.46
+     ],
+     [
+      "2025-08-27",
+      21801.29
+     ],
+     [
+      "2025-08-28",
+      21875.55
+     ],
+     [
+      "2025-08-29",
+      22407.75
+     ],
+     [
+      "2025-09-01",
+      22464.69
+     ],
+     [
+      "2025-09-02",
+      23195.16
+     ],
+     [
+      "2025-09-03",
+      23155.96
+     ],
+     [
+      "2025-09-04",
+      23617.49
+     ],
+     [
+      "2025-09-05",
+      23697.84
+     ],
+     [
+      "2025-09-08",
+      23681.57
+     ],
+     [
+      "2025-09-09",
+      23783.17
+     ],
+     [
+      "2025-09-10",
+      23791.69
+     ],
+     [
+      "2025-09-11",
+      23777.17
+     ],
+     [
+      "2025-09-12",
+      23859.06
+     ],
+     [
+      "2025-09-15",
+      23802.4
+     ],
+     [
+      "2025-09-16",
+      23805.25
+     ],
+     [
+      "2025-09-17",
+      23670.1
+     ],
+     [
+      "2025-09-18",
+      23624.9
+     ],
+     [
+      "2025-09-19",
+      23795.21
+     ],
+     [
+      "2025-09-22",
+      23834.19
+     ],
+     [
+      "2025-09-23",
+      23954.1
+     ],
+     [
+      "2025-09-24",
+      23815.73
+     ],
+     [
+      "2025-09-25",
+      23699.15
+     ],
+     [
+      "2025-09-26",
+      23537.67
+     ],
+     [
+      "2025-09-29",
+      23416.12
+     ]
+    ],
+    "by_year": {
+     "2024": 4562.37,
+     "2025": 8853.75
+    },
+    "by_month": {
+     "2024-01": 605.48,
+     "2024-02": 36.1,
+     "2024-03": 48.62,
+     "2024-04": 634.02,
+     "2024-05": -158.42,
+     "2024-06": 190.42,
+     "2024-07": 133.14,
+     "2024-08": -250.12,
+     "2024-09": 782.41,
+     "2024-10": 498.43,
+     "2024-11": 228.4,
+     "2024-12": 1813.89,
+     "2025-01": 817.55,
+     "2025-02": 956.78,
+     "2025-03": 8.13,
+     "2025-04": 3283.56,
+     "2025-05": 532.43,
+     "2025-06": -141.76,
+     "2025-07": 1551.86,
+     "2025-08": 836.83,
+     "2025-09": 1008.37
+    },
+    "by_symbol": {
+     "EURUSD": 2898.68,
+     "GBPUSD": 807.1,
+     "AUDUSD": 724.23,
+     "USDCAD": 720.91,
+     "USDCHF": 1137.95,
+     "USDJPY": 2325.99,
+     "US100.cash": 289.27,
+     "US500.cash": 315.76,
+     "XAUUSD": 2699.42,
+     "AUDJPY": 118.6,
+     "CADJPY": 565.11,
+     "GBPJPY": 489.7,
+     "EURJPY": 323.4
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.55
+    },
+    "months_positive": 18,
+    "months": 21,
+    "return_pct": 134.16
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-25_2005_AurumFunded_vrp_on",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpVrpMult=0.0",
+    "Started": "2026-10-25T20:05:13.1253747+01:00"
+   },
+   "summary": "# j16: AurumFunded vrp on XAUUSD M15\n\nWritten by tools/autopilot/tester_step.py 2026-10-25 20:16: figures only, the judge judges.\nPreset `mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_vrp.set`, deposit 10000, leverage 1:33, 2024.01.01 to 2025.09.30, set none, compare_set ['InpVrpMult=0.0'].\n\n## legs off (`2026-10-25_1955_AurumFunded_vrp_off`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +1,000.15 (+10.0%) |\n| Trades / win rate | 346.0 / 51.16% |\n| Profit factor | 1.44 |\n| Max equity drawdown | 3.61% |\n| Worst day | 2024-02-20 -1.66% |\n| Return per unit of drawdown | 2.8 |\n| By year | 2024 +1,000 |\n| History quality | 99% real ticks |\n\n## legs on (`2026-10-25_2005_AurumFunded_vrp_on`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +1,000.15 (+10.0%) |\n| Trades / win rate | 346.0 / 51.16% |\n| Profit factor | 1.44 |\n| Max equity drawdown | 3.61% |\n| Worst day | 2024-02-20 -1.66% |\n| Return per unit of drawdown | 2.8 |\n| By year | 2024 +1,000 |\n| History quality | 99% real ticks |\n\n## On against off\n\nReturn per unit of equity drawdown: off 2.8, on 2.8 (not higher with the legs on).\n\n## Expected (from the job)\n\nStep 15 for the variance-premium leg (AurumFunded v1.13, research/vrp_gap_equity_indices.py). Leg alone at InpVrpMult 0.5 on 10k, 2024.01-2025.09: about +2.6% / 3.7% DD from the Python daily series (2 indices at 0.25 x the 10%-vol series), about 11 entries a year per index (hold 10 trading days), magics +30/+31. Judge against 67-87% of the model (lesson 4). Check the input list shows InpVrpMult 0.5 (on) and 0.0 (off compare). NEEDS a VIX symbol on the FTMO tester server (InpVrpVix, default VIX.cash): if the log says the volatility index is not available, the leg never traded; that is a data problem, not a result - report the symbol list and stop.\n\n## Log lines worth a look\n\n- None matched (not found, cannot, failed, margin, invalid, error).\n",
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 1000.15,
+    "gross_profit": 3263.96,
+    "gross_loss": -2263.81,
+    "profit_factor": 1.44,
+    "recovery": 2.55,
+    "sharpe": 5.74,
+    "trades": 346.0,
+    "won": "177 (51.16%)",
+    "eq_dd_max": "392.25 (3.61%)",
+    "eq_dd_rel": "3.61% (392.25)",
+    "bal_dd_max": "312.94 (2.90%)",
+    "ticks": 9068581.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 51.16,
+    "eq_dd_max_pct": 3.61,
+    "bal_dd_max_pct": 2.9,
+    "deals": 693,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10605.48
+     ],
+     [
+      "2024-02-01",
+      10571.63
+     ],
+     [
+      "2024-02-02",
+      10695.49
+     ],
+     [
+      "2024-02-05",
+      10769.79
+     ],
+     [
+      "2024-02-06",
+      10740.99
+     ],
+     [
+      "2024-02-07",
+      10687.97
+     ],
+     [
+      "2024-02-08",
+      10708.73
+     ],
+     [
+      "2024-02-09",
+      10770.86
+     ],
+     [
+      "2024-02-12",
+      10757.92
+     ],
+     [
+      "2024-02-13",
+      10734.74
+     ],
+     [
+      "2024-02-14",
+      10718.15
+     ],
+     [
+      "2024-02-15",
+      10742.01
+     ],
+     [
+      "2024-02-16",
+      10766.0
+     ],
+     [
+      "2024-02-19",
+      10805.61
+     ],
+     [
+      "2024-02-20",
+      10626.19
+     ],
+     [
+      "2024-02-21",
+      10590.94
+     ],
+     [
+      "2024-02-22",
+      10617.94
+     ],
+     [
+      "2024-02-23",
+      10563.08
+     ],
+     [
+      "2024-02-26",
+      10546.3
+     ],
+     [
+      "2024-02-27",
+      10529.73
+     ],
+     [
+      "2024-02-28",
+      10543.7
+     ],
+     [
+      "2024-02-29",
+      10641.58
+     ],
+     [
+      "2024-03-01",
+      10694.4
+     ],
+     [
+      "2024-03-04",
+      10709.62
+     ],
+     [
+      "2024-03-05",
+      10702.96
+     ],
+     [
+      "2024-03-06",
+      10714.18
+     ],
+     [
+      "2024-03-07",
+      10729.6
+     ],
+     [
+      "2024-03-08",
+      10690.2
+     ],
+     [
+      "2024-04-01",
+      10630.32
+     ],
+     [
+      "2024-04-02",
+      10568.27
+     ],
+     [
+      "2024-04-03",
+      10504.58
+     ],
+     [
+      "2024-04-04",
+      10660.07
+     ],
+     [
+      "2024-04-05",
+      10806.59
+     ],
+     [
+      "2024-04-08",
+      10834.59
+     ],
+     [
+      "2024-04-09",
+      10781.17
+     ],
+     [
+      "2024-04-10",
+      10904.02
+     ],
+     [
+      "2024-04-11",
+      10930.91
+     ],
+     [
+      "2024-04-12",
+      10930.73
+     ],
+     [
+      "2024-04-15",
+      10999.66
+     ],
+     [
+      "2024-04-16",
+      11000.15
+     ]
+    ],
+    "by_year": {
+     "2024": 1000.15
+    },
+    "by_month": {
+     "2024-01": 605.48,
+     "2024-02": 36.1,
+     "2024-03": 48.62,
+     "2024-04": 309.95
+    },
+    "by_symbol": {
+     "EURUSD": 288.26,
+     "GBPUSD": 117.04,
+     "AUDUSD": 69.72,
+     "USDCAD": 65.95,
+     "USDCHF": 110.54,
+     "USDJPY": -12.27,
+     "US100.cash": 129.27,
+     "US500.cash": 140.45,
+     "XAUUSD": 218.1,
+     "AUDJPY": -48.9,
+     "CADJPY": -43.37,
+     "GBPJPY": -39.29,
+     "EURJPY": 4.65
+    },
+    "worst_day": {
+     "day": "2024-02-20",
+     "pct": -1.66
+    },
+    "months_positive": 4,
+    "months": 4,
+    "return_pct": 10.0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-25_1955_AurumFunded_vrp_off",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-25T19:55:30.2581033+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 1000.15,
+    "gross_profit": 3263.96,
+    "gross_loss": -2263.81,
+    "profit_factor": 1.44,
+    "recovery": 2.55,
+    "sharpe": 5.74,
+    "trades": 346.0,
+    "won": "177 (51.16%)",
+    "eq_dd_max": "392.25 (3.61%)",
+    "eq_dd_rel": "3.61% (392.25)",
+    "bal_dd_max": "312.94 (2.90%)",
+    "ticks": 9068581.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 51.16,
+    "eq_dd_max_pct": 3.61,
+    "bal_dd_max_pct": 2.9,
+    "deals": 693,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10605.48
+     ],
+     [
+      "2024-02-01",
+      10571.63
+     ],
+     [
+      "2024-02-02",
+      10695.49
+     ],
+     [
+      "2024-02-05",
+      10769.79
+     ],
+     [
+      "2024-02-06",
+      10740.99
+     ],
+     [
+      "2024-02-07",
+      10687.97
+     ],
+     [
+      "2024-02-08",
+      10708.73
+     ],
+     [
+      "2024-02-09",
+      10770.86
+     ],
+     [
+      "2024-02-12",
+      10757.92
+     ],
+     [
+      "2024-02-13",
+      10734.74
+     ],
+     [
+      "2024-02-14",
+      10718.15
+     ],
+     [
+      "2024-02-15",
+      10742.01
+     ],
+     [
+      "2024-02-16",
+      10766.0
+     ],
+     [
+      "2024-02-19",
+      10805.61
+     ],
+     [
+      "2024-02-20",
+      10626.19
+     ],
+     [
+      "2024-02-21",
+      10590.94
+     ],
+     [
+      "2024-02-22",
+      10617.94
+     ],
+     [
+      "2024-02-23",
+      10563.08
+     ],
+     [
+      "2024-02-26",
+      10546.3
+     ],
+     [
+      "2024-02-27",
+      10529.73
+     ],
+     [
+      "2024-02-28",
+      10543.7
+     ],
+     [
+      "2024-02-29",
+      10641.58
+     ],
+     [
+      "2024-03-01",
+      10694.4
+     ],
+     [
+      "2024-03-04",
+      10709.62
+     ],
+     [
+      "2024-03-05",
+      10702.96
+     ],
+     [
+      "2024-03-06",
+      10714.18
+     ],
+     [
+      "2024-03-07",
+      10729.6
+     ],
+     [
+      "2024-03-08",
+      10690.2
+     ],
+     [
+      "2024-04-01",
+      10630.32
+     ],
+     [
+      "2024-04-02",
+      10568.27
+     ],
+     [
+      "2024-04-03",
+      10504.58
+     ],
+     [
+      "2024-04-04",
+      10660.07
+     ],
+     [
+      "2024-04-05",
+      10806.59
+     ],
+     [
+      "2024-04-08",
+      10834.59
+     ],
+     [
+      "2024-04-09",
+      10781.17
+     ],
+     [
+      "2024-04-10",
+      10904.02
+     ],
+     [
+      "2024-04-11",
+      10930.91
+     ],
+     [
+      "2024-04-12",
+      10930.73
+     ],
+     [
+      "2024-04-15",
+      10999.66
+     ],
+     [
+      "2024-04-16",
+      11000.15
+     ]
+    ],
+    "by_year": {
+     "2024": 1000.15
+    },
+    "by_month": {
+     "2024-01": 605.48,
+     "2024-02": 36.1,
+     "2024-03": 48.62,
+     "2024-04": 309.95
+    },
+    "by_symbol": {
+     "EURUSD": 288.26,
+     "GBPUSD": 117.04,
+     "AUDUSD": 69.72,
+     "USDCAD": 65.95,
+     "USDCHF": 110.54,
+     "USDJPY": -12.27,
+     "US100.cash": 129.27,
+     "US500.cash": 140.45,
+     "XAUUSD": 218.1,
+     "AUDJPY": -48.9,
+     "CADJPY": -43.37,
+     "GBPJPY": -39.29,
+     "EURJPY": 4.65
+    },
+    "worst_day": {
+     "day": "2024-02-20",
+     "pct": -1.66
+    },
+    "months_positive": 4,
+    "months": 4,
+    "return_pct": 10.0
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-10-25_1557_AurumFunded_fidelity_1019",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2026.10.19",
+    "To": "2026.10.24",
+    "Deposit": 10000,
+    "Leverage": 100,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-10-25T15:57:55.9117311+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.10.19 - 2026.10.24)",
+    "deposit": 10000.0,
+    "net": -28.98,
+    "gross_profit": 144.33,
+    "gross_loss": -173.31,
+    "profit_factor": 0.83,
+    "recovery": -0.31,
+    "sharpe": -3.47,
+    "trades": 19.0,
+    "won": "6 (31.58%)",
+    "eq_dd_max": "93.16 (0.93%)",
+    "eq_dd_rel": "0.93% (93.16)",
+    "bal_dd_max": "63.56 (0.64%)",
+    "ticks": 1215453.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 31.58,
+    "eq_dd_max_pct": 0.93,
+    "bal_dd_max_pct": 0.64,
+    "deals": 39,
+    "curve": [
+     [
+      "2026-10-19",
+      9957.27
+     ],
+     [
+      "2026-10-20",
+      9974.07
+     ],
+     [
+      "2026-10-21",
+      9946.0
+     ],
+     [
+      "2026-10-22",
+      10008.08
+     ],
+     [
+      "2026-10-23",
+      9971.02
+     ]
+    ],
+    "by_year": {
+     "2026": -28.98
+    },
+    "by_month": {
+     "2026-10": -28.98
+    },
+    "by_symbol": {
+     "USDJPY": -19.66,
+     "EURUSD": 27.47,
+     "US100.cash": -20.79,
+     "US500.cash": -16.0
+    },
+    "worst_day": {
+     "day": "2026-10-19",
+     "pct": -0.43
+    },
+    "months_positive": 0,
+    "months": 1,
+    "return_pct": -0.29
+   },
+   "expected": null
+  },
   {
    "name": "2026-10-18_0940_AurumHydra_t4b_202509",
    "job": {
@@ -42338,107 +60972,659 @@ window.AURUM = {
  ],
  "agents": [
   {
-   "name": "orchestrator",
+   "name": "judge",
    "model": "opus",
    "tools": "all",
-   "steps": "1, 3, 18 and every hand-off",
-   "description": "The main Claude Code session: picks ideas, hands each step to a role agent, reads the gates' verdicts and keeps the ledger. Asks the owner before anything live."
+   "steps": "5",
+   "description": "Judges each Strategy Tester result against the Python figures, has the reviewer check the EA change and records the verdict on the queue item; handles demo orders and ALERTs. Prompt: tools/autopilot/prompts/judge.md. Asks the owner before anything live."
   },
   {
-   "name": "fidelity",
+   "name": "builder",
    "model": "sonnet",
-   "tools": "Read, Grep, Glob, Bash, Write, Edit",
-   "description": "Measures model vs reality: pairs the FTMO demo's fills with a Strategy Tester run over the same days (tools/fill_check.py) and the tester with the Python model (research/tester_fidelity.py). Pipeline steps 16-17. Runs on Sonnet: parsing and comparing, no research judgement.",
-   "steps": "16-17"
+   "tools": "Read, Grep, Glob, Bash, Edit, Write",
+   "description": "Finishes one item of docs/ideas/queue.jsonl end to end - builds the prebuilt / paper / ML / DRL idea in research/ at real costs on all data before the holdout, gates it (tools/gates.py), and on a PASS builds the leg into AurumHydra or AurumFunded switched off, compiles to 0/0 and queues its Strategy Tester job. Pipeline Steps 2-4. Runs on Sonnet; the judge (Opus) judges the tester result and the reviewer checks EA changes.",
+   "steps": "2-4"
+  },
+  {
+   "name": "doctor",
+   "model": "opus",
+   "tools": "Read, Grep, Glob, Bash, PowerShell, Write, Edit",
+   "description": "Daily system check of the Aurum autopilot (owner 2026-10-23) - finds gaps in the agents, the relay, the queue, the demo and the budget, fixes what an agent may fix (queue and state files in docs/), and writes the rest to docs/autopilot/gaps_report.md for the owner's Opus session. Runs on Opus, daily 06:00. Never edits tools/ or .claude/.",
+   "steps": ""
+  },
+  {
+   "name": "finder",
+   "model": "sonnet",
+   "tools": "Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, Edit",
+   "description": "Finds the next ideas and keeps docs/ideas/queue.jsonl fed, rotating four sources - prebuilt strategies (with the change that should make them profitable), papers read in full, ML models and DRL models - aimed at the book's gaps (docs/gaps.json), and fetches data an idea needs. Pipeline Step 1. Runs on Sonnet (owner 2026-10-22); the builder (Sonnet) builds and tests each idea.",
+   "steps": "1"
   },
   {
    "name": "monitor",
    "model": "haiku",
    "tools": "Read, Grep, Glob, Bash, PowerShell, Write",
-   "description": "Daily check-in on the FTMO demo forward test and, later, live monitoring. Pipeline steps 17 and 20. Use on a schedule to compare demo trades with the tester and flag any rule hit.",
-   "steps": "17 and 20"
+   "description": "Daily check-in on the FTMO demo forward test and, later, live monitoring. Runs nightly beside the 5-step loop (owner 2026-10-22). Use on a schedule to compare demo trades with the tester and flag any rule hit.",
+   "steps": ""
+  },
+  {
+   "name": "portfolio-manager",
+   "model": "opus",
+   "tools": "Read, Grep, Glob, Bash, Write, Edit",
+   "description": "Weekly review of the whole book (owner 2026-10-22) - weights, legs that dilute it, drawdowns and the gaps - and writes docs/ideas/steer.md so the finder aims at what the book lacks. Runs on Opus, Saturdays. Read-only on the gate and the EAs.",
+   "steps": ""
   },
   {
    "name": "quant-coder",
    "model": "sonnet",
    "tools": "Read, Grep, Glob, Bash, Edit, Write",
-   "description": "Writes Python backtests in research/ and MQL5 EAs in mql5/. Pipeline steps 5, 6, 7, 11, 12, 13, 14. Use for data checks, prototyping a rule, cost stress runs, goal simulations, and building or merging an EA leg.",
-   "steps": "5, 6, 7, 11, 12, 13, 14"
-  },
-  {
-   "name": "researcher",
-   "model": "haiku",
-   "tools": "Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, Edit",
-   "description": "Finds candidate edges (papers, market structure) and fetches market data. Pipeline steps 2 and 4. Use when the orchestrator needs a list of new ideas checked against the rejected list, or a data set downloaded.",
+   "description": "Writes Python backtests in research/ and MQL5 EAs in mql5/. For chat sessions; in the autopilot the builder does this work (Steps 2 and 4). Use for data checks, prototyping a rule, cost stress runs, goal simulations, and building or merging an EA leg.",
    "steps": "2 and 4"
   },
   {
    "name": "reviewer",
    "model": "opus",
    "tools": "Read, Grep, Glob, Bash",
-   "description": "Independent read-only review of a candidate at gates 8-11 and of every EA change before it is merged. Use with a fresh context; it must not be the agent that built the work.",
-   "steps": ""
-  },
-  {
-   "name": "scanner",
-   "model": "haiku",
-   "tools": "Read, Grep, Glob, Bash, Write",
-   "description": "Runs the brute-force edge scan (tools/edge_scan.py) on a new rule family or new data and gates the survivors (tools/gates.py). Pipeline step 3. Mechanical work, so it runs on Haiku; judging a survivor is the orchestrator's.",
-   "steps": "3"
+   "description": "Independent read-only review of a candidate and of every EA change before it is merged, called by the judge at Step 5. Use with a fresh context; it must not be the agent that built the work.",
+   "steps": "5"
   },
   {
    "name": "tester-operator",
    "model": "haiku",
    "tools": "Read, Grep, Glob, Bash, PowerShell, Write",
-   "description": "Runs MT5 Strategy Tester jobs in the tester install C:\\MetaTrader 5 - Tester (FTMO demo data) and parses the reports. Pipeline steps 15 and 16. Use to launch one tester run, collect its report, and compare it with the expected figures.",
-   "steps": "15 and 16"
+   "description": "Runs MT5 Strategy Tester jobs in the tester install C:\\MetaTrader 5 - Tester (FTMO demo data) and parses the reports. Pipeline Step 3, only when tester_step.py asks for help. Use to launch one tester run, collect its report, and compare it with the expected figures.",
+   "steps": "3"
   }
  ],
+ "budget": {
+  "now": "2026-11-01T02:34",
+  "week_start": "2026-10-30T18:00",
+  "week_runs": 53,
+  "week_usd": 16.73,
+  "weekly_usd": 100,
+  "fraction": 0.167,
+  "skip_above": 0.7,
+  "skip": false,
+  "today": {
+   "finder": {
+    "runs": 9,
+    "cost_usd": 2.306,
+    "tokens": 4023944
+   },
+   "builder": {
+    "runs": 3,
+    "cost_usd": 1.411,
+    "tokens": 3287786
+   },
+   "judge": {
+    "runs": 2,
+    "cost_usd": 1.718,
+    "tokens": 1252142
+   },
+   "tester": {
+    "runs": 2,
+    "cost_usd": 0.042,
+    "tokens": 1959859
+   }
+  },
+  "week_days": {
+   "2026-10-30": 0.026,
+   "2026-10-31": 11.223,
+   "2026-11-01": 5.477
+  },
+  "trend": [
+   {
+    "week_start": "2026-10-30T18:00",
+    "roles": {
+     "monitor": {
+      "runs": 1,
+      "tokens": 818636
+     },
+     "finder": {
+      "runs": 35,
+      "tokens": 19222321
+     },
+     "builder": {
+      "runs": 11,
+      "tokens": 6917841
+     },
+     "doctor": {
+      "runs": 1,
+      "tokens": 608337
+     },
+     "portfolio": {
+      "runs": 1,
+      "tokens": 840202
+     },
+     "judge": {
+      "runs": 2,
+      "tokens": 1252142
+     },
+     "tester": {
+      "runs": 2,
+      "tokens": 1959859
+     },
+     "desk:debrief": {
+      "runs": 1,
+      "tokens": 15717
+     },
+     "desk:scorekeeper": {
+      "runs": 2,
+      "tokens": 48221
+     },
+     "desk:crypto": {
+      "runs": 1,
+      "tokens": 35259
+     },
+     "desk:head-trader": {
+      "runs": 1,
+      "tokens": 39186
+     }
+    }
+   },
+   {
+    "week_start": "2026-10-23T18:00",
+    "roles": {
+     "judge": {
+      "runs": 21,
+      "tokens": 16397558
+     },
+     "finder": {
+      "runs": 570,
+      "tokens": 169074439
+     },
+     "builder": {
+      "runs": 280,
+      "tokens": 38689008
+     },
+     "monitor": {
+      "runs": 5,
+      "tokens": 2123027
+     },
+     "doctor": {
+      "runs": 8,
+      "tokens": 9095877
+     },
+     "portfolio": {
+      "runs": 1,
+      "tokens": 1312478
+     },
+     "desk:monitor": {
+      "runs": 1,
+      "tokens": 25294
+     },
+     "desk:debrief": {
+      "runs": 4,
+      "tokens": 92669
+     },
+     "desk:scorekeeper": {
+      "runs": 4,
+      "tokens": 95055
+     },
+     "desk:systematic": {
+      "runs": 9,
+      "tokens": 233539
+     },
+     "desk:fxmacro": {
+      "runs": 9,
+      "tokens": 237882
+     },
+     "desk:metals": {
+      "runs": 8,
+      "tokens": 175926
+     },
+     "desk:indices": {
+      "runs": 8,
+      "tokens": 177613
+     },
+     "desk:event": {
+      "runs": 11,
+      "tokens": 282256
+     },
+     "desk:crypto": {
+      "runs": 8,
+      "tokens": 182681
+     }
+    }
+   },
+   {
+    "week_start": "2026-10-16T18:00",
+    "roles": {
+     "fidelity": {
+      "runs": 2,
+      "tokens": 86863
+     },
+     "tester": {
+      "runs": 25,
+      "tokens": 14400941
+     },
+     "orchestrator": {
+      "runs": 412,
+      "tokens": 114978087
+     },
+     "researcher": {
+      "runs": 104,
+      "tokens": 28037185
+     },
+     "scanner": {
+      "runs": 1,
+      "tokens": 0
+     },
+     "monitor": {
+      "runs": 7,
+      "tokens": 1169551
+     },
+     "miner": {
+      "runs": 13,
+      "tokens": 15884122
+     },
+     "worker": {
+      "runs": 12,
+      "tokens": 7869825
+     },
+     "judge": {
+      "runs": 7,
+      "tokens": 13974869
+     },
+     "finder": {
+      "runs": 274,
+      "tokens": 96123032
+     },
+     "builder": {
+      "runs": 55,
+      "tokens": 11447941
+     },
+     "doctor": {
+      "runs": 1,
+      "tokens": 2113961
+     }
+    }
+   },
+   {
+    "week_start": "2026-10-09T18:00",
+    "roles": {}
+   }
+  ]
+ },
  "book": {
-  "legs": [
-   "quartet",
-   "grid",
-   "hold",
-   "fix",
-   "cross",
-   "fall",
-   "morning",
-   "after"
-  ],
+  "when": "2026-10-31T10:00:23",
+  "ends": "2025-10-10",
+  "legs": {
+   "quartet": {
+    "weight": 0.032,
+    "sharpe": 2.17
+   },
+   "grid": {
+    "weight": 0.09,
+    "sharpe": 0.83
+   },
+   "hold": {
+    "weight": 0.055,
+    "sharpe": 0.39
+   },
+   "fix": {
+    "weight": 0.113,
+    "sharpe": 1.3
+   },
+   "cross": {
+    "weight": 0.091,
+    "sharpe": 1.19
+   },
+   "fall": {
+    "weight": 0.122,
+    "sharpe": 0.98
+   },
+   "morning": {
+    "weight": 0.133,
+    "sharpe": 0.99
+   },
+   "after": {
+    "weight": 0.073,
+    "sharpe": 1.03
+   },
+   "breakout": {
+    "weight": 0.25,
+    "sharpe": 0.97
+   },
+   "noise": {
+    "weight": 0.041,
+    "sharpe": 1.0
+   }
+  },
+  "book_raw_sharpe": 2.95,
+  "backtest": {
+   "sharpe": 2.75,
+   "sharpe_2018": 3.11,
+   "profitable_months": 0.78,
+   "profitable_months_2018": 0.777,
+   "worst_month": -0.0829,
+   "mean_month": 0.061,
+   "prop": {
+    "pass_12m": 0.9093484419263456,
+    "failed": 0.0,
+    "median_months": 5.9
+   },
+   "payout_month_usd": 2439
+  },
+  "edge_70": {
+   "sharpe": 1.93,
+   "sharpe_2018": 2.24,
+   "profitable_months": 0.687,
+   "profitable_months_2018": 0.681,
+   "worst_month": -0.0991,
+   "mean_month": 0.0426,
+   "prop": {
+    "pass_12m": 0.6694995278564684,
+    "failed": 0.0,
+    "median_months": 8.4
+   },
+   "payout_month_usd": 1703
+  },
+  "rule": "equal risk, 252-day vol, monthly, cap 25%; vol target 20%, half size past 10% drawdown, quarter past 20%",
   "weights": {
-   "breakout": 1.0,
-   "noise": 0.6088017801888469,
-   "scan_slot_EURUSD_s25_L4_short": 1.0294392575797875,
-   "scan_slot_EURUSD_s21_L8_short": 1.0339760072551898,
-   "scan_cal_wed_EURUSD_s25_L2_short": 11.546111768491794
+   "quartet": 0.032,
+   "grid": 0.09,
+   "hold": 0.055,
+   "fix": 0.113,
+   "cross": 0.091,
+   "fall": 0.122,
+   "morning": 0.133,
+   "after": 0.073,
+   "breakout": 0.25,
+   "noise": 0.041
   },
   "since": "2018-01-01",
   "sharpe": {
-   "Hydra book": 3.371,
-   "+ breakout": 3.428,
-   "+ noise": 3.558,
-   "+ scan_slot_EURUSD_s25_L4_short": 3.356,
-   "+ scan_slot_EURUSD_s21_L8_short": 3.364,
-   "+ scan_cal_wed_EURUSD_s25_L2_short": 3.331,
-   "+ breakout + noise + scan_slot_EURUSD_s25_L4_short + scan_slot_EURUSD_s21_L8_short + scan_cal_wed_EURUSD_s25_L2_short": 3.508
+   "Hydra book": 3.11,
+   "+ noise": 3.34,
+   "+ ml_metalabel_after_morning_fall": 3.25,
+   "+ vrp_gap_equity_indices": 3.2,
+   "+ prebuilt_dual_thrust_four_indices_ew": 3.26,
+   "+ ml_jump_model_regime_long_indices": 3.33,
+   "+ graziani_rev": 3.36
   }
  },
  "demo": {
   "today": {
-   "day": "2026-10-19",
+   "day": "2026-11-01",
    "alert": false,
    "experts_lines": 0,
    "orders_by_leg": {},
    "journal_trade_lines": 0,
+   "closes": [],
+   "pl_of_day": null,
    "day_stop": [],
    "final_stop": [],
    "failed": [],
    "phase": [],
    "skipped": [],
    "clock": [],
+   "leverage": [],
+   "duplicate_close": [],
+   "done_reported_failed": [],
    "last_lines": [],
-   "logs_found": []
+   "logs_found": [
+    "20261101.log"
+   ]
   },
-  "log": "# Demo log\n\n## 2026-10-17 (Saturday)\n\n- Trades per leg: not logged (0 EA lines, 0 orders, 0 journal trade lines).\n- P/L of the day: not logged.\n- Slippage on fills: not logged (no fills).\n- Day stop / final stop / margin error / trades without broker stop: none in the log.\n- Odd: no trades logged; EA not attached? Saturday, so the forex market is closed and zero activity is expected; the log file 20261017.log exists. Tester window open until 2026-10-18 18:00, Terminal 16 reported running.\n\n\n"
+  "log": "# Demo log\n\n## 2026-10-17 (Saturday)\n\n- Trades per leg: not logged (0 EA lines, 0 orders, 0 journal trade lines).\n- P/L of the day: not logged.\n- Slippage on fills: not logged (no fills).\n- Day stop / final stop / margin error / trades without broker stop: none in the log.\n- Odd: no trades logged; EA not attached? Saturday, so the forex market is closed and zero activity is expected; the log file 20261017.log exists. Tester window open until 2026-10-18 18:00, Terminal 16 reported running.\n\n## 2026-10-19 (Monday) \u2014 ALERT: demo EA not attached\n\n- Found by the orchestrator at 07:36 local. AurumFunded is on no chart of Terminal 16 and has not been since\n  2026-10-17 04:57:06 (journal: \"expert AurumFunded (XAUUSD,M15) removed\"). It had loaded at 04:33:55 that day.\n- After that the terminal ran tester configs until 2026-10-18 01:20:43. The keeper then restarted it plain at 01:24:53\n  (\"Terminal 16: started\", not \"started, AurumFunded attached\"). The journal has no Experts line after that start.\n  It logged in to the demo with 0 positions and 0 orders, and it showed 0 positions again on the 23:01 reconnect.\n- The saved charts (Profiles/Charts/Default chart01-04.chr, written 2026-10-18 01:20:40) contain no `<expert>`\n  block. The EA log (MQL5/Logs) exists only for 20261017. demo_check for 2026-10-19 reports \"ok\" with 0 EA lines.\n- Result: no demo trading since Saturday. The clean out-of-sample demo test due to start today has not started.\n  Agents may not attach an EA, so the owner has to re-attach it (HANDOFF \"Waiting on the owner\", approvals a4).\n- Likely cause: the keeper copy that ran at 01:24 had been started on 10-17, before the attach branch was added to\n  keeper.ps1, so it ran the old code. The attach check also runs only while Terminal 16 is closed, so a terminal\n  that stays open without the EA is never caught.\n\n## 2026-10-19 (Monday), 15:30 update: demo EA attached; demo_check ALERT is a false alarm\n\n- Found by the orchestrator at 15:30 local. At 14:53:44 Terminal 16 was shut down and restarted at 14:53:59 from\n  `tools/autopilot/t16_attach.ini`. At 14:54:09 the journal says \"16 inputs read from ... AurumFunded_FTMO_phase1_legs.set\"\n  and \"expert AurumFunded (XAUUSD,M15) loaded successfully\". The EA log prints the 1.06 firm-day line, so the build\n  is 1.06. The clean demo test runs from 14:54 today.\n- **Leverage and margin (the open fidelity question):** \"account leverage 1:100, margin of 1 lot in EUR, XAUUSD\n  7417.67 at 4162.76, USDJPY 890.96 at 158.365, EURUSD 1000.00 at 1.12241, AUDCAD 622.02 at 0.9839, US500.cash\n  137.11 at 7694.45\". At EURUSD 1.12241 that is gold 1:50.0, USDJPY 1:100.0, EURUSD 1:100, US500.cash 1:50.0 (at\n  contract size 1). That is the tester install's setting (1:100, gold 1:50), so j12-j14 are the right reference for\n  the demo, and j3 (Terminal 16 tester at 1:33, gold 1:16.5) is not.\n- **Account currency is EUR**, while the tester jobs use a deposit of 10000 USD. The firm's limits are in EUR: \"firm day\n  2026.10.19, day start 10000.00, day stop at 9700.00, final stop at 9150.00 (static)\". Compare demo and tester in %\n  of the balance, not in currency. The P&L of USD-quoted symbols carries the EURUSD move.\n- **Trades:** 1 order, 1 deal: a breakout market buy of 0.01 USDJPY with sl 157.700, \"done in 180.438 ms\". The deal\n  filled at 158.365 three ms after the order result. Range 157.700-158.143 (0.73x its 60-day average).\n- **The ALERT is false.** demo_check reported \"breakout order on USDJPY failed, retcode 10009 (done at 0.000)\".\n  10009 is TRADE_RETCODE_DONE. The EA judges `!ok || g_trade.ResultDeal()==0` (`Legs.mqh:1630`), and FTMO's market\n  execution returns the order with deal 0; the deal comes moments later. So the fill was logged as a failure and\n  its \"broke its range, bought\" line is missing. No duplicate: on the next tick `HeldLots` (`Legs.mqh:1605`) sees the\n  position. The same deal-0 test is on the grid (915), fix (1156), stock-fall (1258), Tokyo-morning (1375),\n  after-holiday (1513) and noise (1843) legs. Their next-tick guards (HeldLots / TradedSince, the grid's level\n  count) stop a repeat unless a tick arrives before the position shows. The demo has no repeat order so far.\n- **Late-attach entry:** the leg bought on the first tick after the attach, 22 pips above the range high, because\n  the break had happened before 14:54 and nothing limits how late the entry may come. The tester would have bought\n  at the break, nearer 158.143. Fidelity should flag today's breakout fill as a restart artefact, not a model gap.\n  Any mid-session restart by the keeper can cause the same thing.\n\n## 2026-10-20 (Tuesday): ALERT is the deal-0 false alarm again; one unplanned restart, no harm\n\nChecked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the repo's 1.07 has the deal-0 fix.\n\n- **The ALERT is false.** The Tokyo leg sold 0.63 USDJPY at 02:55:00, filled at 158.558. That is 1 order and 1 deal,\n  with no repeat. The ALERT is the same 10009/deal-0 read as on 10-19.\n- **Unplanned restart:** the EA was removed at 04:12:58 and the terminal exited cleanly at 04:13:21. The keeper's 10-20\n  log starts at 04:14:22; its 10-19 log ends at 14:54, so the keeper itself was restarted. It relaunched T16 with the\n  attach ini at 04:14:28, and the EA loaded at 04:14:35 and synced 1 position. The cause of the keeper restart is not\n  in the logs (a PC or scheduled-task restart?).\n- **Tokyo exit on time:** the position closed at 04:24:59 at 158.432, the planned 90-min end, so the restart did no\n  harm. The leverage line prints twice (00:05 and 04:14).\n- **Other trades:** each was 1 order with no repeat.\n\n  | Leg | Side and size | Opened | Closed |\n  |---|---|---|---|\n  | breakout | sell 0.02 USDJPY | 158.106 at 09:40 (range 158.106-158.600, 0.81x) | 157.985 at 16:59:59 |\n  | midday | sell 0.44 EURUSD | 1.12121 at 12:30 | 1.12110 at 13:59:59 |\n  | US500.cash | buy 0.70 | 7743.15 at 16:30 | 7717.55 at 17:30 |\n  | US100.cash | buy 0.09 | 29689.08 at 16:30 | 29560.13 at 17:30 |\n\n  The bell leg was skipped (move -0.45 is below 1.5x the average 3.30).\n- **Account:** the firm day started at 9992.46 EUR; the day stop was 9692.46 and the final stop is 9150.00. Neither\n  was hit.\n- **Agent runs:** every relay run on 10-20 ended at once with \"weekly limit, resets Oct 23 18:00\". So no orchestrator\n  or fidelity run happened between 10-19 15:35 and this run.\n\n## 2026-10-21 (Wednesday)\n\n- demo_check ok; 1 EA line so far.\n- 05:32 local: still no orders, as expected. The Tokyo leg trades only on settlement days (dates divisible by 5, or\n  the Friday before one that falls on a weekend; `Legs.mqh:589`), so the 21st has no Tokyo trade. The breakout and\n  noise legs open later in the day.\n- 12:36 local: no ALERT. The firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at\n  9150.00 (static). At 09:00 the USDJPY range was 158.025-158.388, 0.59x its 60-day average. That is inside the\n  filter (`InpBreakMinRange` 0.25, `Legs.mqh:1618`), so the breakout leg is armed and waiting for a break. At\n  12:29:59 the midday leg sold 0.42 EURUSD at 1.12258, with the stop at 1.12458 and model weight 1.19. That is\n  1 order with no repeat. Fills are compared with the tester after the first demo week (10-23).\n- 13:16 local: no ALERT. At 12:56:54 the breakout leg sold 0.03 USDJPY at 158.025, the range low, with the stop at\n  158.388, the range high. That is 1 order with no repeat.\n- 19:00 local: no ALERT. The noise leg bought 0.09 US100.cash twice: at 17:59:59 at 29856.58 (bands 29832.19 /\n  29356.58) and at 18:59:59 at 29884.08 (bands 29838.62 / 29350.19). The leg never adds to a held position. It skips\n  a new entry while it holds one (`Legs.mqh:1864-1880`). Before it buys again, it closes the position once the bid is\n  below max(upper band, day average). So the second buy follows an exit at the 18:30 or 19:00 check. The EA does not\n  log noise exits, so the demo log cannot show which check closed it. The fill comparison (10-23) will show it from\n  the deal history.\n- 20:31 local: no ALERT. At 20:29:59 the noise leg bought 0.09 US100.cash at 29896.58 (bands 29864.07 / 29324.90),\n  its third buy today with the same size. It again follows an exit of the held position: the leg cannot add while it\n  holds one (`Legs.mqh:1864-1880`). The exit can fall in the same check as the re-entry. When the day average lies\n  above the bid and the bid above the upper band, the leg closes and buys again at once. The Python model does the\n  same and charges the cost of each close (`research/noise_area_index.py:106-117`), so this churn is in the\n  expectation. The deal history at the 10-23 fill comparison shows which checks closed the positions.\n\n## 2026-10-21 (Wednesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports 8 EA lines, orders midday 1 and other 4, 0 journal trade\nlines. The Terminal 16 experts log has 9 AurumFunded lines, all listed below.\n\n- **Trades:** 5 orders today, each 1 order with no repeat. Midday 1 (sell 0.42 EURUSD at 12:29:59, 1.12258). Breakout 1\n  (sell 0.03 USDJPY at 12:56:54, 158.025). Noise 3 (buy 0.09 US100.cash at 17:59:59, 18:59:59 and 20:29:59). The noise\n  buys match the 19:00 and 20:31 notes above and add nothing new.\n- **New since 20:31:** one skip line at 21:59:59, \"bell move +1.25 is below 1.5 x average 3.25, no trade today\".\n  It is a skip, not an order.\n- **Account:** the firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at 9150.00 (static).\n  Neither was hit. No margin error was logged.\n- **Clock check and errors:** no clock-check skips and no errors in the log.\n- **P/L of the day:** not logged (the EA log has no close lines for today).\n- **Slippage:** not logged; the fill comparison with the tester waits for the first demo week (10-23).\n- **Trades without a broker stop:** none logged; each open line shows a stop (1.12458, 158.388, and the noise bands).\n\n## 2026-10-22 (Thursday), 16:30 check (judge): no ALERT\n\n`tools/demo_check.py` reports 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, no day stop, final stop,\nfailure or clock line.\n\n- Midday sold 0.23 EURUSD at 1.12225, stop 1.12422 (1 order).\n- Breakout skipped: USD/JPY range 157.290-158.251 (1.58x its 60-day average), \"balance too small for the minimum lot\n  of USDJPY at a stop of 1.181\" (`RiskLots()` floor; see the judge's 14:40 note in `docs/HANDOFF.md`).\n- Noise sold 0.68 US500.cash at 7657.45 (bands 7783.22 / 7662.51) and 0.09 US100.cash at 29172.68 (bands 29922.10 /\n  29227.01). Both bids were below the lower band, the designed short entry (`Legs.mqh:1880-1887`); one order each, no\n  repeat. The checker counts them as \"other\" (proposed tools change (7) in `docs/HANDOFF.md`).\n\n## 2026-10-22 (Thursday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, and one skip (breakout). The Terminal 16 experts log has 6 AurumFunded lines, the last at 16:29:59. Nothing new was logged after the 16:30 judge check.\n\n- **Trades per leg:** midday 1 (sell 0.23 EURUSD at 12:29:59, 1.12225, stop 1.12422, model weight 1.00). Breakout 0 (skipped at 08:59:59: range 157.290-158.251 at 1.58x its 60-day average, and \"balance too small for the minimum lot of USDJPY at a stop of 1.181\"). Noise 2 (sell 0.68 US500.cash at 16:29:59, 7657.45, bands 7783.22 / 7662.51; sell 0.09 US100.cash at 16:29:59, 29172.68, bands 29922.10 / 29227.01). One order each, no repeat. No bell, Tokyo, fix or other leg lines today.\n- **Account:** the firm-day lines (day start, day stop, final stop) are not logged today, so the day stop and final stop cannot be checked from the log. No margin error logged.\n- **P/L of the day:** not logged (no close lines in the EA log).\n- **Slippage:** not logged. The log gives fill prices only, not the quote at signal time, so the fills cannot be compared with the tester yet. The fill comparison starts 10-23.\n- **Trades without a broker stop:** none. The midday line shows its stop. The noise lines print the bands, not the stop, but the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`, 3 x the leg's volatility from the entry price). The printed line does not show that stop value, so it is not logged.\n- **Odd:** the breakout skip is the RiskLots floor (judge notes 14:43 and 16:33 in `docs/HANDOFF.md`), not a fault. The two noise shorts are designed lower-band entries.\n\n## 2026-10-23 (Friday), 10:30 check (judge): no ALERT\n\n`tools/demo_check.py` reports ok, 4 EA lines, orders Tokyo 1 and other 1, 0 journal trade lines, no day stop, final stop,\nfailure or clock line.\n\n- **Account:** firm day 2026.10.23, day start 10043.55, day stop at 9743.55, final stop at 9150.00 (static).\n- **Leverage:** \"account leverage 1:100, margin of 1 lot in EUR, XAUUSD 7183.07 at 4029.02\" at 00:05, and again at\n  01:45:34 after the keeper restart onto AurumFunded 1.10 (gold about 1:50, as on 10-19). `demo_check.py` hides this\n  line because it contains \"account\" (proposed tools change (8) in `docs/HANDOFF.md`).\n- Tokyo sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895, model weight 0.50 (1 order).\n- Breakout: USD/JPY range 156.075-157.123 (1.70x its 60-day average), bought 0.01 lots at 157.123 at 09:06, stop\n  156.075. The 1.048 range is just under the 1.09 above which the 0.01 floor blocks a trade (judge note 10-22 14:40).\n  The checker counts it as \"other\" (tools change (7)).\n- **Trades without a broker stop:** none; both order lines show a stop.\n- **Slippage:** the fill comparison waits for the full first demo week (fidelity, after today's close).\n\n## 2026-10-23 (Friday), 12:36 check (judge): no ALERT\n\n`tools/demo_check.py` reports ok, 5 EA lines, orders Tokyo 1, other 1, midday 1, 0 journal trade lines.\n\n- **New since 10:30:** at 12:30:00 the midday leg sold 0.44 EURUSD at 1.11993, stop 1.12200, model weight 1.36\n  (1 order, no repeat, broker stop set).\n- **Size check (midday 10-21 / 10-22 / 10-23: 0.42 / 0.23 / 0.44 lots):** risk at the stop divided by model weight is\n  0.63 / 0.40 / 0.60% of balance. With `InpSizeMult` 0.5 and `InpMeridianRiskPct` 1.0 (phase1 preset), that is the\n  loss-run factor `Progression()` (`Legs.mqh:519-535`, `InpLossMult` 0.67 / `InpLossNorm` 0.80): 1.25 after a win,\n  0.84 after one loss. So 10-21's midday trade closed at a loss (inferred from the size; the EA logs no closes) and\n  10-22's at a win. Designed behaviour; the tester runs the same code, so it is in the tester figures.\n- No skip, error, day stop or clock line. No ALERT.\n\n## 2026-10-23 (Friday), 15:25 check (judge): ALERT, harmless (a duplicate close)\n\n`tools/demo_check.py` reports ALERT, 6 EA lines, orders Tokyo 1, other 1, midday 1: \"close on EURUSD failed,\nretcode 10036 (position closed)\" at 14:00:00.795.\n\n- **What happened (terminal journal):** the midday exit sent a close for the 12:30 EURUSD sell at 13:59:59.507. It\n  was placed at 13:59:59.612 and filled at 14:00:00.736 (1235 ms): bought 0.44 at 1.11902 against the 1.11994 sell,\n  about +40 USD before commission. At 14:00:00.792 a second close of the same position was refused (\"Position doesn't\n  exist\"), and the EA logged it as retcode 10036.\n- **Cause:** `CloseAll` (`Legs.mqh:357-373`) runs on every tick and once a second, and trades synchronously. On the\n  next call, 56 ms after the fill, `PositionsTotal()` still listed the position, so the EA sent the close again.\n  Nothing opened, and `Leg()` (`Legs.mqh:779-780`) ignores the return value, so no state changed. The tester fills\n  at once, so the tester figures are not affected.\n- **Win after loss:** with this win, the next midday size goes up by the 1.25 factor (`Progression()`, 12:36 note).\n- No other skip, error, day stop or clock line. The checker and EA changes are proposed as (9) in `docs/HANDOFF.md`.\n  The demo's inputs are not changed.\n\n## 2026-10-23 (Friday), 17:03 check (judge): no new ALERT; EA re-initialised on M1 at 16:30\n\n`tools/demo_check.py` still reports the ALERT, but it is the 14:00 duplicate close explained at 15:25. There are 8 EA\nlines now; 2 are new:\n\n- **16:30:16, chart now XAUUSD,M1 (it was attached on M15):** the EA ran OnInit again and printed the USD/JPY\n  breakout range 156.075-157.123 again. This is likely a chart timeframe change. The terminal journal is written to\n  disk only up to 01:45, so the cause is not confirmed. No order was repeated:\n  - OnInit resets the breakout state (`Legs.mqh:2319-2320`).\n  - The late-start guard (`Legs.mqh:1747-1772`) skips a side that is already held or traded, so the 09:06 high-side\n    buy was not sent again.\n  - The low side (156.075) stays armed, as it would in an EA that kept running.\n  - The loss-run sizing (`Progression()`, `Legs.mqh:519-535`) is read from the 90-day deal history, so the reinit\n    does not reset it.\n  - The legs read their bars with explicit `PERIOD_*` arguments, so the chart period should not change what they\n    trade. Ticks on an M1 chart can arrive at different times, which may shift when an order is sent within a minute.\n- **17:00:00, US100.cash bought 0.08 lots at 29120.83, bands 29077.93 / 28742.05:** the noise leg (\"other\" 2 =\n  breakout + noise). Designed; 1 order, no repeat.\n- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo. Owner: please\n  confirm whether the XAUUSD chart was switched to M1 at 16:30 (switching back to M15 is the owner's choice; agents do\n  not touch the terminal).\n\n## 2026-10-23 (Friday), 20:25 check (judge): no new ALERT; second US100 noise buy at 17:59:59\n\n`tools/demo_check.py` still shows only the explained 14:00 ALERT. There are 9 EA lines; 1 is new:\n\n- **17:59:59.596, US100.cash bought 0.08 lots at 29123.83, bands 29114.00 / 28706.11:** the noise leg's exit and\n  re-entry at the same half-hour check, the pattern judged on 10-21 (18:59 and 20:29). The leg cannot add to a held\n  position: when it holds one it either keeps it (`continue`) or closes it under max(upper band, session average) and,\n  with the bid still above the upper band, buys again (`Legs.mqh:1989-2012`). The close leaves no EA line, and the\n  journal is flushed only to 01:45, so the close itself is not visible. The same code runs in the tester.\n- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo.\n\n## 2026-10-23 (Friday), 23:16 check (monitor): no new ALERT; the tool's ALERT is the known 14:00 duplicate close\n\nChecked by the monitor role. `tools/demo_check.py` reports ALERT, 10 EA lines, orders Tokyo 1, other 3, midday 1, 0 journal\ntrade lines. The flag is the failed close at 14:00:00.795 (retcode 10036), explained in the 15:25 judge check: a second\nclose of a position already closed at 13:59:59. It is not a monitor trigger (no day stop, final stop, margin error or\ntrade without a broker stop).\n\n- **Trades per leg (logged opens):** Tokyo 1 (sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895). Breakout 1 (bought 0.01\n  USDJPY at 157.123 at 09:06, stop 156.075). Midday 1 (sold 0.44 EURUSD at 1.11993 at 12:30, stop 1.12200; closed at\n  13:59:59 by the leg's exit, per the 15:25 note). Noise 2 (bought 0.08 US100.cash at 17:00:00 and at 17:59:59, bands in\n  the log). Bell skipped at 21:59:59 (move +0.83 is below 1.5 x the average 2.95). Each leg shows one order, no repeat.\n- **Tester comparison:** not possible. Tester jobs end 2025-09-30 (holdout), so there is no tester figure for this day.\n- **P/L of the day:** not logged (no P/L line in the EA log, no journal trade lines, no end-of-day equity). Only the midday\n  close can be worked out from the logged prices: sold 1.11993 and closed at 1.11902 on 0.44 lots is about +40 USD before\n  commission. The other legs' closes are not in the log.\n- **Slippage on fills:** not logged (fill prices only, no quote at signal time). The fill comparison waits for fidelity\n  after the first demo week.\n- **Account:** firm day 2026.10.23, day start 10043.55, day stop 9743.55, final stop 9150.00 (static). No day-stop or\n  final-stop line. No margin error. No clock-check skip.\n- **Trades without a broker stop:** none shown. Midday and breakout lines print a stop. The noise lines print bands, not the\n  stop; the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`), which the printed line does\n  not show.\n- **Odd:** nothing new. The 16:30 M1 re-initialisation and the 17:59:59 noise buy are the ones judged at 17:03 and 20:25.\n\n## 2026-10-24 and 2026-10-25 (weekend)\n\nNo entry: the demo window was closed (Saturday 00:00 to Sunday 18:00), so no trades were expected.\n\n## 2026-10-26 (Monday), 23:15 check (monitor): no ALERT; no trades logged\n\n`tools/demo_check.py` reports ok: 3 EA lines, orders none, 0 journal trade lines, no day stop, final stop, margin error, failure, skip or clock line.\n\n- **Trades per leg:** none. No order was logged for any leg.\n- **Reason given in the log:** no trading today, European and US summer time differ. The EA held out for the session; the two regions change clocks on different dates, so session times are off for part of the year.\n- **Account:** firm day 2026.10.27 as logged, day start 10000.97, day stop 9700.97, final stop 9150.00 (static). Neither stop was hit; no trade was taken.\n- **Leverage:** account leverage 1:100 (gold 7189.40 at 4016.43), the same as the 10-19 reading.\n- **P/L of the day:** not logged.\n- **Slippage on fills:** not logged (no fills). No tester figure: tester jobs end 2025-09-30 and demo days are after the holdout.\n- **Trades without a broker stop:** none (no orders).\n- **Odd:** only the summer-time note. Worth a look if the demo should trade every weekday.\n- **Fidelity:** docs/fidelity/2026-10-23.md exists, so no fidelity week is due today.\n\n## 2026-10-27 19:26 \u2014 demo EA updated to Funded 1.16 (owner request)\n\nThe owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.\n\n- **How:** Terminal 16 was closed gracefully under a short owner hold (`terminal.ps1 -Hold -By owner -Hours 0.25`), then released. The keeper restarted it at 19:26 with `t16_attach.ini`, because the saved chart had no AurumFunded.\n- **Journal:** \"16 inputs read from expert 'AurumFunded\\AurumFunded' set file ... AurumFunded_FTMO_phase1_legs.set\"; \"expert AurumFunded (XAUUSD,M15) loaded successfully\" at 19:26:40.\n- **Build:** AurumFunded.ex5 compiled 2026-10-27 17:56 (1.16, 0 errors, 0 warnings, reviewer PASS in docs/autopilot/gaps_report.md).\n- **Experts log at 19:26:43:** account leverage 1:100; \"no trading today, European and US summer time differ\". The DST guard keeps it flat until the US clock change on 11-01.\n- **Positions before the restart:** none. The 00:49 sync showed 0 positions and 0 orders.\n- **Preset:** unchanged, AurumFunded_FTMO_phase1_legs.set.\n\n## 2026-10-27 19:55 - T16 on the New York clock preset (owner)\n\n- Change: T16 now loads `AurumFunded_FTMO_phase1_legs_nyclock.set`, a copy of phase1_legs.set with only `InpEuClock=false`. `tools/autopilot/t16_attach.ini` points at it. Funded 1.16 is unchanged and no existing .set file was edited.\n- Why: 1.16 stayed flat with \"no trading today, European and US summer time differ\" after Europe changed its clocks on 10-25. FTMO's server stays at New York + 7 hours (GMT+3) all year. The T16 journal showed GMT+3 both before the change (10-19: 14:54 CEST local = 15:54 server) and after it (10-26: 22:01 GMT+1 local = 00:01 server). The legs are built around that offset, so the pause was blocking nothing.\n- Effect: with `InpEuClock=false`, the live check expects the server at GMT + 2 + US summer = GMT+3, which matches. The demo can trade from the next session instead of waiting for 11-01.\n- Restart: owner hold, then release. The keeper relaunched T16 with `/config:t16_attach.ini`.\n- Still open: the other FTMO presets (and the funded account's) keep `InpEuClock=true`. They would pause the same way from 03-14 to 03-28 2027 unless the EA default changes.\n\n## 2026-10-27 20:10 - AurumFunded 1.17 built (owner request)\n\n- 1.17: live, only the measured server clock (TimeTradeServer - TimeGMT against New York + 7) stops a day. The InpEuClock skip now acts only in the tester and defaults to false. This fixes every preset, the funded ones and the 2027-03-14..03-28 gap included, without editing any .set file.\n- Compiled 0 errors, 0 warnings. Tester behaviour is unchanged: tester runs set InpEuClock=true explicitly.\n- T16 still runs 1.16 on the nyclock preset, which behaves the same live. 1.17 loads at the next restart. It was not forced because a US100.cash 0.07 buy is open (deal #547910787, 19:59:58).\n- Live trades on the European/US gap days have no matching tester trades.\n\n## 2026-10-27 20:20 - 1.17 review: PASS, one known risk\n\n- Reviewer: PASS. The live clock check passes on FTMO GMT+3 for 10-26..10-31 and 2027-03-14..03-27, and on GMT+2 from 11-02. LondonOffset is right on gap days.\n- Known risk: InpPropResetHHMM=100 is fixed. On gap days FTMO's CET midnight is 02:00 server, so the EA's firm day starts 1 hour early. The day-stop start level and the day count can be off by that hour's P/L. Our 3% day stop leaves 2% of room under the firm's 5%. This applies until 11-01, and again 2027-03-14..03-28.\n\n## 2026-10-27 (Tuesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, orders noise 1, 4 journal trade lines, one skip (bell). The Terminal 16 experts log is two daily log files for the same date. No day stop, final stop or margin error logged.\n\n- **Trades per leg:** noise 1 (buy 0.07 US100.cash at 29647.28, bands 29624.22 / 29053.87, closed at 29652.88). Bell 0 (skipped: \"bell move -1.11 is below 1.5 x average 2.91, no trade today\"). No midday, breakout, Tokyo, fix or other leg lines today.\n- **Closes and P/L of the day:** 1 close, US100.cash 0.07 lots at 29652.88, P/L 0.37 EUR. P/L of the day 0.37 EUR (demo_check `pl_of_day`).\n- **Account:** the firm-day line for 2026.10.28 logs day start 10001.34, day stop 9701.34, highest day start 10043.55, final stop 9150.00 (static). Account leverage logged as 1:100. No margin error logged.\n- **Slippage:** the log gives fill and close prices only, not the quote at signal time, so the slippage on the fill is not logged. The judge check at 20:04 recorded the fill 0.2 pt better than the logged price. The tester pairing is not run for demo days, so no tester comparison.\n- **Trades without a broker stop:** none. The judge check (decisions.jsonl, 2026-10-27 20:04) records the broker stop on this US100 buy.\n- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.\n\n## 2026-10-28 (Wednesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 9 EA lines, 11 journal trade lines, two daily log files for the date. No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** midday 1 (EURUSD sell 0.45). Other 2 (USDJPY breakout: sell 0.04 at 157.741 and buy 0.04 at 158.046 on the same tick, one entry per side, as the leg is built). No bell, noise, Tokyo, fix or Dual Thrust lines logged today.\n- **Closes and P/L of the day:** 3 closes, all in EUR, matching the 3 orders. EURUSD 0.45 at 1.11347, P/L -33.57. USDJPY 0.04 at 158.046, P/L -7.07 (the sell, stopped out). USDJPY 0.04 at 158.165, P/L +2.59. P/L of the day -38.05 EUR (demo_check `pl_of_day`).\n- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.29: day start 9962.10, day stop 9662.10, highest day start 10043.55, final stop 9150.00 (static).\n- **Slippage on fills:** EURUSD midday sell filled at 1.11267 against 1.11266 in the log, 0.1 pip worse (judge note 12:33). USDJPY sell stopped at 158.046 against a stop of 158.039, 0.7 pip (judge note 14:34). The log gives no quote at signal time, so further slippage is not logged.\n- **Trades without a broker stop:** none. The EURUSD order carried a stop at 1.11465 (judge note 12:33); the USDJPY orders carried stops at 158.039 (sell) and 157.748 (buy) (judge note 14:34).\n- **Odd:** nothing beyond the two-sided USDJPY breakout, which is the leg's design (separate magics, one entry per side per day).\n\n## 2026-10-29 (Thursday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, 8 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** midday 1 (EURUSD sell 0.21 at 1.11463, broker stop 1.11659). Other 1 (USDJPY breakout buy 0.02 at 158.068, stop 157.602 at the range low). No bell, noise, Tokyo, fix or Dual Thrust orders. Bell skipped: \"bell move +4.34 is below 1.5 x average 3.10, no trade today\".\n- **Closes and P/L of the day:** 2 closes, both in EUR. EURUSD 0.21 at 1.11278, P/L +34.20. USDJPY 0.02 at 157.857, P/L -2.46. P/L of the day +31.74 EUR (demo_check `pl_of_day`).\n- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.30: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static).\n- **Slippage on fills:** EURUSD sell filled at 1.11463, the journal price, so 0 pips against the log. USDJPY buy filled at 158.068 against a range high of 158.067, 0.1 pip above (judge note 13:07). The log gives no quote at signal time, so further slippage is not logged.\n- **Trades without a broker stop:** none. Both entries carried a broker stop (judge notes 12:31 and 13:07).\n- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.\n\n## 2026-10-30 (Friday), 17:45 change (owner): Dual Thrust leg on from the next start\n\nOwner asked to turn the Dual Thrust index leg on in the T16 demo. New preset `AurumFunded_FTMO_phase1_legs_nyclock_dual.set` (the nyclock preset plus InpDualMult=0.25, GER40.cash and JP225.cash, K 0.3 / 0.7, max spread 5 bp: the j18 on run), copied to T16's Presets; `tools/autopilot/t16_attach.ini` now loads it.\n\n- **Restart:** not done mid-session, as with 1.17: 4 trades were open at 17:36 (AUDUSD sell 0.01 and USDCAD buy 0.01 after the fix, US500.cash sell 0.63 and US100.cash sell 0.08 noise). A one-off script restarts T16 on Saturday 2026-10-31 00:30, after the Friday close, by the 10-27 method (owner hold, graceful close, release, the keeper starts T16 with t16_attach.ini), so 1.18 (already in the junctioned Experts folder) loads with the new preset.\n- **Watch from Monday:** first Dual Thrust orders on US500, US100, GER40 and JP225 (magics +32 to +35). PropDays counts magics only up to +25, so Dual-only days do not count as trading days. GER40 had a Sharpe of -0.04 on its own in the j18 run. 1.18 had no independent review and its compile log is not in the repo.\n\n## 2026-10-31 (Saturday), 18:11 change (owner): AurumFunded 1.19 on T16\n\nOwner asked for the four should-fixes of the 1.18 review. 1.19: (1) Dual Thrust waits 10 s (GRID_WAIT) for a sent order to show among the positions before it may send again; (2) InpDualMaxRiskPct (default 1.0, not in any .set file) caps the loss at the broker stop per Dual trade at SizeMult() x 1% of balance, and below the minimum lot the market skips the day; (3) PropDays counts magics up to +35, so breakout, noise-area, VRP and Dual days count as trading days; (4) compile logs for 1.18 and 1.19 in the repo (0 errors, 0 warnings). Independent review: one blocker on the first draft (the cap ignored SizeMult), fixed before the deploy; commit 7d4306e.\n\n- **Restart:** market closed, 0 positions. Owner hold 18:09:45, T16 closed 18:10:00, released 18:10:02; keeper 18:10:59 \"Terminal 16: started, AurumFunded attached\". Journal 18:11:34: 23 inputs read from `AurumFunded_FTMO_phase1_legs_nyclock_dual.set`, \"expert AurumFunded loaded successfully\", 0 positions, 0 orders.\n- **Watch from Monday:** the cap is not in the Python test of prebuilt_dual_thrust_four_indices_ew, so on wide-range days the demo trades smaller than the gate figures; the judge should not compare capped demo days with the uncapped test. A position that takes more than 10 s to show can still be sent twice (bounded by DUAL_FLIPS), as with the grid. Check that none of the four indices prints \"not available\".\n\n## 2026-10-30 (Friday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 30 EA lines, 36 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** Tokyo 1 (USDJPY sell 0.26, broker stop 157.966, closed 03:25 after the 90 min hold, P/L -2.96). Other 1 (USDJPY breakout sell 0.01 below the range low, stop 157.893, closed 18:00 server, P/L -1.00). Midday 1 (EURUSD sell 0.45 at 1.11936, stop 1.12140, closed 14:00, P/L +68.56). Noise 4 (sell US500.cash 0.65 and US100.cash 0.08 at 15:30, closed 16:00 back inside the band, P/L -11.38 and -7.64; sell US500.cash 0.63 and US100.cash 0.08 at 17:30, closed later, P/L +8.82 and +5.13). Fix 2 (AUDUSD sell 0.01, P/L -0.08; USDCAD buy 0.01, P/L -0.77). Bell and Dual Thrust: no orders. demo_check counts the breakout as \"other\".\n- **Closes and P/L of the day:** 9 closes, all in EUR, matching the 9 position closes in the log. P/L of the day +58.68 EUR (demo_check `pl_of_day`). Every position was closed by the last log line; none is open overnight.\n- **Skipped:** 10 fix pairs at 15:00 and 17:00 skipped with \"balance too small for the minimum lot\" (GBPUSD x2, AUDUSD, USDCAD, USDCHF x2, AUDJPY, CADJPY, GBPJPY, EURUSD). At this balance the fix leg trades only the pairs whose minimum lot fits the stop.\n- **Account:** no leverage line logged today. Last firm-day line in the log: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static), which is the start of today's trading.\n- **Slippage on fills:** taken from the judge notes of 17:32 and 17:34 (not re-measured in this check). Tokyo sell filled at 157.485 against 157.481 in the log, 0.4 pip worse. US500.cash sells at 15:30 and 17:30 filled 0.3-0.5 pt worse than the log (17:30 at 7597.70 against 7598.20). US100.cash sell at 15:30 filled 1.8 pt better. The log gives no quote at signal time for the rest, so further slippage is not logged.\n- **Trades without a broker stop:** none. All orders carried a broker stop (judge notes 17:32, 17:34).\n- **Odd:** (1) the fix leg skipped 10 of its 12 pairs on the minimum-lot rule at a balance of about 9,993 EUR; (2) no Dual Thrust orders, as expected: the owner's 17:45 change loads the new preset only after the planned restart on Saturday 2026-10-31 00:30 (see the 17:45 entry); (3) clock check: none logged today, the window ran through Friday.\n\n## 2026-10-31 (Saturday), evening: AurumFunded 1.20 built, not deployed (waits for the owner)\n\n1.20 halves the fix risk on the five main pairs (InpFixRiskPct default 0.25 for AurumFunded only, from book_sim's SCALE fix 0.5) and rounds their lots to the nearest step. The yen crosses keep 0.5% and round down. AurumHydra is unchanged (macro defaults 0.5 and round down). The live preset sets neither input, so the new default takes effect. Compile of a scratch copy: 0 errors, 0 warnings (compile_v1.20.log.txt). Independent review: PASS WITH NOTES. Its note on the crosses (nearest rounding would have doubled their cap) was fixed before the final compile.\n\n- **What it does at about 10k EUR:** at 0.01-lot granularity, half the risk rounded to the nearest step trades exactly the pairs that 1.19 traded, at the same 1-step size. The halving applies only to positions of 2 steps or more. The 10 pairs skipped on 10-30 stay skipped. Trading them would need more than the full 0.5% risk on a weak trend weight, which goes against the halving, so it was not done. book_sim's halved-fix figures apply to v1.20 only from 2 steps up.\n- **Deploy:** waits for the owner (hold, graceful close, release, the keeper starts T16 with t16_attach.ini). The .ex5 is not in the repo.\n"
+ },
+ "funnel": {
+  "total": 112,
+  "by_status": {
+   "rejected": 96,
+   "done": 13,
+   "funded": 1,
+   "tester": 2
+  },
+  "by_source": {
+   "data": 12,
+   "prebuilt": 23,
+   "paper": 48,
+   "fix": 7,
+   "ml": 20,
+   "drl": 2
+  },
+  "recent": [
+   {
+    "id": "fix_graziani_rev",
+    "source": "fix",
+    "title": "Fix AurumFunded v1.21 month-reversal leg (graziani_rev) before its tester job counts",
+    "status": "tester",
+    "added": "2026-11-01",
+    "verdict": null
+   },
+   {
+    "id": "paper_graziani_ts_reversal_us500",
+    "source": "paper",
+    "title": "Graziani (2024) Time Series Reversal: A Payment Cycle Friction - long US500 for the next month if the last-week-of-month return was negative",
+    "status": "tester",
+    "added": "2026-11-01",
+    "verdict": null
+   },
+   {
+    "id": "paper_fast_alpha_pullback_entry_dualthrust",
+    "source": "paper",
+    "title": "Zarattini-Pagani 2026 Fast Alphas: wait-for-pullback entry/exit overlay on an intraday breakout leg (applied to dual thrust 4 indices)",
+    "status": "rejected",
+    "added": "2026-11-01",
+    "verdict": null
+   },
+   {
+    "id": "paper_noise_area_ger40_jpn225",
+    "source": "paper",
+    "title": "Zarattini, Aziz, Barbon (2024/25) Beat the Market: noise-area intraday momentum, same parameters on GER40 and JPN225 (plus US100 check)",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "paper_jones_pyun_vix_conditional_index_reversal",
+    "source": "paper",
+    "title": "Jones, Pyun, Wang: Implied Variance and Market Index Reversal (VIX-conditional index reversal after down days)",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "ml_volmanaged_grid_hold_sizing",
+    "source": "ml",
+    "title": "Volatility-managed sizing of the grid and hold legs (Moreira-Muir 2017), pre-registered single rule",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "leg_cross_dailyz_meanrev_3mkts",
+    "source": "prebuilt",
+    "title": "Daily z-score mean reversion on AUDNZD, EURGBP, EURCHF, NZDCAD (same parameters)",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "paper_thomakos_pairs_country_indices",
+    "source": "paper",
+    "title": "Pairs trading on international equity indices (Thomakos-Wang-Schizas; Gatev distance method) as a market-neutral days leg",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "ml_metalabel_desk_benchmark_edges",
+    "source": "ml",
+    "title": "Meta-label filter on the 5 prebuilt desk edges: of past setups like this (same trend and volatility regime), how many won? Take the trade only when that share is high",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "paper_baltussen_last30_index_mom",
+    "source": "paper",
+    "title": "Baltussen, Da, Lammers, Martens (2021 JFE): market intraday momentum, return to 30 min before close predicts the last 30 min, on US500, US100 (+ DAX, Nikkei same rule)",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "ml_jump_model_regime_long_indices",
+    "source": "ml",
+    "title": "Statistical jump model (JM) 0/1 regime filter: long US500 / US100 only in the bull regime",
+    "status": "rejected",
+    "added": "2026-10-31",
+    "verdict": null
+   },
+   {
+    "id": "ml_quantile_exit_breakout_noise",
+    "source": "ml",
+    "title": "Quantile-regression take-profit for breakout and noise legs",
+    "status": "rejected",
+    "added": "2026-10-30",
+    "verdict": null
+   },
+   {
+    "id": "variance_ratio_grid_gate",
+    "source": "paper",
+    "title": "Lo-MacKinlay variance-ratio gate on the AUDCAD grid leg",
+    "status": "rejected",
+    "added": "2026-10-30",
+    "verdict": null
+   },
+   {
+    "id": "ml_pooled_metalabel_intraday_legs",
+    "source": "ml",
+    "title": "One pooled meta-label model across fix, cross, after, morning, fall, noise and quartet trades (Lopez de Prado, AFML ch. 3)",
+    "status": "rejected",
+    "added": "2026-10-30",
+    "verdict": null
+   },
+   {
+    "id": "ml_day_type_gate_breakout_noise_grid",
+    "source": "ml",
+    "title": "Trend-day versus range-day classifier (Dalton, Mind over Markets) gating breakout, noise and grid",
+    "status": "rejected",
+    "added": "2026-10-30",
+    "verdict": null
+   },
+   {
+    "id": "ml_hrp_leg_weights",
+    "source": "ml",
+    "title": "Hierarchical Risk Parity weights across the book legs (Lopez de Prado 2016, JPM 42(4))",
+    "status": "rejected",
+    "added": "2026-10-29",
+    "verdict": null
+   },
+   {
+    "id": "fix_dual_thrust_dax_open",
+    "source": "fix",
+    "title": "Dual Thrust four-index leg: rerun the research with the EA session open, commit the v1.18 compile log",
+    "status": "done",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "ml_bandit_leg_weights_monthly",
+    "source": "drl",
+    "title": "Thompson-sampling bandit over leg risk multipliers (0.5/1/1.5), monthly walk-forward",
+    "status": "rejected",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "paper_huang_gold_platinum_us500",
+    "source": "paper",
+    "title": "Huang (2015) Gold, Platinum, and Expected Stock Returns: gold/platinum ratio times US500 and US100 monthly",
+    "status": "rejected",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "prebuilt_dual_thrust_four_indices_ew",
+    "source": "prebuilt",
+    "title": "Dual Thrust (je-suis-tm/quant-trading) k1=0.3 long / k2=0.7 short, N=4, on the four index series with M1 data, equal risk: SPXUSD, NSXUSD, GRXEUR, JPXJPY",
+    "status": "funded",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "paper_fernandez_perez_commodity_skewness_ls",
+    "source": "paper",
+    "title": "Fernandez-Perez, Frijns, Fuertes, Miffre 2018: long the most negatively skewed commodities, short the most positively skewed, monthly",
+    "status": "rejected",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "ml_metalabel_quartet_skip",
+    "source": "ml",
+    "title": "Meta-label skip filter for the quartet leg (seasonal session)",
+    "status": "rejected",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "ml_cross_skip_fix_overlap",
+    "source": "ml",
+    "title": "Overlap-aware skip filter for the cross leg (logistic, past-only), aimed at the fix+cross corr 0.61",
+    "status": "rejected",
+    "added": "2026-10-28",
+    "verdict": null
+   },
+   {
+    "id": "paper_sorensen_grain_harvest_seasonal_short",
+    "source": "paper",
+    "title": "Sorensen 2002: harvest-pressure seasonal in grains, short corn, soybean and wheat from 1 June to 30 September",
+    "status": "rejected",
+    "added": "2026-10-27",
+    "verdict": null
+   },
+   {
+    "id": "paper_chen_rogoff_rossi_commodity_fx_lead",
+    "source": "paper",
+    "title": "Chen, Rogoff, Rossi 2010: commodity currencies (AUD, CAD, NZD) lead commodity prices, trade metals and oil on the monthly sign of the currency basket",
+    "status": "rejected",
+    "added": "2026-10-27",
+    "verdict": null
+   },
+   {
+    "id": "paper_driesprong_oil_predicts_index",
+    "source": "paper",
+    "title": "Driesprong, Jacobsen, Maat 2008: a fall in oil predicts a higher stock index next month (hold the index only after a negative oil month)",
+    "status": "rejected",
+    "added": "2026-10-27",
+    "verdict": null
+   },
+   {
+    "id": "prebuilt_dual_thrust_basket_crosses",
+    "source": "prebuilt",
+    "title": "Dual Thrust (je-suis-tm quant-trading) on a wider untested basket: yen/euro crosses, XAGUSD, WTIUSD, DAX, Nikkei, same parameters",
+    "status": "rejected",
+    "added": "2026-10-27",
+    "verdict": null
+   },
+   {
+    "id": "paper_announcement_day_long_indices",
+    "source": "paper",
+    "title": "Savor-Wilson 2013: long US500/US100 on scheduled macro announcement days (NFP, CPI/PPI, ISM, GDP; FOMC kept as a variant)",
+    "status": "rejected",
+    "added": "2026-10-26",
+    "verdict": null
+   },
+   {
+    "id": "ml_book_turbulence_scaler",
+    "source": "ml",
+    "title": "Turbulence index (Mahalanobis distance) as a past-only risk scaler on the whole book",
+    "status": "rejected",
+    "added": "2026-10-26",
+    "verdict": null
+   },
+   {
+    "id": "var_overreaction_fx_crosses",
+    "source": "prebuilt",
+    "title": "overreaction_fx variant: non-dollar crosses only (EURJPY, GBPJPY, AUDJPY, AUDCAD, EURGBP)",
+    "status": "rejected",
+    "added": "2026-10-26",
+    "verdict": null
+   }
+  ]
  }
 };

@@ -8,15 +8,16 @@ Status **tester**, pipeline step 5 of 5. Source: retail London-breakout concept,
 
 Range 01:00-09:00 server, each side once a day on a break 10:00-18:00, stop at the far side, flat at 18:00. Sharpe 1.18 to 2017 / 0.83 from 2018 at the measured 1.2 bp, 0.59 at 1.5 bp; |corr| with Hydra <= 0.03.
 
-Gates (2026-10-17, dry run): **PASS**
+Gates (2026-10-23): **FAIL at belief**
 
 | Gate | Result | Figure | Rule |
 |---|---|---|---|
-| halves | pass | 1.18 / 0.83 | >= 0.5 to 2017 and from 2018 |
-| costs | pass | 0.59 | >= 0.3 at 1.5x cost |
-| dsr | pass | 0.969 (N=47, luck bar 0.55) | >= 0.9 |
-| corr | pass | book -0.00, max leg hold -0.03 | |book| <= 0.2, |leg| <= 0.3 |
-| goal | pass | Hydra 2018+ 3.37 -> 3.43 at weight 1; P(5x) 55.2% -> 55.9% | Sharpe gain >= 0.03, weight fixed by --weight |
+| halves | pass | 1.10 / 0.84 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.59 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.00, max leg grid +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 7/9 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.27 -> 3.34 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=27117, luck bar 1.01) | >= 0.9 |
 
 Strategy Tester (backtests/2026-10-17_0118_AurumBreakout_USDJPY): 771 trades, 47.73% winners, PF 1.16, +9.96%, max equity drawdown 4.02% - matches the Python figures; step 15 passed.
 
@@ -313,15 +314,1308 @@ Status **rejected**, pipeline step 2 of 5. Source: -.
 
 
 
-Gates (2026-10-22): **FAIL at halves**
+Gates (2026-10-23): **FAIL at halves**
 
 | Gate | Result | Figure | Rule |
 |---|---|---|---|
-| halves | FAIL | 0.40 / 0.44 | >= 0.5 to 2017 and from 2018 |
-| costs | pass | 0.38 | >= 0.3 at 1.5x cost |
-| dsr | FAIL | 0.008 (N=27070, luck bar 1.03) | >= 0.9 |
-| corr | pass | book -0.07, max leg morning +0.01 | book <= +0.2, each leg <= +0.3 (negative passes) |
-| goal | FAIL | Hydra 2018+ 3.45 -> 3.48 at weight 0.438; P(5x) 56.2% -> 56.5% | Sharpe gain >= 0.03, weight fitted to 2017 |
+| halves | FAIL | -0.21 / -0.07 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.47 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.09, max leg morning +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.31 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=27092, luck bar 1.01) | >= 0.9 |
+
+## tod_eurusd (`tod_eurusd`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.63 / -0.30 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.00 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.06, max leg after +0.10 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://swlb1.aeaweb.org/conference/2009/retrieve.php?pdfid=301 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.07 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=27118, luck bar 1.00) | >= 0.9 |
+
+## ml_metalabel_breakout_size (`ml_metalabel_breakout_size`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at book**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.18 / 0.89 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.67 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.00, max leg grid +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://en.wikipedia.org/wiki/Meta-Labeling | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.32 replacing breakout | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=27119, luck bar 1.01) | >= 0.9 |
+
+## rebalancing_signal (`rebalancing_signal`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.19 / 0.32 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.18 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.05, max leg morning +0.08 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.edhec.edu/sites/default/files/2026-03/Scientific%20paper.%20ssrn-5122748.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.26 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26711, luck bar 1.00) | >= 0.9 |
+
+## ma200_pullback (`ma200_pullback`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.13 / -0.01 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.31 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.03, max leg hold +0.12 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 5/8 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.28 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26712, luck bar 1.00) | >= 0.9 |
+
+## gold_bond_regime (`gold_bond_regime`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.37 / 0.56 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.19 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.12, max leg hold +0.68 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://quantpedia.com/cross-asset-price-based-regimes-for-gold/ | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.24 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26722, luck bar 1.00) | >= 0.9 |
+
+## opex_week_indices (`opex_week_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -1.17 / -0.33 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -1.17 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg breakout +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 1/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.16 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26723, luck bar 1.00) | >= 0.9 |
+
+## dao_gap (`dao_gap`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.02 / 0.32 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.13 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.05, max leg quartet +0.15 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.32 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26724, luck bar 1.00) | >= 0.9 |
+
+## totm_us (`totm_us`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.11 / 0.14 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.01 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.01, max leg morning +0.07 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.23 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26725, luck bar 1.00) | >= 0.9 |
+
+## overreaction_fx (`overreaction_fx`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-23): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.62 / -0.00 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.26 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.17, max leg quartet +0.25 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.24 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26726, luck bar 1.00) | >= 0.9 |
+
+## vrp_gap (`vrp_gap`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.03 / 0.39 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.10 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.03, max leg hold +0.32 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.29 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26727, luck bar 1.00) | >= 0.9 |
+
+## fx_carry_g10 (`fx_carry_g10`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.11 / -0.16 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.23 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.02, max leg quartet +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 3/7 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.21 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26728, luck bar 1.00) | >= 0.9 |
+
+## policy_gap (`policy_gap`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.12 / -0.44 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.22 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.04, max leg cross +0.01 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 1/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.18 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26729, luck bar 1.00) | >= 0.9 |
+
+## vix_vxv_spike (`vix_vxv_spike`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.66 / -0.25 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.14 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.05, max leg morning +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.19 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26730, luck bar 1.00) | >= 0.9 |
+
+## fx_value_rer (`fx_value_rer`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.10 / -0.53 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.42 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.00, max leg breakout +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/7 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.14 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26731, luck bar 1.00) | >= 0.9 |
+
+## samehour_fx (`samehour_fx`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -10.32 / -10.35 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -15.53 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.04, max leg quartet +0.06 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 0.52 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | FAIL | 0.000 (book, N=26732, luck bar 1.00) | >= 0.9 |
+
+## cot_contrarian (`cot_contrarian`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.04 / 0.28 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.10 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.04, max leg quartet +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 4/7 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.24 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26739, luck bar 1.00) | >= 0.9 |
+
+## hau_rey_fx (`hau_rey_fx`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.09 / 0.07 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.05 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.00, max leg hold +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/system/files/working_papers/w9398/w9398.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.27 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26740, luck bar 1.00) | >= 0.9 |
+
+## baltussen_mac5 (`baltussen_mac5`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.26 / -0.18 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.34 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.00, max leg cross +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://personal.eur.nl/vanbekkum/2018%20JFE%20BaltussenVanBekkumDa.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.18 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26741, luck bar 1.00) | >= 0.9 |
+
+## chen_tsang_slope_fx (`chen_tsang_slope_fx`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.81 / -0.14 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.60 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg hold +0.00 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 1/5 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.25 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26742, luck bar 1.00) | >= 0.9 |
+
+## safari_cubic (`safari_cubic`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.77 / -0.58 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.94 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.01, max leg hold +0.10 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 1/7 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.06 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26743, luck bar 1.00) | >= 0.9 |
+
+## ml_regime_filter_gold_hold (`ml_regime_filter_gold_hold`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.22 / 0.15 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.08 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.06, max leg quartet +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.23 replacing hold | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26744, luck bar 1.00) | >= 0.9 |
+
+## btc_hour_2123 (`btc_hour_2123`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 1.48 / -0.08 (split at its middle 2021-09-09) | >= 0.2 each half |
+| costs | pass | 0.44 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.03, max leg fall +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://quantpedia.com/are-there-seasonal-intraday-or-overnight-anomalies-in-bitcoin/ | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.34 -> 3.43 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26745, luck bar 1.00) | >= 0.9 |
+
+## btc_weekend_1521 (`btc_weekend_1521`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 1.16 / -0.27 (split at its middle 2021-09-10) | >= 0.2 each half |
+| costs | pass | 0.42 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg breakout +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | 3/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.36 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26746, luck bar 1.00) | >= 0.9 |
+
+## commod_same_month (`commod_same_month`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.24 / 0.30 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.16 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.00, max leg hold +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.28 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26747, luck bar 1.00) | >= 0.9 |
+
+## crypto_xs_mom (`crypto_xs_mom`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.29 / -0.58 (split at its middle 2022-02-03) | >= 0.2 each half |
+| costs | FAIL | -0.75 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.01, max leg grid +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.15 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26748, luck bar 1.00) | >= 0.9 |
+
+## ml_har_rv_leg_sizing (`ml_har_rv_leg_sizing`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at book**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.18 / 1.27 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.73 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.02, max leg grid +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://doi.org/10.1093/jjfinec/nbp001 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.24 replacing breakout,noise | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26749, luck bar 1.04) | >= 0.9 |
+
+## ml_regime_hmm_book (`ml_regime_hmm_book`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 2.55 / 3.19 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 2.04 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.95, max leg cross +0.51 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.32 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26750, luck bar 1.00) | >= 0.9 |
+
+## drl_leg_sizing_ppo (`drl_leg_sizing_ppo`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at costs**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.64 / 2.41 (split at its middle 2023-12-06) | >= 0.2 each half |
+| costs | FAIL | -3.35 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.53, max leg after +0.75 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.30 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26751, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_monday_dip_ibs_indices (`prebuilt_monday_dip_ibs_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.18 / 0.05 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.06 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.01, max leg fall +0.05 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.34 -> 3.20 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26752, luck bar 1.00) | >= 0.9 |
+
+## ml_grid_er_start_filter (`ml_grid_er_start_filter`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at belief**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.92 / 0.76 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.75 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.04, max leg quartet +0.07 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.15 replacing grid | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26753, luck bar 1.00) | >= 0.9 |
+
+## hks_periodicity (`hks_periodicity`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -6.21 / -7.25 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -9.52 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.01, max leg hold +0.08 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/5 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 0.97 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | FAIL | 0.138 (book, N=26754, luck bar 1.00) | >= 0.9 |
+
+## erb_yield_shock (`erb_yield_shock`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-24): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.09 / 0.45 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.26 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.00, max leg noise +0.07 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://doi.org/10.2469/faj.v69.n4.1 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.09 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26755, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_crabel_nr7_orb_gold (`prebuilt_crabel_nr7_orb_gold`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.05 / -0.06 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.22 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.03, max leg breakout +0.09 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.mql5.com/en/code/78259 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.97 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26756, luck bar 1.00) | >= 0.9 |
+
+## paper_gatev_ratio_xau_xag (`paper_gatev_ratio_xau_xag`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.35 / -0.45 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.50 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.05, max leg fix +0.01 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/papers/w7032 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.01 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26757, luck bar 1.00) | >= 0.9 |
+
+## paper_gatev_ratio_fx_pairs (`paper_gatev_ratio_fx_pairs`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -1.36 / -0.29 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -1.27 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg morning +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/papers/w7032 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.00 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26758, luck bar 1.00) | >= 0.9 |
+
+## paper_gatev_ratio_nsx_spx (`paper_gatev_ratio_nsx_spx`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.73 / 0.08 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.25 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.01, max leg grid +0.01 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/papers/w7032 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.63 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26759, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_dual_thrust_fx_gold (`prebuilt_dual_thrust_fx_gold`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at book**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.64 / 0.27 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.21 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.10, max leg breakout +0.22 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | 5/5 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.12 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26760, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_dual_thrust_indices_overnight_free (`prebuilt_dual_thrust_indices_overnight_free`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.22 / 0.96 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.46 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.08, max leg noise +0.31 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://github.com/je-suis-tm/quant-trading | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.23 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26761, luck bar 1.00) | >= 0.9 |
+
+## ml_regime_grid_audcad (`ml_regime_grid_audcad`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.89 / 0.87 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.79 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.30, max leg grid +0.97 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.01 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26762, luck bar 1.00) | >= 0.9 |
+
+## paper_melvin_prins_eom_equity_hedge (`paper_melvin_prins_eom_equity_hedge`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.02 / 0.51 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.61 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.21, max leg cross +0.53 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://ecb.eu/events/pdf/conferences/131216/Third_FX_Workshop_MELVIN_PRINS_Equity%20hedging%20and%20exchange%20rates%20Nov%202013.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.03 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26763, luck bar 1.00) | >= 0.9 |
+
+## paper_moreira_muir_hold_sizing (`paper_moreira_muir_hold_sizing`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at book**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.42 / 0.23 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.21 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.00, max leg quartet +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.96 replacing hold | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26764, luck bar 1.00) | >= 0.9 |
+
+## ml_hold_ridge_sizing (`ml_hold_ridge_sizing`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.14 / 0.82 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.38 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.02, max leg quartet +0.07 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.14 replacing hold | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26765, luck bar 1.00) | >= 0.9 |
+
+## paper_nagel_vix_reversal_index (`paper_nagel_vix_reversal_index`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.41 / -0.24 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.02 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.08, max leg morning +0.05 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/papers/w17653 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.90 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26766, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_ger40_evening_coil (`prebuilt_ger40_evening_coil`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.22 / -0.50 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.60 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg fix +0.02 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/2 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.99 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26767, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_jpn225_quiet_drift (`prebuilt_jpn225_quiet_drift`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.76 / -0.93 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -1.57 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.01, max leg noise +0.05 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.75 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26768, luck bar 1.00) | >= 0.9 |
+
+## paper_hamao_us_close_to_asia_eu_open (`paper_hamao_us_close_to_asia_eu_open`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -1.98 / -1.29 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -2.15 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.07, max leg breakout +0.01 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.76 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26769, luck bar 1.00) | >= 0.9 |
+
+## paper_rapach_us_lead_weekly_indices (`paper_rapach_us_lead_weekly_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.61 / -0.07 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.35 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.05, max leg cross +0.10 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.00 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26770, luck bar 1.00) | >= 0.9 |
+
+## variant_index_open_gap_fade_4mkts (`variant_index_open_gap_fade_4mkts`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.84 / -0.53 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.90 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.06, max leg quartet +0.16 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.88 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26771, luck bar 1.00) | >= 0.9 |
+
+## variant_asian_range_london_fade_eurusd (`variant_asian_range_london_fade_eurusd`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -2.15 / -3.16 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -3.59 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.02, max leg cross +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 0/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.33 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26772, luck bar 1.00) | >= 0.9 |
+
+## variant_yield_shock_gold_usdjpy_nextday (`variant_yield_shock_gold_usdjpy_nextday`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.43 / -0.06 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.19 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg hold +0.08 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.10 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26773, luck bar 1.00) | >= 0.9 |
+
+## ml_metalabel_after_morning_fall (`ml_metalabel_after_morning_fall`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **PASS**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.15 / 1.89 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 1.35 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.02, max leg grid +0.01 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.25 replacing after,morning,fall | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26774, luck bar 1.00) | >= 0.9 |
+
+## paper_lunar_new_moon_indices (`paper_lunar_new_moon_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.34 / -0.02 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.12 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.08, max leg grid -0.01 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://personal.lse.ac.uk/yuan/papers/lunar.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.13 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26775, luck bar 1.00) | >= 0.9 |
+
+## vrp_gap_equity_indices (`vrp_gap_equity_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **PASS**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.12 / 0.38 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.70 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.09, max leg morning +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | 3/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.20 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26776, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_gold_holiday_drift (`prebuilt_gold_holiday_drift`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at book**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.40 / 0.34 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.35 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.05, max leg hold +0.16 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://quantpedia.com/cultural-calendars-and-the-gold-drift-are-holidays-moving-gld-etf/ | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.02 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26777, luck bar 0.86) | >= 0.9 |
+
+## gold_eur_resid (`gold_eur_resid`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.30 / 0.14 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.11 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.08, max leg morning +0.05 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 1/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.09 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26778, luck bar 1.00) | >= 0.9 |
+
+## ml_hold_gvz_regime (`ml_hold_gvz_regime`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-25): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.18 / 0.84 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.38 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.03, max leg quartet +0.06 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.15 replacing hold | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26779, luck bar 1.00) | >= 0.9 |
+
+## var_overreaction_fx_crosses (`var_overreaction_fx_crosses`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-26): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.54 / -0.35 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.21 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.22, max leg quartet +0.39 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.brunel.ac.uk/economics-finance-and-accounting/research/pdf/1909-Mar-GMC-Overreactions-and-trading-strategies.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.87 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26780, luck bar 1.00) | >= 0.9 |
+
+## ml_book_turbulence_scaler (`ml_book_turbulence_scaler`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-26): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.96 / 2.91 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 2.66 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.90, max leg fix +0.37 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.fs.hub.hit-u.ac.jp/inc/files/staff-research/workingpaper/FS-2021-E-001.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.07 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26781, luck bar 1.00) | >= 0.9 |
+
+## paper_announcement_day_long_indices (`paper_announcement_day_long_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-26): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.13 / 0.07 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.06 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.01, max leg fall +0.06 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Draft20111128p_edited.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.04 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26782, luck bar 1.00) | >= 0.9 |
+
+## prebuilt_dual_thrust_basket_crosses (`prebuilt_dual_thrust_basket_crosses`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-27): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.27 / -0.50 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.46 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.07, max leg breakout +0.11 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 6/12 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.92 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26783, luck bar 1.00) | >= 0.9 |
+
+## Grain harvest seasonal short (ZC+ZS+ZW, 1 Jun-30 Sep) (`grain_harvest_short`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-27): **FAIL at book**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.22 / 0.34 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.25 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.04, max leg fix +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | 4/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.11 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26784, luck bar 0.90) | >= 0.9 |
+
+## paper_driesprong_oil_predicts_index (`paper_driesprong_oil_predicts_index`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-27): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.27 / 0.18 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.01 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.09, max leg morning +0.06 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://repub.eur.nl/pub/1017/ERS%20082%20Jacobsen.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.08 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26787, luck bar 1.00) | >= 0.9 |
+
+## chen_rogoff_rossi_fx_commod (`chen_rogoff_rossi_fx_commod`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-27): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.45 / -0.57 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.74 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.01, max leg hold +0.05 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/papers/w13901 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.86 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26786, luck bar 1.00) | >= 0.9 |
+
+## ml_cross_skip_fix_overlap (`ml_cross_skip_fix_overlap`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-28): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 1.00 / 1.18 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 1.01 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.33, max leg cross +0.96 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.77 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26788, luck bar 1.00) | >= 0.9 |
+
+## ml_metalabel_quartet_skip (`ml_metalabel_quartet_skip`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-28): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 2.11 / 2.13 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 1.50 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.33, max leg quartet +0.92 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | no source, no other markets | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.40 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26789, luck bar 1.00) | >= 0.9 |
+
+## paper_huang_gold_platinum_us500 (`paper_huang_gold_platinum_us500`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-28): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.17 / 0.36 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.09 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.06, max leg morning +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://conference.nber.org/conf_papers/f80928.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.13 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26790, luck bar 1.00) | >= 0.9 |
+
+## commod_skew_ls (`commod_skew_ls`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-28): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -1.31 / -2.78 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -1.92 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.03, max leg hold +0.07 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://openaccess.city.ac.uk/id/eprint/17843/1/SSRN-id2671165_July2017.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.48 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | FAIL | 0.047 (book, N=26791, luck bar 0.92) | >= 0.9 |
+
+## prebuilt_dual_thrust_four_indices_ew (`prebuilt_dual_thrust_four_indices_ew`)
+
+Status **integrated**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-28): **PASS**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.64 / 0.95 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.61 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.07, max leg noise +0.26 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://github.com/je-suis-tm/quant-trading | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.26 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26794, luck bar 1.00) | >= 0.9 |
+
+## ml_jump_model_regime_long_indices (`ml_jump_model_regime_long_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-31): **PASS**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.72 / 0.61 (split at its middle 2021-05-07) | >= 0.2 each half |
+| costs | pass | 0.66 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.07, max leg fall +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://arxiv.org/abs/2402.05272 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.33 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26795, luck bar 1.00) | >= 0.9 |
+
+## paper_thomakos_pairs_country_indices (`paper_thomakos_pairs_country_indices`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-31): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.31 / 0.29 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.06 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.02, max leg quartet +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/3 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.37 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26796, luck bar 1.00) | >= 0.9 |
+
+## leg_cross_dailyz_meanrev_3mkts (`leg_cross_dailyz_meanrev_3mkts`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-31): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | -0.26 / -0.14 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.40 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.01, max leg grid +0.03 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | FAIL | 2/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 2.97 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26813, luck bar 1.00) | >= 0.9 |
+
+## ml_volmanaged_grid_hold_sizing (`ml_volmanaged_grid_hold_sizing`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-31): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.13 / 0.69 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.06 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.00, max leg quartet +0.04 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://www.nber.org/papers/w22208 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.14 replacing hold | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26814, luck bar 1.00) | >= 0.9 |
+
+## paper_jones_pyun_vix_conditional_index_reversal (`paper_jones_pyun_vix_conditional_index_reversal`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-31): **FAIL at halves**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | FAIL | 0.05 / 0.34 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.17 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.05, max leg morning +0.09 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://sjpyun.github.io/Rev.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.11 -> 3.09 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26815, luck bar 1.00) | >= 0.9 |
+
+## noise_gj (`noise_gj`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-10-31): **FAIL at costs**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.49 / 0.22 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | FAIL | -0.05 | > 0.0 at 1.5x cost |
+| corr | pass | book +0.04, max leg noise +0.07 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | 4/4 markets profitable | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.11 -> 3.19 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26816, luck bar 1.00) | >= 0.9 |
+
+## paper_fast_alpha_pullback_entry_dualthrust (`paper_fast_alpha_pullback_entry_dualthrust`)
+
+Status **rejected**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-11-01): **FAIL at corr**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.51 / 0.85 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.49 | > 0.0 at 1.5x cost |
+| corr | FAIL | book +0.29, max leg prebuilt_dual_thrust_four_indices_ew +0.97 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://concretumgroup.com/wp-content/uploads/2026/02/Improving-Performance-with-Fast-Alphas-A-Tactical-Overlay-for-Intraday-Trend-Trading.pdf | a published source, or the same parameters profitable on all of 3+ markets |
+| book | FAIL | book 2018+ 3.29 -> 3.14 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26817, luck bar 1.00) | >= 0.9 |
+
+## graziani_rev (`graziani_rev`)
+
+Status **tester**, pipeline step 2 of 5. Source: -.
+
+
+
+Gates (2026-11-01): **PASS**
+
+| Gate | Result | Figure | Rule |
+|---|---|---|---|
+| halves | pass | 0.44 / 0.57 (to 2017 / from 2018) | >= 0.2 each half |
+| costs | pass | 0.36 | > 0.0 at 1.5x cost |
+| corr | pass | book -0.04, max leg morning +0.06 | book <= +0.3, each leg <= +0.3 (negative passes) |
+| belief | pass | published https://afajof.org/management/viewp.php?n=133448 | a published source, or the same parameters profitable on all of 3+ markets |
+| book | pass | book 2018+ 3.29 -> 3.36 | gain >= 0.03, equal risk, weights walk-forward |
+| dsr | pass | 1.000 (book, N=26819, luck bar 1.00) | >= 0.9 |
 
 ## Rejected families
 

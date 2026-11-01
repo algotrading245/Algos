@@ -112,6 +112,9 @@
 //| month near the US close, buy if the index is below its 4th-Friday|
 //| close, hold to next month's last trading day (renew on a new     |
 //| signal). Size min(3, 10% / vol); broker stop 5% of equity.       |
+//| v1.22: month-reversal fixes (review 11-01): stale-hold guard from |
+//| the last renewal, stop reset on renewal, Good Friday in NyseClosed|
+//| (shared with the VRP leg), trade log covers magic +36/+37.        |
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
@@ -120,7 +123,7 @@
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.21"
+#property version   "1.22"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"

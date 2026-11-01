@@ -12,7 +12,12 @@ sys.path.insert(0, "tools")
 import holdout
 
 SPEC = {"SPXUSD": 1.0, "NSXUSD": 0.5}
-SWAP_BP = 2.0
+# Swap per night from docs/ftmo_specs.json: |swap_long| * point / last price (US500 -160.52, US100 -730.72 points of
+# 0.01), at the last price before the holdout, as research/volmanaged_mm_ftmo.py does. Replaces the flat 2 bp.
+import json
+_SP = json.load(open("docs/ftmo_specs.json"))["symbols"]
+_MAP = {"SPXUSD": "US500.cash", "NSXUSD": "US100.cash"}
+SWAP_BP_SYM = {}
 
 
 def daily(sym):
@@ -25,7 +30,7 @@ def daily(sym):
     return holdout.drop(c)
 
 
-def run(c, spread_bp, k=1.0, variant=0):
+def run(c, spread_bp, k=1.0, variant=0, swap_bp=None):
     idx = c.index
     ret = c.pct_change().fillna(0.0)
     per = idx.to_period("M")
@@ -53,12 +58,12 @@ def run(c, spread_bp, k=1.0, variant=0):
             cand = [j for j in b if idx[j].day >= 14]
             x = cand[0]
         pos.iloc[e + 1: x + 1] = 1.0
-        nights = (idx[x] - idx[e]).days
         cost.iloc[e] += k * spread_bp * 1e-4 / 2
         cost.iloc[x] += k * spread_bp * 1e-4 / 2
-        # swap spread over the held days in proportion to calendar nights
-        for j in range(e + 1, x + 1):
-            cost.iloc[j] += k * SWAP_BP * 1e-4 * (idx[j] - idx[j - 1]).days
+        # FTMO swap (docs/ftmo_specs.json, fixed bp of notional per night, triple on the rollover3days weekday =
+        # Friday): charged at each close held overnight, e .. x-1, booked on that day.
+        for j in range(e, x):
+            cost.iloc[j] += k * swap_bp * 1e-4 * (3.0 if idx[j].dayofweek == 4 else 1.0)
         n += 1
     return ret * pos - cost, n
 
@@ -75,7 +80,11 @@ if __name__ == "__main__":
     px = {s: daily(s) for s in SPEC}
     out = {}
     for s, c in px.items():
-        print(s, c.index[0].date(), c.index[-1].date(), len(c))
+        sp = _SP[_MAP[s]]
+        SWAP_BP_SYM[s] = abs(sp["swap_long"]) * sp["point"] / c.iloc[-1] * 1e4
+        print(s, c.index[0].date(), c.index[-1].date(), len(c), "swap bp/night %.2f" % SWAP_BP_SYM[s])
+    _run = run
+    run = lambda c, sb, k=1.0, variant=0, s=None: _run(c, sb, k, variant, SWAP_BP_SYM["SPXUSD" if sb == 1.0 else "NSXUSD"])
     for v in (0, 1):
         for s, c in px.items():
             for k in (0.0, 1.0, 1.5, 2.0):

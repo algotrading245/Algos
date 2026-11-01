@@ -1635,13 +1635,28 @@ bool UsHoliday(datetime day)
           day==Observed(y,12,25));
   }
 
-// True when the NYSE is shut on 'day' (a weekday): the federal holidays without Columbus Day and Veterans Day.
+// Good Friday of year y (two days before Easter Sunday, Gregorian computus), midnight.
+datetime GoodFriday(int y)
+  {
+   int a=y%19,b=y/100,c=y%100,d=b/4,e=b%4,f=(b+8)/25,g=(b-f+1)/3;
+   int h=(19*a+b-d-g+15)%30,i=c/4,k=c%4,l=(32+2*e+2*i-h-k)%7,m=(a+11*h+22*l)/451;
+   int mon=(h+l-7*m+114)/31,dd=((h+l-7*m+114)%31)+1;
+   MqlDateTime s;
+   ZeroMemory(s);
+   s.year=y;
+   s.mon=mon;
+   s.day=dd;
+   return(StructToTime(s)-2*86400);
+  }
+
+// True when the NYSE is shut on 'day' (a weekday): the federal holidays without Columbus Day and Veterans Day, plus
+// Good Friday.
 bool NyseClosed(datetime day)
   {
    MqlDateTime s;
    TimeToStruct(day,s);
    int y=s.year;
-   return(day==Observed(y,1,1) || day==Observed(y+1,1,1) || day==Weekday(y,1,1,3) || day==Weekday(y,2,1,3) ||
+   return(day==GoodFriday(y) || day==Observed(y,1,1) || day==Observed(y+1,1,1) || day==Weekday(y,1,1,3) || day==Weekday(y,2,1,3) ||
           day==Weekday(y,5,1,-1) || (y>=2022 && day==Observed(y,6,19)) || day==Observed(y,7,4) ||
           day==Weekday(y,9,1,1) || day==Weekday(y,11,4,4) || day==Observed(y,12,25));
   }
@@ -2469,8 +2484,8 @@ void Vrp()
 
 // Month reversal (Graziani 2024, research/graziani_reversal.py): on the last trading day of a month, near the US close,
 // if the index fell from the 4th-Friday close to now, buy it and hold to the last trading day of the next month, where
-// the same check decides whether to hold on. Python (US500 + US100, 2010-2025, 1x): Sharpe 0.52 / 0.64 by half, 0.47 at
-// 1.5x cost, about 40% of months. Size: notional of 10% a year volatility (60 days, at most 3x) x equity x SizeMult() x
+// the same check decides whether to hold on. Python (US500 + US100, 2010-2025, 1x): Sharpe 0.44 / 0.57 by half, 0.36 at
+// 1.5x cost (FTMO swap), about 40% of months. Size: notional of 10% a year volatility (60 days, at most 3x) x equity x SizeMult() x
 // InpGrzMult, fixed at the entry. The broker stop (InpGrzStopEqPct of equity) is not in the Python test.
 
 // True when 'day' is a weekday, the NYSE is open and the next NYSE trading day is in another month.
@@ -2528,6 +2543,34 @@ bool GrzSignal(string sym,bool &below,double &vol)
    return(vol>0);
   }
 
+// Moves the broker stop of a held month-reversal position to InpGrzStopEqPct of equity below the current bid, for the
+// notional it holds now (a renewal: the stop set at the entry is a month old and sits far below or above the price).
+void GrzResetStop(string sym,long magic)
+  {
+   MqlTick q;
+   double eq=AccountInfoDouble(ACCOUNT_EQUITY);
+   if(eq<=0 || !SymbolInfoTick(sym,q) || q.bid<=0)
+      return;
+   int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+   Prepare(sym,magic);
+   for(int k=PositionsTotal()-1; k>=0; k--)
+     {
+      ulong t=PositionGetTicket(k);
+      if(t==0 || PositionGetString(POSITION_SYMBOL)!=sym || PositionGetInteger(POSITION_MAGIC)!=magic)
+         continue;
+      // notional in account currency (EUR on FTMO), the same conversion as NotionalLots
+      double pnl;
+      if(!OrderCalcProfit(ORDER_TYPE_BUY,sym,PositionGetDouble(POSITION_VOLUME),q.bid,q.bid*1.01,pnl) || pnl<=0)
+         continue;
+      double mult=pnl/0.01/eq;
+      if(mult<=0)
+         continue;
+      double sl=NormalizeDouble(q.bid*(1.0-MathMin(0.5,InpGrzStopEqPct/100.0/mult)),dg);
+      if(!g_trade.PositionModify(t,sl,PositionGetDouble(POSITION_TP)))
+         PrintFormat(AURUM_NAME+": month-reversal stop reset on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
+     }
+  }
+
 void Grz()
   {
    if(!g_grzOn)
@@ -2541,8 +2584,14 @@ void Grz()
       long magic=InpMagic+GRZ_MAGIC+i;
       bool held=(HeldLots(sym,magic,opened)>0);
       datetime start=today+HHMMSec(InpGrzHHMM);
-      // Restart-safe: the position itself is the state. A hold older than 40 days missed its exit (EA off): close it.
-      if(held && today-DayOf(opened)>40*86400)
+      // Restart-safe: the position and a terminal global (day of the last entry or renewal) are the state. A hold whose
+      // last decision day is more than 40 days back missed its exit (EA off): close it. Measured from the last
+      // renewal, not the open time, so a hold renewed month after month stays open.
+      string rkey=AURUM_NAME+"_grz_"+IntegerToString(magic)+"_renew";
+      datetime lastDecision=opened;
+      if(held && GlobalVariableCheck(rkey) && (datetime)GlobalVariableGet(rkey)>lastDecision)
+         lastDecision=(datetime)GlobalVariableGet(rkey);
+      if(held && today-DayOf(lastDecision)>40*86400)
         {
          PrintFormat(AURUM_NAME+": month-reversal hold on %s older than 40 days, closing",sym);
          CloseAll(sym,magic);
@@ -2573,7 +2622,12 @@ void Grz()
          if(!below)
             CloseAll(sym,magic);   // no new signal: the month's hold ends here
          else
-            PrintFormat(AURUM_NAME+": month-reversal on %s signals again, the hold goes on",sym);
+           {
+            GlobalVariableSet(rkey,(double)now);
+            GlobalVariablesFlush();
+            GrzResetStop(sym,magic);
+            PrintFormat(AURUM_NAME+": month-reversal on %s signals again, the hold goes on, stop reset",sym);
+           }
          g_grzDone[i]=today;
          continue;
         }
@@ -2606,6 +2660,8 @@ void Grz()
          PrintFormat(AURUM_NAME+": month-reversal order on %s failed, retcode %d (%s)",sym,g_trade.ResultRetcode(),g_trade.ResultRetcodeDescription());
          continue;
         }
+      GlobalVariableSet(rkey,(double)now);
+      GlobalVariablesFlush();
       PrintFormat(AURUM_NAME+": month-reversal, %s below its 4th-Friday close, bought %.2f at %.2f, stop %.2f",sym,lots,FillPrice(q.ask),sl);
       g_grzDone[i]=today;
      }
@@ -3157,7 +3213,7 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,const MqlTradeRequest &
       long entry=HistoryDealGetInteger(trans.deal,DEAL_ENTRY);
       long magic=HistoryDealGetInteger(trans.deal,DEAL_MAGIC);
       if((entry!=DEAL_ENTRY_OUT && entry!=DEAL_ENTRY_INOUT && entry!=DEAL_ENTRY_OUT_BY) ||
-         magic<InpMagic || magic>InpMagic+35)
+         magic<InpMagic || magic>InpMagic+GRZ_MAGIC+1)
          return;
       double pl=HistoryDealGetDouble(trans.deal,DEAL_PROFIT)+HistoryDealGetDouble(trans.deal,DEAL_SWAP)+
                 HistoryDealGetDouble(trans.deal,DEAL_COMMISSION)+HistoryDealGetDouble(trans.deal,DEAL_FEE);
