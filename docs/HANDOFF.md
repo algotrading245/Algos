@@ -51,6 +51,19 @@ each finished piece of work.
 
 ## Current state
 
+- **Month-reversal leg, fix_graziani_rev2 reviewed (judge 2026-11-01 03:50): item (b) answered, item (a) still has
+  no file behind it.** The 2024.10.28 00:05 close in j19 is the tester's clock check: `ClockOk()` returns false
+  between the end of European and US summer time, and `CloseEverything()` runs (`AurumFunded.mq5:291-299, 425-432`).
+  The code confirms this, but the quoted log line is in no committed file. With the gap modelled
+  (`research/graziani_clock_exits.py`) the leg still passes: halves 0.44 / 0.32 at 1x, and 0.23 overall at 1.5x
+  (> 0). In j20, expect closes with empty comments in late October and March; they are not a leg fault.
+  - Still blocking: there is no `compile_*.log.txt` in `mql5/Experts/AurumHydra/`. Also, Hydra is v1.42, not
+    "v1.22".
+  - For the owner: the clock cut is not tester-only. It also fires live for presets with InpEuClock=true on a broker
+    that follows European summer time (`AurumFunded_FundedNext_instant.set:19`). FTMO is not affected.
+  - Builder item `fix_graziani_rev3` (new) is to commit the Hydra compile log; it needs no EA change and no tester
+    job. j20 stays the leg test and is judged when it is done.
+
 - **Month-reversal leg v1.22 (judge 2026-11-01 03:40): 5 of 7 fixes check out, 2 blocking items still open.**
   The reviewer confirmed the 40-day guard (now measured from the last renewal), Good Friday, the FTMO swaps (the gate
   still passes: halves 0.44 / 0.57, book 3.29 -> 3.36), the magic filter and the stop reset. Still open: (a) no

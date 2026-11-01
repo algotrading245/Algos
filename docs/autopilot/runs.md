@@ -166,3 +166,4 @@ committed).
 | 2026-11-01 03:10 | tester | Started j20 (AurumFunded grz2_off) | j20 running in 2026-11-01_0310_AurumFunded_grz2_off |
 | 2026-11-01 03:20 | judge | Judged j19 (graziani_rev v1.21) | diagnostic only, superseded by j20: leg +393 USD, rel DD 7.06->7.75%; failed index closes at Mon 00:05 flagged for j20 |
 | 2026-11-01 03:40 | judge | review fix_graziani_rev (v1.22, 622e9a6) | 5/7 fixed; 2 blocking (Hydra compile log, lesson-21 book exits); fix_graziani_rev2 queued; j20 running, not counted until done |
+| 2026-11-01 03:50 | judge | review fix_graziani_rev2 (5092522) | 1 blocking (no AurumHydra compile log committed, Hydra is v1.42), 3 minor; fix_graziani_rev3 queued; j20 running, judged when done |
