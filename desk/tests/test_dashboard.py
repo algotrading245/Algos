@@ -197,6 +197,13 @@ def test_command_center_pods_shows_live_state():
     assert "brief: 'Owns " in row and "Briefs Each Weekday" in row
     assert "knows: [['Gold’s dip fills on Fridays', '2 Endorsed'], ['Noise leg’s fills lag', 'New']]" in row
     assert "not mine" not in row and "wakes: p.wakes || 'Six Wakes A Day'," in pods
+    # scorekeeper record in place of XP, level and IQ
+    assert "sk: { trades: 6, pnl: -37.0, hit: 0.5, R: -1.74," in row and "−$37.00 · 50% Hit · 6 Trades" in row
+    assert "Level {{p.levelNo}}" not in pods and "Legend 7,500 XP" not in pods and "Win Rate Bonus" not in pods
+    assert "const maxXp" not in pods and "LEVELS[me.li]" not in pods and "LEVELS[top.li]" not in pods and "label: 'Desk XP'" not in pods
+    assert "label: 'Desk P&L', value: '—', sub: 'No Closed Trades In 8 Weeks'" in pods
+    assert "Scorekeeper · Last 8 Weeks" in pods and ">Hit Rate</span>" in pods
+    assert cc._sk_line({}) == "No Closed Trades In 8 Weeks" and cc._sk_line({"trades": 1, "pnl": 0.05, "hit": 1.0}) == "+$0.05 · 100% Hit · 1 Trade"
 
 
 def test_command_center_eas_shows_live_state():
@@ -456,11 +463,18 @@ def test_command_center_main_pod_xp_from_intel_and_queue_counts(tmp_path, monkey
     tpl = _main_template()
     intel = {"xp": 168, "iq": 94, "work": {"runs": 9, "notes": 9}, "talk": {"asked": 1},
              "share": {"cited": 2}, "trading": {"trades": 6}}
-    out = cc._patch_main_podxp(tpl, {"pods": [{"name": "systematic", "intel": intel}, {"name": "crypto"}]})
-    assert '"systematic": {"runs": 9, "notes": 9, "asked": 1,' in out and '"xp": 168, "iq": 94}' in out
-    assert "podSeed(9, 9, 6" not in out and "x.xp != null ? x.xp" in out and "x.iq != null ? x.iq" in out
+    score = {"trades": 6, "pnl": -37.19, "hit": 0.5, "total_R": -1.741, "score": -0.079}
+    out = cc._patch_main_podxp(tpl, {"pods": [{"name": "systematic", "intel": intel, "score": score}, {"name": "crypto"}]})
+    assert '"systematic": {"runs": 9, "notes": 9, "asked": 1,' in out
+    assert '"trades": 6,' in out and '"pnl": -37.19, "hit": 0.5, "R": -1.741, "score": -0.079}' in out
+    assert '"crypto": {"runs": 0,' in out and "podSeed(9, 9, 6" not in out
     assert "Pod Split Sample" not in out and "Simulated Events" not in out
-    assert cc._patch_main_podxp(tpl, {"pods": [{"name": "crypto"}]}) == tpl
+    # the made-up level, IQ and XP are gone; the cards and the ranking show P&L, hit rate and score
+    assert "Reached Level" not in out and "iqBadge: 'Level '" not in out and "iqNum: 'IQ '" not in out
+    assert "' XP'" not in out and "+5 XP" not in out and "XP (Simulated)" not in out and "XP To '" not in out
+    assert "' P&L'" in out and "% Hit'" in out and "Pods By Score" in out and "desk/scorekeeper.py" in out
+    assert "const podRank = POD_IDS.map((id) => [id, s.podXp[id] || {}])" in out and "' L' + (lv + 1)" not in out
+    assert cc._patch_main_podxp(tpl, {"pods": []}) == tpl
     (tmp_path / "ideas").mkdir()
     (tmp_path / "ideas" / "queue.jsonl").write_text("\n".join(
         json.dumps({"id": f"q{n}", "status": s}) for n, s in enumerate(["rejected", "rejected", "done", "new"])))

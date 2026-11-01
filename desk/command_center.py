@@ -14,8 +14,9 @@ recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the fir
 the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
 lines. The activity feed: today's agent runs, journal rows and git commits, newest first. The funded card and Funded
 Equity KPI from the T16 AurumFunded EA log (read only; private lines dropped). Live on Pods (from the same state): each pod's allocation, work and
-talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets, the KPI row, each
-pod's brief line (markets owned, state, level), its wakes from the config schedule and what it knows (its own
+talk counts, and its scorekeeper record in place of the old XP, level and IQ (P&L, hit rate, trades, R, profit factor,
+drawdown and score, last 8 weeks, from logs/desk/state/scores.json), the board posts, the tickets, the KPI row, each
+pod's brief line (markets owned, state, P&L and hit rate), its wakes from the config schedule and what it knows (its own
 knowledge entries, most endorsed first); the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
 list from mql5/Experts/_archive, and the Hydra legs from the armed edges (risk per leg); trade counts, today's
@@ -759,15 +760,114 @@ def _hhmm(t):
         return "—"
 
 
+def _usd(v):
+    v = float(v or 0)
+    return ("−$" if v < 0 else "+$") + f"{abs(v):,.2f}"
+
+
+def _sk_line(sc):
+    """One line from a pod's scorekeeper entry: P&L, hit rate and trades over the 8-week window."""
+    sc = sc if isinstance(sc, dict) else {}
+    n = int(sc.get("trades") or 0)
+    if not n:
+        return "No Closed Trades In 8 Weeks"
+    hit = sc.get("hit")
+    return (f"{_usd(sc.get('pnl'))} · " + (f"{round(float(hit) * 100)}% Hit · " if hit is not None else "")
+            + f"{n} Trade{'s' if n != 1 else ''}")
+
+
+def _sk_js(sc):
+    """The scorekeeper entry as a JS object literal for the Pods page."""
+    sc = sc if isinstance(sc, dict) else {}
+
+    def num(k):
+        v = sc.get(k)
+        return "null" if not isinstance(v, (int, float)) else repr(float(v))
+    return (f"sk: {{ trades: {int(sc.get('trades') or 0)}, pnl: {num('pnl')}, hit: {num('hit')}, R: {num('total_R')}, "
+            f"rpt: {num('R_per_trade')}, pf: {num('pf')}, dd: {num('max_dd_R')}, score: {num('score')} }}, ")
+
+
+_PODS_SK_JS = [
+    ("const info = PODS.map((p) => { const c = s.counts[p.id], xp = xpOf(c, p.winR), li = levelOf(xp); return { p, c, xp, li, iq: iqOf(xp, p.winR, c.trades) }; });",
+     "const skUsd = (v) => (v < 0 ? '−$' : '+$') + Math.abs(v || 0).toFixed(2), skSgn = (v, d) => (v >= 0 ? '+' : '') + Number(v || 0).toFixed(d), "
+     "skFx = (v, d) => v == null ? '—' : Number(v).toFixed(d);\n"
+     "    const info = PODS.map((p) => { const c = s.counts[p.id], k = p.sk || {}, n = k.trades || 0; "
+     "return { p, c, k, n, xp: n ? (k.score || 0) : -9, li: 0, iq: k.hit == null ? '—' : Math.round(k.hit * 100) + '%' }; });"),
+    ("const lo = LEVELS[li][1], hi = li < LEVELS.length - 1 ? LEVELS[li + 1][1] : lo, pct = hi > lo ? Math.round((xp - lo) / (hi - lo) * 100) : 100;",
+     "const k = p.sk || {}, n = k.trades || 0, pct = k.hit == null ? 0 : Math.round(k.hit * 100);"),
+    ("tags.push({ text: 'XP Gained',", "tags.push({ text: 'Updated',"),
+    ("level: LEVELS[li][0], levelNo: String(li + 1), iq: String(iq), xp: xp.toLocaleString('en-US'), pct: String(pct),\n"
+     "        toNext: hi > lo ? (hi - xp).toLocaleString('en-US') + ' To ' + LEVELS[li + 1][0] : 'Top Level', xpAria: p.name + ' ' + pct + '% To Next Level',",
+     "level: n ? skUsd(k.pnl) + ' P&L · ' + n + (n === 1 ? ' Trade' : ' Trades') : 'No Closed Trades · 8 Weeks', levelNo: '', iq: iq, "
+     "xp: n ? skSgn(k.R, 2) + ' R · PF ' + skFx(k.pf, 2) : 'Hit Rate Starts At Trade 1', pct: String(pct),\n"
+     "        toNext: n ? 'Score ' + skSgn(k.score, 3) : '', xpAria: p.name + ' Hit Rate ' + iq,"),
+    ("const maxXp = Math.max(...Object.keys(XP_W).map((k) => me.c[k] * XP_W[k]), 1);",
+     "const kk = me.k, nn = me.n;"),
+    ("const rows = Object.keys(XP_W).map((k) => ({ label: XP_LABEL[k], count: String(me.c[k]), w: String(XP_W[k]), xp: String(me.c[k] * XP_W[k]),\n"
+     "      bar: 'height: 6px; border-radius: 3px; background: #0071E3; width: ' + (me.c[k] * XP_W[k] / maxXp * 100).toFixed(1) + '%' }));",
+     "const rows = [['Trades Closed', String(nn)], ['Hit Rate', me.iq], ['P&L', nn ? skUsd(kk.pnl) : '—'], ['Total R', nn ? skSgn(kk.R, 2) : '—'], "
+     "['R Per Trade', nn ? skSgn(kk.rpt, 3) : '—'], ['Profit Factor', nn ? skFx(kk.pf, 2) : '—'], ['Max Drawdown', nn ? skFx(kk.dd, 2) + ' R' : '—']]"
+     ".map(([label, xp]) => ({ label, count: '', w: '', xp, bar: '' }));"),
+    ("name: p.name + ' · ' + LEVELS[me.li][0] + ' · IQ ' + me.iq,",
+     "name: p.name + ' · ' + (me.n ? me.iq + ' Hit Rate' : 'No Closed Trades'),"),
+    ("xp: me.xp.toLocaleString('en-US'), ladder,",
+     "xp: me.n ? skSgn(kk.score, 3) + (me.n < 20 ? ' · ' + me.n + ' Of 20 Trades' : '') : '—', ladder,"),
+    ("text: m.text, xp: m.xp + ' XP' }", "text: m.text, xp: '' }"),
+    ("const totalXp = info.reduce((a, x) => a + x.xp, 0), top = info.slice().sort((a, b) => b.xp - a.xp)[0];",
+     "const top = info.filter((x) => x.n).sort((a, b) => (b.k.score || 0) - (a.k.score || 0) || (b.k.pnl || 0) - (a.k.pnl || 0))[0];"),
+    ("{ label: 'Top Pod', value: top.p.name, sub: LEVELS[top.li][0] + ' · IQ ' + top.iq, style: big },",
+     "{ label: 'Top Pod', value: top ? top.p.name : 'None Yet', sub: top ? 'Score ' + skSgn(top.k.score, 3) + ' · ' + top.iq + ' Hit' : 'No Closed Trades In 8 Weeks', style: big },"),
+]
+
+_PODS_SK_HTML = [
+    ("Six Trading Pods That Get Smarter As They Work. Every Run, Shared Note, Answer And Trade Adds Experience.",
+     "Six Trading Pods, Each Judged By Its Own Closed Trades: P&amp;L, Hit Rate And R Over The Last 8 Weeks."),
+    ("Pick A Pod To See How It Earned Its Level.", "Pick A Pod To See Its Scorekeeper Record."),
+    ("{{p.level}} · Level {{p.levelNo}}</span>", "{{p.level}}</span>"),
+    ('color: #6E6E73">IQ</span>', 'color: #6E6E73">Hit Rate</span>'),
+    ("<span>{{p.xp}} XP</span>", "<span>{{p.xp}}</span>"),
+    ("Where The XP Comes From</span>", "Scorekeeper · Last 8 Weeks</span>"),
+    ("<span>Total</span><span>{{sel.xp}} XP</span>", "<span>Score</span><span>{{sel.xp}}</span>"),
+    ("IQ = 60 Plus Experience And Win Rate, Clamped 60 To 160. The Brief Each Pod Gets Grows With Its Level: More Of Its Own Lessons, More Shared Knowledge, Longer Memory.",
+     "From desk/scorekeeper.py (logs/desk/state/scores.json): Each Pod’s Closed Trades Over The Last 8 Weeks. Score = Its R Per Trade "
+     "Minus The Rest Of The Desk’s, Shrunk By n/(n+20), So A Pod Is Fully Judged From Its 20th Trade."),
+]
+
+
+def _patch_pods_scores(src, state):
+    """Pods page: the scorekeeper record (P&L, hit rate, R, score) in place of the made-up XP, level and IQ."""
+    for p in state.get("pods") or []:
+        pid = str(p.get("name") or "")
+        if pid:
+            src = re.sub(rf"\{{ id: '{re.escape(pid)}', ", lambda m, p=p: m.group(0) + _sk_js(p.get("score")), src, count=1)
+    for a, b in _PODS_SK_JS + _PODS_SK_HTML:
+        src = src.replace(a, b, 1)
+    src = re.sub(r"\n[ \t]*rows\.push\(\{ label: 'Win Rate Bonus'[^\n]*", "", src, count=1)
+    src = re.sub(r'<div style="display: grid; grid-template-columns: 150px 60px 70px minmax\(0, 1fr\) 70px;.*?\{\{r\.xp\}\}</span>\s*</div>\n',
+                 lambda m: ('<div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; '
+                            'padding: 9px 0; border-top: 1px solid #E8E8ED"><span>{{r.label}}</span>'
+                            '<span style="text-align: right; font-weight: 600">{{r.xp}}</span></div>\n'), src, count=1, flags=re.S)
+    src = re.sub(r'\s*<div style="display: flex; flex-direction: column">\s*<span[^>]*>Level Ladder</span>.*?Legend 7,500 XP</span></div>\s*</div>',
+                 "", src, count=1, flags=re.S)
+    desk = (state.get("scores") or {}).get("desk") or {}
+    n = int(desk.get("trades") or 0)
+    hit = desk.get("hit")
+    sub = (f"{n} Trade{'s' if n != 1 else ''}" + (f" · {round(float(hit) * 100)}% Hit" if hit is not None else "") + " · 8 Weeks") if n \
+        else "No Closed Trades In 8 Weeks"
+    col = "" if not n else "; color: " + ("#B3261E" if float(desk.get("pnl") or 0) < 0 else "#248A3D")
+    return re.sub(r"\{ label: 'Desk XP', value: [^\n]*",
+                  lambda _: f"{{ label: 'Desk P&L', value: '{_usd(desk.get('pnl')) if n else '—'}', sub: '{sub}', style: big + '{col}' }},",
+                  src, count=1)
+
+
 def _pod_panel(pid, p, cfg, know):
     """The selected pod's brief line, its wakes and what it knows (its own knowledge entries, most endorsed first)."""
     pc = (cfg.get("pods") or {}).get(pid) or {}
     mk = pc.get("owns") or []
     owns = ", ".join(mk[:5]) + (f" +{len(mk) - 5} More" if len(mk) > 5 else "") if mk else "No Markets Of Its Own"
-    lv = ((p.get("intel") or {}).get("level") or {})
     st = ("Paused" if p.get("paused") else "Active" if p.get("active")
           else f"Opens In Phase {p.get('opens_phase') or pc.get('phase') or '?'}")
-    brief = f"Owns {owns} · {st}" + (f" · Level {lv['n']} {lv.get('name', '')}".rstrip() if lv.get("n") else "")
+    brief = f"Owns {owns} · {st} · {_sk_line(p.get('score'))}"
     wd = we = 0
     for ev in cfg.get("schedule") or []:
         if ev.get("kind") == "brief" and pid in (ev.get("pods") or [pid]):
@@ -1346,8 +1446,7 @@ def _patch_controls_page(src, state, positions=None):
         n = str(p.get("name") or "")
         if not n:
             continue
-        lv = ((p.get("intel") or {}).get("level") or {})
-        meta = f"Level {lv.get('n', '?')} · {lv.get('name', '')}".rstrip(" ·")
+        meta = _sk_line(p.get("score"))
         last = max((t.get("created") or "" for t in tickets if t.get("pod") == n), default="")
         if last:
             meta += " · Last Ticket " + _hhmm(last)
@@ -2005,18 +2104,22 @@ def _patch_main_debrief(src, state, root):
 
 
 def _patch_main_podxp(src, state):
-    """Pod ranking and cards: each pod's counts, xp and iq from desk/intel.py (state pods' intel)."""
+    """Pod ranking and cards: each pod's scorekeeper record (P&L, hit rate, R, score; desk/scorekeeper.py) in place
+    of the old XP, level and IQ, plus its activity counts (runs, notes, asks) from desk/intel.py."""
     xp = {}
     for p in state.get("pods") or []:
-        it = p.get("intel") or {}
-        if not p.get("name") or "xp" not in it:
+        if not p.get("name"):
             continue
+        it, sc = p.get("intel") or {}, p.get("score") or {}
         w, tk, sh, tr = (it.get(k) or {} for k in ("work", "talk", "share", "trading"))
         xp[str(p["name"])] = {"runs": w.get("runs") or 0, "notes": w.get("notes") or 0,
                               "asked": tk.get("asked") or 0, "answered": tk.get("answered") or 0,
                               "shared": sh.get("shared") or 0, "endorsed": sh.get("endorsed") or 0,
-                              "cited": sh.get("cited") or 0, "trades": tr.get("trades") or 0,
-                              "winR": 0, "iqBase": it.get("iq") or 100, "xp": it.get("xp"), "iq": it.get("iq")}
+                              "cited": sh.get("cited") or 0,
+                              "trades": int(sc.get("trades") or 0) if sc else int(tr.get("trades") or 0),
+                              "winR": 0, "iqBase": 100, "xp": 0, "iq": 0,
+                              "pnl": float(sc.get("pnl") or 0), "hit": sc.get("hit"), "R": float(sc.get("total_R") or 0),
+                              "score": float(sc.get("score") or 0)}
     if not xp:
         return src
     src, n = re.subn(r"podXp: \{\n.*?\n\s*\}, podBusy", lambda _: "podXp: " + json.dumps(xp) + ", podBusy", src, count=1, flags=re.S)
@@ -2024,10 +2127,45 @@ def _patch_main_podxp(src, state):
         return src
     src = src.replace("const xpTotal = (x) => Math.round(", "const xpTotal = (x) => x.xp != null ? x.xp : Math.round(", 1)
     src = src.replace("const iqOf = (x) => Math.max(", "const iqOf = (x) => x.iq != null ? x.iq : Math.max(", 1)
-    src = src.replace('{{sampleChip}}">Pod Split Sample<', '{{srcChip}}">Live XP And IQ<', 1)
-    src = src.replace('{{sampleChip}}">Real Counts 10-31, Simulated Events<', '{{srcChip}}">desk/intel.py<', 1)
-    return src.replace("Values Stay Sample Until The Wiring Reads The Logs.",
-                       "Pod Values Come From desk/intel.py (logs/desk/state/intel.json).", 1)
+    usd = "(xp.pnl < 0 ? '−$' : '+$') + Math.abs(xp.pnl || 0).toFixed(2)"
+    hitPct = "(xp.hit == null ? 0 : Math.round(xp.hit * 100))"
+    for a, b in [
+        ("iqBadge: 'Level ' + (lv + 1) + ' · ' + POD_LEVELS[lv][1], iqStyle: pill(POD_TINT[lv][0], POD_TINT[lv][1]),",
+         f"iqBadge: xp.trades ? {usd} + ' P&L' : 'No Closed Trades', "
+         "iqStyle: !xp.trades ? pill('#F5F5F7', '#6E6E73') : xp.pnl < 0 ? pill('#FDECEC', '#B3261E') : pill('#E9F7EC', '#248A3D'),"),
+        ("iqNum: 'IQ ' + iqOf(xp), xpPct,",
+         f"iqNum: xp.hit == null ? '— Hit' : Math.round(xp.hit * 100) + '% Hit', xpPct: {hitPct},"),
+        ("xpLabel: hi ? nf(tot) + ' / ' + nf(hi) + ' XP' : nf(tot) + ' XP', xpNext: hi ? nf(hi - tot) + ' To Level ' + (lv + 2) : 'Top Level',",
+         "xpLabel: xp.trades + (xp.trades === 1 ? ' Trade' : ' Trades') + ' · ' + (xp.R >= 0 ? '+' : '') + Number(xp.R || 0).toFixed(2) + ' R · 8 Weeks', "
+         "xpNext: xp.trades ? 'Score ' + (xp.score >= 0 ? '+' : '') + Number(xp.score || 0).toFixed(3) : 'Hit Rate',"),
+        ("xpBar: bar(xpPct, '#AF52DE'),", f"xpBar: bar({hitPct}, '#34C759'),"),
+        ("'No New XP · '", "'Off · '"),
+        ("(fl.n ? '+' + fl.n + ' XP · ' : '') + fl.label", "fl.label"),
+        ("'Run Now +' + (10 + 2 * POD_MKTS[id]) + ' XP'", "'Run Now'"),
+        ('aria-label="Experience To Next Level"', 'aria-label="Hit Rate"'),
+        (">Smartest Pods</span>", ">Pods By Score</span>"),
+        ("' Notes · +' + (10 + 2 * k) + ' XP (Simulated)'", "' Notes (Simulated)'"),
+        ("' · ' + podName(pid) + ' +5 XP'", "' · ' + podName(pid)"),
+        ("' · +' + 8 * k.by.length + ' XP To ' + podName(k.from)", "''"),
+        ('{{sampleChip}}">Pod Split Sample<', '{{srcChip}}">Scorekeeper P&amp;L And Hit Rate<'),
+        ('{{sampleChip}}">Real Counts 10-31, Simulated Events<', '{{srcChip}}">desk/scorekeeper.py<'),
+        ("Values Stay Sample Until The Wiring Reads The Logs.",
+         "Pod Values Come From desk/scorekeeper.py (logs/desk/state/scores.json)."),
+    ]:
+        src = src.replace(a, b, 1)
+    src = re.sub(r"if \(lv > podLevel\(xpTotal\(s\.podXp\[id\]\)\)\) events = \[[^\n]*?Reached Level[^\n]*?\.concat\(events\);", "", src, count=1)
+    src = re.sub(r"const podRank = POD_IDS\.map\(.*?style: pill\(POD_TINT\[lv\]\[0\], POD_TINT\[lv\]\[1\]\) \};",
+                 lambda _: ("const podRank = POD_IDS.map((id) => [id, s.podXp[id] || {}]).sort((a, b) => (b[1].trades ? 1 : 0) - (a[1].trades ? 1 : 0) "
+                            "|| (b[1].score || 0) - (a[1].score || 0) || (b[1].pnl || 0) - (a[1].pnl || 0)).map(([id, x], i) => {\n"
+                            "      return { label: (i + 1) + ' ' + podName(id), val: x.trades ? 'Score ' + (x.score >= 0 ? '+' : '') + Number(x.score || 0).toFixed(3) "
+                            "+ ' · ' + (x.hit == null ? '—' : Math.round(x.hit * 100) + '%') + ' Hit' : 'No Trades', "
+                            "style: !x.trades ? pill('#F5F5F7', '#6E6E73') : x.score < 0 ? pill('#FDECEC', '#B3261E') : pill('#E9F7EC', '#248A3D') };"),
+                 src, count=1, flags=re.S)
+    return re.sub(r"Pod Intelligence Comes From Each Pod’s Real Record.*?(?=</p>)",
+                  lambda _: ("Each Pod Is Scored On Its Own Closed Trades Over The Last 8 Weeks, From desk/scorekeeper.py "
+                             "(logs/desk/state/scores.json): P&amp;L, Hit Rate, R And A Score = Its R Per Trade Minus The Rest Of The Desk’s, "
+                             "Shrunk By n/(n+20), So A Pod Is Fully Judged From Its 20th Trade. Runs, Notes And Asks Come From desk/intel.py."),
+                  src, count=1, flags=re.S)
 
 
 def patch_page(src, i, live, usage, positions, label, extra=None):
@@ -2065,6 +2203,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_main_book, src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
+        src = _safe(_patch_pods_scores, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_eas_page, src, extra["state"], positions)
     elif i == 3 and isinstance((extra or {}).get("state"), dict):
