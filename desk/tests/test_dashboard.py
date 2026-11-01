@@ -411,3 +411,32 @@ def test_command_center_main_shows_live_processes():
     assert "guard: s.held ? 'Held' : 'Hold And Release' }\n    ].concat(liveRuns" in pr and "'15740'" not in pr
     assert "const commit = 9.0 +" in pr and "' Of 31.9 GB'" in pr and "(commit / 31.9 * 100)" in pr
     assert "'RAM 15.9 GB · '" in pr
+
+
+def test_command_center_main_funded_from_t16_log(tmp_path):
+    from desk import command_center as cc
+    logs = tmp_path / "MQL5" / "Logs"
+    logs.mkdir(parents=True)
+    t = "AurumFunded (XAUUSD,M15)\tAurumFunded: "
+    (logs / "20261029.log").write_text("\n".join([
+        f"IH\t0\t23:00:00.696\t{t}firm day 2026.10.30, day start 9993.33 (balance 9993.33, equity 9993.33), day stop",
+        f"RN\t0\t23:05:00.129\t{t}account 12345678 leverage 1:100",
+    ]), encoding="utf-16")
+    (logs / "20261030.log").write_text("\n".join([
+        f"JK\t0\t12:30:00.047\t{t}midday leg sold 0.45 EURUSD at 1.11936, stop 1.12140",
+        f"QM\t0\t13:59:59.772\t{t}closed EURUSD magic 20261030 0.45 at 1.11762, P/L 68.56 EUR",
+        f"HH\t0\t15:29:59.874\t{t}US500.cash sold 0.65 lots at 7602.95, bands 7744.30 / 7611.57",
+        f"PQ\t0\t16:00:00.157\t{t}closed US500.cash magic 99 0.65 at 7622.05, P/L -11.38 EUR",
+        f"OI\t0\t17:29:59.782\t{t}US500.cash sold 0.63 lots at 7598.20, bands 7751.65 / 7604.30",
+    ]), encoding="utf-8")
+    t16 = cc._t16_log(tmp_path)
+    assert t16["balance"] == pytest.approx(10050.51) and t16["day"] == pytest.approx(57.18)
+    assert t16["positions"] == 1 and t16["firm"] == "2026.10.30" and t16["last"] == "Fri 17:29"
+    assert cc._t16_log(tmp_path / "none") is None
+    out = cc._patch_main_funded(_main_template(), t16, "1.19")
+    assert "this.fundedCurve = [9993.33, 10061.89, 10050.51];" in out
+    assert "equity: money(10050.51), change: '+57.18 On Firm Day 2026.10.30 · 1 Open, Equity Not In The Log'" in out
+    assert "st('Floating P/L', '—'), st('Day P/L', '+57.18'), st('Positions', '1')" in out
+    assert "st('Last Log', 'Fri 17:29', '#6E6E73')" in out
+    assert "value: '10,050.51', sub: s.held ? 'Held By Owner' : 'AurumFunded v1.19'" in out
+    assert "[T16" not in out and "12345678" not in out

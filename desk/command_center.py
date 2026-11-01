@@ -11,7 +11,8 @@ rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and dai
 rows, the alerts (needs_you) and the idea queue. From the usage log and docs/: the token chart (today, per role), the
 recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. From
 the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
-lines. The activity feed: today's agent runs, journal rows and git commits, newest first. Live on Pods (from the same state): each pod's allocation, work and
+lines. The activity feed: today's agent runs, journal rows and git commits, newest first. The funded card and Funded
+Equity KPI from the T16 AurumFunded EA log (read only; private lines dropped). Live on Pods (from the same state): each pod's allocation, work and
 talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
 pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
@@ -197,6 +198,86 @@ def _patch_desk(src, state, positions):
         f"label: 'Desk Equity', value: '{eq:,.2f}', sub: 'To Day Floor {eq - floor:,.2f}'"), src, count=1)
     return re.sub(r"label: 'Open Positions', value: '[^']*', sub: '[^']*'",
                   lambda _: f"label: 'Open Positions', value: '{n}', sub: 'Desk Account'", src, count=1)
+
+
+# T16 (the FTMO demo running AurumFunded) is never touched: only its log files are read, with the privacy rules of
+# tools/demo_check.py (private lines dropped, long digit runs masked).
+T16_DATA = pathlib.Path.home() / "AppData" / "Roaming" / "MetaQuotes" / "Terminal" / "66FB7F5B174F9C3B2A690C49FF012FEB"
+_T16_PRIVATE = re.compile(r"login|authoriz|account", re.I)
+_T16_DIGITS = re.compile(r"(?<![.\d])\d{6,}(?![.\d])")
+_T16_DAY = re.compile(r"firm day (\S+), day start (-?[\d.]+)")
+_T16_CLOSED = re.compile(r"closed \S+ magic \S+ [\d.]+ at \S+, P/L (-?[\d.]+)")
+_T16_OPEN = re.compile(r"\b(?:bought|sold) [\d.]+ ")
+
+
+def _t16_log(data_dir=None, days=14):
+    """The AurumFunded account as its EA log tells it: the balance curve (each firm-day start, then each close),
+    the firm day, its day start and closed P/L, open positions and the time of the last line. None without a log."""
+    logs = sorted((pathlib.Path(data_dir or T16_DATA) / "MQL5" / "Logs").glob("2*.log"))[-days:]
+    curve, firm, start, day, opens, closes, last = [], None, None, 0.0, 0, 0, None
+    for p in logs:
+        raw = p.read_bytes()
+        text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
+        for line in text.splitlines():
+            if "AurumFunded" not in line or _T16_PRIVATE.search(line):
+                continue
+            line = _T16_DIGITS.sub("<num>", line)
+            m = re.search(r"\t(\d\d:\d\d):\d\d", line)
+            if m:
+                last = (p.stem, m.group(1))
+            m = _T16_DAY.search(line)
+            if m:
+                firm, start, day = m.group(1), float(m.group(2)), 0.0
+                curve.append(start)
+                continue
+            if start is None:
+                continue
+            m = _T16_CLOSED.search(line)
+            if m:
+                closes += 1
+                day += float(m.group(1))
+                curve.append(curve[-1] + float(m.group(1)))
+            elif _T16_OPEN.search(line):
+                opens += 1
+    if start is None:
+        return None
+    try:
+        when = dt.datetime.strptime(last[0], "%Y%m%d").strftime("%a ") + last[1] if last else "—"
+    except ValueError:
+        when = "—"
+    return {"curve": curve, "balance": curve[-1], "firm": firm, "start": start, "day": day,
+            "positions": max(0, opens - closes), "last": when}
+
+
+def _deployed_funded():
+    """The AurumFunded version on T16, from the last 'AurumFunded X on T16' change in docs/demo_log.md."""
+    try:
+        found = re.findall(r"^##.*AurumFunded (\d+\.\d+) on T16", (DOCS / "demo_log.md").read_text(encoding="utf-8"), re.M)
+    except OSError:
+        return None
+    return found[-1] if found else None
+
+
+def _patch_main_funded(src, t16, version=None):
+    """The Main funded card and the Funded Equity KPI from the T16 EA log. Floating P/L and margin are not in the log."""
+    if not t16:
+        return src
+    bal, n = t16["balance"], t16["positions"]
+    curve = t16["curve"] if len(t16["curve"]) > 1 else t16["curve"] * 2
+    src = re.sub(r"this\.fundedCurve = [^;]*;", lambda _: f"this.fundedCurve = {json.dumps([round(v, 2) for v in curve])};",
+                 src, count=1)
+    note = f"{n} Open, Equity Not In The Log" if n else "Flat"
+    change = _js(f"{_sgn(t16['day'])} On Firm Day {t16['firm']} · {note}")
+    src = re.sub(r"equity: '\[T16 Equity\]', change: '[^']*'",
+                 lambda _: f"equity: money({bal:.2f}), change: '{change}'", src, count=1)
+    src = re.sub(r"stats: \[st\('Balance', '\[T16 Balance\]'\).*?'#6E6E73'\)\]", lambda _: (
+        f"stats: [st('Balance', money({bal:.2f})), st('Floating P/L', '{'—' if n else '0.00'}'), "
+        f"st('Day P/L', '{_sgn(t16['day'])}'), st('Positions', '{n}'), st('Day Start', '{t16['start']:,.2f}'), "
+        f"st('Last Log', '{_js(t16['last'])}', '#6E6E73')]"), src, count=1)
+    sub = f"'AurumFunded v{_js(version)}'" if version else "'AurumFunded'"
+    return re.sub(r"label: 'Funded Equity', value: '\[T16\]', sub: s\.held \? 'Held By Owner' : '[^']*'",
+                  lambda _: f"label: 'Funded Equity', value: '{bal:,.2f}', sub: s.held ? 'Held By Owner' : {sub}",
+                  src, count=1)
 
 
 def _patch_gate(src, state):
@@ -1292,6 +1373,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
         src = _safe(_patch_main_live, src, live, usage)
         src = _safe(lambda s: _patch_main_procs(s, *_procs()), src)
+        src = _safe(lambda s: _patch_main_funded(s, _t16_log(), _deployed_funded()), src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):
