@@ -152,3 +152,23 @@ def test_command_center_main_shows_live_state():
     assert "gv('Trades', '7 Of 100'" in main and "gv('Weeks', '0.7 Of 8.0'" in main
     assert "Demo heartbeat is stale" in main
     assert "q-live-1" in main
+
+
+def test_command_center_pods_shows_live_state():
+    import base64, gzip
+    from desk import command_center as cc
+    pod = {"name": "systematic", "share": 0.25, "score": {"trades": 6, "pnl": -37.0, "total_R": -1.74, "hit": 0.5},
+           "intel": {"work": {"runs": 9, "notes": 9}, "talk": {"asked": 1}, "share": {"cited": 2}, "trading": {"hit": 0.5}}}
+    state = {"t": "2026-11-01T10:05:00", "limits": {"equity": 10000}, "pods": [pod],
+             "board": [{"t": "2026-11-01T10:00:00", "pod": "head-trader", "kind": None, "text": "It's flat \\ ok"}],
+             "tickets": [{"id": "t-1", "pod": "crypto", "status": "blocked", "side": "sell", "instrument": "BTCUSD",
+                          "risk_pct": 0.1, "why": "past the weekend cutoff"}]}
+    out = cc.build(dashboard.BUNDLE, {}, [], [], {"state": state}).decode("utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[1]]
+    raw = base64.b64decode(e["data"])
+    pods = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    assert "alloc: 25, c: { runs: 9, notes: 9, asked: 1," in pods and "closed: 6, followed: '-1.74 R'" in pods
+    assert "from: 'head-trader'" in pods and "|| {}).name || String(id)" in pods
+    assert "past the weekend cutoff" in pods and "state: 'Blocked'" in pods
+    assert "label: 'Messages Today', value: '1'" in pods

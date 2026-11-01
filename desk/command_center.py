@@ -8,7 +8,9 @@ Live on every screen: the "Live Snapshot" label and chip, and the sample simulat
 Live on Main: role runs, tokens, last run and task (this budget week), the agent talk feed from the relay log, the
 desk's open positions, and the kill button, which POSTs /api/kill. With extra = {"state": /api/state, "queue": queue
 rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and daily loss, the live-gate checks, the pod
-rows, the alerts (needs_you) and the idea queue. The rest is still the design's sample content.
+rows, the alerts (needs_you) and the idea queue. Live on Pods (from the same state): each pod's allocation, work and
+talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
+pod briefs, what each pod knows and the rules are still design text. The rest is still the design's sample content.
 """
 import base64
 import collections
@@ -247,6 +249,82 @@ def _patch_sources(src):
                        "chip('#E8F5EC', '#1E7B34') : chip('#FFF4E5', '#B25000')", 1)
 
 
+_KIND_XP = {"ask": 2, "reply": 6, "share": 5, "endorse": 8, "cite": 15, "note": 2}
+
+
+def _hhmm(t):
+    try:
+        return dt.datetime.fromisoformat(str(t)[:19]).strftime("%H:%M")
+    except ValueError:
+        return "—"
+
+
+def _patch_pods_page(src, state):
+    pods = {str(p.get("name")): p for p in state.get("pods") or []}
+    eq = float((state.get("limits") or {}).get("equity") or 0)
+    for pid, p in pods.items():
+        it, sc = p.get("intel") or {}, p.get("score") or {}
+        w, tk, sh, tr = it.get("work") or {}, it.get("talk") or {}, it.get("share") or {}, it.get("trading") or {}
+        trades = int(sc.get("trades") or tr.get("trades") or 0)
+        c = (f"c: {{ runs: {int(w.get('runs') or 0)}, notes: {int(w.get('notes') or 0)}, asked: {int(tk.get('asked') or 0)}, "
+             f"answered: {int(tk.get('answered') or 0)}, shared: {int(sh.get('shared') or 0)}, endorsed: {int(sh.get('endorsed') or 0)}, "
+             f"cited: {int(sh.get('cited') or 0)}, trades: {trades} }}")
+        wk = float(sc.get("pnl") or 0) / eq * 100 if eq else 0.0
+        tail = (f"wk: {wk:.2f}, bench: 0, below: 0, closed: {trades}, followed: '{float(sc.get('total_R') or 0):+.2f} R'"
+                + (", idle: true" if trades == 0 else ""))
+
+        def one(m, c=c, tail=tail, alloc=round(float(p.get("share") or 0) * 100), hit=float(tr.get("hit") or sc.get("hit") or 0)):
+            s = re.sub(r"alloc: \d+", f"alloc: {alloc}", m.group(0), count=1)
+            s = re.sub(r"c: \{[^}]*\}", lambda _: c, s, count=1)
+            s = re.sub(r"winR: [\d.]+", f"winR: {hit:.2f}", s, count=1)
+            s = re.sub(r" probation: '[^']*',", "", s, count=1)
+            return re.sub(r"wk: [-\d.]+, bench: [-\d.]+, below: \d+, closed: \d+, followed: '[^']*'(, idle: true)?(, quiet: \d+)?",
+                          lambda _: tail, s, count=1)
+        src = re.sub(rf"\{{ id: '{re.escape(pid)}', name: [^\n]*", one, src, count=1)
+    src = src.replace("const nameOf = (id) => PODS.find((p) => p.id === id).name;",
+                      "const nameOf = (id) => ((PODS.find((p) => p.id === id) || {}).name || String(id));", 1)
+
+    board = sorted(state.get("board") or [], key=lambda b: str(b.get("t") or ""), reverse=True)
+    talk = []
+    for b in board[:12]:
+        k = str(b.get("kind") or "note").lower()
+        k = {"review": "reply"}.get(k, k if k in _KIND_XP else "note")
+        to = b.get("to")
+        talk.append(f"{{ t: '{_hhmm(b.get('t'))}', kind: '{k}', from: '{_js(str(b.get('pod') or 'desk'))}', "
+                    f"to: {repr(_js(str(to))) if to and to != 'all' else 'null'}, text: '{_js(str(b.get('text') or '')[:120])}', "
+                    f"xp: '+{_KIND_XP[k]}' }}")
+    if talk:
+        src = re.sub(r"talk: \[\n.*?\]\.reverse\(\) \};", lambda _: "talk: [" + ", ".join(talk) + "] };", src, count=1, flags=re.S)
+
+    tickets = sorted(state.get("tickets") or [], key=lambda t: str(t.get("updated") or t.get("created") or ""), reverse=True)
+    pills = {"blocked": ("Blocked", "pill('#FDECEC', '#B3261E')"), "closed": ("Closed", "pill('#E9F7EC', '#248A3D')")}
+    rev = []
+    for t in tickets[:6]:
+        st = str(t.get("status") or "open").lower()
+        name, pl = pills.get(st, ("In Review", "pill('#E8F2FF', '#0066CC')"))
+        pn = (pods.get(str(t.get("pod"))) or {}).get("name") or t.get("pod") or "?"
+        risk = f" · {float(t['risk_pct']):.2f}% Risk" if isinstance(t.get("risk_pct"), (int, float)) else ""
+        res = f" · {float(t['R']):+.2f} R" if isinstance(t.get("R"), (int, float)) else ""
+        rev.append(f"{{ ticket: '{_js(str(t.get('id') or '?'))} · {_js(str(pn).title())}', "
+                   f"what: '{_js(str(t.get('side') or '').title())} {_js(str(t.get('instrument') or ''))}{risk}{res}', "
+                   f"note: '{_js(str(t.get('why') or t.get('thesis') or '')[:140])}',state: '{name}', pill: {pl} }}")
+    if rev:
+        src = re.sub(r"const reviews = \[\n.*?\n    \];", lambda _: "const reviews = [" + ", ".join(rev) + "];", src, count=1, flags=re.S)
+
+    today = str(state.get("t") or dt.datetime.now().isoformat())[:10]
+    msgs = sum(1 for b in board if str(b.get("t") or "")[:10] == today)
+    sts = [str(t.get("status") or "open").lower() for t in tickets]
+    open_n, blocked = sum(s not in ("closed", "blocked") for s in sts), sts.count("blocked")
+    idle = sum(1 for p in pods.values() if not int((p.get("score") or {}).get("trades") or 0))
+    src = re.sub(r"\{ label: 'Messages Today', value: [^\n]*",
+                 lambda _: f"{{ label: 'Messages Today', value: '{msgs}', sub: 'Board Posts Since Midnight', style: big }},", src, count=1)
+    src = re.sub(r"\{ label: 'Tickets In Review', value: [^\n]*", lambda _: (
+        f"{{ label: 'Tickets In Review', value: '{open_n}', sub: '{blocked} Blocked · {sts.count('closed')} Closed', style: big }},"),
+        src, count=1)
+    return re.sub(r"\{ label: 'Pods Idle', value: '[^']*', sub: '[^']*'",
+                  lambda _: f"{{ label: 'Pods Idle', value: '{idle}', sub: 'No Closed Trade Yet'", src, count=1)
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -265,6 +343,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_alerts, src, state)
             src = _patch_sources(src)
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
+    elif i == 1 and isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_pods_page, src, extra["state"])
     return src
 
 
