@@ -8,7 +8,8 @@ Live on every screen: the "Live Snapshot" label and chip, and the sample simulat
 Live on Main: role runs, tokens, last run and task (this budget week), the agent talk feed from the relay log, the
 desk's open positions, and the kill button, which POSTs /api/kill. With extra = {"state": /api/state, "queue": queue
 rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and daily loss, the live-gate checks, the pod
-rows, the alerts (needs_you) and the idea queue. Live on Pods (from the same state): each pod's allocation, work and
+rows, the alerts (needs_you) and the idea queue. From the usage log and docs/: the token chart (today, per role), the
+recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. Live on Pods (from the same state): each pod's allocation, work and
 talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
 pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
@@ -1010,6 +1011,80 @@ def _patch_agents_page(src, live, usage):
     return src
 
 
+_ROLE_NAME = {"finder": "Finder", "builder": "Builder", "tester": "Tester Operator", "judge": "Judge", "reviewer": "Reviewer",
+              "monitor": "Monitor", "doctor": "Doctor", "portfolio": "Portfolio Manager"}
+_GATE_ORDER = ["halves", "costs", "corr", "belief", "book", "dsr"]
+
+
+def _tok(r):
+    return sum(int(r.get(k) or 0) for k in ("input", "output", "cache_read", "cache_create"))
+
+
+def _patch_main_live(src, live, usage, root=None, today=None):
+    """Main page: token chart, recent runs, funnel, gate fails and the Tokens/Runs Today KPIs from the logs."""
+    docs = pathlib.Path(root) if root else DOCS
+    day = (today or dt.date.today()).isoformat()
+    rows = [r for r in usage or [] if isinstance(r, dict) and r.get("ts")]
+    todays = [r for r in rows if str(r["ts"])[:10] == day]
+
+    # Token chart: today's tokens per role, in millions (the template adds runs in flight).
+    per = collections.Counter()
+    for r in todays:
+        per[_ROLE_NAME.get(r.get("role"), _title(str(r.get("role"))))] += _tok(r)
+    base = {n: round(v / 1e6, 4) for n, v in per.items() if v}
+    src = re.sub(r"const baseTok = \{.*?\};", lambda _: "const baseTok = " + json.dumps(base) + ";", src, count=1)
+
+    # Recent runs: the last ten usage rows, newest first.
+    last = sorted(rows, key=lambda r: str(r["ts"]), reverse=True)[:10]
+    runs = [[str(r["ts"])[11:16], _title(str(r.get("role") or "?")), _title(str(r.get("model") or "—")),
+             int(r.get("input") or 0), int(r.get("output") or 0), int(r.get("cache_read") or 0),
+             int(r.get("cache_create") or 0)] for r in last]
+    src = re.sub(r"const baseRuns = \[.*?\n    \]\.map\(", lambda _: "const baseRuns = " + json.dumps(runs) + ".map(",
+                 src, count=1, flags=re.S)
+
+    # KPIs: today's tokens and runs, and this week's runs.
+    week = sum(a["runs"] for a in _week_agg(live, usage).values())
+    tok = sum(_tok(r) for r in todays)
+    src = src.replace("fmtTok(20.28e6 + liveTok + doneTok)", f"fmtTok({tok} + liveTok + doneTok)")
+    src = src.replace(": '36 Runs'", f": '{len(todays)} Runs'", 1)
+    src = src.replace("String(36 + s.done.length)", f"String({len(todays)} + s.done.length)")
+    src = src.replace("sub: '37 This Week'", f"sub: '{week} This Week'", 1)
+
+    # Funnel and gate fails, from the idea logs and the gate files.
+    queue = _jsonl(docs / "ideas" / "queue.jsonl")
+    backlog = _jsonl(docs / "ideas" / "backlog.jsonl")
+    results = _jsonl(docs / "ideas" / "results.jsonl")
+    gates = [g for g in (_jfile(p) for p in sorted((docs / "gates").glob("*.json"))) if isinstance(g, dict)]
+    cj = _jfile(docs / "candidates.json") or {}
+    cands = [c for c in (cj.get("candidates") if isinstance(cj, dict) else cj) or [] if isinstance(c, dict)]
+    book = _jfile(docs / "book.json") or {}
+    ids = {x.get("id") for x in queue + backlog + results + gates} - {None}
+    if ids:
+        funnel = [["Ideas Tried", len(ids)],
+                  ["Prescreened", len({x.get("id") for x in results + gates} - {None})],
+                  ["Full Backtest", len(gates)],
+                  ["Passed Gate", sum(str(g.get("verdict", "")).upper() == "PASS" for g in gates)],
+                  ["Tester Matched", sum(c.get("status") in ("tester", "demo", "live", "integrated") for c in cands)],
+                  ["In The Book", len(book.get("legs") or {})]]
+        src = re.sub(r"const funnel = \[\[.*?\]\]\n", lambda _: "const funnel = " + json.dumps(funnel) + "\n", src, count=1)
+        # Counts span 1 to hundreds, so the bars use a log scale.
+        src = src.replace("(n / 109 * 100).toFixed(1)", f"(Math.log(1 + n) / Math.log({1 + len(ids)}) * 100).toFixed(1)", 1)
+    first = collections.Counter()
+    for g in gates:
+        fails = {x.get("gate") for x in g.get("gates") or [] if isinstance(x, dict) and x.get("pass") is False}
+        hit = next((k for k in _GATE_ORDER if k in fails), None)
+        if hit:
+            first[hit] += 1
+    if first:
+        def gf(m):
+            return re.sub(r"\[(\d), ('[^']*'), ('[^']*'), \d+\]",
+                          lambda r: f"[{r.group(1)}, {r.group(2)}, {r.group(3)}, {first.get(_GATE_ORDER[int(r.group(1)) - 1], 0)}]",
+                          m.group(0))
+        src = re.sub(r"const gateFails = \[\[.*?\]\]\n", gf, src, count=1)
+        src = src.replace("(f / 33 * 100).toFixed(1)", f"(f / {max(first.values())} * 100).toFixed(1)", 1)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -1028,6 +1103,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_alerts, src, state)
             src = _patch_sources(src)
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
+        src = _safe(_patch_main_live, src, live, usage)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):

@@ -334,3 +334,30 @@ def test_command_center_agents_shows_live_state(tmp_path, monkeypatch):
     assert "value: 'Judge'" in pr and "value: 'Ready', sub: '4 Empty Runs In A Row'" in pr
     assert '"who": "Judge", "kind": "Run"' in pr and '"kind": "Backoff"' in pr
     assert "backoff: true" not in pr.split("const ROLES", 1)[1].split("];", 1)[0]
+
+
+def test_command_center_main_shows_live_logs(tmp_path):
+    import base64, gzip, pathlib
+    import datetime as dt
+    from desk import command_center as cc
+    out = pathlib.Path(dashboard.BUNDLE).read_text(encoding="utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[0]]
+    raw = base64.b64decode(e["data"])
+    tpl = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+    (tmp_path / "ideas").mkdir()
+    (tmp_path / "gates").mkdir()
+    (tmp_path / "ideas" / "queue.jsonl").write_text("\n".join(json.dumps({"id": f"q{n}"}) for n in range(5)))
+    for n, gate in enumerate(["halves", "halves", "costs"]):
+        (tmp_path / "gates" / f"g{n}.json").write_text(json.dumps(
+            {"id": f"g{n}", "verdict": "FAIL", "gates": [{"gate": gate, "pass": False}, {"gate": "dsr", "pass": False}]}))
+    today = dt.date(2026, 11, 1)
+    usage = [{"ts": "2026-11-01T09:50:05", "role": "finder", "model": "sonnet", "input": 1_000_000, "output": 500_000},
+             {"ts": "2026-11-01T08:00:00", "role": "tester", "model": "haiku", "input": 250_000},
+             {"ts": "2026-10-31T23:00:00", "role": "judge", "model": "opus", "input": 9}]
+    pr = cc._patch_main_live(tpl, {}, usage, root=tmp_path, today=today)
+    assert 'const baseTok = {"Finder": 1.5, "Tester Operator": 0.25};' in pr
+    assert 'const baseRuns = [["09:50", "Finder", "Sonnet", 1000000, 500000, 0, 0]' in pr
+    assert "fmtTok(1750000 + liveTok + doneTok)" in pr and "String(2 + s.done.length)" in pr and "'2 Runs'" in pr
+    assert '["Ideas Tried", 8]' in pr and '["Full Backtest", 3]' in pr and "Math.log(9)" in pr
+    assert "Both Halves', 2]" in pr and "1.5x Costs', 1]" in pr and "(f / 2 * 100)" in pr
