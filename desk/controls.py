@@ -6,7 +6,8 @@ Three kinds of switch, each with pause / resume (stop is pause: new entries stop
   pipeline  finder / builder / tester / judge: logs/autopilot/PAUSE-<role>; relay.ps1 skips a paused role (and a
             paused tester also skips tester_step.py). The whole-pipeline logs/autopilot/PAUSE stays the keeper's.
   demo      hydra / funded: <MT5 Common Files>/Aurum/stop_<leg>.flag; the EA stops new entries while it exists
-            (AurumFunded 1.23 and AurumHydra read it; older builds on the demo ignore it, see status()).
+            (AurumFunded 1.23 and AurumHydra 1.43 read it, via CAurumTrade in Include/Aurum/Legs.mqh; older builds
+            on the demo ignore it; the tester never reads it).
 Owner-only things are refused here: desk/risk.json, cli resume after a halt, live trading, deploys, the fidelity
 pairing and the T16 terminal. Every change goes into the desk journal (kinds pause / resume, by owner).
 """

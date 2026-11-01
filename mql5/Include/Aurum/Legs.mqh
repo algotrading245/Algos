@@ -43,8 +43,48 @@ bool   AurumInputsBad();                                            // true: the
 #define FIX_PAIRS 5
 #define FIX_ALL 8          // the dollar pairs and the yen crosses of the month-end fix
 
-CTrade   g_trade;
-datetime g_day=0;          // day whose session entry has been handled
+// The dashboard's stop switch (desk/controls.py, owner 2026-11-01): while <Common Files>\Aurum\stop_<leg>.flag
+// exists (leg = hydra or funded, from AURUM_NAME), no new position is opened; exits, stops and closes run as usual.
+// Read every 5 s. Never in the tester: its Common folder is the same one the demo terminal reads.
+bool AurumStopped()
+  {
+   static datetime seen=0;
+   static bool stopped=false;
+   if(MQLInfoInteger(MQL_TESTER) || MQLInfoInteger(MQL_OPTIMIZATION))
+      return(false);
+   datetime now=TimeLocal();
+   if(now<seen+5)
+      return(stopped);
+   seen=now;
+   string leg=StringSubstr(AURUM_NAME,5);
+   StringToLower(leg);
+   bool s=FileIsExist("Aurum\\stop_"+leg+".flag",FILE_COMMON);
+   if(s!=stopped)
+      Print(AURUM_NAME+(s ? ": stop flag set from the dashboard, no new entries; open positions are managed as usual" :
+                            ": stop flag cleared, new entries are allowed again"));
+   stopped=s;
+   return(stopped);
+  }
+
+// Every leg opens through Buy / Sell and closes through PositionClose*, so the stop switch is enforced here.
+class CAurumTrade : public CTrade
+  {
+private:
+   bool              Refuse(void)
+     {
+      m_result.retcode=TRADE_RETCODE_TRADE_DISABLED;
+      m_result.comment="stop flag set from the dashboard";
+      return(false);
+     }
+public:
+   bool              Buy(const double volume,const string symbol=NULL,double price=0.0,const double sl=0.0,const double tp=0.0,const string comment="")
+     { return(AurumStopped() ? Refuse() : CTrade::Buy(volume,symbol,price,sl,tp,comment)); }
+   bool              Sell(const double volume,const string symbol=NULL,double price=0.0,const double sl=0.0,const double tp=0.0,const string comment="")
+     { return(AurumStopped() ? Refuse() : CTrade::Sell(volume,symbol,price,sl,tp,comment)); }
+  };
+
+CAurumTrade g_trade;
+datetime g_day=0;         // day whose session entry has been handled
 datetime g_bar=0;          // M15 bar whose dip signal has been handled
 datetime g_done[LEGS];        // per stop leg: day whose window has been dealt with
 double   g_peak=0.0;
@@ -1085,7 +1125,7 @@ void Grid()
                   MathAbs(g_gridSent),(int)(now-g_gridSentAt));
       g_gridSent=0;
      }
-   if(tick.ask-tick.bid>InpGridMaxSpread*SymbolInfoDouble(sym,SYMBOL_POINT))
+   if(AurumStopped() || tick.ask-tick.bid>InpGridMaxSpread*SymbolInfoDouble(sym,SYMBOL_POINT))
       return;
    // the size of a grid cycle is fixed when its first level opens
    double base=(q!=0 && GlobalVariableCheck(GridKey("base")) ? GlobalVariableGet(GridKey("base")) : 0.0);
@@ -1176,7 +1216,7 @@ void Hold()
    Prepare(InpGold,magic);
    if(diff>0)
      {
-      if(q.ask-q.bid>InpGoldMaxSpread)
+      if(AurumStopped() || q.ask-q.bid>InpGoldMaxSpread)
          return;
       double margin=0.0;
       if(OrderCalcMargin(ORDER_TYPE_BUY,InpGold,1.0,q.ask,margin) && margin>0)

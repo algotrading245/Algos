@@ -135,10 +135,13 @@
 //| down, so a size of a few steps no longer skips the widest stops. |
 //| v1.42: each closing deal of the EA's magics is printed live with |
 //| its P/L, for tools/demo_check.py.                                |
+//| v1.43: dashboard stop switch: while Common\Files\Aurum\          |
+//| stop_hydra.flag exists no new position opens; exits and closes   |
+//| run as usual. Ignored in the tester (Include/Aurum/Legs.mqh).    |
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.42"
+#property version   "1.43"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

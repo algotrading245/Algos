@@ -1233,7 +1233,7 @@ def _patch_controls_page(src, state, positions=None):
         meta = f"{ea} {v}" + (f" · {armed} Legs Armed" if eid == "hydra" and armed else "")
         flag = eid in (ctl.get("demo") or [])
         if flag:
-            meta += " · Stop Flag Set" + (" · Read From AurumFunded 1.23" if eid == "funded" else " · Read Once Hydra Supports It")
+            meta += " · Stop Flag Set" + (" · Read From AurumFunded 1.23" if eid == "funded" else " · Read From AurumHydra 1.43")
         sw.append({"id": eid, "group": "Demo Legs", "name": nm, "what": what, "meta": meta,
                    "state": "Stopped" if flag else desk_st})
     src = re.sub(r"const SWITCHES = \[.*?\n\];", lambda _: "const SWITCHES = " + json.dumps(sw, ensure_ascii=False) + ";",
