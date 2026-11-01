@@ -580,3 +580,34 @@ def test_command_center_main_book_sharpe_and_correlation():
     assert "Correlation Heatmap Of 3 Legs, Last 252 Days" in out and "repeat(3, minmax" in out
     assert 'hint-placeholder-count="16"' in out and ">Risk Bar Sample<" in out
     assert cc._patch_main_book(src, {}, {}) == src
+
+
+def test_command_center_alerts_from_inbox_and_doctor(tmp_path):
+    from desk import command_center as cc
+    (tmp_path / "desk" / "inbox").mkdir(parents=True)
+    (tmp_path / "desk" / "inbox" / "ALERT.md").write_text("\n".join([
+        "# Desk alert 2026-11-01 00:41 UTC", "",
+        "- **ALERT** the desk clock stalled; the watchdog ran a pass.", "", "The desk's code check wrote this.", "",
+        "# Desk alert 2026-11-01 00:04 UTC", "",
+        "- **ALERT** the desk clock stalled; the watchdog ran a pass.", "",
+        "# Desk alert 2026-10-28 23:58 UTC", "",
+        "- **WARN** 1 errors in the last hour (commit_error)",
+    ]), encoding="utf-8")
+    (tmp_path / "docs" / "autopilot").mkdir(parents=True)
+    (tmp_path / "docs" / "autopilot" / "gaps_report.md").write_text("\n".join([
+        "# Gaps report - 2026-10-31 06:05 (doctor)", "", "## Fixed this run", "", "1. **Not this one.** done", "",
+        "## Open, for Opus", "", "1. **PropDays counts magics only up to +25.** detail", "",
+        "2. **Fidelity has no role.** detail", "", "## Watching", "", "1. **Nor this.** x",
+    ]), encoding="utf-8")
+    src = "    const alertDefs = [\n      ['old', 'red', 'X', 'Sample', 'Today 06:00'],\n    ].concat(ROLES)"
+    state = {"needs_you": [{"level": "ALERT", "what": "Clock heartbeat is 9 min old"},
+                           {"level": "WARN", "what": "x (inbox/ALERT.md, Desk alert)"}]}
+    out = cc._patch_alerts(src, state, tmp_path)
+    rows = json.loads(out.split("const alertDefs = ", 1)[1].split(".concat", 1)[0])
+    assert [r[3] for r in rows] == ["Clock heartbeat is 9 min old", "the desk clock stalled; the watchdog ran a pass.",
+                                    "1 errors in the last hour (commit_error)",
+                                    "PropDays counts magics only up to +25", "Fidelity has no role"]
+    assert [r[1] for r in rows] == ["red", "red", "amber", "amber", "amber"]
+    assert rows[1][4] == "Sun 11-01 00:41" and rows[2][4] == "Wed 10-28 23:58" and rows[3][4] == "Sat 10-31 06:05"
+    assert rows[3][2] == "Doctor" and rows[3][0].startswith("doc-") and out == cc._patch_alerts(src, state, tmp_path)
+    assert "Sample" not in out and cc._patch_alerts(src, {}, tmp_path / "none").startswith("    const alertDefs = []")

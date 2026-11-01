@@ -8,7 +8,8 @@ Live on every screen: the "Live Snapshot" label and chip, and the sample simulat
 Live on Main: role runs, tokens, last run and task (this budget week), the agent talk feed from the relay log, the
 desk's open positions, and the kill button, which POSTs /api/kill. With extra = {"state": /api/state, "queue": queue
 rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and daily loss, the live-gate checks, the pod
-rows, the alerts (needs_you) and the idea queue. From the usage log and docs/: the token chart (today, per role), the
+rows, the needs-you alerts and the idea queue. The alerts card also lists every desk/inbox/ALERT.md section (dated) and
+the doctor's open items from docs/autopilot/gaps_report.md, with text-hashed ids so an ack holds. From the usage log and docs/: the token chart (today, per role), the
 recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. From
 the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
 lines. The activity feed: today's agent runs, journal rows and git commits, newest first. The funded card and Funded
@@ -499,9 +500,71 @@ def _patch_queue(src, rows):
     return re.sub(r"const queue = \[.*?\n    \];", lambda _: "const queue = [" + ", ".join(out) + "];", src, count=1, flags=re.S)
 
 
-def _patch_alerts(src, state):
-    rows = [[f"live-{i}", "amber" if str(n.get("level")).upper() == "WARN" else "red", "Desk",
-             _js(str(n.get("what") or ""))[:90], "Now"] for i, n in enumerate(state.get("needs_you") or [])]
+def _alert_id(pre, text):
+    import hashlib
+    return pre + "-" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:8]
+
+
+def _when(day, hm=""):
+    """'2026-11-01', '00:41' -> 'Sun 11-01 00:41'."""
+    try:
+        d = dt.date.fromisoformat(day)
+    except ValueError:
+        return day
+    return f"{d.strftime('%a')} {d.strftime('%m-%d')} {hm}".strip()
+
+
+def _desk_alert_rows(root, limit=8):
+    """Every section of desk/inbox/ALERT.md (newest first): ALERT red, WARN amber; a repeated text keeps its newest date."""
+    try:
+        txt = (pathlib.Path(root) / "desk" / "inbox" / "ALERT.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    rows, seen, when = [], set(), ""
+    for line in txt.splitlines():
+        m = re.match(r"# Desk alert (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) UTC", line)
+        if m:
+            when = _when(m.group(1), m.group(2))
+            continue
+        m = re.match(r"- \*\*(ALERT|WARN|HALT)\*\*\s*(.+)", line)
+        if m and when:
+            text = m.group(2).replace("**", "").strip()
+            if text in seen:
+                continue
+            seen.add(text)
+            rows.append([_alert_id("desk", text), "amber" if m.group(1) == "WARN" else "red", "Desk",
+                         _js(_cut(text, 90)), when])
+    return rows[:limit]
+
+
+def _doctor_rows(root, limit=8):
+    """The doctor's 'Open, for Opus' items from docs/autopilot/gaps_report.md, dated by the report header."""
+    try:
+        txt = (pathlib.Path(root) / "docs" / "autopilot" / "gaps_report.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    m = re.search(r"^# Gaps report - (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})", txt, re.M)
+    when = _when(m.group(1), m.group(2)) if m else "Doctor"
+    sec = re.search(r"^## Open, for Opus\s*\n(.*?)(?=^## |\Z)", txt, re.M | re.S)
+    rows = []
+    for t in re.findall(r"^\d+\.\s+\*\*(.+?)\*\*", sec.group(1) if sec else "", re.M):
+        t = t.strip().rstrip(".")
+        rows.append([_alert_id("doc", t), "amber", "Doctor", _js(_cut(t, 90)), when])
+    return rows[:limit]
+
+
+def _patch_alerts(src, state, root=None):
+    """Alerts card: the desk's needs-you list now, then ALERT.md history, then the doctor's open items.
+    Ids hash the text, so an ack holds across reloads."""
+    rows = []
+    for n in (state or {}).get("needs_you") or []:
+        what = str(n.get("what") or "")
+        if "inbox/ALERT.md" in what:  # the history rows below carry these, with their real date
+            continue
+        rows.append([_alert_id("live", what), "amber" if str(n.get("level")).upper() == "WARN" else "red", "Desk",
+                     _js(_cut(what, 90)), "Now"])
+    if root is not None:
+        rows += _desk_alert_rows(root) + _doctor_rows(root)
     js = json.dumps(rows, ensure_ascii=False)
     return re.sub(r"const alertDefs = \[.*?\n    \]\.concat", lambda _: f"const alertDefs = {js}.concat", src, count=1, flags=re.S)
 
@@ -1637,9 +1700,9 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _safe(_patch_desk, src, state, positions)
             src = _safe(_patch_gate, src, state)
             src = _safe(_patch_pods, src, state)
-            src = _safe(_patch_alerts, src, state)
             src = _safe(lambda s: _patch_main_feed(s, state, usage, _git_today()), src)
             src = _patch_sources(src)
+        src = _safe(_patch_alerts, src, state if isinstance(state, dict) else {}, ROOT)
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
         src = _safe(_patch_main_live, src, live, usage)
         src = _safe(lambda s: _patch_main_procs(s, *_procs()), src)
