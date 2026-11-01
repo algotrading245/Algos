@@ -51,6 +51,21 @@ each finished piece of work.
 
 ## Current state
 
+- **j20 judged FAIL on model fidelity; graziani_rev rejected as built (judge 2026-11-01 08:45).** The leg added
+  on-off +392.58 USD (+3.9% of 10k) at +0.69 pt equity DD (7.06 -> 7.75%), return/DD 18.9 -> 17.7. j20 matches j19
+  to the cent, and both ran v1.22 (j19's on-run log already has the v1.22 "stop reset" renewal line). The reason for
+  the FAIL: `research/graziani_reversal.py:27` keeps M1 bars before 16:00 *file* clock, and the histdata file clock
+  is the server clock (Europe/Athens). On 2024-04-30 the script's close is 5096.04 (15:00 bucket), but the S&P cash
+  close (5035) only shows in the 22:00 bucket. So the gated rule prices the 4th Friday and the month end at about
+  09:00 New York, while the EA uses the D1 close and 22:30 server. The two signal different months: the Python's
+  US500 entries in 2024-25 are 02-29, 05-31, 09-30, 10-31, 12-31, 01-31 and 03-31; the tester's are 01-31, 04-30,
+  08-30, 12-31, 04-30, 07-31 and 08-29. The gate figures are therefore not evidence for the traded rule. 5 of the 8
+  tester holds closed off schedule (clock cut 2024-10-28, day stops and other book exits, lesson 21). The leg stays
+  off by default (InpGrzMult 0), so the EA's default behaviour is unchanged. Builder item `fix_graziani_clock` (new)
+  re-gates the leg on the EA's own clock as a new trial, or drops it. `research/totm_indices.py` (already rejected)
+  has the same hour<16 convention. A lesson was proposed (`kind: lesson`, 08:36) and waits for the reviewer before it
+  goes into lessons.md.
+
 - **Month-reversal leg, fix_graziani_rev2 reviewed (judge 2026-11-01 03:50): item (b) answered, item (a) still has
   no file behind it.** The 2024.10.28 00:05 close in j19 is the tester's clock check: `ClockOk()` returns false
   between the end of European and US summer time, and `CloseEverything()` runs (`AurumFunded.mq5:291-299, 425-432`).
