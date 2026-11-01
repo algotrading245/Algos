@@ -494,9 +494,12 @@
       ],
       "from": "2024.01.01",
       "to": "2025.09.30",
-      "status": "queued",
+      "status": "running",
       "needs": null,
-      "expect": "Step 15 for AurumFunded v1.22 (month-reversal leg after the 11-01 review fixes; supersedes diagnostic j19). Preset = OFF run; compare_set adds InpGrzMult=0.5 (ON run). Python with FTMO swaps (US500 2.38, US100 2.91 bp/night, triple Friday), research/graziani_reversal.py: Sharpe 0.44/0.57 by half at 1x, 0.36 at 1.5x, 54 + 61 holds 2010-2025, about 40% of months. 2024.01-2025.09: roughly 7 (US500) + 10 (US100) held months, small size (mean notional 0.17-0.22 x equity) so expect about +1 to 2% (+100 to 200 USD, 67-87% in the tester), worst hold-to-date equity loss about -1.7%, worst day -0.85% (research/graziani_book_exits.py: broker stop 5% never reached on closes, no hold would hit the 3% day stop alone). Lesson 21: the book CloseEverything can still close a hold as a bystander, so spot off-schedule closes (empty comment other than sl). Good Friday 2024-03-29 must not be a month-end entry day (March 2024 last trading day is 03-28); renewals keep the hold open past day 40 of the first month."
+      "expect": "Step 15 for AurumFunded v1.22 (month-reversal leg after the 11-01 review fixes; supersedes diagnostic j19). Preset = OFF run; compare_set adds InpGrzMult=0.5 (ON run). Python with FTMO swaps (US500 2.38, US100 2.91 bp/night, triple Friday), research/graziani_reversal.py: Sharpe 0.44/0.57 by half at 1x, 0.36 at 1.5x, 54 + 61 holds 2010-2025, about 40% of months. 2024.01-2025.09: roughly 7 (US500) + 10 (US100) held months, small size (mean notional 0.17-0.22 x equity) so expect about +1 to 2% (+100 to 200 USD, 67-87% in the tester), worst hold-to-date equity loss about -1.7%, worst day -0.85% (research/graziani_book_exits.py: broker stop 5% never reached on closes, no hold would hit the 3% day stop alone). Lesson 21: the book CloseEverything can still close a hold as a bystander, so spot off-schedule closes (empty comment other than sl). Good Friday 2024-03-29 must not be a month-end entry day (March 2024 last trading day is 03-28); renewals keep the hold open past day 40 of the first month.",
+      "folder": "backtests\\2026-11-01_0310_AurumFunded_grz2_off",
+      "terminal": "C:\\MetaTrader 5 - Tester",
+      "note": "Started by tools/autopilot/tester_step.py 2026-11-01 03:10 on MetaTrader 5 - Tester."
     }
   ]
 }
