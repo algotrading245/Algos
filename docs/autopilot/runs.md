@@ -162,3 +162,4 @@ committed).
 | 2026-11-01 01:43 | tester | Retried j19 once by hand (same inputs, detached), cleared tester-help | j19 running in 2026-11-01_0143_AurumFunded_grz1_off, diagnostic only |
 | 2026-11-01 01:46 | tester | Checked the 01:43 j19 retry (inputs, MetaTester log: started 01:44:12, leverage 1:33, InpGrzMult 0.0); removed the stale tester-help.json; no second retry | j19 running in 2026-11-01_0143_AurumFunded_grz1_off, diagnostic only, judge owns the outcome |
 | 2026-11-01 02:20 | tester | Collected j19 off run, started the on run | j19 running |
+| 2026-11-01 03:10 | tester | Collected j19 (AurumFunded grz1): net +13,732 (+137%), 2298.0 trades, PF 1.63, equity DD 7.75% | j19 done, needs judging |
