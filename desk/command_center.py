@@ -208,13 +208,14 @@ _T16_DIGITS = re.compile(r"(?<![.\d])\d{6,}(?![.\d])")
 _T16_DAY = re.compile(r"firm day (\S+), day start (-?[\d.]+)")
 _T16_CLOSED = re.compile(r"closed \S+ magic \S+ [\d.]+ at \S+, P/L (-?[\d.]+)")
 _T16_OPEN = re.compile(r"\b(?:bought|sold) [\d.]+ ")
+_T16_FINAL = re.compile(r"final stop at (-?[\d.]+)")
 
 
 def _t16_log(data_dir=None, days=14):
     """The AurumFunded account as its EA log tells it: the balance curve (each firm-day start, then each close),
     the firm day, its day start and closed P/L, open positions and the time of the last line. None without a log."""
     logs = sorted((pathlib.Path(data_dir or T16_DATA) / "MQL5" / "Logs").glob("2*.log"))[-days:]
-    curve, firm, start, day, opens, closes, last = [], None, None, 0.0, 0, 0, None
+    curve, firm, start, day, opens, closes, last, final, traded = [], None, None, 0.0, 0, 0, None, None, set()
     for p in logs:
         raw = p.read_bytes()
         text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
@@ -229,6 +230,8 @@ def _t16_log(data_dir=None, days=14):
             if m:
                 firm, start, day = m.group(1), float(m.group(2)), 0.0
                 curve.append(start)
+                m = _T16_FINAL.search(line)
+                final = float(m.group(1)) if m else final
                 continue
             if start is None:
                 continue
@@ -239,6 +242,7 @@ def _t16_log(data_dir=None, days=14):
                 curve.append(curve[-1] + float(m.group(1)))
             elif _T16_OPEN.search(line):
                 opens += 1
+                traded.add(firm)
     if start is None:
         return None
     try:
@@ -246,7 +250,7 @@ def _t16_log(data_dir=None, days=14):
     except ValueError:
         when = "—"
     return {"curve": curve, "balance": curve[-1], "firm": firm, "start": start, "day": day,
-            "positions": max(0, opens - closes), "last": when}
+            "positions": max(0, opens - closes), "last": when, "final": final, "traded": len(traded)}
 
 
 def _deployed_funded():
@@ -278,6 +282,49 @@ def _patch_main_funded(src, t16, version=None):
     return re.sub(r"label: 'Funded Equity', value: '\[T16\]', sub: s\.held \? 'Held By Owner' : '[^']*'",
                   lambda _: f"label: 'Funded Equity', value: '{bal:,.2f}', sub: s.held ? 'Held By Owner' : {sub}",
                   src, count=1)
+
+
+def _t16_preset(ini=None, experts=None):
+    """The AurumFunded inputs on T16: the .set named by the ExpertParameters line of t16_attach.ini (only that
+    line is read). {} when either file is missing."""
+    try:
+        ini = ini or ROOT / "tools" / "autopilot" / "t16_attach.ini"
+        m = re.search(r"^ExpertParameters=(.+?)\s*$", pathlib.Path(ini).read_text(encoding="utf-8", errors="replace"),
+                      re.M)
+        raw = (pathlib.Path(experts or ROOT / "mql5" / "Experts" / "AurumFunded") / pathlib.Path(m.group(1)).name).read_bytes()
+    except (OSError, AttributeError):
+        return {}
+    text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
+    out = {}
+    for k, v in re.findall(r"^Inp(Prop\w+)=([^|\r\n]*)", text, re.M):
+        try:
+            out[k] = float(v)
+        except ValueError:
+            out[k] = v.strip()
+    return out
+
+
+def _patch_main_rules(src, t16, preset, daily=5.0, total=10.0):
+    """The Main funded rules (FTMO 2-Step: daily loss 5% and max loss 10% of the initial balance) from the T16 log.
+    The initial balance comes from the EA's static final stop and its max-stop input."""
+    if not t16 or not t16.get("final") or not preset.get("PropMaxStopPct"):
+        return src
+    init = t16["final"] / (1 - preset["PropMaxStopPct"] / 100)
+    if init <= 0:
+        return src
+    bal, target, days = t16["balance"], preset.get("PropTargetPct", 10.0), int(preset.get("PropMinDays", 4))
+    dl = max(0.0, -t16["day"]) / init * 100
+    ml = max(0.0, init - bal) / init * 100
+    pt = max(0.0, bal - init) / init * 100
+
+    def b(used, cap):
+        return f"{min(100.0, used / cap * 100):.1f}"
+    rules = (f"const rules = [\n"
+             f"  {{ label: 'Daily Loss Limit', value: '{dl:.2f}% Of {daily:g}%', bar: bar({b(dl, daily)}, '#FF9500') }},\n"
+             f"  {{ label: 'Max Loss', value: '{ml:.2f}% Of {total:g}%', bar: bar({b(ml, total)}, '#D70015') }},\n"
+             f"  {{ label: 'Profit Target', value: '{pt:.2f}% Of {target:g}% · Days {t16['traded']} Of {days}', "
+             f"bar: bar({b(pt, target)}, '#34C759') }}\n];")
+    return re.sub(r"const rules = \[.*?\n\s*\];", lambda _: rules, src, count=1, flags=re.S)
 
 
 def _patch_gate(src, state):
@@ -1373,7 +1420,9 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
         src = _safe(_patch_main_live, src, live, usage)
         src = _safe(lambda s: _patch_main_procs(s, *_procs()), src)
-        src = _safe(lambda s: _patch_main_funded(s, _t16_log(), _deployed_funded()), src)
+        t16 = _t16_log()
+        src = _safe(lambda s: _patch_main_funded(s, t16, _deployed_funded()), src)
+        src = _safe(lambda s: _patch_main_rules(s, t16, _t16_preset()), src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):

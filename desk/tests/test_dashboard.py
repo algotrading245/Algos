@@ -440,3 +440,29 @@ def test_command_center_main_funded_from_t16_log(tmp_path):
     assert "st('Last Log', 'Fri 17:29', '#6E6E73')" in out
     assert "value: '10,050.51', sub: s.held ? 'Held By Owner' : 'AurumFunded v1.19'" in out
     assert "[T16" not in out and "12345678" not in out
+
+
+def test_command_center_main_rules_from_t16_log_and_preset(tmp_path):
+    from desk import command_center as cc
+    logs = tmp_path / "MQL5" / "Logs"
+    logs.mkdir(parents=True)
+    t = "AurumFunded (XAUUSD,M15)\tAurumFunded: "
+    (logs / "20261030.log").write_text("\n".join([
+        f"IH\t0\t00:00:01.000\t{t}firm day 2026.10.30, day start 10100.00 (balance 10100.00, equity 10100.00), "
+        f"day stop at 9800.00, highest day start 10100.00, final stop at 9150.00 (static)",
+        f"JK\t0\t12:30:00.047\t{t}US500.cash sold 0.65 lots at 7602.95, bands 7744.30 / 7611.57",
+        f"QM\t0\t13:59:59.772\t{t}closed US500.cash magic 99 0.65 at 7622.05, P/L -50.00 EUR",
+    ]), encoding="utf-8")
+    ini = tmp_path / "t16_attach.ini"
+    ini.write_text("[Common]\nAccount=1\n[Experts]\nExpertParameters=p.set\n", encoding="utf-8")
+    (tmp_path / "p.set").write_text("InpPropTargetPct=10.0\nInpPropMinDays=4\nInpPropMaxStopPct=8.5\n", encoding="utf-16")
+    preset = cc._t16_preset(ini, tmp_path)
+    assert preset == {"PropTargetPct": 10.0, "PropMinDays": 4.0, "PropMaxStopPct": 8.5}
+    assert cc._t16_preset(tmp_path / "none.ini", tmp_path) == {}
+    t16 = cc._t16_log(tmp_path)
+    assert t16["final"] == 9150.0 and t16["traded"] == 1
+    out = cc._patch_main_rules(_main_template(), t16, preset)
+    assert "label: 'Daily Loss Limit', value: '0.50% Of 5%', bar: bar(10.0, '#FF9500')" in out
+    assert "label: 'Max Loss', value: '0.00% Of 10%', bar: bar(0.0, '#D70015')" in out
+    assert "label: 'Profit Target', value: '0.50% Of 10% · Days 1 Of 4', bar: bar(5.0, '#34C759')" in out
+    assert cc._patch_main_rules("x", t16, {}) == "x"
