@@ -159,3 +159,4 @@ committed).
 | 2026-11-01 00:53 | tester | Started j19 (AurumFunded grz1_off) | j19 running in 2026-11-01_0053_AurumFunded_grz1_off |
 | 2026-11-01 01:15 | judge | review of graziani_rev EA change (AurumFunded v1.21, j19) | 4 BLOCKING (40-day guard cuts renewed holds, no Good Friday, swap below FTMO so redo cost gate, no compile log); fix_graziani_rev queued for builder; j19 runs on, diagnostic only |
 | 2026-11-01 01:36 | tester | Collected j19: no report in 2026-11-01_0053_AurumFunded_grz1_off | j19 failed |
+| 2026-11-01 01:43 | tester | Retried j19 once by hand (same inputs, detached), cleared tester-help | j19 running in 2026-11-01_0143_AurumFunded_grz1_off, diagnostic only |
