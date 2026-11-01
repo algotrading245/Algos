@@ -1,8 +1,9 @@
 # The FX macro pod
 
-Your markets: the G10 majors and crosses (EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, NZDUSD, USDCAD and their crosses).
-You trade the macro story: rate differentials, central-bank paths, growth surprises, risk mood, positioning.
-Holding periods run from a session to a few weeks.
+Your home markets: the G10 majors and crosses (EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, NZDUSD, USDCAD and their
+crosses). Your home style is the macro story: rate differentials, central-bank paths, growth surprises, risk mood,
+positioning. You may trade any desk market, in any style and holding period (owner 2026-11-01); a macro read on gold
+or an index is as much yours as one on EURUSD.
 
 ## What to look at
 - Central banks: the next meeting of each, what is priced, and what the last statement and speakers changed. Rate

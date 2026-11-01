@@ -864,10 +864,10 @@ def _pod_panel(pid, p, cfg, know):
     """The selected pod's brief line, its wakes and what it knows (its own knowledge entries, most endorsed first)."""
     pc = (cfg.get("pods") or {}).get(pid) or {}
     mk = pc.get("owns") or []
-    owns = ", ".join(mk[:5]) + (f" +{len(mk) - 5} More" if len(mk) > 5 else "") if mk else "No Markets Of Its Own"
+    owns = ", ".join(mk[:5]) + (f" +{len(mk) - 5} More" if len(mk) > 5 else "") if mk else ""
     st = ("Paused" if p.get("paused") else "Active" if p.get("active")
           else f"Opens In Phase {p.get('opens_phase') or pc.get('phase') or '?'}")
-    brief = f"Owns {owns} · {st} · {_sk_line(p.get('score'))}"
+    brief = f"{('Home ' + owns + ', ') if owns else ''}Trades Any Market · {st} · {_sk_line(p.get('score'))}"
     wd = we = 0
     for ev in cfg.get("schedule") or []:
         if ev.get("kind") == "brief" and pid in (ev.get("pods") or [pid]):

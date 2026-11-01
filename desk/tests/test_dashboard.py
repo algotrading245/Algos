@@ -194,7 +194,7 @@ def test_command_center_pods_shows_live_state():
     assert "past the weekend cutoff" in pods and "state: 'Blocked'" in pods
     assert "label: 'Messages Today', value: '1'" in pods
     row = next(l for l in pods.splitlines() if "{ id: 'systematic'" in l)
-    assert "brief: 'Owns " in row and "Briefs Each Weekday" in row
+    assert "brief: 'Trades Any Market " in row and "Briefs Each Weekday" in row
     assert "knows: [['Gold’s dip fills on Fridays', '2 Endorsed'], ['Noise leg’s fills lag', 'New']]" in row
     assert "not mine" not in row and "wakes: p.wakes || 'Six Wakes A Day'," in pods
     # scorekeeper record in place of XP, level and IQ

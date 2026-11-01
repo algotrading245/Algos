@@ -38,9 +38,9 @@ python -m desk.cli memory knowledge [POD]  |  intel [POD]
 python -m desk.cli playbook show POD | log POD
 python -m desk.cli edge list | describe NAME | score NAME
 python -m desk.cli edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
-python -m desk.cli edge arm NAME MARKET [key=value ...] [risk=PCT] | edge disarm NAME [MARKET]   (your own markets)
+python -m desk.cli edge arm NAME MARKET [key=value ...] [risk=PCT] | edge disarm NAME [MARKET]   (any market)
 python -m desk.cli ticket approve|reject ID "why"    (head trader only)
-python -m desk.cli playbook edit POD FILE "why"      (head trader only)
+python -m desk.cli playbook edit POD FILE "why"      (your own pod's; the head trader any)
 python -m desk.cli memory lesson POD "text" [ticket=ID]   (debrief only)
 python -m desk.cli kill "why"                        (emergency only: halts the desk and closes every position)
 python -m desk.cli scores | live-gate

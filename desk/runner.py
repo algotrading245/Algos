@@ -265,7 +265,7 @@ def reviewer(cfg):
 
 
 def missing_notes(job, pods, since, cfg):
-    """The markets each pod owns but left without a board note since the brief began (owner 2026-10-27). A pod
+    """The home markets (a watchlist, not a fence: owner 2026-11-01) each pod left without a board note since the brief began (owner 2026-10-27). A pod
     whose run was skipped or failed is not counted. Journaled; returns {pod: [markets]}."""
     from desk import memory
     posted = {(r.get("pod"), r.get("instrument")) for r in memory.board(10 ** 6) if r.get("t", "") >= since}

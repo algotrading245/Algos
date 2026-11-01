@@ -2,9 +2,9 @@
 
 An agent can propose and the head trader can approve, but only check() turns a ticket into an order, in this order:
   1. halts      KILL file, daily / weekly loss stop, drawdown kill (logs/desk/state/limits.json)
-  2. ticket     fields valid, pod active in this phase, pod owns the instrument, profile allows it
-  3. market     symbol tradable, fresh price, spread under spread_mult x normal, no high-impact news inside the window;
-                the event pod only 15-240 min after a release for its instrument
+  2. ticket     fields valid, pod active in this phase, profile allows it. Any pod trades any desk market, in any
+                style (owner 2026-11-01): pods are judged by their score, not fenced by market or method
+  3. market     symbol tradable, fresh price, spread under spread_mult x normal, no high-impact news inside the window
   4. risk       asked risk x the pod's competition tilt, capped at per_trade_pct and the new-edge cap, x the phase scale;
                 the pod stop halves it at a 3% month loss on the pod's allocation and refuses at 5%
   5. book       pod, desk, group, net-USD and per-instrument limits; netting (never both sides of one instrument);
@@ -19,7 +19,6 @@ import math
 from desk import clocks, journal, news, paths, phase, spreads, tickets
 
 LIMITS = paths.STATE / "limits.json"
-FREE_ROAM_PODS = ("systematic", "event")  # may trade any instrument; the others trade what they own
 
 
 def profile():
@@ -154,8 +153,7 @@ def groups_of(instrument, cfg):
     return [g for g, members in cfg.get("groups", {}).items() if instrument in members]
 
 
-SOFT = {"pod_stop": {"halve_pct": 3.0, "pause_pct": 5.0, "alloc_mult": 3.0}, "net_usd": {"share_of_desk": 0.6},
-        "event_pod": {"min_delay_min": 15, "max_after_min": 240}}
+SOFT = {"pod_stop": {"halve_pct": 3.0, "pause_pct": 5.0, "alloc_mult": 3.0}, "net_usd": {"share_of_desk": 0.6}}
 
 
 def soft_limits(cfg):
@@ -240,9 +238,6 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     pod, ins, side = tk["pod"], tk["instrument"], tk["side"]
     if pod not in phase.pods_active(cfg, ph):
         return no(f"pod {pod} not active in phase {ph}")
-    owns = cfg["pods"][pod].get("owns") or []
-    if pod not in FREE_ROAM_PODS and owns and ins not in owns:
-        return no(f"{pod} does not trade {ins}")
     if cfg["instruments"][ins].get("class") == "crypto" and prof.get("allow_crypto") is False:
         return no("crypto not allowed on this profile")
     if weekend_cutoff(prof, t):
@@ -262,22 +257,9 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     ok, why = spreads.check(b, sym, spec, tick, prof.get("spread_mult", 2.0), cfg["instruments"][ins].get("cost"), t)
     if not ok:
         return no("spread: " + why)
-    win = prof.get("news_window_min", 2)
-    if pod == "event":
-        # the event pod trades the reaction, never the release: blocked min_delay either side of one, and only
-        # inside max_after of a release that moves this instrument
-        lim = soft["event_pod"]
-        win = max(win, lim["min_delay_min"])
-    ev = news.blocking(ins, t, win)
+    ev = news.blocking(ins, t, prof.get("news_window_min", 2))
     if ev:
         return no(f"news: {ev['ccy']} {ev['title']} at {ev['t']}")
-    if pod == "event":
-        ccy = news.currencies(ins)
-        after = [e for e in news.events(t - dt.timedelta(minutes=lim["max_after_min"]),
-                                        t - dt.timedelta(minutes=lim["min_delay_min"])) if e["ccy"] in ccy]
-        if not after:
-            return no(f"event pod: no {'/'.join(ccy)} release between {lim['min_delay_min']} and "
-                      f"{lim['max_after_min']} min ago")
 
     # 4. risk
     asked = float(tk.get("risk_pct") or prof["per_trade_pct"])

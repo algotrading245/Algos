@@ -142,24 +142,22 @@ def test_arm_with_params_matching_the_card(armable):
     assert extras.edge(["disarm", "t_leg"])["armed"] == []
 
 
-def test_a_pod_arms_on_its_own_markets(armable, monkeypatch):
+def test_any_pod_arms_on_any_market(armable, monkeypatch):
     armable()
     monkeypatch.setenv("AURUM_DESK_ROLE", "head-trader")
     with pytest.raises(cli.Refused, match="only a pod or the owner"):
         arm()
     monkeypatch.setenv("AURUM_DESK_ROLE", "metals")
-    with pytest.raises(cli.Refused, match="its own markets"):
-        arm()
+    assert arm()["armed"][0]["pod"] == "metals"  # EURUSD is not a metal: no fence (owner 2026-11-01)
     monkeypatch.setenv("AURUM_DESK_ROLE", "fxmacro")
-    assert arm()["armed"][0]["pod"] == "fxmacro"
-    monkeypatch.setenv("AURUM_DESK_ROLE", "systematic")
-    with pytest.raises(cli.Refused, match="already armed by fxmacro"):
+    with pytest.raises(cli.Refused, match="already armed by metals"):
         arm()
     monkeypatch.setenv("AURUM_DESK_ROLE", "indices")
     assert len(extras.edge(["disarm", "t_leg"])["armed"]) == 1  # not its leg
+    monkeypatch.setenv("AURUM_DESK_ROLE", "metals")
+    assert extras.edge(["disarm", "t_leg"])["armed"] == []
     monkeypatch.setenv("AURUM_DESK_ROLE", "")
-    with pytest.raises(cli.Refused, match="its own markets"):
-        arm("pod=metals")  # the owner names the pod; that pod still trades only its markets
+    assert arm("pod=crypto")["armed"][0]["pod"] == "crypto"  # the owner names the pod
     assert arm()["armed"][0]["pod"] == "systematic"  # the owner may move a leg to another pod
     assert extras.edge(["disarm", "t_leg"])["armed"] == []
 
@@ -217,15 +215,18 @@ def test_playbook_check_waits_for_trades():
     assert playbooks.check("metals", state, dt.datetime(2026, 10, 21)) is None
 
 
-def test_playbook_edit_command_is_head_trader_or_owner(monkeypatch, tmp_path):
+def test_a_pod_edits_its_own_playbook_only(monkeypatch, tmp_path):
     f = tmp_path / "pb.md"
     f.write_text("rules", encoding="utf-8")
-    monkeypatch.setenv("AURUM_DESK_ROLE", "fxmacro")
-    with pytest.raises(cli.Refused, match="only the head trader"):
+    monkeypatch.setenv("AURUM_DESK_ROLE", "metals")
+    with pytest.raises(cli.Refused, match="only its own playbook"):
         extras.playbook(["edit", "fxmacro", str(f), "why"])
+    monkeypatch.setenv("AURUM_DESK_ROLE", "fxmacro")
+    assert extras.playbook(["edit", "fxmacro", str(f), "my", "rules"])["version"] == 1
+    assert playbooks.log("fxmacro")[0]["by"] == "fxmacro"
     monkeypatch.setenv("AURUM_DESK_ROLE", "head-trader")
-    assert extras.playbook(["edit", "fxmacro", str(f), "fold", "lessons"])["version"] == 1
-    assert playbooks.log("fxmacro")[0]["why"] == "fold lessons"
+    assert extras.playbook(["edit", "fxmacro", str(f), "fold", "lessons"])["version"] == 2
+    assert playbooks.log("fxmacro")[1]["why"] == "fold lessons"
 
 
 # ---- the scorekeeper ---------------------------------------------------------------------------------------------------

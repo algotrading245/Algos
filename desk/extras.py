@@ -12,12 +12,12 @@ memory endorse KNOWLEDGE_ID                        vouch for another pod's entry
 memory knowledge [POD] [n=40]
 intel [POD]                                        a pod's intelligence profile, from its real record
 playbook show POD | log POD
-playbook edit POD FILE "why"                       the head trader or the owner
-playbook rollback POD V "why"                      the head trader or the owner
+playbook edit POD FILE "why"                       the pod itself, the head trader or the owner (the pod's own rules)
+playbook rollback POD V "why"                      the pod itself, the head trader or the owner
 edge list | describe NAME | score NAME
 edge sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
-edge arm NAME MARKET [key=value ...] [risk=PCT]    any pod on a market it owns (systematic: any market), or the
-                                                   owner [pod=POD]; needs a passing sandbox run
+edge arm NAME MARKET [key=value ...] [risk=PCT]    any pod, on any desk market (owner 2026-11-01), or the owner
+                                                   [pod=POD]; needs a passing sandbox run; the leg's P&L is the pod's
 edge disarm NAME [MARKET]                          a pod disarms its own legs; systematic and the owner any leg
 scores                                            the scorekeeper's last scores and the pod allocation
 live-gate                                          the live gate, evaluated now (it also writes reports/live_gate.md)
@@ -141,11 +141,11 @@ def playbook(args):
             return playbooks.log(pod)
         return {"pod": pod, "version": playbooks.version(pod), "text": playbooks.show(pod)}
     if op in ("edit", "rollback"):
-        if cli.role() not in EDITORS:
-            raise Refused("only the head trader or the owner changes a playbook")
         if len(args) < 4:
             raise Refused(f'playbook {op} POD {"FILE" if op == "edit" else "V"} "why"')
         pod, why, by = _pod(args[1]), " ".join(args[3:]), cli.role() or "owner"
+        if cli.role() not in EDITORS and cli.role() != pod:
+            raise Refused("a pod changes only its own playbook (the head trader or the owner any)")
         try:
             if op == "edit":
                 f = Path(args[2])
@@ -206,9 +206,6 @@ def _arm(op, e, args):
         return {"ok": True, "armed": systematic.disarm(name, market, None if role in ("", systematic.POD) else role)}
     if not market:
         raise Refused("edge arm NAME MARKET [key=value ...] [risk=PCT]")
-    owns = cfg["pods"][pod].get("owns", [])
-    if pod != systematic.POD and market not in owns:
-        raise Refused(f"{pod} arms legs only on its own markets ({', '.join(owns) or 'none'}), not {market}")
     other = [a.get("pod", systematic.POD) for a in systematic.state()["armed"]
              if (a["edge"], a["market"]) == (name, market) and a.get("pod", systematic.POD) != pod]
     if other and role:

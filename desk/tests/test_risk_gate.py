@@ -66,10 +66,10 @@ def test_pod_and_instrument_rules(b, cfg):
     g = risk_gate.check(tk(pod="metals", instrument="XAUUSD", stop=1.0), b, cfg)
     assert "pod metals not active in phase 1" in g["why"]
     g = risk_gate.check(tk(instrument="XAUUSD"), b, cfg)
-    assert "fxmacro does not trade XAUUSD" in g["why"]
+    assert "does not trade" not in g["why"]  # any pod trades any desk market (owner 2026-11-01)
     g = risk_gate.check(tk(instrument="GBPUSD"), b, cfg)
     assert "not offered by this broker" in g["why"]
-    assert risk_gate.check(tk(pod="systematic"), b, cfg)["ok"]  # free roam
+    assert risk_gate.check(tk(pod="systematic"), b, cfg)["ok"]
 
 
 def test_invalid_ticket(b, cfg):
@@ -144,26 +144,18 @@ def test_net_usd_cap(b, cfg):
     assert risk_gate.check(tk(side="sell", stop=1.105), b, cfg)["ok"]  # cutting the net is always allowed
 
 
-def test_event_pod_only_after_a_release(b, cfg, monkeypatch):
+def test_every_pod_trades_any_style_under_one_news_window(b, cfg, monkeypatch):
     backdate_phase(30)
-    seen = {}
-
-    def events(start, end):
-        seen["win"] = (start, end)
-        return rows
-    monkeypatch.setattr(risk_gate.news, "events", events)
-    rows = [{"ccy": "JPY", "title": "BoJ", "t": "2026-10-21T13:00"}]
-    g = risk_gate.check(tk(pod="event"), b, cfg)
-    assert g["why"].startswith("event pod: no EUR/USD release between 15 and 240 min ago")
-    assert seen["win"] == (clocks.now() - dt.timedelta(minutes=240), clocks.now() - dt.timedelta(minutes=15))
-    rows = [{"ccy": "USD", "title": "Retail sales", "t": "2026-10-21T12:30"}]
-    assert risk_gate.check(tk(pod="event"), b, cfg)["ok"]
-    # the release window itself is blocked at least min_delay either side, whatever the profile's news window
+    monkeypatch.setattr(risk_gate.news, "events", lambda start, end: [])
+    assert risk_gate.check(tk(pod="event"), b, cfg)["ok"]  # no release needed (owner 2026-11-01)
     calls = []
     monkeypatch.setattr(risk_gate.news, "blocking", lambda ins, t, win: calls.append(win))
     risk_gate.check(tk(pod="event"), b, cfg)
     risk_gate.check(tk(), b, cfg)
-    assert calls == [15, 2]
+    assert calls == [2, 2]  # the profile's window, the same for every pod
+    monkeypatch.setattr(risk_gate.news, "blocking",
+                        lambda ins, t, win: {"ccy": "USD", "title": "CPI", "t": "2026-10-21T14:00"})
+    assert risk_gate.check(tk(pod="event"), b, cfg)["why"].startswith("news: USD CPI")
 
 
 def test_placed_tickets_count_as_open(b, cfg):

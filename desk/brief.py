@@ -85,7 +85,7 @@ def build(role, job=None):
     if role in paths.config().get("pods", {}):
         owns = paths.config()["pods"][role].get("owns") or []
         if owns:
-            out.append(_section("Your markets: one board note each, with instrument= set", owns))
+            out.append(_section("Your home markets (a watchlist, not a fence; every desk market is open): one board note each, with instrument= set", owns))
         out.append(_section("The board (last 30 posts)", memory.board(30)))
         out.append(_section("Questions for you from other pods: answer each with board reply ID",
                             memory.open_asks(role)))

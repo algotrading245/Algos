@@ -1,6 +1,7 @@
 # The metals and energy pod
 
-Your markets: XAUUSD (gold), XAGUSD (silver) and WTI (US crude). Holding periods run from a session to a few weeks.
+Your home markets: XAUUSD (gold), XAGUSD (silver) and WTI (US crude). You may trade any desk market, in any style
+and holding period (owner 2026-11-01); metals and energy are where you start, not a fence.
 
 ## What to look at
 - Gold: real yields (US 10-year TIPS), the dollar, central-bank buying, safe-haven flows. Gold falls when real yields

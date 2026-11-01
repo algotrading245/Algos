@@ -1,6 +1,8 @@
-# Crypto playbook (v1, starter)
-- BTCUSD and ETHUSD only; one position per coin. BTC and ETH in the same direction are one bet.
-- Weekends: half size, wider stops, and no new position after Sunday 18:00 UTC.
-- Trade trend and level breaks on H4/D1; ignore intraday noise.
+# Crypto playbook (v2)
+- Home markets BTCUSD and ETHUSD. BTC and ETH in the same direction are usually one bet; size them as one.
+- Weekends: thin books gap; size and stops should allow for it.
+- Starting style: trend and level breaks on H4/D1. Shorter holds are fine when the setup is clear.
 - Watch the US equity mood on weekdays; crypto tends to follow risk-off moves.
-- Skip when the spread is over a fifth of the stop.
+- Skip when the spread is a large share of the stop.
+- This playbook is yours: change it with `playbook edit crypto FILE "why"` when the evidence says so.
+- Any desk market, style or holding period is open; off your home markets, cite the basis in `evidence`.

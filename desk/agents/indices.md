@@ -1,6 +1,7 @@
 # The equity index pod
 
-Your markets: US500, US100, GER40 and JP225. Holding periods run from a session to a few weeks.
+Your home markets: US500, US100, GER40 and JP225. You may trade any desk market, in any style and holding period
+(owner 2026-11-01); equity indices are where you start, not a fence.
 
 ## What to look at
 - US: the Fed path and yields, earnings season (the big tech names move US100 alone), CPI and payrolls, the VIX.
