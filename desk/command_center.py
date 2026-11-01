@@ -9,7 +9,9 @@ Live on Main: role runs, tokens, last run and task (this budget week), the agent
 desk's open positions, and the kill button, which POSTs /api/kill. With extra = {"state": /api/state, "queue": queue
 rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and daily loss, the live-gate checks, the pod
 rows, the alerts (needs_you) and the idea queue. From the usage log and docs/: the token chart (today, per role), the
-recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. Live on Pods (from the same state): each pod's allocation, work and
+recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. From
+the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
+lines. Live on Pods (from the same state): each pod's allocation, work and
 talk counts (so XP, level and IQ), hit rate, P/L and closed trades, the board posts, the tickets and the KPI row; the
 pod briefs, what each pod knows and the rules are still design text. Live on EAs: equity, balance, the kill floor,
 the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
@@ -1085,6 +1087,112 @@ def _patch_main_live(src, live, usage, root=None, today=None):
     return src
 
 
+_PROC_CACHE = {}  # pid -> psutil.Process, so cpu_percent() measures since the last page load
+_T16_GUARD = "s.held ? 'Held' : 'Hold And Release'"
+
+
+def _commit_gb():
+    """Commit charge (used, limit) in GB from Windows GetPerformanceInfo, or None off Windows."""
+    import ctypes
+    from ctypes import wintypes
+
+    class PI(ctypes.Structure):
+        _fields_ = [("cb", wintypes.DWORD)] + [(n, ctypes.c_size_t) for n in (
+            "CommitTotal", "CommitLimit", "CommitPeak", "PhysicalTotal", "PhysicalAvailable", "SystemCache",
+            "KernelTotal", "KernelPaged", "KernelNonpaged", "PageSize")] + \
+            [(n, wintypes.DWORD) for n in ("HandleCount", "ProcessCount", "ThreadCount")]
+    pi = PI()
+    pi.cb = ctypes.sizeof(pi)
+    if not ctypes.windll.psapi.GetPerformanceInfo(ctypes.byref(pi), pi.cb):
+        return None
+    return pi.CommitTotal * pi.PageSize / 2 ** 30, pi.CommitLimit * pi.PageSize / 2 ** 30
+
+
+def _proc_doing(name, exe, cmd):
+    """(doing, guard JS) for a watched process, or None to skip it."""
+    low = [c.lower() for c in cmd]
+    if name == "terminal64.exe":
+        folder = pathlib.Path(exe).parent.name
+        tail = folder.split(" - ", 1)[1] if " - " in folder else ""
+        if tail == "16":
+            return "T16 · AurumFunded", _T16_GUARD
+        if tail.lower() == "desk":
+            return "Desk Terminal", "'Desk Kill'"
+        if tail.lower() == "tester":
+            return "Strategy Tester", "'Read Only'"
+        return ("MT5 " + tail if tail else folder or "MT5"), "'Read Only'"
+    if name in ("python.exe", "pythonw.exe"):
+        if "-c" in low:
+            return None
+        if any("hermes" in c for c in low):
+            return ("Hermes Gateway" if "gateway" in low else "Hermes"), "'—'"
+        mod = low[low.index("-m") + 1] if "-m" in low[:-1] else next((c for c in low[1:] if c.endswith(".py")), "")
+        if mod == "desk.dashboard":
+            return "Desk Dashboard · State API", "'—'"
+        if mod.endswith("dashboard_live.py"):
+            return "Live Dashboard Server", "'—'"
+        if not mod:
+            return None
+        return _title(pathlib.PureWindowsPath(mod).stem.replace(".", " ").replace("_", " ")), "'—'"
+    if name == "claude.exe":
+        if "-p" in low or "--print" in low:
+            return None  # headless autopilot runs show as role runs instead
+        return "Claude Session", "'—'"
+    return None
+
+
+def _procs():
+    """(rows, mem): the running terminals, Python jobs and Claude sessions, and RAM/commit in GB."""
+    import psutil
+    found, ncpu = [], psutil.cpu_count() or 1
+    for p in psutil.process_iter(["pid", "ppid", "name", "exe", "cmdline", "memory_info"]):
+        try:
+            name = (p.info["name"] or "").lower()
+            got = _proc_doing(name, p.info["exe"] or "", p.info["cmdline"] or [])
+            if not got:
+                continue
+            pr = _PROC_CACHE.setdefault(p.pid, p)
+            found.append({"pid": p.pid, "ppid": p.info["ppid"], "cmd": p.info["cmdline"], "name": _title(name[:-4]),
+                          "doing": got[0], "guard": got[1], "cpu": pr.cpu_percent(None) / ncpu,
+                          "mb": (p.info["memory_info"].rss if p.info["memory_info"] else 0) / 2 ** 20})
+        except (psutil.Error, OSError, ValueError):
+            continue
+    # A venv launcher and its child do the same job: keep the child, which holds the memory.
+    parents = {r["ppid"] for r in found for q in found if q["pid"] == r["ppid"] and q["doing"] == r["doing"]}
+    rows = [r for r in found if r["pid"] not in parents]
+    for pid in set(_PROC_CACHE) - {r["pid"] for r in found}:
+        _PROC_CACHE.pop(pid, None)
+    order = {"Terminal64": 0, "Pythonw": 1, "Python": 2, "Claude": 3}
+    rows.sort(key=lambda r: (order.get(r["name"], 9), r["pid"]))
+    vm = psutil.virtual_memory()
+    try:
+        commit = _commit_gb()
+    except (AttributeError, OSError):
+        commit = None
+    if not commit:
+        sw = psutil.swap_memory()
+        commit = ((vm.used + sw.used) / 2 ** 30, (vm.total + sw.total) / 2 ** 30)
+    return rows, {"ram": vm.total / 2 ** 30, "commit": commit[0], "limit": commit[1]}
+
+
+def _patch_main_procs(src, rows, mem):
+    """Main page: the process table and the RAM/commit lines from the running machine."""
+    if rows:
+        js = ",\n      ".join(
+            "{ pid: '%d', name: '%s', doing: '%s', cpu: '%.1f', mb: '%d', guard: %s }"
+            % (r["pid"], _js(r["name"]), _js(r["doing"]), r["cpu"], round(r["mb"]), r["guard"]) for r in rows)
+        src = re.sub(r"const procs = \[\n.*?\n    \]\.concat\(liveRuns",
+                     lambda _: "const procs = [\n      " + js + "\n    ].concat(liveRuns", src, count=1, flags=re.S)
+    if mem:
+        lim = round(mem["limit"], 1)
+        src = src.replace("const commit = 25.8 +", f"const commit = {mem['commit']:.1f} +", 1)
+        src = src.replace("' Of 29 GB'", f"' Of {lim:g} GB'", 1)
+        src = src.replace("(commit / 29 * 100)", f"(commit / {lim:g} * 100)", 1)
+        src = src.replace("commit / 29 > 0.9", f"commit / {lim:g} > 0.9", 1)
+        src = src.replace("'RAM 7.9 GB · '", f"'RAM {mem['ram']:.1f} GB · '", 1)
+    return src
+
+
 def patch_page(src, i, live, usage, positions, label, extra=None):
     src = src.replace(">Sample Data<", f">{label}<")
     src = src.replace("background: #FFF4E5; color: #8A4B00", "background: #E8F5EC; color: #1E7B34")
@@ -1104,6 +1212,7 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
             src = _patch_sources(src)
         src = _safe(_patch_queue, src, (extra or {}).get("queue"))
         src = _safe(_patch_main_live, src, live, usage)
+        src = _safe(lambda s: _patch_main_procs(s, *_procs()), src)
     elif i == 1 and isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_pods_page, src, extra["state"])
     elif i == 2 and isinstance((extra or {}).get("state"), dict):

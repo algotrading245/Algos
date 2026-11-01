@@ -361,3 +361,30 @@ def test_command_center_main_shows_live_logs(tmp_path):
     assert "fmtTok(1750000 + liveTok + doneTok)" in pr and "String(2 + s.done.length)" in pr and "'2 Runs'" in pr
     assert '["Ideas Tried", 8]' in pr and '["Full Backtest", 3]' in pr and "Math.log(9)" in pr
     assert "Both Halves', 2]" in pr and "1.5x Costs', 1]" in pr and "(f / 2 * 100)" in pr
+
+
+def _main_template():
+    import base64, gzip, pathlib
+    from desk import command_center as cc
+    out = pathlib.Path(dashboard.BUNDLE).read_text(encoding="utf-8")
+    man = json.loads(cc._MANIFEST.search(out).group(2))
+    e = man[json.loads(cc._ORDER.search(out).group(1))[0]]
+    raw = base64.b64decode(e["data"])
+    return json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
+
+
+def test_command_center_main_shows_live_processes():
+    from desk import command_center as cc
+    D = r"C:\MetaTrader 5 - Desk\terminal64.exe"
+    assert cc._proc_doing("terminal64.exe", D, [D]) == ("Desk Terminal", "'Desk Kill'")
+    assert cc._proc_doing("terminal64.exe", r"C:\Program Files\MetaTrader 5 - 16\terminal64.exe", [])[0] == "T16 · AurumFunded"
+    assert cc._proc_doing("pythonw.exe", "", ["pythonw", "-m", "desk.dashboard"])[0] == "Desk Dashboard · State API"
+    assert cc._proc_doing("python.exe", "", ["python", "-c", "print(1)"]) is None
+    assert cc._proc_doing("claude.exe", "", ["claude", "-p", "go"]) is None
+    rows = [{"pid": 3324, "name": "Terminal64", "doing": "Desk Terminal", "guard": "'Desk Kill'", "cpu": 1.42, "mb": 13.4},
+            {"pid": 14440, "name": "Terminal64", "doing": "T16 · AurumFunded", "guard": cc._T16_GUARD, "cpu": 0.2, "mb": 10}]
+    pr = cc._patch_main_procs(_main_template(), rows, {"ram": 15.9, "commit": 9.04, "limit": 31.88})
+    assert "{ pid: '3324', name: 'Terminal64', doing: 'Desk Terminal', cpu: '1.4', mb: '13', guard: 'Desk Kill' }" in pr
+    assert "guard: s.held ? 'Held' : 'Hold And Release' }\n    ].concat(liveRuns" in pr and "'15740'" not in pr
+    assert "const commit = 9.0 +" in pr and "' Of 31.9 GB'" in pr and "(commit / 31.9 * 100)" in pr
+    assert "'RAM 15.9 GB · '" in pr
