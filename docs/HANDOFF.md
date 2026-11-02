@@ -422,3 +422,5 @@ each finished piece of work.
   policy; FTMO 1-Step maximum loss (details in the archive).
 - Commit 031f5b6 carried 18 staged renames into `mql5/Experts/_archive/` (.ex5 rule broken): keep or revert.
 - Anything in `docs/autopilot/approvals.json` with status "pending".
+
+- **Judge 2026-11-02 13:10, j21 (fix_refused_retry2) PASS.** Back-off 0 and 60 s gave identical tester results (+13,339.78, 2289 trades, PF 1.65, equity DD 7.06%): the back-off changes no tester trade. Owner: Funded 1.25 can be deployed when you allow it (the leg inputs stay as they are; InpRefuseBackoffSec 60 is the intended value). The gap to j19 (2298 trades, +137%, DD 7.75%) comes from the build and is not tuned.
