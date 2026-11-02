@@ -141,7 +141,7 @@
 //| Backtest: tools/backtest_hydra.py, tools/backtest_quartet.py     |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.43"
+#property version   "1.44"
 #define AURUM_NAME "AurumHydra"
 #include <Math\Stat\Normal.mqh>
 #include <Trade\Trade.mqh>

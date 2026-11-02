@@ -76,11 +76,64 @@ private:
       m_result.comment="stop flag set from the dashboard";
       return(false);
      }
+   // Server refusals (trade disabled 10017, market closed 10018, autotrading off 10027, close only 10044): no new
+   // entry for 60 s after one, account-wide for 10017/10027 and per symbol for 10018/10044. Requotes and price
+   // changes are not refusals and keep the plain retry. Logged once per back-off.
+   datetime          m_accUntil;
+   string            m_symName[16];
+   datetime          m_symUntil[16];
+   bool              Backed(const string symbol)
+     {
+      datetime now=TimeLocal();
+      if(now<m_accUntil)
+         return(true);
+      for(int i=0; i<16; i++)
+         if(m_symName[i]==symbol && now<m_symUntil[i])
+            return(true);
+      return(false);
+     }
+   bool              Send(const bool buy,const double volume,const string symbol,const double sl,const double tp,const string comment)
+     {
+      if(AurumStopped())
+         return(Refuse());
+      string sym=(symbol==NULL ? _Symbol : symbol);
+      if(Backed(sym))
+        {
+         m_result.retcode=TRADE_RETCODE_TRADE_DISABLED;
+         m_result.comment="back-off after a server refusal";
+         return(false);
+        }
+      bool ok=(buy ? CTrade::Buy(volume,symbol,0.0,sl,tp,comment) : CTrade::Sell(volume,symbol,0.0,sl,tp,comment));
+      uint rc=m_result.retcode;
+      if(rc==TRADE_RETCODE_TRADE_DISABLED || rc==TRADE_RETCODE_CLIENT_DISABLES_AT || rc==TRADE_RETCODE_MARKET_CLOSED ||
+         rc==10044)    // close only
+        {
+         datetime until=TimeLocal()+60;
+         if(rc==TRADE_RETCODE_TRADE_DISABLED || rc==TRADE_RETCODE_CLIENT_DISABLES_AT)
+            m_accUntil=until;
+         else
+           {
+            int slot=0;
+            for(int i=0; i<16; i++)
+              {
+               if(m_symName[i]==sym) { slot=i; break; }
+               if(m_symUntil[i]<m_symUntil[slot])
+                  slot=i;
+              }
+            m_symName[slot]=sym;
+            m_symUntil[slot]=until;
+           }
+         PrintFormat(AURUM_NAME+": server refused an order on %s (retcode %d, %s); no new entries for 60 s",sym,(int)rc,m_result.comment);
+        }
+      return(ok);
+     }
 public:
+                     CAurumTrade(void) : m_accUntil(0) { for(int i=0; i<16; i++) { m_symName[i]=""; m_symUntil[i]=0; } }
+   bool              BackedOff(const string symbol) { return(Backed(symbol)); }
    bool              Buy(const double volume,const string symbol=NULL,double price=0.0,const double sl=0.0,const double tp=0.0,const string comment="")
-     { return(AurumStopped() ? Refuse() : CTrade::Buy(volume,symbol,price,sl,tp,comment)); }
+     { return(Send(true,volume,symbol,sl,tp,comment)); }
    bool              Sell(const double volume,const string symbol=NULL,double price=0.0,const double sl=0.0,const double tp=0.0,const string comment="")
-     { return(AurumStopped() ? Refuse() : CTrade::Sell(volume,symbol,price,sl,tp,comment)); }
+     { return(Send(false,volume,symbol,sl,tp,comment)); }
   };
 
 CAurumTrade g_trade;
@@ -1929,6 +1982,8 @@ void Breakout()
          g_breakTraded[s]=today;
          continue;
         }
+      if(g_trade.BackedOff(sym))
+         continue;             // a server refusal is pending: tried again after the back-off
       Prepare(sym,magic);
       bool ok=(side>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" breakout") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" breakout"));
       if(!Filled(ok))
@@ -2857,6 +2912,8 @@ void Dual()
          continue;
         }
       lots=MathMin(lots,riskLots);
+      if(g_trade.BackedOff(sym))
+         continue;             // a server refusal is pending: no try is spent
       Prepare(sym,magic);
       g_dualFlips[i]++;
       bool ok=(dir>0 ? g_trade.Buy(lots,sym,0.0,sl,0.0,AURUM_NAME+" dual") : g_trade.Sell(lots,sym,0.0,sl,0.0,AURUM_NAME+" dual"));
