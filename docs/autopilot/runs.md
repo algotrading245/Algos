@@ -180,3 +180,4 @@ committed).
 | 2026-11-02 11:53 | judge | demo ALERT 11:48 USDJPY 10017 | last send of the counted burst (785), no new action; fix_refused_retry2 next |
 | 2026-11-02 11:56 | tester | Started j21 (AurumFunded bko0_off) | j21 running in 2026-11-02_1156_AurumFunded_bko0_off |
 | 2026-11-02 12:02 | judge | review fix_refused_retry2 (77df371) | CLEAN: input 0 = v1.23, compile 1.25/1.45 0/0; j21 queued, deploy waits for its trade-list match |
+| 2026-11-02 12:33 | tester | Collected j21 off run, started the on run | j21 running |
