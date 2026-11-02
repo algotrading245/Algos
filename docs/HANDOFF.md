@@ -284,6 +284,20 @@ each finished piece of work.
 
 ## Waiting on the owner
 
+- **(a7, pending, judge 2026-11-02 04:45) The FTMO demo can no longer trade: the server disabled trading on the account.**
+  The ALERT was 8 failed Dual Thrust buys on JP225.cash at 04:36:23-27 local, retcode 10017 "trade disabled". JP225 is
+  not the cause. The T16 journal shows that the connection was lost at 03:11:44 and re-authorised at 03:14:15. At
+  03:14:19 the server sent "trading has been disabled - disabled on server" and "balance management has been disabled"
+  (0 positions, 0 orders). This was not a rule breach: the EA's firm-day line at 00:00 shows day start 10050.36 EUR,
+  day stop 9750.36 and final stop 9150.00. The likely cause is that the free-trial demo expired (the account has been on
+  FTMO-Demo since about 10-15). That is not verified. **Please check the account in the FTMO client area, then restore
+  the demo (a new trial or account, with T16 logged into it) or stop the forward test.** Agents may not change an
+  account. Until then, every leg's orders fail, harmlessly. A failed Dual order still uses one of the 8 DUAL_FLIPS
+  (`Legs.mqh:2861`), so JP225 stopped after 8 tries. The clean out-of-sample demo record covers 2026-10-19 to 2026-11-01.
+  A new account starts a new record, so write its start date in `docs/demo_log.md` (judge runs may not edit that file).
+  Tool proposal (agents do not edit `tools/`): `tools/demo_check.py` should also scan the journal for "trading has been
+  disabled" and raise it as an ALERT of its own, so the cause is named at the reconnect.
+
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
   `expected_tester`, e.g. PF < 0.8 on 20+ trades, or a fill or rule error); full verdict about 2027-01-19.

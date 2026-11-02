@@ -50,6 +50,13 @@
       "approved": "2026-10-25",
       "decision": "keep, frozen (owner's session 2026-10-25): breakout stays on in the FTMO demo at its current weight as the out-of-sample test; no weight increase, no new EA use and no live money until it is judged. Interim check 2026-11-22 (about 4 weeks of trades: pull only on a clear break from expected_tester, e.g. PF < 0.8 on 20+ trades or a fill or rule error); full verdict after 3 demo months, about 2027-01-19, against expected_tester.",
       "note": "Judge 2026-10-23 recommends keep: the leg was approved and has run on the demo since 10-19, which is the clean out-of-sample test, and pulling it mid-test removes the book largest weight (0.25) on a rule that came after it was approved. It is frozen: no weight increase and no new EA use until the demo has 3 months of breakout trades. Judge it then against the tester (candidates.json expected_tester: 777 trades 2024.01-2026.09, about 24 a month, win 47%, PF 1.14). Pulling needs a demo EA change, so only the owner can do it."
+    },
+    {
+      "id": "a7",
+      "what": "FTMO demo on Terminal 16 has trading disabled by the server since the 2026-11-02 03:14 local reconnect (journal: \"trading has been disabled - disabled on server\" and \"balance management has been disabled\"; 0 positions, balance 10050.36 EUR, far above the day stop 9750.36 and final stop 9150.00, so not a rule breach). Every order fails with retcode 10017; the first were 8 Dual Thrust JP225.cash buys at 04:36. Likely cause: the FTMO free-trial demo has expired (in use on FTMO-Demo since about 2026-10-15). Restore the demo (new free trial or account in the FTMO client area, then log Terminal 16 into it), or stop the demo forward test? Agents cannot change an account.",
+      "status": "pending",
+      "asked": "2026-11-02",
+      "note": "Judge 2026-11-02 04:45: the out-of-sample demo record stops at 2026-11-01 until the owner acts. A new account starts a new record (balance and firm-day state from zero); record its start date in docs/demo_log.md. Check the client area for the account status before anything else."
     }
   ]
 }
