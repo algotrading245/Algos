@@ -1423,3 +1423,4 @@
 {"date": "2026-11-02", "kind": "paper", "title": "Huang, Jiang, Tu, Zhou: Investor Sentiment Aligned (RFS 2015)", "link": "https://down.aefweb.net/WorkingPapers/w676.pdf", "read": "in full", "specs": []}
 {"date": "2026-11-02", "kind": "paper", "title": "Pollet & Wilson 2010 JFE average correlation (paywalled)", "link": "https://econpapers.repec.org/RePEc:eee:jfinec:v:96:y:2010:i:3:p:364-380", "read": "unverified", "specs": []}
 {"date": "2026-11-02", "kind": "paper", "title": "Fisher & Statman: Consumer confidence and stock returns (secondary summaries)", "link": "https://www.cxoadvisory.com/sentiment-indicators/does-consumer-confidence-predict-stock-market-returns/", "read": "unverified", "specs": []}
+{"date": "2026-11-02", "kind": "prebuilt", "title": "Implied-move fade using CBOE VIX/GVZ/EVZ (own rule, Carr-Wu 2009 premium)", "link": "https://www.cboe.com/tradable_products/vix/", "read": "unverified", "specs": []}
