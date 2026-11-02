@@ -251,6 +251,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   <section data-tab="demo">
     <h2>Demo forward test</h2>
     <p class="lead">Step 17: 2-4 weeks on the FTMO demo. The monitor runs <code>python tools/demo_check.py</code> each day and appends to <code>docs/demo_log.md</code>.</p>
+    <div class="grid g2" id="eaPresence" style="margin-bottom:16px"></div>
     <div class="grid g2"><div class="card" id="demoToday"></div><div class="card md" id="demoLog"></div></div>
   </section>
 
@@ -258,6 +259,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     <h2>Agents and models</h2>
     <p class="lead">The relay starts the finder, builder, tester and judge one idea after another. Gates are code, so no agent can wave a candidate through.</p>
     <div class="card" id="budget" style="margin-bottom:16px"></div>
+    <div class="card" id="tasks" style="margin-bottom:16px"></div>
     <div class="grid g3" id="agentCards"></div>
   </section>
 </main>
@@ -559,8 +561,17 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
         '<div class="grid g3" style="margin-top:12px">' + [["EA lines", t.experts_lines], ["Orders", legs.reduce(function (a, k) { return a + t.orders_by_leg[k]; }, 0)], ["Journal trade lines", t.journal_trade_lines]].map(function (k) { return '<div class="kpi"><div class="l">' + k[0] + '</div><div class="v">' + k[1] + "</div></div>"; }).join("") + "</div>" +
         (legs.length ? '<div class="row" style="margin-top:10px">' + legs.map(function (l) { return '<span class="chip gold">' + esc(l) + " " + t.orders_by_leg[l] + "</span>"; }).join("") + "</div>" : "") +
         ["day_stop", "final_stop", "failed", "phase", "skipped"].map(function (k) { return (t[k] || []).length ? '<div style="margin-top:10px"><b>' + k.replace("_", " ") + "</b>" + t[k].map(function (m) { return '<div class="sub mono">' + esc(m) + "</div>"; }).join("") + "</div>" : ""; }).join("") +
-        '<div class="sub" style="margin-top:12px">Logs found: ' + esc((t.logs_found || []).join(", ") || "none") + ". AurumFunded is not attached on the demo yet, so empty is expected until step 17 starts.</div>";
+        '<div class="sub" style="margin-top:12px">Logs found: ' + esc((t.logs_found || []).join(", ") || "none") + ".</div>";
     }
+    var E = D.eas || {};
+    $("#eaPresence").innerHTML = E.error ? '<div class="card"><div class="empty">' + esc(E.error) + "</div></div>" :
+      ["AurumFunded", "AurumHydra"].map(function (n) {
+        var e = E[n] || {};
+        return '<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">' + n + " on Terminal 16</h3>" +
+          (e.attached ? '<span class="chip ok">running: ' + e.today_lines + " lines today</span>" : '<span class="chip bad">not attached: no line today</span>') + "</div>" +
+          '<div class="sub" style="margin:6px 0">' + (e.last_day ? "Last line on " + esc(e.last_day) : "No line in the last 30 log days") + "</div>" +
+          (e.last_lines || []).map(function (m) { return '<div class="sub mono">' + esc(m) + "</div>"; }).join("") + "</div>";
+      }).join("");
     $("#demoLog").innerHTML = D.demo.log ? md(D.demo.log) : '<h3>Demo log</h3><div class="empty">docs/demo_log.md does not exist yet. The monitor creates it on the first check-in.</div>';
   }
 
@@ -592,6 +603,15 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
           roles.map(function (r) { var x = B.today[r]; return "<tr><td>" + esc(r) + "</td><td>" + x.runs + "</td><td>$" + fmt(x.cost_usd) + "</td><td>" + Number(x.tokens).toLocaleString() + "</td></tr>"; }).join("") + "</table></div>"
           : '<div class="sub" style="margin-top:10px">No agent runs today.</div>') + trendTable(B.trend);
     }
+    var TK = D.tasks || {}, TCOL = { ok: "ok", running: "ok", late: "bad", failed: "bad", missing: "bad", disabled: "" };
+    $("#tasks").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Scheduled tasks</h3><span class="sub">checked ' + esc((TK.checked || "").replace("T", " ")) + "</span></div>" +
+      (TK.error ? '<div class="empty">' + esc(TK.error) + "</div>" :
+      '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Task</th><th>State</th><th>Last run</th><th>Next run</th><th>Result</th><th>What it does</th></tr>' +
+      (TK.rows || []).map(function (r) {
+        var d = function (s) { return s && s.slice(0, 4) !== "1999" ? esc(s.slice(5, 16).replace("T", " ")) : "-"; };
+        return "<tr><td>" + esc(r.name) + '</td><td><span class="chip ' + (TCOL[r.verdict] || "") + '">' + esc(r.verdict) + "</span></td><td>" + d(r.last) + "</td><td>" + d(r.next) +
+          '</td><td class="mono" title="' + esc(r.why) + '">' + esc(r.result) + "</td><td>" + esc(r.does) + "</td></tr>";
+      }).join("") + "</table></div>");
     $("#agentCards").innerHTML = D.agents.map(function (a) {
       var col = AGENT_COL[a.name] || "#888";
       return '<div class="card" style="border-top:3px solid ' + col + '"><div class="row" style="justify-content:space-between"><h3 style="margin:0">' + esc(a.name) + '</h3><span class="chip gold">' + esc(a.model) + "</span></div>" +

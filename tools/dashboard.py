@@ -133,6 +133,40 @@ def demo():
     return {"today": today, "log": log.read_text(encoding="utf-8") if log.exists() else None}
 
 
+def ea_presence():
+    """Which Aurum EA runs on Terminal 16, from its experts logs (owner 2026-11-02): per EA, today's line count, the
+    last day with a line in the last 30 log files and its last 5 lines (redacted by demo_check.read). An EA with no
+    line today is not attached there; the page says so instead of leaving it out."""
+    try:
+        import demo_check
+        logs = sorted((demo_check.DATA / "MQL5" / "Logs").glob("2*.log"))[-30:]
+    except Exception as e:
+        return {"error": str(e)}
+    today = date.today().strftime("%Y%m%d") + ".log"
+    out = {}
+    for ea in ("AurumFunded", "AurumHydra"):
+        row = {"today_lines": 0, "last_day": None, "last_lines": []}
+        for p in reversed(logs):
+            lines = [l for l in demo_check.read(p) if ea in l]
+            if p.name == today:
+                row["today_lines"] = len(lines)
+            if lines:
+                row.update(last_day=f"{p.stem[:4]}-{p.stem[4:6]}-{p.stem[6:]}",
+                           last_lines=[l.split("\t")[-1][:200] for l in lines[-5:]])
+                break
+        row["attached"] = row["today_lines"] > 0
+        out[ea] = row
+    return out
+
+
+def task_health():
+    try:
+        import task_health as th
+        return th.health()
+    except Exception as e:
+        return {"error": str(e), "rows": []}
+
+
 def candidates_md(ledger):
     lines = ["# Candidate ledger", "", "Generated from `docs/candidates.json` by `python tools/dashboard.py`; edit the "
              "JSON, not this file.", ""]
@@ -174,6 +208,8 @@ def main():
         "book": book(ledger),
         "demo": demo(),
         "funnel": funnel(),
+        "eas": ea_presence(),
+        "tasks": task_health(),
     }
     OUT.mkdir(exist_ok=True)
     tmp = OUT / "data.js.tmp"                                       # whole file or nothing: the live page reloads it
