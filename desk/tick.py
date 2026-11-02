@@ -9,6 +9,7 @@
 python -m desk.tick           one pass (what the task runs)
 """
 import datetime as dt
+import json
 import subprocess
 import traceback
 
@@ -17,6 +18,19 @@ from desk import (broker, clocks, executor, jobs, journal, monitor, mutex, news,
 
 SCHEDULE = paths.STATE / "schedule.json"
 HEARTBEAT = paths.STATE / "heartbeat.json"
+EQUITY = paths.STATE / "equity.jsonl"  # one row a clock pass, kept for good: the dashboard's equity curve from day 0
+
+
+def record_equity(t, summary):
+    """Append this pass's equity and balance (only when the executor read the account)."""
+    if summary.get("equity") is None:
+        return
+    row = {"t": t.isoformat(timespec="seconds"), "equity": summary["equity"], "balance": summary.get("balance")}
+    try:
+        with open(EQUITY, "a", encoding="utf-8") as f:
+            f.write(json.dumps(row) + "\n")
+    except OSError as e:
+        journal.log("tick_error", where="equity", why=str(e))
 TICK_MUTEX = "Local\\AurumDeskTick"
 RETRY = dt.timedelta(minutes=30)  # a failed calendar fetch or commit tries again after this
 AGENT_KINDS = ("brief", "debrief", "weekly", "scorekeeper")
@@ -69,12 +83,15 @@ def schedule(b, cfg, summary, t):
             continue
         k, ok = ev["kind"], True
         try:
-            if k == "brief" and jobs.weekend_closed(t):
-                # no ticket can pass before Monday; mark it ran so it does not fire late once the cutoff ends
-                journal.log("brief_skipped", event=ev["name"], why="past the weekend cutoff (flat_before_weekend)")
-            elif k == "brief":
+            if k == "brief":
                 pods = [p for p in active if p in ev.get("pods", active)]
-                if pods and not jobs.has_pending("brief", name=ev["name"]):
+                # past the weekend cutoff only pods whose tickets can pass are briefed (weekend_crypto: the crypto
+                # pod); with none left the brief is marked ran, so it does not fire late once the cutoff ends
+                shut = [p for p in pods if jobs.weekend_closed(t, p, cfg)]
+                pods = [p for p in pods if p not in shut]
+                if shut and not pods:
+                    journal.log("brief_skipped", event=ev["name"], why="past the weekend cutoff (flat_before_weekend)")
+                elif pods and not jobs.has_pending("brief", name=ev["name"]):
                     jobs.queue("brief", t, name=ev["name"], pods=pods)
             elif k in AGENT_KINDS:
                 if active and not jobs.has_pending(k):
@@ -152,6 +169,7 @@ def once():
               "why": getattr(b, "why", "") or summary.get("why"), "summary": summary, "ran": ran,
               "woke": woke, "phase": phase.current()}
         paths.write_json(HEARTBEAT, hb)
+        record_equity(t, summary)
         return hb
 
 

@@ -95,14 +95,23 @@ def score(s, rest):
     return round((s["R_per_trade"] - other) * n / (n + SHRINK), 3)
 
 
-def shadow_r_per_trade(s=None):
+def _shadow_sum(s=None):
     s = paths.read_json(systematic.SHADOW, {}) if s is None else s
     n = r = 0
     for ms in (s.get("edges") or {}).values():
         for v in ms.values():
             n += int(v.get("trades") or 0)
             r += float(v.get("total_r") or 0)
+    return n, r
+
+
+def shadow_r_per_trade(s=None):
+    n, r = _shadow_sum(s)
     return round(r / n, 3) if n else None
+
+
+def shadow_trades(s=None):
+    return _shadow_sum(s)[0]
 
 
 def scores(t=None, state=None):

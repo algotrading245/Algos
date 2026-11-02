@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from desk.edges.base import (DAY, ZONES, at, atr, bar_before, close_sig, date_of, day_of, days, edge,
-                             last_weekday_of_month, sig, sma, spx, std, tf_secs, tod, trade_days)
+                             last_weekday_of_month, sig, sma, spx, std, tf_secs, tod, trade_days, weekday)
 
 FIXPAIRS = {"EURUSD": 1, "GBPUSD": 1, "AUDUSD": 1, "USDCAD": -1, "USDCHF": -1}  # +1: the pair rises when USD falls
 CROSSES = ["AUDJPY", "CADJPY", "GBPJPY"]
@@ -280,9 +280,12 @@ def golddip(df, p, ctx):
 # ---- USDJPY range breakout ------------------------------------------------------------------------------------------
 
 @edge("breakout", ["USDJPY"], "M15", bars=120, defaults={"r_from": 60, "r_to": 540, "e_from": 600, "e_to": 1080,
-                                                         "exit": [23, 0]}, card="""
+                                                         "exit": [23, 0], "margin": 0, "fri_cut": 840}, card="""
 USDJPY Tokyo-range breakout. The range of 01:00-09:00 server time (Tokyo's session); the first close beyond it between
-10:00 and 18:00 enters that way, stop at the far side of the range. One trade a day; out at 23:00 server.
+10:00 and 18:00 enters that way, stop at the far side of the range. One trade a day; out at 23:00 server. No new entry
+on Fridays from 14:00 server (end of the London morning): the weekend flatten would cut it (sandbox 11-02, before the
+holdout: PF 1.10 both ways, total R 123 vs 126, max drawdown 30.3R vs 32.0R; 2018 on 54.6R vs 48.7R). A margin past
+the range (lesson 10-30) was tested at 5-30% of its width and is off: it cut total R (114R at 10%) and did not lift PF.
 """)
 def breakout(df, p, ctx):
     t = df["time"].values
@@ -294,12 +297,19 @@ def breakout(df, p, ctx):
         if rng.sum() < 8:
             continue
         hi, lo = h[rng].max(), l[rng].min()
-        for i in np.nonzero((d == day) & (m >= p["e_from"]) & (m < p["e_to"]))[0]:
-            if c[i] > hi:
+        # lesson 10-30: a close 4 pips past the range is noise; "margin" asks for a close that far past it, as a share
+        # of the range's width. "fri_cut": no new entry on Fridays from that minute (server), as the weekend flatten
+        # would close it within hours.
+        pad = float(p.get("margin", 0) or 0) * (hi - lo)
+        e_to = p["e_to"]
+        if p.get("fri_cut") is not None and weekday(day * DAY) == 4:
+            e_to = min(e_to, int(p["fri_cut"]))
+        for i in np.nonzero((d == day) & (m >= p["e_from"]) & (m < e_to))[0]:
+            if c[i] > hi + pad:
                 out.append(sig(i, "buy", lo, f"close {c[i]:.3f} above the Tokyo range {hi:.3f}",
                                exit_t=day * DAY + p["exit"][0] * 3600 + p["exit"][1] * 60))
                 break
-            if c[i] < lo:
+            if c[i] < lo - pad:
                 out.append(sig(i, "sell", hi, f"close {c[i]:.3f} below the Tokyo range {lo:.3f}",
                                exit_t=day * DAY + p["exit"][0] * 3600 + p["exit"][1] * 60))
                 break

@@ -159,15 +159,18 @@ def reconcile(b, cfg, state=None, t=None):
 
 # ---- halts -------------------------------------------------------------------------------------------------------
 
-def flatten(b, cfg, why, state=None, t=None):
-    """Close every desk position, cancel every desk order and every ticket not yet placed."""
+def flatten(b, cfg, why, state=None, t=None, keep=None):
+    """Close every desk position, cancel every desk order and every ticket not yet placed.
+    keep(ticket) -> True leaves that ticket and its symbol's broker orders and positions alone (the weekend crypto)."""
     t = t or clocks.now()
     state = tickets.fold() if state is None else state
+    kept = {i for i, tk in state.items() if keep and keep(tk)}
+    kept_syms = {state[i].get("symbol") for i in kept} - {None}
     n = 0
     # one failure must not stop the rest; the next pass tries again
     for kind, items, act in (("order", b.orders() or [], b.cancel), ("position", b.positions() or [], b.close_position)):
         for x in items:
-            if not desk_magic(x.get("magic"), cfg):
+            if not desk_magic(x.get("magic"), cfg) or x.get("symbol") in kept_syms:
                 continue
             try:
                 r = act(x["ticket"])
@@ -179,6 +182,8 @@ def flatten(b, cfg, why, state=None, t=None):
                 journal.log("flatten_fail", kind=kind, ticket=x["ticket"], comment=r.get("comment"))
     for tk in state.values():
         st = tk.get("status")
+        if tk["id"] in kept:
+            continue
         if st in ("proposed", "approved"):
             tickets.cancel(tk["id"], why, by="risk-gate")
         elif st == "placed":
@@ -390,9 +395,11 @@ def run(b, cfg=None, t=None):
     if halt:
         flatten(b, cfg, halt, state, t)
     elif risk_gate.weekend_cutoff(prof, t):
-        live = [v for v in state.values() if v.get("status") in ("placed", "open")]
+        def keep(tk):
+            return risk_gate.weekend_exempt(tk, prof, cfg, t)
+        live = [v for v in state.values() if v.get("status") in ("placed", "open") and not keep(v)]
         if live:
-            flatten(b, cfg, "flat before the weekend (prop profile)", state, t)
+            flatten(b, cfg, "flat before the weekend (prop profile)", state, t, keep=keep)
     state = tickets.fold()
     acts = manage(b, cfg, state, t)
     sent = 0 if halt else execute(b, cfg, prof, ph, tickets.fold(), t)

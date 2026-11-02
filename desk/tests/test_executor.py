@@ -99,6 +99,18 @@ def test_kill_flattens_and_blocks_new_orders(b, cfg):
     assert get(a)["status"] == "closed" and get(c)["status"] == "cancelled"
 
 
+def test_flatten_keep_leaves_the_exempt_ticket_and_its_symbol(b, cfg):
+    a = approved()
+    executor.run(b, cfg)
+    c = approved(pod="systematic")
+    n = executor.flatten(b, cfg, "flat before the weekend (prop profile)", keep=lambda tk: tk["id"] == a)
+    assert n == 0 and len(b.positions()) == 1  # the kept ticket's position stays
+    assert get(a)["status"] == "open" and not get(a).get("closing")
+    assert get(c)["status"] == "cancelled"
+    executor.flatten(b, cfg, "flat before the weekend (prop profile)")
+    assert get(a).get("closing")
+
+
 def test_loss_past_the_kill_floor_writes_the_kill_file(b, cfg):
     executor.run(b, cfg)
     b.balance = 8700.0

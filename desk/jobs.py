@@ -56,16 +56,23 @@ def has_pending(kind, **match):
     return any(j["kind"] == kind and all(j.get(k) == v for k, v in match.items()) for j in pending())
 
 
-def weekend_closed(t=None):
-    """True while the active risk profile is flat over the weekend and past its Friday cutoff: every ticket is refused
-    then (risk_gate.weekend_cutoff), so a pod's wake or brief would spend its tokens on tickets that cannot pass
-    (11-01: the crypto pod spent 58k tokens against a 39k slice on weekend tickets all blocked)."""
+def weekend_closed(t=None, pod=None, cfg=None):
+    """True while the active risk profile is flat over the weekend, between its Friday cutoff and Sunday reopen: its
+    tickets are refused then (risk_gate.weekend_cutoff), so a pod's wake or brief would spend its tokens on tickets that
+    cannot pass (11-01: the crypto pod spent 58k tokens against a 39k slice on weekend tickets all blocked).
+    With weekend_crypto on the profile, a pod that owns crypto stays open: its crypto tickets can pass."""
     from desk import risk_gate
     try:
         _, prof = risk_gate.profile()
     except Exception:
         return False
-    return risk_gate.weekend_cutoff(prof, t or clocks.now())
+    t = t or clocks.now()
+    if pod and risk_gate.weekend_cutoff(prof, t, "crypto") is False:
+        cfg = cfg or paths.config()
+        owns = cfg.get("pods", {}).get(pod, {}).get("owns", [])
+        if any(cfg["instruments"].get(i, {}).get("class") == "crypto" for i in owns):
+            return False
+    return risk_gate.weekend_cutoff(prof, t)
 
 
 def wake(pod, trigger_ids, cfg, t=None, **data):
@@ -75,7 +82,7 @@ def wake(pod, trigger_ids, cfg, t=None, **data):
     from desk import allowance, triggers
     cap = allowance.wake_cap(pod, cfg)
     why = None
-    if weekend_closed(t):
+    if weekend_closed(t, pod, cfg):
         why = "past the weekend cutoff: the profile is flat over the weekend, so no ticket can pass"
     elif triggers.wakes_today(pod, t) >= cap:
         why = f"{cap} wakes already today (the cap follows the token share)"

@@ -192,13 +192,40 @@ def round_step(x, step):
     return math.floor(x / step + 1e-9) * step
 
 
-def weekend_cutoff(prof, t):
-    """True once a flat-before-weekend profile is past its Friday cutoff (New York)."""
+def weekend_cutoff(prof, t, ins_class=None):
+    """True while a flat-before-weekend profile is between its Friday cutoff and its Sunday reopen (New York;
+    weekend_reopen_ny, default 17:00, when FX opens again: Monday's Asia session starts then).
+    With weekend_crypto, crypto (which trades all weekend) is not closed: ins_class "crypto" passes. Positions held at
+    the Friday cutoff are still flattened (weekend_started), so nothing is carried across the Friday close."""
     if not prof.get("flat_before_weekend"):
+        return False
+    if ins_class == "crypto" and prof.get("weekend_crypto"):
         return False
     ny = t.astimezone(clocks.NY)
     h, m = clocks.parse_hhmm(prof.get("weekend_cutoff_ny", "15:00"))
-    return ny.weekday() == 4 and (ny.hour, ny.minute) >= (h, m) or ny.weekday() in (5, 6)
+    rh, rm = clocks.parse_hhmm(prof.get("weekend_reopen_ny", "17:00"))
+    wd, hm = ny.weekday(), (ny.hour, ny.minute)
+    return wd == 4 and hm >= (h, m) or wd == 5 or wd == 6 and hm < (rh, rm)
+
+
+def weekend_started(prof, t):
+    """The UTC time this weekend's Friday cutoff fell, while weekend_cutoff holds; else None."""
+    if not weekend_cutoff(prof, t):
+        return None
+    ny = t.astimezone(clocks.NY)
+    h, m = clocks.parse_hhmm(prof.get("weekend_cutoff_ny", "15:00"))
+    fri = (ny - dt.timedelta(days=(ny.weekday() - 4) % 7)).replace(hour=h, minute=m, second=0, microsecond=0)
+    return fri.astimezone(clocks.UTC)
+
+
+def weekend_exempt(tk, prof, cfg, t):
+    """A crypto ticket opened after the Friday cutoff on a weekend_crypto profile: the weekend flatten leaves it."""
+    since = weekend_started(prof, t)
+    if since is None or not prof.get("weekend_crypto"):
+        return False
+    if cfg["instruments"].get(tk.get("instrument"), {}).get("class") != "crypto":
+        return False
+    return dt.datetime.fromisoformat(tk.get("created") or "1970-01-01T00:00:00+00:00") >= since
 
 
 # ---- the check -------------------------------------------------------------------------------------------------
@@ -238,9 +265,10 @@ def check(tk, b, cfg=None, prof=None, ph=None, state=None, t=None):
     pod, ins, side = tk["pod"], tk["instrument"], tk["side"]
     if pod not in phase.pods_active(cfg, ph):
         return no(f"pod {pod} not active in phase {ph}")
-    if cfg["instruments"][ins].get("class") == "crypto" and prof.get("allow_crypto") is False:
+    ins_class = cfg["instruments"][ins].get("class")
+    if ins_class == "crypto" and prof.get("allow_crypto") is False:
         return no("crypto not allowed on this profile")
-    if weekend_cutoff(prof, t):
+    if weekend_cutoff(prof, t, ins_class):
         return no("past the weekend cutoff")
 
     # 3. market

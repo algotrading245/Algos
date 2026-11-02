@@ -15,6 +15,7 @@ import datetime as dt
 from desk import clocks, journal, paths, phase, risk_gate, scorekeeper, systematic, tickets
 
 WEEKS, MIN_TRADES, MIN_PF, MAX_DD_PCT, FAULT_R = 8, 100, 1.2, 8.0, -1.5
+MIN_SIDE_TRADES = 50  # AI pods' trades and shadow trades, each, before "AI beats shadow" can pass
 FAULTS = ("orphan_position", "orphan_order", "close_fail")
 REPORT = paths.REPORTS / "live_gate.md"
 
@@ -37,6 +38,7 @@ def evaluate(t=None, state=None):
     ai = [v for v in closed if v.get("pod") != systematic.POD and not v.get("arm") and v.get("R") is not None]
     ai_r = round(sum(float(v["R"]) for v in ai) / len(ai), 3) if ai else None
     shadow = scorekeeper.shadow_r_per_trade()
+    n_shadow = scorekeeper.shadow_trades()
     weeks = round((t - p3).days / 7, 1) if p3 and t > p3 else 0.0
     pf = _pf([float(v.get("pnl") or 0) for v in closed])
     dd = (risk_gate.limits().get("record") or {}).get("max_dd_pct")
@@ -50,8 +52,11 @@ def evaluate(t=None, state=None):
         "profit_factor": {"need": MIN_PF, "have": pf, "ok": pf is not None and pf >= MIN_PF},
         "max_drawdown_pct": {"need": MAX_DD_PCT, "have": dd, "ok": dd is not None and dd <= MAX_DD_PCT},
         "code_faults": {"need": 0, "have": len(faults), "ok": not faults, "list": faults[:20]},
-        "ai_beats_shadow": {"need": f"> {shadow} R a trade", "have": ai_r,
-                            "ok": ai_r is not None and shadow is not None and ai_r > shadow},
+        # an average over a handful of trades is noise: both sides need MIN_SIDE_TRADES before the comparison counts
+        "ai_beats_shadow": {"need": f"> {shadow} R a trade", "min_trades": MIN_SIDE_TRADES,
+                            "have": ai_r, "ai_trades": len(ai), "shadow_trades": n_shadow,
+                            "ok": ai_r is not None and shadow is not None and ai_r > shadow
+                                  and len(ai) >= MIN_SIDE_TRADES and n_shadow >= MIN_SIDE_TRADES},
     }
     passed = bool(p3) and all(c["ok"] for c in checks.values())
     if passed:
@@ -74,7 +79,8 @@ def _report(g):
              f"Counted from {g['since'][:10] if g['since'] else '(not started)'}.", "",
              "| check | need | have | ok |", "|---|---|---|---|"]
     for k, c in g["checks"].items():
-        lines.append(f"| {k} | {c['need']} | {c['have']} | {'yes' if c['ok'] else 'no'} |")
+        have = c["have"] if "ai_trades" not in c else f"{c['have']} ({c['ai_trades']} AI, {c['shadow_trades']} shadow trades; {c['min_trades']}+ each)"
+        lines.append(f"| {k} | {c['need']} | {have} | {'yes' if c['ok'] else 'no'} |")
     lines += ["", "The gate only reports. Live money needs the owner's yes and their edit of desk/risk.json."]
     return "\n".join(lines) + "\n"
 

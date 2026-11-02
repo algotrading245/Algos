@@ -40,14 +40,17 @@ import html
 import json
 import pathlib
 import re
+import threading
 import time
 
 _MANIFEST = re.compile(r'(<script type="__bundler/manifest">\s*)(.*?)(\s*</script>)', re.S)
 _ORDER = re.compile(r'<script type="__bundler/page_order">\s*(.*?)\s*</script>', re.S)
 _TEMPLATE = re.compile(r'(<script type="__bundler/template">\s*)(.*?)(\s*</script>)', re.S)
 ROLES = ["finder", "builder", "tester", "judge", "reviewer", "monitor", "doctor", "portfolio"]
-_CACHE = {"t": 0.0, "body": None}
+_CACHE = {"t": 0.0, "body": None, "warm": False}
+_BUILD = threading.Lock()
 TTL = 15
+STALE_OK = 60  # with the prebuild thread alive a page this old is still served at once (the thread refreshes it)
 
 
 def _js(s):
@@ -2355,13 +2358,39 @@ def build(bundle_path, live, usage, positions, extra=None):
     return outer.encode("utf-8")
 
 
+def refresh(bundle_path, get_inputs):
+    """build() now and keep it; one build at a time (a request and the prebuild thread do not build twice)."""
+    with _BUILD:
+        if _CACHE["body"] is not None and time.time() - _CACHE["t"] < 1:
+            return _CACHE["body"]  # another caller built it while this one waited
+        body = build(bundle_path, *get_inputs())
+        _CACHE["body"], _CACHE["t"] = body, time.time()
+        return body
+
+
 def cached(bundle_path, get_inputs):
-    """build() at most once every TTL seconds; get_inputs() returns (live, usage, positions)."""
-    now = time.time()
-    if _CACHE["body"] is None or now - _CACHE["t"] > TTL:
-        _CACHE["body"] = build(bundle_path, *get_inputs())
-        _CACHE["t"] = now
-    return _CACHE["body"]
+    """The page, rebuilt at most once every TTL seconds; get_inputs() returns (live, usage, positions, extra).
+    While the prebuild thread runs, a page up to STALE_OK seconds old is served without waiting for a build."""
+    body, age = _CACHE["body"], time.time() - _CACHE["t"]
+    if body is not None and (age <= TTL or (_CACHE["warm"] and age <= STALE_OK)):
+        return body
+    return refresh(bundle_path, get_inputs)
+
+
+def prebuild(bundle_path, get_inputs, every=TTL - 3):
+    """Rebuild the page in a background thread every `every` seconds, so a page load never waits for the build
+    (it took several seconds cold). Returns the thread."""
+    def loop():
+        while True:
+            try:
+                refresh(bundle_path, get_inputs)
+                _CACHE["warm"] = True
+            except Exception:
+                _CACHE["warm"] = False
+            time.sleep(every)
+    th = threading.Thread(target=loop, name="command-center-prebuild", daemon=True)
+    th.start()
+    return th
 
 
 def forget():

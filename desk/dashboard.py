@@ -98,6 +98,27 @@ SLOW_TTL = 5          # seconds the file-heavy sections are cached
 LIVE_TTL = 1          # seconds a live MT5 read is reused
 PROC_TTL = 10         # seconds between checks that the desk terminal is running
 SERIES = 3600         # equity samples kept in memory (an hour at one a second)
+EQUITY = paths.STATE / "equity.jsonl"  # tick.EQUITY: one row a clock pass since day 0
+HISTORY_POINTS = 720  # the stored curve is thinned to about this many points
+_HIST = {"size": -1, "rows": []}
+
+
+def equity_history(path=EQUITY, points=HISTORY_POINTS):
+    """The stored equity curve, [[t, equity], ...] thinned evenly to about `points` (the last row always kept).
+    Re-read only when the file has grown."""
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return []
+    if size != _HIST["size"]:
+        rows = [[r.get("t"), r.get("equity")] for r in read_tail_jsonl(path, 10 ** 7) or []
+                if isinstance(r, dict) and r.get("equity") is not None]
+        step = max(1, len(rows) // points)
+        thin = rows[::step]
+        if rows and thin[-1] is not rows[-1]:
+            thin.append(rows[-1])
+        _HIST.update(size=size, rows=thin)
+    return list(_HIST["rows"])
 
 
 def _try(fn, *a, **kw):
@@ -398,6 +419,13 @@ class State:
             self.slow_t = time.time()
             return self.slow
 
+    def _equity(self):
+        """The stored curve from day 0, then this process's live samples newer than its last row."""
+        hist = _try(equity_history)
+        hist = hist if isinstance(hist, list) else []
+        last = hist[-1][0] if hist else ""
+        return hist + [s for s in list(self.live.series) if s[0] > (last or "")]
+
     def build(self):
         from desk import cli
         t = clocks.now()
@@ -405,7 +433,7 @@ class State:
         live = self.live.read()
         out = {"t": t.isoformat(timespec="seconds"), "status": st,
                "limits": _try(paths.read_json, paths.STATE / "limits.json", {}),
-               "live": live, "equity_series": list(self.live.series)}
+               "live": live, "equity_series": self._equity()}
         out.update(self._slow(st, t))
         mon = out["monitor"] if isinstance(out["monitor"], dict) else {}
         alert = out["alert_file"] if isinstance(out["alert_file"], dict) and "error" not in out["alert_file"] else None
@@ -416,6 +444,20 @@ class State:
 # ---- the server ------------------------------------------------------------------------------------------------------
 
 LOCAL = ("127.0.0.1", "::1")
+
+
+def cc_inputs(state):
+    """What command_center.build() needs: (live.js, usage rows, positions, {"state", "queue"})."""
+    try:
+        positions = (state.live.read() or {}).get("positions")
+    except Exception:
+        positions = None
+    try:
+        st = state.build()
+    except Exception:
+        st = None
+    extra = {"state": st, "queue": read_tail_jsonl(QUEUE, 60) or []}
+    return read_js(LIVE_JS)[0], read_tail_jsonl(USAGE, 5000) or [], positions, extra
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -434,16 +476,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def _cc_inputs(self):
-        try:
-            positions = (self.state.live.read() or {}).get("positions")
-        except Exception:
-            positions = None
-        try:
-            state = self.state.build()
-        except Exception:
-            state = None
-        extra = {"state": state, "queue": read_tail_jsonl(QUEUE, 60) or []}
-        return read_js(LIVE_JS)[0], read_tail_jsonl(USAGE, 5000) or [], positions, extra
+        return cc_inputs(self.state)
 
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -540,6 +573,7 @@ def main(argv=None):
         print(f"dashboard not started: {e}")
         return 1
     print(f"desk dashboard on http://{a.host}:{a.port}")
+    command_center.prebuild(BUNDLE, lambda: cc_inputs(Handler.state))  # page loads never wait for a build
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

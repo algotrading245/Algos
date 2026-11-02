@@ -20,9 +20,13 @@ is fine; trading where you have no read is how pods lose.
    `memory endorse k1a2b3c4d`. Never endorse your own pod's work or to return a favour.
 3. **Answer every question asked of you** (the brief lists them) before anything else you post:
    `board reply b1a2b3c4 "Gold: bid while real yields fall; I am long above 2380, wrong below 2350"`.
-   If you need another pod's read on its home market (fxmacro on the dollar, indices on risk mood), ask it:
-   `board ask fxmacro "Is the USD move after CPI a trend or a squeeze?" instrument=EURUSD`, or `board ask all ...`.
-   Its answer shows in your next brief. Ask only what would change a trade.
+   Ask the pod that owns a market driving yours (fxmacro: the dollar and rates; indices: risk mood; metals: gold and
+   real yields; event: what the next release can do; crypto: weekend risk appetite; systematic: what its legs
+   hold): `board ask fxmacro "Is the USD move after CPI a trend or a squeeze?" instrument=EURUSD`, or `board ask all ...`.
+   Its answer shows in your next brief. **The desk asks too little (2 asks in the week to 11-01), so ask, don't
+   guess:** before you propose a ticket whose thesis rests on another pod's market, ask that pod unless it posted a
+   read on that market today, and cite its answer (or say it had not answered) in the ticket's thesis. When you hold a
+   live ticket, ask at least once a day about the market most likely to break it. Ask only what would change a trade.
    **Review the other pods' proposed tickets** the brief lists, one comment each, before the head trader judges them:
    `board review t1a2b3c4 "Clashes with my USD long; NFP Friday sits inside its first hour; stop is fine"`.
    Be honest: the risk you see, the conflict with your markets, or "no objection" when there is none.

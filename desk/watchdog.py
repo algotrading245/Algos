@@ -75,10 +75,55 @@ def check_runner(t):
     return r.get("job")
 
 
+DASH_TASK = "\\AurumDesk\\Dashboard"
+
+
+def _dashboard_proc(procs=None):
+    """(pid, start time) of the running dashboard server, or None."""
+    try:
+        import psutil
+    except ImportError:
+        return None
+    for p in psutil.process_iter(["pid", "cmdline", "create_time"]):
+        try:
+            if "desk.dashboard" in " ".join(p.info["cmdline"] or []):
+                return p.info["pid"], p.info["create_time"]
+        except Exception:
+            continue
+    return None
+
+
+def code_mtime():
+    """Newest change to the desk's Python code (the dashboard imports only desk/)."""
+    return max((f.stat().st_mtime for f in (paths.ROOT / "desk").glob("*.py")), default=0.0)
+
+
+def check_dashboard(proc=None, newest=None, run=subprocess.run):
+    """Restart the Dashboard task when desk/*.py changed after the server started, so a code change shows without
+    anyone restarting it by hand. A missing server is left to the task's own restart settings."""
+    proc = _dashboard_proc() if proc is None else proc
+    if not proc:
+        return None
+    newest = code_mtime() if newest is None else newest
+    if newest <= proc[1]:
+        return None
+    run(["schtasks", "/End", "/TN", DASH_TASK], capture_output=True, text=True)
+    _kill_tree(proc[0])  # /End stops the task's process; the server may be its child
+    r = run(["schtasks", "/Run", "/TN", DASH_TASK], capture_output=True, text=True)
+    journal.log("dashboard_restarted", why="desk code changed", ok=r.returncode == 0)
+    return "restarted the dashboard (desk code changed)"
+
+
 def once():
     cfg = paths.config()
     t = clocks.now()
     did = []
+    try:
+        d = check_dashboard()
+        if d:
+            did.append(d)
+    except Exception as e:
+        journal.log("watchdog_error", where="dashboard", why=f"{type(e).__name__}: {e}")
     if Path(cfg["terminal"]["path"]).exists() and not terminal_running(cfg):
         if start_terminal(cfg):
             did.append("started the desk terminal")
