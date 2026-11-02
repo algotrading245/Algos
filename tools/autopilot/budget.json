@@ -1,6 +1,6 @@
 {
- "_why": "weekly_usd: the week the weekly limit hit (2026-10-16 18:00 to 10-20) the autopilot had used about $103 in Claude's notional dollars; chat sessions share the same limit. Reset: Friday (4) 18:00 local, from the limit message 'resets Oct 23, 6pm'.",
- "weekly_usd": 100,
+ "_why": "weekly_usd is the whole account's week (autopilot + chat + desk) in Claude's notional dollars (owner 2026-11-02, item 6). The weekly limit hit at $207 (week from 10-16 18:00, hit 10-19 16:10) and $303 (week from 10-23 18:00, hit 10-30 00:05), all use priced by budget.py; 250 sits between, so skip_above 0.7 stops the finder at $175. The autopilot alone used $102 and $145 of those. Reset: Friday (4) 18:00 local, from the limit message 'resets Oct 23, 6pm'.",
+ "weekly_usd": 250,
  "reset_weekday": 4,
  "reset_hour": 18,
  "skip_above": 0.7

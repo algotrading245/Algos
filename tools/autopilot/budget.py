@@ -4,6 +4,7 @@ are nice to have (the finder's runs when the queue is empty).
     python tools/autopilot/budget.py record --role builder --provider claude --model sonnet --events <events.jsonl>
     python tools/autopilot/budget.py backfill      # rebuild logs/autopilot/usage.jsonl from every events file
     python tools/autopilot/budget.py status        # JSON: this week's use, fraction of the budget, skip, today by role
+                                                   # (week_usd = autopilot_usd + outside_usd: chat and desk sessions)
 
 run-agent.ps1 calls `record` after every run; relay.ps1 calls `status` and, when "skip" is true, does not start the
 finder (unless a data item waits).  The figures come from the "result" line Claude writes at the end of
@@ -13,6 +14,7 @@ reports), the week's reset (the weekday and hour the plan's weekly limit resets)
 """
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime, timedelta
@@ -96,14 +98,145 @@ def week_start(now, c):
     return d if d <= now else d - timedelta(days=7)
 
 
-def status(now=None):
+PROJECTS = Path.home() / ".claude" / "projects"
+OUTSIDE_CACHE = LOGS / "outside_cache.json"
+STATUS = LOGS / "budget_status.json"
+WEIGHT = {"input": 1.0, "output": 5.0, "cache_read": 0.1, "cache_create": 1.25}   # as dashboard_live.Rates
+TOK = ("input", "output", "cache_read", "cache_create")
+FALLBACK_RATE = 15e-6     # $ per weighted token when usage.jsonl has no run to fit from
+
+
+def family(model):
+    m = (model or "").lower()
+    return next((f for f in ("opus", "sonnet", "haiku", "fable") if f in m), "")
+
+
+def rates(rows):
+    """$ per weighted token for each model family, fitted from autopilot runs that used one family only (the same
+    fit as dashboard_live.Rates).  "" (an unknown family) takes the dearest rate."""
+    cost, tok = {}, {}
+    for r in rows:
+        fams = {family(m) for m in r.get("models") or []} - {""}
+        w = sum(WEIGHT[k] * r.get(k, 0) for k in TOK)
+        if len(fams) == 1 and r.get("cost_usd") and w:
+            f = fams.pop()
+            cost[f] = cost.get(f, 0.0) + r["cost_usd"]
+            tok[f] = tok.get(f, 0.0) + w
+    out = {f: cost[f] / tok[f] for f in cost}
+    out[""] = max(out.values(), default=FALLBACK_RATE)
+    return out
+
+
+def autopilot_sessions():
+    """Session ids of the autopilot's own runs (their transcripts are already priced in usage.jsonl)."""
+    ids = set()
+    for p in EVENTS.glob("*.jsonl"):
+        try:
+            with open(p, encoding="utf-8", errors="replace") as f:
+                for _, line in zip(range(5), f):
+                    m = re.search(r'"session_id"\s*:\s*"([^"]+)"', line)
+                    if m:
+                        ids.add(m.group(1))
+                        break
+        except OSError:
+            pass
+    return ids
+
+
+def _scan(path, entry):
+    """Read the new bytes of one transcript into entry["msgs"]: message id -> [ts, family, session, entrypoint,
+    input, output, cache_read, cache_create].  A message's later line overwrites its earlier ones (final usage)."""
+    msgs = entry.setdefault("msgs", {})
+    with open(path, "rb") as f:
+        f.seek(entry.get("off", 0))
+        data = f.read()
+    end = data.rfind(b"\n") + 1            # a half-written last line waits for the next call
+    for raw in data[:end].splitlines():
+        if b'"usage"' not in raw or b'"assistant"' not in raw:
+            continue
+        try:
+            o = json.loads(raw)
+        except ValueError:
+            continue
+        m = o.get("message") or {}
+        u = m.get("usage") or {}
+        if o.get("type") != "assistant" or not m.get("id") or not u:
+            continue
+        msgs[m["id"]] = [o.get("timestamp", ""), family(m.get("model")), o.get("sessionId", ""),
+                         o.get("entrypoint", ""), int(u.get("input_tokens") or 0), int(u.get("output_tokens") or 0),
+                         int(u.get("cache_read_input_tokens") or 0), int(u.get("cache_creation_input_tokens") or 0)]
+    entry["off"] = entry.get("off", 0) + end
+
+
+def outside(start, rows, projects=None, cache_path=None, skip_sessions=None):
+    """Use outside the autopilot since start (chat sessions, the desk's agents, their subagents): every Claude
+    transcript under ~/.claude/projects, less the autopilot's own sessions, priced with rates(rows).  The bytes
+    already read are cached per file, so the relay's 5-minute and the dashboard's 30-second calls stay cheap
+    (owner 2026-11-02: the throttle only saw the autopilot)."""
+    projects = Path(projects or PROJECTS)
+    cache_path = Path(cache_path or OUTSIDE_CACHE)
+    try:
+        cache = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cache = {}
+    cut = start.timestamp() - 86400
+    fresh = {}
+    for dirpath, _, files in os.walk(projects):
+        if len(Path(dirpath).relative_to(projects).parts) > 3:
+            continue
+        for name in files:
+            if not name.endswith(".jsonl"):
+                continue
+            p = os.path.join(dirpath, name)
+            try:
+                st = os.stat(p)
+            except OSError:
+                continue
+            if st.st_mtime < cut:
+                continue
+            e = cache.get(p) or {}
+            if st.st_size < e.get("off", 0):           # rewritten: read again from the start
+                e = {}
+            try:
+                if st.st_size > e.get("off", 0):
+                    _scan(p, e)
+            except OSError:
+                continue
+            fresh[p] = e
+    _write_json(cache_path, fresh)
+    skip =autopilot_sessions() if skip_sessions is None else skip_sessions
+    rate = rates(rows)
+    seen, out = set(), {"usd": 0.0, "tokens": 0, "by": {}}
+    for e in fresh.values():
+        for mid, (ts, fam, sid, entry, *tok) in e.get("msgs", {}).items():
+            if mid in seen or sid in skip:
+                continue
+            seen.add(mid)
+            try:
+                t = datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone().replace(tzinfo=None)
+            except ValueError:
+                continue
+            if t < start:
+                continue
+            usd = rate.get(fam, rate[""]) * sum(WEIGHT[k] * n for k, n in zip(TOK, tok))
+            who = "chat" if entry == "cli" else "desk/other"
+            out["usd"] += usd
+            out["tokens"] += sum(tok)
+            out["by"][who] = round(out["by"].get(who, 0.0) + usd, 3)
+    out["usd"] = round(out["usd"], 2)
+    return out
+
+
+def status(now=None, with_outside=True):
     c = config()
     now = now or datetime.now()
     start = week_start(now, c)
     rows = load()
     week = [r for r in rows if datetime.fromisoformat(r["ts"]) >= start]
     today = [r for r in rows if r["ts"][:10] == now.date().isoformat()]
-    used = sum(r["cost_usd"] for r in week)
+    auto = sum(r["cost_usd"] for r in week)
+    out = outside(start, rows) if with_outside else {"usd": 0.0, "tokens": 0, "by": {}}
+    used = auto + out["usd"]
     frac = used / c["weekly_usd"] if c["weekly_usd"] else 0.0
     roles = {}
     for r in today:
@@ -114,10 +247,25 @@ def status(now=None):
     days = {}
     for r in week:
         days[r["ts"][:10]] = round(days.get(r["ts"][:10], 0.0) + r["cost_usd"], 3)
-    return {"now": now.isoformat(timespec="minutes"), "week_start": start.isoformat(timespec="minutes"),
-            "week_runs": len(week), "week_usd": round(used, 2), "weekly_usd": c["weekly_usd"],
+    res = {"now": now.isoformat(timespec="minutes"), "week_start": start.isoformat(timespec="minutes"),
+            "week_runs": len(week), "week_usd": round(used, 2), "autopilot_usd": round(auto, 2),
+            "outside_usd": out["usd"], "outside_by": out["by"], "weekly_usd": c["weekly_usd"],
             "fraction": round(frac, 3), "skip_above": c["skip_above"], "skip": frac >= c["skip_above"],
             "today": roles, "week_days": days}
+    if with_outside:
+        _write_json(STATUS, res)      # desk/allowance.py adds the chat share from here (it counts the desk itself)
+    return res
+
+
+def _write_json(path, obj):
+    """Write whole or not at all (the relay, the dashboard and the desk may call at the same moment)."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(obj), encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError:
+        pass
 
 
 DESK_JOURNAL = ROOT / "desk" / "journal"

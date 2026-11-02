@@ -2,7 +2,8 @@
 
   pool       the pods' daily tokens: budgets.pod in config.json, cut to what the pods' weekly dollars
              (budgets.pod_weekly_usd) leave for the weekdays to the plan's weekly reset, and cut again when the whole
-             account nears its weekly cap (tools/autopilot/budget.json: half above skip_above, a quarter above 90%).
+             account nears its weekly cap (tools/autopilot/budget.json: half above skip_above, a quarter above 90%;
+             the account = the autopilot + the desk + chat sessions).
   pod slice  the pool split by the token shares (alloc.json token_shares, base shares before the first allocation)
              among the pods trading now.
   wake cap   wakes_per_pod_day scaled by the same share against an equal split, 1 to twice the base; a paused pod 0.
@@ -94,7 +95,22 @@ def account_fraction(t=None, c=None):
     rows = _week_rows(t, c)
     tpu = tokens_per_usd(rows)
     desk = sum(_usd(r, tpu) for r in rows)
-    return (ap + desk) / c["weekly_usd"] if c.get("weekly_usd") else 0.0
+    return (ap + desk + chat_usd(start)) / c["weekly_usd"] if c.get("weekly_usd") else 0.0
+
+
+def chat_usd(start):
+    """Chat sessions' dollars this week, from the autopilot budget's last status (tools/autopilot/budget.py prices
+    every Claude transcript; owner 2026-11-02). 0 when that status is missing, older than 2 hours or of another week."""
+    p = AP_LOGS / "budget_status.json"
+    try:
+        if dt.datetime.now().timestamp() - p.stat().st_mtime > 7200:
+            return 0.0
+        s = json.loads(p.read_text(encoding="utf-8"))
+        if dt.datetime.fromisoformat(s["week_start"]) != start:
+            return 0.0
+        return float((s.get("outside_by") or {}).get("chat") or 0)
+    except (OSError, ValueError, KeyError, TypeError):
+        return 0.0
 
 
 def _read(path):
