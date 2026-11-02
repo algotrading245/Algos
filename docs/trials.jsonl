@@ -580,3 +580,4 @@
 {"id": "fisher_statman_confidence", "when": "2026-11-02T23:41:38", "verdict": "FAIL at halves"}
 {"id": "prescreen:own_implied_move_fade_3mkts", "when": "2026-11-02T23:43:39", "verdict": "SCREEN_PASS", "count": 12}
 {"id": "own_implied_move_fade_3mkts", "when": "2026-11-02T23:46:54", "verdict": "FAIL at halves"}
+{"id": "avg_industry_correlation", "when": "2026-11-02T23:50:20", "verdict": "FAIL at halves"}
