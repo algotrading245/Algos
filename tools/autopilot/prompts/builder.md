@@ -10,7 +10,15 @@ loss limits).
 
 2. Take the item: in `docs/ideas/queue.jsonl`, the oldest item with status "testing" (a run that was cut off, or an
    idea-engine pass that only needs its leg built), else the oldest "new" one that is not `"source": "data"`. Set its
-   status to "testing" (edit that one line). Read only what you need: `docs/HANDOFF.md` (top section),
+   status to "testing" (edit that one line).
+   **BACKLOG LEAD** (owner 2026-11-02): when the "Started by the relay because" line says `BACKLOG LEAD <id>`, no idea
+   waits and the finder came back empty, so you take that lead from `docs/ideas/backlog.jsonl` yourself. Open its link,
+   pick one specific strategy or paper with a rule our markets can trade (not carry, VRP, tsmom or FX macro), read it in
+   full and append it to `docs/ideas/queue.jsonl` as a new item in the finder's shape (`id`, `source`, `title`, `why`
+   with the source's own out-of-sample result, `evidence`, `link`, `gap`, `ea`, `status: "testing"`). Then move the lead
+   out of backlog.jsonl into `docs/ideas/backlog_done.jsonl` with `result` set to the new id, and build that item as
+   below. If the page holds no such rule, close the lead as `"dropped"` naming what you read, and hand over
+   `--next none --reason "builder: backlog lead <id> dropped: <why>"`. Read only what you need: `docs/HANDOFF.md` (top section),
    `docs/candidates.json`, `docs/memory/rejected_index.json`, and `python tools/memory.py search "<topic>"`, so you
    never redo a rejected idea. A "paper" item: read the paper in full (`python tools/pdf_text.py <link> --pages 1-12`,
    then the rest) before you code it. A "prebuilt" item: read its source code and apply the change named in `why`.

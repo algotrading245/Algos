@@ -21,8 +21,10 @@
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
 #   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
 #      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder run under 2
-#      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json); 3 empty
-#      runs in a row back it off 24 hours (finder-empty.json), lifted early by a new steer.md.
+#      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json). After 2
+#      empty runs in a row (finder-empty.json) the reason adds ROTATE: one named lead further down the backlog, of
+#      another kind each time, since the oldest leads are the dead ones; and once a day the builder takes a backlog
+#      lead itself (BACKLOG LEAD, step 8b). 6 empty runs in a row back the finder off 6 hours, lifted by a new steer.md.
 # A role whose last 3 runs failed (fails_in_row in last-<role>.json) is paused 2 hours after the last, then tried once.
 # The weekly budget (budget.py) is shown in -DryRun only. A usage limit backs off only the provider that hit it
 # (router.py backoff); which CLI and model a role runs on is router.json's.
@@ -68,6 +70,45 @@ function Get-QueueLines {
     $q = Join-Path $Repo "docs\ideas\queue.jsonl"
     if (Test-Path $q) { @(Get-Content $q -Encoding UTF8 | Where-Object { "$_".Trim() }).Count } else { 0 }
 }
+function Get-FinderStreak {
+    $st = if (Test-Path $FinderEmpty) { try { Get-Content $FinderEmpty -Raw | ConvertFrom-Json } catch { $null } }
+    if ($st) { $st } else { [pscustomobject]@{ streak = 0; rotate = 0 } }
+}
+# Open leads, the ones whose note says the fetch failed (HTTP 429, timeout) last, oldest first within each group.
+function Get-LiveLeads {
+    $bl = Join-Path $Repo "docs\ideas\backlog.jsonl"
+    if (-not (Test-Path $bl)) { return @() }
+    $rows = @(Get-Content $bl -Encoding UTF8 | Where-Object { $_ -match '"status":\s*"open"' } |
+              ForEach-Object { try { $_ | ConvertFrom-Json } catch { } })
+    $dead = '429|timed out|timeout|retry later'
+    return @($rows | Where-Object { "$($_.note)" -notmatch $dead }) + @($rows | Where-Object { "$($_.note)" -match $dead })
+}
+# Rotation (owner 2026-11-02, replaces the 24-hour backoff of 2026-11-01): the finder works the oldest lead first, and
+# on 11-01 three runs in a row re-hit arXiv listings that answered HTTP 429, then the pipeline sat idle a day. The k-th
+# rotation names a lead of the k-th kind in turn (paper, prebuilt, ...), skipping the ones that failed to fetch.
+function Get-RotateLead([int]$K) {
+    $live = @(Get-LiveLeads | Where-Object { "$($_.note)" -notmatch '429|timed out|timeout|retry later' })
+    if (-not $live.Count) { $live = @(Get-LiveLeads) }
+    if (-not $live.Count) { return $null }
+    $kinds = @($live | ForEach-Object { "$($_.kind)" } | Select-Object -Unique)
+    $pool = @($live | Where-Object { "$($_.kind)" -eq $kinds[$K % $kinds.Count] })
+    return $pool[[int][math]::Floor($K / $kinds.Count) % $pool.Count]
+}
+$BuilderLeadDay = Join-Path $LogDir "builder-lead-day"   # date of the day's backlog-lead builder run
+# Builder from the backlog (owner 2026-11-02): no idea waits, the finder's last 2+ runs were empty and leads are open,
+# so once a day the builder takes the most concrete live lead (prebuilt / variant / leg before a paper) itself.
+function Get-BuilderLead {
+    $longOff = $false
+    if (Test-Path $FinderBackoff) {
+        try { $fb = Get-Content $FinderBackoff -Raw | ConvertFrom-Json; $longOff = $fb.long -and ((Get-Date) -lt [datetime]$fb.until) } catch { }
+    }
+    if ((Get-QueueWaiting) -gt 0 -or ([int](Get-FinderStreak).streak -lt 2 -and -not $longOff)) { return $null }
+    $today = (Get-Date).ToString("yyyy-MM-dd")
+    if ((Test-Path $BuilderLeadDay) -and ((Get-Content $BuilderLeadDay -Raw).Trim() -eq $today)) { return $null }
+    $live = @(Get-LiveLeads | Where-Object { "$($_.note)" -notmatch '429|timed out|timeout|retry later' })
+    $pick = @($live | Where-Object { $_.kind -in @("variant", "leg", "prebuilt") }) + @($live)
+    if ($pick.Count) { return $pick[0] } else { return $null }
+}
 function Get-Unreviewed {
     return @(Get-QueueItems | Where-Object { $_.status -eq "tester" -and -not ($_.PSObject.Properties.Name -contains "review") }).Count
 }
@@ -112,7 +153,21 @@ function Get-FinderWhy {
     }
     $mode = if ($open -eq 0 -or ($open -lt 10 -and -not $scouted)) { "MODE: scout" } else { "MODE: normal" }
     if ($mode -eq "MODE: scout" -and -not $DryRun) { Set-Content -Path $FinderScoutDay -Value $today -Encoding ascii }
-    return "queue low ($waiting waiting): $open open lead(s), $mode"
+    $why = "queue low ($waiting waiting): $open open lead(s), $mode"
+    $st = Get-FinderStreak
+    if ($mode -eq "MODE: normal" -and [int]$st.streak -ge 2) {
+        $k = if ($st.PSObject.Properties["rotate"]) { [int]$st.rotate } else { 0 }
+        $lead = Get-RotateLead $k
+        if ($lead) {
+            $why += "; ROTATE: the last $($st.streak) runs on the oldest leads changed nothing, so take lead $($lead.id) " +
+                    "($($lead.kind), gap $($lead.gap)) first and leave the oldest ones for later"
+            if (-not $DryRun) {
+                [ordered]@{ streak = [int]$st.streak; at = "$($st.at)"; rotate = $k + 1; lead = "$($lead.id)" } |
+                    ConvertTo-Json | Set-Content $FinderEmpty -Encoding UTF8
+            }
+        }
+    }
+    return $why
 }
 
 # A book change (owner 2026-11-01): the legs in docs/book.json (book_sim.py) differ from those the last portfolio run
@@ -219,6 +274,12 @@ while ($true) {
         }
     }
     elseif ($off -notcontains "builder" -and (Get-QueueWaiting) -gt 0 -and (Invoke-Prescreen) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }
+    elseif ($off -notcontains "builder" -and ($bLead = Get-BuilderLead)) {
+        $role = "builder"
+        $why = "no idea waiting and the finder's last runs came back empty: BACKLOG LEAD " +
+               "$($bLead.id) ($($bLead.kind), gap $($bLead.gap)): $($bLead.title) $($bLead.link)"
+        if (-not $DryRun) { Set-Content -Path $BuilderLeadDay -Value (Get-Date).ToString("yyyy-MM-dd") -Encoding ascii }
+    }
     elseif ($off -notcontains "finder") { $why = Get-FinderWhy; if ($why) { $role = "finder" } }
 
     if (-not $role) {
@@ -260,13 +321,14 @@ while ($true) {
         # Empty = the run changed neither the queue nor the open leads (a scout that adds leads is not empty).
         # A data-item run (it writes a fetch script) is not counted.
         $empty = ($why -like "queue low*") -and ((Get-OpenLeads) -eq $leads0) -and ((Get-QueueLines) -le $queue0)
-        $st = if (Test-Path $FinderEmpty) { try { Get-Content $FinderEmpty -Raw | ConvertFrom-Json } catch { $null } }
-        $n = if ($empty) { 1 + $(if ($st -and $st.streak) { [int]$st.streak } else { 0 }) } else { 0 }
-        # 3 empty runs in a row (owner 2026-11-01): 24 hours off, unless a new steer.md names new targets.
-        if ($n -ge 3) {
-            $fbWhy = "$n empty finder runs in a row ($leads0 open leads, queue unchanged)"
-            [ordered]@{ until = (Get-Date).AddHours(24).ToString("s"); why = $fbWhy; long = $true } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
-            Write-Log "relay" "finder backoff 24 h: $fbWhy"
+        $st = Get-FinderStreak
+        $n = if ($empty) { 1 + [int]$st.streak } else { 0 }
+        # From 2 empty runs Get-FinderWhy rotates the lead (owner 2026-11-02); only 6 in a row, every rotation empty
+        # too, back the finder off, 6 hours, unless a new steer.md names new targets (was 24 h at 3, owner 2026-11-01).
+        if ($n -ge 6) {
+            $fbWhy = "$n empty finder runs in a row, rotation included ($leads0 open leads, queue unchanged)"
+            [ordered]@{ until = (Get-Date).AddHours(6).ToString("s"); why = $fbWhy; long = $true } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
+            Write-Log "relay" "finder backoff 6 h: $fbWhy"
             $n = 0
         }
         elseif ($empty -and $short) {
@@ -274,6 +336,9 @@ while ($true) {
             [ordered]@{ until = (Get-Date).AddMinutes(30).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
             Write-Log "relay" "finder backoff 30 min: $fbWhy"
         }
-        [ordered]@{ streak = $n; at = (Get-Date).ToString("s") } | ConvertTo-Json | Set-Content $FinderEmpty -Encoding UTF8
+        $st2 = Get-FinderStreak   # Get-FinderWhy may have moved the rotation on during this run's start
+        [ordered]@{ streak = $n; at = (Get-Date).ToString("s")
+                    rotate = $(if ($st2.PSObject.Properties["rotate"]) { [int]$st2.rotate } else { 0 })
+                    lead = "$($st2.lead)" } | ConvertTo-Json | Set-Content $FinderEmpty -Encoding UTF8
     }
 }

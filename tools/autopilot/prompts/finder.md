@@ -57,7 +57,10 @@ due comes before both.
   queued or spec id in `result` (if the page holds more good items, keep it open instead and put where to go on in
   `note`), or `"dropped"` with the items you read and why each fails (moved to `backlog_done.jsonl`). "Venue crawl"
   or "no tradeable rule" without naming what you read is not a valid reason (2026-10-25: 30 finder runs in a row
-  dropped nothing and queued nothing on that excuse). Every normal run opens at least the oldest open lead.
+  dropped nothing and queued nothing on that excuse). Every normal run opens at least the oldest open lead, except
+  when the reason has a **ROTATE** line (owner 2026-11-02: 3 runs on 11-01 re-hit arXiv listings that answered HTTP
+  429): then open the lead it names first, and skip any lead whose `note` says the fetch failed (429, timeout) unless
+  an hour has passed since that note; a fetch that fails again goes in `note` with the time.
   **Deep, not wide** (owner 2026-10-25: hundreds of shallow runs queued almost nothing that passed). Take the lead
   that aims at the biggest gap not "tried", read its source in full (definitions, tables, the out-of-sample section),
   and queue 1 or 2 items from it. Then go on to the next lead only if turns are left. One idea read in full and
