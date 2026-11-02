@@ -20,9 +20,11 @@
 #   7b. A leg came into or left docs/book.json: the portfolio manager (also weekly, Saturday task).
 #   7c. Today's 06:00 doctor failed (a limit) or never ran by 08:00: the doctor, at most twice a day (doctor-retry.json).
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
-#   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
-#      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder run under 2
-#      minutes that queued nothing and closed no lead backs the finder off 30 minutes (finder-backoff.json). After 2
+#   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data.
+#      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder
+#      run that queued no idea backs the finder off 60 minutes, 120 while the week is over budget.skip_above, 30 for a
+#      run under 2 minutes that closed no lead either (finder-backoff.json; owner 2026-11-02: closing leads alone ran it
+#      31 times in a day for 0 ideas). After 2
 #      empty runs in a row (finder-empty.json) the reason adds ROTATE: one named lead further down the backlog, of
 #      another kind each time, since the oldest leads are the dead ones; and once a day the builder takes a backlog
 #      lead itself (BACKLOG LEAD, step 8b). 6 empty runs in a row back the finder off 6 hours, lifted by a new steer.md.
@@ -142,8 +144,8 @@ function Get-FinderWhy {
     if ($stuck.Count) { Write-Log "relay" "data item(s) stuck after $DataTryCap finder runs, priority dropped: $(($stuck | ForEach-Object { $_.id }) -join ', ')" }
     $waiting = Get-QueueWaiting
     if ($waiting -ge 2) { return $null }
-    # Empty-run backoff (owner 2026-10-25): a finder run under 2 minutes that queued nothing and closed no lead
-    # waits 30 minutes before the next one (it re-ran every 5 minutes). A data item due is not held back.
+    # Backoff (owner 2026-10-25, widened 2026-11-02): a finder run that queued no idea waits 60 minutes (120 with the
+    # week over budget; 30 for a run under 2 minutes that closed no lead either). A data item due is not held back.
     $fb = if (Test-Path $FinderBackoff) { try { Get-Content $FinderBackoff -Raw | ConvertFrom-Json } catch { $null } }
     if ($fb -and $fb.until -and ([datetime]$fb.until) -gt (Get-Date)) {
         # A new steer.md lifts the 24-hour backoff (it names new targets); the 30-minute one just runs out.
@@ -366,10 +368,14 @@ while ($true) {
             Write-Log "relay" "finder backoff 6 h: $fbWhy"
             $n = 0
         }
-        elseif ($empty -and $short) {
-            $fbWhy = "run of $([int]((Get-Date) - $t0).TotalSeconds) s queued nothing and closed no lead ($leads0 open)"
-            [ordered]@{ until = (Get-Date).AddMinutes(30).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
-            Write-Log "relay" "finder backoff 30 min: $fbWhy"
+        elseif (($why -like "queue low*") -and ((Get-QueueLines) -le $queue0)) {
+            # No idea queued (owner 2026-11-02): closing leads alone ran the finder 31 times in a day for 0 ideas.
+            # Such a run waits 60 minutes, 120 with the week over budget.skip_above; a run under 2 minutes that also
+            # closed no lead waits 30 (owner 2026-10-25) unless the budget is over. An idea queued sets no gap.
+            $gap = if ($overBudget) { 120 } elseif ($empty -and $short) { 30 } else { 60 }
+            $fbWhy = "run queued no idea ($leads0 open leads before, $(Get-OpenLeads) after)$(if ($overBudget) { '; week over budget' })"
+            [ordered]@{ until = (Get-Date).AddMinutes($gap).ToString("s"); why = $fbWhy } | ConvertTo-Json | Set-Content $FinderBackoff -Encoding UTF8
+            Write-Log "relay" "finder backoff $gap min: $fbWhy"
         }
         $st2 = Get-FinderStreak   # Get-FinderWhy may have moved the rotation on during this run's start
         [ordered]@{ streak = $n; at = (Get-Date).ToString("s")
