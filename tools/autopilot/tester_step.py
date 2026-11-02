@@ -205,6 +205,13 @@ RANGE = re.compile(r"(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*%")
 GOALX = re.compile(r"\d+(?:\.\d+)?x(?![\w.])")
 
 
+def eq_dd(r):
+    """The relative equity drawdown (the deepest fall from a peak, as % of that peak: the prop-rule measure), else
+    the maximal one's %, else None. Every drawdown figure here comes from this (owner 2026-11-02)."""
+    v = r.get("eq_dd_rel_pct")
+    return v if v is not None else r.get("eq_dd_max_pct")
+
+
 def expect_figures(job, r, goal_share_pct=None):
     """The figures of a result to compare with the expect text: return / drawdown of a plain run, the share of
     months at the goal of a month series."""
@@ -212,8 +219,8 @@ def expect_figures(job, r, goal_share_pct=None):
     if r:
         if r.get("return_pct") is not None:
             figs["return"] = float(r["return_pct"])
-        if r.get("eq_dd_max_pct") is not None:
-            figs["dd"] = float(r["eq_dd_max_pct"])
+        if eq_dd(r) is not None:
+            figs["dd"] = float(eq_dd(r))
     if goal_share_pct is not None:
         figs["return"] = float(goal_share_pct)
     return figs
@@ -300,8 +307,7 @@ def log_problems(folder):
 def run_lines(r):
     by_year = ", ".join(f"{y} {v:+,.0f}" for y, v in (r.get("by_year") or {}).items())
     wd = r.get("worst_day") or {}
-    # the relative drawdown (the deepest fall from a peak, as % of that peak) is the prop-rule measure
-    dd = r.get("eq_dd_rel_pct") or r.get("eq_dd_max_pct") or 0
+    dd = eq_dd(r) or 0
     ret = r.get("return_pct")
     return [
         f"| Net profit | {r.get('net', 0):+,.2f} ({ret:+.1f}%) |" if ret is not None else f"| Net profit | {r.get('net')} |",
@@ -344,7 +350,7 @@ def write_run_summary(job, folders):
         out.append("")
     if len(results) == 2 and all(results):
         a, b = results
-        rd = [(x.get("return_pct") or 0) / x["eq_dd_max_pct"] if x.get("eq_dd_max_pct") else None for x in results]
+        rd = [(x.get("return_pct") or 0) / eq_dd(x) if eq_dd(x) else None for x in results]
         if None not in rd:
             out += ["## On against off", "",
                     f"Return per unit of equity drawdown: off {rd[0]:.1f}, on {rd[1]:.1f} "
@@ -491,7 +497,7 @@ def collect(q, job):
     results = write_run_summary(job, folders)
     r = results[-1] or {}
     head = (f"net {r.get('net', 0):+,.0f} ({r.get('return_pct', 0):+.0f}%), {r.get('trades')} trades, "
-            f"PF {r.get('profit_factor')}, equity DD {r.get('eq_dd_max_pct')}%")
+            f"PF {r.get('profit_factor')}, equity DD {eq_dd(r)}% (relative)")
     job["status"] = "done"
     note_add(job, f"Collected by tools/autopilot/tester_step.py {now():%Y-%m-%d %H:%M}: {head}; summary.md written.")
     add_run(f"Collected {jid} ({job['expert']} {job.get('tag')}): {head}", f"{jid} done, needs judging")
