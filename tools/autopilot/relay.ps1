@@ -18,6 +18,7 @@
 #      script runs detached (fetch_runner.py step, every pass); the item is skipped while it runs, then the finder
 #      closes it.
 #   7b. A leg came into or left docs/book.json: the portfolio manager (also weekly, Saturday task).
+#   7c. Today's 06:00 doctor failed (a limit) or never ran by 08:00: the doctor, at most twice a day (doctor-retry.json).
 #   8. An idea waiting for the builder ("new" or "testing", data items excepted): the builder.
 #   9. Otherwise the finder, when fewer than 2 ideas wait, to work its lead backlog or fetch data (no budget brake).
 #      The reason it is given says MODE: scout (fewer than 10 open leads, once a day; or none open) or MODE: normal. A finder run under 2
@@ -108,6 +109,24 @@ function Get-BuilderLead {
     $live = @(Get-LiveLeads | Where-Object { "$($_.note)" -notmatch '429|timed out|timeout|retry later' })
     $pick = @($live | Where-Object { $_.kind -in @("variant", "leg", "prebuilt") }) + @($live)
     if ($pick.Count) { return $pick[0] } else { return $null }
+}
+$DoctorRetry = Join-Path $LogDir "doctor-retry.json"   # {day, n}: the relay's doctor re-runs today
+# Doctor catch-up (owner 2026-11-02): the 06:00 doctor hit the 5-hour limit on 2026-11-01 and nobody re-ran it.
+# A failed run today, or no run today by 08:00 (PC asleep at 06:00), gets the doctor again from the relay, at least
+# 30 minutes after the failed run (the router's backoff keeps a limited provider out), at most twice a day.
+function Get-DoctorDue {
+    $now = Get-Date; $today = $now.ToString("yyyy-MM-dd")
+    $rt = if (Test-Path $DoctorRetry) { try { Get-Content $DoctorRetry -Raw | ConvertFrom-Json } catch { $null } }
+    $n = if ($rt -and $rt.day -eq $today) { [int]$rt.n } else { 0 }
+    if ($n -ge 2) { return $null }
+    $l = Get-Last "doctor"
+    if ($l -and $l.runs_day -eq $today) {
+        if ($l.failed -ne $true) { return $null }
+        if (($now - (Get-LastEnd "doctor")).TotalMinutes -lt 30) { return $null }
+        return "today's doctor run failed ($($l.fail_why)); catch-up $($n + 1) of 2"
+    }
+    if ($now.Hour -lt 8) { return $null }
+    return "no doctor run today by 08:00; catch-up $($n + 1) of 2"
 }
 function Get-Unreviewed {
     return @(Get-QueueItems | Where-Object { $_.status -eq "tester" -and -not ($_.PSObject.Properties.Name -contains "review") }).Count
@@ -211,8 +230,9 @@ $FailPauseMin = 120
 while ($true) {
     if (Test-Path $Pause) { Write-Log "relay" "paused (logs\autopilot\PAUSE exists; the keeper log says when it was set)"; break }
     $mutex = New-Object System.Threading.Mutex($false, "Local\AurumAgent")
-    if (-not $mutex.WaitOne(0)) { break }
-    $mutex.ReleaseMutex()
+    if ($mutex.WaitOne(0)) { $mutex.ReleaseMutex() }
+    elseif ($DryRun) { Write-Output "an agent is running; after it:" }
+    else { break }
 
     $r = if (Test-Path $Relay) { try { Get-Content $Relay -Raw | ConvertFrom-Json } catch { $null } }
     $now = Get-Date
@@ -271,6 +291,14 @@ while ($true) {
         if (-not $DryRun) {
             $legs = @((Get-Content (Join-Path $Repo "docs\book.json") -Raw -Encoding UTF8 | ConvertFrom-Json).legs.PSObject.Properties.Name | Sort-Object)
             [ordered]@{ legs = $legs; at = (Get-Date).ToString("s") } | ConvertTo-Json | Set-Content $BookSeen -Encoding UTF8
+        }
+    }
+    elseif ($off -notcontains "doctor" -and ($dWhy = Get-DoctorDue)) {
+        $role = "doctor"; $why = $dWhy
+        if (-not $DryRun) {
+            $rt = if (Test-Path $DoctorRetry) { try { Get-Content $DoctorRetry -Raw | ConvertFrom-Json } catch { $null } }
+            $dn = if ($rt -and $rt.day -eq $now.ToString("yyyy-MM-dd")) { [int]$rt.n + 1 } else { 1 }
+            [ordered]@{ day = $now.ToString("yyyy-MM-dd"); n = $dn } | ConvertTo-Json | Set-Content $DoctorRetry -Encoding UTF8
         }
     }
     elseif ($off -notcontains "builder" -and (Get-QueueWaiting) -gt 0 -and (Invoke-Prescreen) -gt 0) { $role = "builder"; $why = "$(Get-QueueWaiting) idea(s) waiting" }

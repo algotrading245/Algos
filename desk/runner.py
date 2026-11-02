@@ -30,7 +30,8 @@ AGENTS = paths.DESK / "agents"
 SETTINGS = AGENTS / "settings.json"
 BUDGET = paths.STATE / "budget.json"
 HEAD = brief.HEAD
-LIMIT_RE = re.compile(r"hit your (weekly |daily |session |usage )*limit", re.I)
+# "You've hit your 5-hour limit" (2026-11-01) had a hyphen the old word list did not allow.
+LIMIT_RE = re.compile(r"hit your ([\w-]+ )*limit", re.I)
 LIMIT_STATE = paths.STATE / "usage_limit.json"
 
 

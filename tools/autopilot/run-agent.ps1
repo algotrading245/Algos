@@ -331,8 +331,9 @@ $recent
     # same work up (or, with none left, the relay goes code-only until one is back). Both CLIs word these differently;
     # "session limit" and "hit your (weekly) limit" are Claude's caps, the rest are Qwen's API side. Only a failed or
     # near-empty run counts, so a long report that merely mentions a rate limit does not trip it; stderr always counts.
-    # "You've hit your weekly limit · resets 5pm (Europe/Berlin)" was missed on 2026-10-30 (202 builder retries).
-    $limitRx = '(?i)usage limit|rate limit|session limit|weekly limit|hit your (\w+ )?limit|limit reached|limit will reset|quota|insufficient balance|invalid api key|incorrect api key|arrearage|access denied'
+    # "You've hit your weekly limit · resets 5pm (Europe/Berlin)" was missed on 2026-10-30 (202 builder retries),
+    # "You've hit your 5-hour limit · resets 7:10am" on 2026-11-01 (the hyphen; the doctor's run was lost).
+    $limitRx = '(?i)usage limit|rate limit|session limit|weekly limit|\d+-hour limit|hit your ([\w-]+ )?limit|limit reached|limit will reset|quota|insufficient balance|invalid api key|incorrect api key|arrearage|access denied'
     $limitText = if ($code -ne 0 -or $text.Trim().Length -lt 600) { "$text`n$($err.Result)" } else { "$($err.Result)" }
     if ($limitText -match $limitRx) {
         $limitHit = $true
