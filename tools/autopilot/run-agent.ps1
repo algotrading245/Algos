@@ -310,11 +310,13 @@ $recent
     # Failed runs in a row; the relay pauses the role at 3 (2026-10-30: 206 failed builder starts on a limit
     # message the pattern did not know).
     $fails = if ($failed) { $(if ($prev -and $prev.fails_in_row) { [int]$prev.fails_in_row } else { 0 }) + 1 } else { 0 }
-    @{ role = $Role; provider = $route.provider; model = $route.model; tier = $route.tier
+    # Limit hits today (the limit block below adds one); the relay holds the role for the day at $LimitHitCap.
+    $lHits = if ($prev -and $prev.limit_day -eq $day) { [int]$prev.limit_hits } else { 0 }
+    $rec = @{ role = $Role; provider = $route.provider; model = $route.model; tier = $route.tier
        started = $started.ToString("s"); ended = (Get-Date).ToString("s"); exit = $code; timed_out = $timedOut
        next = $next; reason = $reason; idle = [bool]($idle -and -not $failed); failed = [bool]$failed; fail_why = $failWhy
-       empty_streak = $streak; fails_in_row = $fails; runs_day = $day; runs_today = $runs } |
-        ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
+       empty_streak = $streak; fails_in_row = $fails; runs_day = $day; runs_today = $runs; limit_day = $day; limit_hits = $lHits }
+    $rec | ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
     # Token budget (owner 2026-10-22): one line per run in logs\autopilot\usage.jsonl (budget.py reads the cost and
     # token counts from the events file); the relay skips the nice-to-have runs when the week's use is high.
     $bu = & python.exe (Join-Path $PSScriptRoot "budget.py") record --role $Role --provider "$($route.provider)" --model "$($route.model)" --events $evFile 2>&1
@@ -337,6 +339,8 @@ $recent
     $limitText = if ($code -ne 0 -or $text.Trim().Length -lt 600) { "$text`n$($err.Result)" } else { "$($err.Result)" }
     if ($limitText -match $limitRx) {
         $limitHit = $true
+        $rec.limit_hits = $lHits + 1
+        $rec | ConvertTo-Json | Set-Content $lastFile -Encoding UTF8
         # PowerShell 5.1 mangles quotes in native arguments and drops empty ones, so the reason is kept plain.
         $why = (([regex]::Match($limitText, "(?i)[^\r\n]{0,60}($limitRx)[^\r\n]{0,60}").Value) -replace '["''\\]', '').Trim()
         if (-not $why) { $why = "limit" }

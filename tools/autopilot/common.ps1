@@ -93,6 +93,7 @@ function Get-DataWaiting {
 # item "new", it loses its priority, so one stuck item cannot loop the finder (2026-10-22: 68 runs on data_ftmo_specs,
 # whose file already existed). The doctor reports the stuck ones.
 $DataTryCap = 3
+$LimitHitCap = 6   # relay: a role that hits a usage limit this often in a day waits for the next day (owner 2026-11-02)
 $DataTries = Join-Path $LogDir "data-tries.json"
 function Get-DataTries {
     $h = @{}

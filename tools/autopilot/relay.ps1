@@ -327,6 +327,13 @@ while ($true) {
             break
         }
     }
+    # Hard cap on limit hits (owner 2026-11-02): router.py spaces the retries after a limit, but a role that keeps hitting
+    # one ($LimitHitCap times today, common.ps1) waits for tomorrow; the doctor reports it.
+    if ($lr0 -and $lr0.limit_day -eq $now.ToString("yyyy-MM-dd") -and [int]$lr0.limit_hits -ge $LimitHitCap) {
+        $msg = "$role held until tomorrow: $($lr0.limit_hits) usage-limit hits today (cap $LimitHitCap)"
+        if ($DryRun) { Write-Output $msg } else { Write-Log "relay" $msg }
+        break
+    }
     if (-not $DryRun) {
         # Written before the agent starts, so an agent that fails cannot leave a stale hand-over behind.
         [ordered]@{ from = $role; next = "none"; due = $now.ToString("s"); reason = "started by the relay" } |
