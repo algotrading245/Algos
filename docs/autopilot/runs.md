@@ -178,3 +178,4 @@ committed).
 | 2026-11-02 11:47 | judge | demo ALERT 11:45 (USDJPY 10017) | same trade-disabled burst, 659 failed sends; noted, fix_refused_retry review next |
 | 2026-11-02 11:50 | judge | demo ALERT 11:47 (USDJPY 10017) + review fix_refused_retry | same burst (785 sends, a7); review REDO: no 1.24/1.44 compile logs, tester 10018 back-off unverified; fix_refused_retry2 queued |
 | 2026-11-02 11:53 | judge | demo ALERT 11:48 USDJPY 10017 | last send of the counted burst (785), no new action; fix_refused_retry2 next |
+| 2026-11-02 11:56 | tester | Started j21 (AurumFunded bko0_off) | j21 running in 2026-11-02_1156_AurumFunded_bko0_off |
