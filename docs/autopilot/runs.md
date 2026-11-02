@@ -175,3 +175,4 @@ committed).
 | 2026-11-02 11:40 | judge | demo ALERT 11:34: breakout USDJPY retcode 10017 | same cause as 04:45 (trading disabled on server, a7 pending); breakout resends every tick (436 in 2 min); fix_refused_retry queued |
 | 2026-11-02 11:38 | judge | demo ALERT 11:36 (USDJPY 10017) | tail of the 11:34 burst (444 failed sends, last 11:36:00); no new action, fix_refused_retry queued, a7 pending |
 | 2026-11-02 11:43 | judge | demo ALERT 11:39 USDJPY 10017 | same trade-disabled burst (537 sends); HANDOFF noted, fix_refused_retry awaits review |
+| 2026-11-02 11:47 | judge | demo ALERT 11:45 (USDJPY 10017) | same trade-disabled burst, 659 failed sends; noted, fix_refused_retry review next |

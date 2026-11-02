@@ -313,6 +313,9 @@ each finished piece of work.
     `fix_refused_retry` into AurumFunded 1.24 (60 s back-off after a refusal, commit 04006be). It is not reviewed yet
     and not deployed: deploying 1.24 on T16 needs the owner's yes, so these ALERTs keep coming until then or until a7
     is resolved.
+  - **Judge 2026-11-02 11:46, fifth ALERT (11:45:54):** the same burst again; 659 failed sends in the day log, last at
+    11:46:10.955, same 0.02 USDJPY buy at stop 157.448, same cause (a7). No new action; the next judge run reviews
+    `fix_refused_retry` (1.24) so it is ready when the owner allows the deploy.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
