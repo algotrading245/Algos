@@ -325,6 +325,13 @@ each finished piece of work.
   - **Judge 2026-11-02 11:52, seventh ALERT (11:48:10):** this is the last send of the burst already counted at 11:50.
     The day log still has 785 failed sends, the last at 11:48:10.944, and none after it. Same cause (a7). No new
     action. Next: the builder's `fix_refused_retry2`.
+  - **Judge 2026-11-02 12:35, eighth ALERT (12:30:15), midday leg, same cause (a7):** 173 failed EURUSD sells of
+    0.18 lots from 12:29:59.606 to 12:30:59.108, about 3 a second. Its window then closed. The day log now has 958
+    failed sends: breakout 777 (11:33:44-11:48:10), midday 173 and Dual 8. The journal still has no line that
+    re-enables trading after 03:14:19. The midday leg sends through the shared `g_trade` (`Legs.mqh:979`), so the 1.25
+    back-off (`Legs.mqh:111-128`, `InpRefuseBackoffSec` 60) covers it as well, and no new fix item is needed. 1.25
+    waits for j21 (running) and then the owner's yes to deploy. More ALERTs will come at each leg's entry window until
+    a7 is resolved.
     **Owner:** do not deploy 1.24 until `fix_refused_retry2` passes.
   - **Judge 2026-11-02 12:02, review of `fix_refused_retry2` (77df371): CLEAN.** The back-off is now the input
     `InpRefuseBackoffSec` (default 60). Funded is 1.25 and Hydra 1.45, and both compile 0/0 with their logs committed.
