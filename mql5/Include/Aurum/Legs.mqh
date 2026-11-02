@@ -108,7 +108,9 @@ private:
       if(rc==TRADE_RETCODE_TRADE_DISABLED || rc==TRADE_RETCODE_CLIENT_DISABLES_AT || rc==TRADE_RETCODE_MARKET_CLOSED ||
          rc==10044)    // close only
         {
-         datetime until=TimeLocal()+60;
+         if(InpRefuseBackoffSec<=0)
+            return(ok);
+         datetime until=TimeLocal()+InpRefuseBackoffSec;
          if(rc==TRADE_RETCODE_TRADE_DISABLED || rc==TRADE_RETCODE_CLIENT_DISABLES_AT)
             m_accUntil=until;
          else
@@ -123,7 +125,7 @@ private:
             m_symName[slot]=sym;
             m_symUntil[slot]=until;
            }
-         PrintFormat(AURUM_NAME+": server refused an order on %s (retcode %d, %s); no new entries for 60 s",sym,(int)rc,m_result.comment);
+         PrintFormat(AURUM_NAME+": server refused an order on %s (retcode %d, %s); no new entries for %d s",sym,(int)rc,m_result.comment,InpRefuseBackoffSec);
         }
       return(ok);
      }

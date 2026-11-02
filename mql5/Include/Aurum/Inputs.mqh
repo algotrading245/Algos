@@ -281,3 +281,4 @@ input group "Execution"
 input long   InpMagic           = AURUM_MAGIC; // First magic number: +0 session, +1 dip, +2 bell, +3 Tokyo, +4 midday, +5 fast, +6 hold, +11.. grid, +20 and +21 fix, +22 stock-fall fix, +23 Tokyo morning, +24 after a holiday, +25 overnight drift, +26 and +27 USD/JPY breakout, +28 and +29 noise-area index legs
 input int    InpGoldDeviation   = 30;     // Max slippage on gold, points
 input int    InpFxDeviation     = 10;     // Max slippage on the currency pairs, points
+input int    InpRefuseBackoffSec = 60;    // After a server refusal (trade disabled, market closed, close only) no new entries for this long, seconds (0 = off, the pre-1.25 behaviour)

@@ -1,0 +1,4 @@
+AurumFunded.mq5 v1.25 compile, 2026-11-02, builder (tools/autopilot/compile.ps1 -Expert AurumFunded)
+Change: 60 s back-off after server refusals in CAurumTrade (Legs.mqh) is now the input InpRefuseBackoffSec (default 60, 0 = off = the 1.23 behaviour), so one binary runs both sides of the tester check.
+
+Result: 0 errors, 0 warnings, 6792 ms elapsed, cpu='X64 Regular'

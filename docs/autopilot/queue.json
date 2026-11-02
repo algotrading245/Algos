@@ -503,6 +503,27 @@
       "note": "Judge 2026-11-01 08:45: FAIL, see result; candidate graziani_rev rejected as built; re-gate on the EA clock is builder item fix_graziani_clock. | Collected by tools/autopilot/tester_step.py 2026-11-01 04:17: net +13,732 (+137%), 2298.0 trades, PF 1.63, equity DD 7.75%; summary.md written. Off run collected, on run started by tools/autopilot/tester_step.py 2026-11-01 03:42. Started by tools/autopilot/tester_step.py 2026-11-01 03:10 on MetaTrader 5 - Tester. | Judge 2026-11-01 03:40: review of v1.22 found 2 blocking process items (no Hydra compile log; lesson-21 book exits not modelled); fix item fix_graziani_rev2. Job was already running, so not put on hold; its result is not counted (PASS/FAIL) until fix_graziani_rev2 is done.",
       "folder_on": "backtests\\2026-11-01_0342_AurumFunded_grz2_on",
       "result": "FAIL (judge 2026-11-01 08:45, Step 16 fidelity): the leg added on-off +392.58 USD (+3.9% of 10k) at +0.69 pt equity DD (7.06 -> 7.75%), return/DD 18.9 -> 17.7, against expect +100-200; but the gated model is not the EA rule. research/graziani_reversal.py:27 keeps M1 bars before 16:00 FILE clock, and the histdata file clock is the server clock (Europe/Athens): on 2024-04-30 its close is 5096.04 (15:00 bucket), the cash close 5035 only shows in the 22:00 bucket. So the Python 4th-Friday and month-end prices are about 09:00 New York, the EA uses the D1 close and 22:30 server (15:30 NY). On 2024.01-2025.04 the two signal different months (Python US500 entries 02-29, 05-31, 09-30, 10-31, 12-31, 01-31, 03-31; tester 01-31, 04-30, 08-30, 12-31, then 04-30, 07-31, 08-29). The gate figures (halves 0.44/0.57, book 3.29->3.36) are not evidence for the traded rule. Also 5 of 8 tester holds closed off schedule (2024-10-28 01:05 clock cut, 2025-02-27 23:02, 2025-04-04 17:15, 2025-05-01 13:52 day stop, 2025-08-01 19:54), lesson 21. j20 = j19 to the cent (same v1.22 code: j19 on-run log has the v1.22 renewal line)."
+    },
+    {
+      "id": "j21",
+      "expert": "AurumFunded",
+      "symbol": "XAUUSD",
+      "period": "M15",
+      "preset": "mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_grz.set",
+      "deposit": 10000,
+      "leverage": 33,
+      "tag": "bko0",
+      "set": [
+        "InpRefuseBackoffSec=0"
+      ],
+      "compare_set": [
+        "InpRefuseBackoffSec=60"
+      ],
+      "from": "2024.01.01",
+      "to": "2025.09.30",
+      "status": "queued",
+      "needs": null,
+      "expect": "Check for fix_refused_retry2 on AurumFunded v1.25 (build 04006be + input InpRefuseBackoffSec). Off run = back-off 0 = the v1.23 behaviour, on run = 60 s back-off (v1.24 behaviour); the month-reversal leg stays off (InpGrzMult=0), so the book is the j19 off run (about 2298 trades, +137%, equity DD 7.75%). Expect the two trade lists to match: same count, same open times and prices. Any difference is a retry the tester made after a 10018/10027 refusal at a session edge that the 60 s back-off delayed; list those (compare deal times and the 'server refused an order' log lines). Do not tune on this window."
     }
   ]
 }
