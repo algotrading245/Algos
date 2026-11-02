@@ -297,6 +297,14 @@ each finished piece of work.
   A new account starts a new record, so write its start date in `docs/demo_log.md` (judge runs may not edit that file).
   Tool proposal (agents do not edit `tools/`): `tools/demo_check.py` should also scan the journal for "trading has been
   disabled" and raise it as an ALERT of its own, so the cause is named at the reconnect.
+  - **Judge 2026-11-02 11:40, second ALERT (11:34), same cause:** the breakout leg's USDJPY buy 0.02 (stop 157.448)
+    failed with 10017. The journal still shows no line re-enabling trading after 03:14:19. New finding: the
+    breakout leg resends a refused order on every tick, with 436 failed sends from 11:33:44 to 11:35:49 and still
+    going. Its failure branch (`Legs.mqh:1934-1937`) does not mark the day as traded. The tries are harmless on this
+    disabled demo, but on a funded account hundreds of refused requests a minute are a risk in themselves. Queued
+    builder item `fix_refused_retry` (back off on 10017/10018/10027/10044, log once). It is separate from
+    `fix_stop_switch`, which covers only the dashboard stop flag. Until a7 is resolved, expect more of these ALERTs
+    whenever a leg's entry window opens.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
