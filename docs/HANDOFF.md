@@ -308,6 +308,11 @@ each finished piece of work.
   - **Judge 2026-11-02 11:40, third ALERT (11:36):** the tail of the same USDJPY burst, nothing new. The day's log
     holds 444 failed sends; the last one is at 11:36:00.977 and no later lines exist yet. Still a7 (pending) and
     `fix_refused_retry`.
+  - **Judge 2026-11-02 11:43, fourth ALERT (11:39:36):** the burst started again; the day's log now holds 537
+    failed sends, last at 11:39:36.682, the same 0.02 USDJPY buy at stop 157.448. Same cause (a7). The builder built
+    `fix_refused_retry` into AurumFunded 1.24 (60 s back-off after a refusal, commit 04006be). It is not reviewed yet
+    and not deployed: deploying 1.24 on T16 needs the owner's yes, so these ALERTs keep coming until then or until a7
+    is resolved.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from

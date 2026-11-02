@@ -174,3 +174,4 @@ committed).
 | 2026-11-02 04:45 | judge | demo ALERT 04:36: 8 x Dual Thrust JP225.cash retcode 10017 | CAUSE: the server disabled trading on the FTMO demo account at the 03:14 reconnect (journal "trading has been disabled - disabled on server"), not a breach (10050.36 vs stops 9750.36 / 9150), likely the trial expired; approvals a7 pending, HANDOFF note; demo_log.md is closed to judge edits, demo_check journal-alert change proposed |
 | 2026-11-02 11:40 | judge | demo ALERT 11:34: breakout USDJPY retcode 10017 | same cause as 04:45 (trading disabled on server, a7 pending); breakout resends every tick (436 in 2 min); fix_refused_retry queued |
 | 2026-11-02 11:38 | judge | demo ALERT 11:36 (USDJPY 10017) | tail of the 11:34 burst (444 failed sends, last 11:36:00); no new action, fix_refused_retry queued, a7 pending |
+| 2026-11-02 11:43 | judge | demo ALERT 11:39 USDJPY 10017 | same trade-disabled burst (537 sends); HANDOFF noted, fix_refused_retry awaits review |
