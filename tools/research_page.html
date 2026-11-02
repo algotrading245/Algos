@@ -358,6 +358,8 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const h=(strings,...vals)=>strings.reduce((a,s,i)=>a+s+(i<vals.length?(vals[i]&&vals[i].__raw!==undefined?vals[i].__raw:esc(vals[i])):""),"");
 const raw=s=>({__raw:s??""});
 const fmtPct=(v,d=2)=>v==null||isNaN(v)?"—":(v>0?"+":"")+Number(v).toFixed(d)+"%";
+// relative equity drawdown (the prop-rule measure), else the maximal one (owner 2026-11-02)
+const ddp=r=>!r?null:(r.eq_dd_rel_pct??r.eq_dd_max_pct??r.eq_dd_pct??null);
 const fmtNum=(v,d=0)=>v==null||isNaN(v)?"—":Number(v).toLocaleString("en-GB",{maximumFractionDigits:d,minimumFractionDigits:d});
 const clip=(s,n)=>{s=String(s??"");return s.length>n?s.slice(0,n-1)+"…":s};
 const cap=s=>String(s||"").charAt(0).toUpperCase()+String(s||"").slice(1);
@@ -1208,7 +1210,7 @@ function openInspector(id){
         ${st.stopped?`<div class="note err"><b>Stopped at step ${esc(c.step)}.</b> ${esc(st.reason||"")}</div>`:""}
         ${c.summary?`<section><h4>Summary</h4><p>${esc(c.summary)}</p></section>`:""}
         ${g.gates?`<section><h4>Gates · ${esc(g.verdict||"")} <span class="faint" style="text-transform:none;font-weight:400">${esc(when(g.when))}</span></h4><div class="tbl-wrap"><table class="t"><thead><tr><th>Gate</th><th>Figure</th><th>Rule</th><th></th></tr></thead><tbody>${g.gates.map(x=>`<tr><td>${esc(x.gate)}</td><td class="num">${esc(x.figure)}</td><td class="muted">${esc(x.rule)}</td><td><span class="st ${x.pass?"pass":"fail"}">${x.pass?"pass":"fail"}</span></td></tr>`).join("")}</tbody></table></div></section>`:""}
-        ${(c.tester||[]).length?`<section><h4>Strategy Tester runs</h4>${c.tester.map(t=>`<div style="font-size:12.5px;padding:4px 0">${esc(t.symbol||"")}: ${esc(t.trades??"?")} trades, win ${esc(t.win_rate??"?")}%, PF ${esc(t.profit_factor??"?")}${t.return_pct!=null?", "+fmtPct(t.return_pct):""}${t.eq_dd_max_pct!=null?", eq DD "+t.eq_dd_max_pct+"%":""} <span class="faint mono">${esc(t.run||"")}</span></div>`).join("")}</section>`:""}
+        ${(c.tester||[]).length?`<section><h4>Strategy Tester runs</h4>${c.tester.map(t=>`<div style="font-size:12.5px;padding:4px 0">${esc(t.symbol||"")}: ${esc(t.trades??"?")} trades, win ${esc(t.win_rate??"?")}%, PF ${esc(t.profit_factor??"?")}${t.return_pct!=null?", "+fmtPct(t.return_pct):""}${ddp(t)!=null?", eq DD "+ddp(t)+"%":""} <span class="faint mono">${esc(t.run||"")}</span></div>`).join("")}</section>`:""}
         ${c.notes?`<section><h4>Notes</h4><p>${esc(c.notes)}</p></section>`:""}`;
       act=`${g.gates?`<button class="btn" data-doc="docs/gates/${esc(c.id)}.json">${icon("shieldok","sm")}Gate file</button>`:""}<button class="btn" data-doc="docs/candidates.md">${icon("doc","sm")}candidates.md</button>${showG}`;
     }else if(n.type==="job"){wide=true;body=`<div class="skel"></div><div class="skel" style="width:60%"></div>`;loadJob(n.job.id)}
@@ -1261,7 +1263,7 @@ async function loadJob(jid){
     const res=(r,lab)=>r?`<td class="num r">${fmtPct(r.return_pct)}</td><td class="num r">${r.eq_dd_pct!=null?fmtNum(r.eq_dd_pct,2)+"%":"—"}</td><td class="num r">${fmtNum(r.pf,2)}</td><td class="num r">${fmtNum(r.trades)}</td><td class="num r">${r.win_rate!=null?fmtNum(r.win_rate,1)+"%":"—"}</td>`:"";
     const e=j.expected;
     let rows="";
-    if(e)rows+=`<tr><td>Expected (Python / ledger)</td><td class="num r">${fmtPct(e.return_pct)}</td><td class="num r">${e.eq_dd_max_pct!=null?e.eq_dd_max_pct+"%":"—"}</td><td class="num r">${fmtNum(e.profit_factor,2)}</td><td class="num r">${fmtNum(e.trades)}</td><td class="num r">${e.win_rate!=null?e.win_rate+"%":"—"}</td></tr>`;
+    if(e)rows+=`<tr><td>Expected (Python / ledger)</td><td class="num r">${fmtPct(e.return_pct)}</td><td class="num r">${ddp(e)!=null?ddp(e)+"%":"—"}</td><td class="num r">${fmtNum(e.profit_factor,2)}</td><td class="num r">${fmtNum(e.trades)}</td><td class="num r">${e.win_rate!=null?e.win_rate+"%":"—"}</td></tr>`;
     if(j.result&&j.result.return_pct!=null)rows+=`<tr><td>${j.result_on?"Tester · legs off":"Tester"}</td>${res(j.result)}</tr>`;
     if(j.result_on&&j.result_on.return_pct!=null)rows+=`<tr><td>Tester · legs on</td>${res(j.result_on)}</tr>`;
     const series=[];if(j.result&&j.result.curve&&j.result.curve.length)series.push({name:j.result_on?"legs off":"equity",color:"#98A2B3",pts:j.result.curve});
@@ -1364,7 +1366,7 @@ function jobsTableRows(list,compact){
     <td><div style="font-weight:500">${esc(j.expert||"—")}</div><div class="faint" style="font-size:12px">${esc(j.symbol||"")} ${esc(j.period||"")}${compact?"":" · "+esc(j.tag||"")}</div></td>
     ${compact?"":`<td class="num muted" style="white-space:nowrap">${esc((j.window[0]||"?").slice(0,7))} → ${esc((j.window[1]||"?").slice(0,10))}</td>`}
     <td>${stChip(jobStatusCls(j.status),j.status)}</td>
-    <td class="num" style="font-size:12.5px">${e?`${fmtPct(e.return_pct,1)} / ${e.eq_dd_max_pct??"—"}%`:`<span class="faint" title="${esc(j.expect||"")}">${j.expect?"in note":"—"}</span>`}</td>
+    <td class="num" style="font-size:12.5px">${e?`${fmtPct(e.return_pct,1)} / ${ddp(e)??"—"}%`:`<span class="faint" title="${esc(j.expect||"")}">${j.expect?"in note":"—"}</span>`}</td>
     <td class="num" style="font-size:12.5px">${r?esc(r):j.status==="failed"?`<span class="neg">failed · see details</span>`:"—"}</td>
     ${compact?"":`<td class="num r">${j.result&&j.result.pf!=null?fmtNum((j.result_on||j.result).pf,2):"—"}</td><td class="num r">${j.result&&j.result.trades!=null?fmtNum((j.result_on||j.result).trades):"—"}</td><td>${verdictChip(j)}</td><td class="muted num" style="white-space:nowrap">${esc(j.started?when(j.started):"—")}</td>`}</tr>`}).join("");
 }

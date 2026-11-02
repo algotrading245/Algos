@@ -43,7 +43,7 @@ def main(folder):
         # The tester log holds earlier runs too; only this month's round counts.
         hit = [x for start, x in ROUND.findall(text) if start.startswith(m["Month"])]
         rows.append({"month": m["Month"], "multiple": round(mult, 3), "round": float(hit[0]) if hit else None,
-                     "trades": r.get("trades"), "eq_dd_pct": r.get("eq_dd_max_pct"),
+                     "trades": r.get("trades"), "eq_dd_pct": r["eq_dd_rel_pct"] if r.get("eq_dd_rel_pct") is not None else r.get("eq_dd_max_pct"),
                      "margin_refusals": len(MARGIN.findall(text)), "status": "done"})
     x = np.array([r["multiple"] for r in rows if r["multiple"] is not None])
     best = np.array([max(r["multiple"], r["round"] or 0) for r in rows if r["multiple"] is not None])

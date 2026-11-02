@@ -149,7 +149,7 @@ def candidates_md(ledger):
             lines.append("")
         for t in c.get("tester", []):
             lines += [f"Strategy Tester ({t['run']}): {t['trades']} trades, {t['win_rate']}% winners, PF "
-                      f"{t['profit_factor']}, {t['return_pct']:+}%, max equity drawdown {t['eq_dd_max_pct']}% - "
+                      f"{t['profit_factor']}, {t['return_pct']:+}%, relative equity drawdown {t['eq_dd_rel_pct'] if t.get('eq_dd_rel_pct') is not None else t.get('eq_dd_max_pct')}% - "
                       f"{t['verdict']}.", ""]
         if c.get("notes"):
             lines += [f"Notes: {c['notes']}", ""]

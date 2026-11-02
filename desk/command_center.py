@@ -1298,7 +1298,7 @@ def _patch_research_page(src, state, live, root=None):
         rows.append(dict(_gate_figs(g), id=c.get("id"), name=_cut(c.get("name") or titles.get(c.get("id")) or _title(str(c.get("id")).replace("_", " ")), 60),
                          stage="Tester", source=_cut(re.split(r"[;(]", str(c.get("source") or c.get("published") or "—"))[0], 40),
                          markets=", ".join(syms) or "—", idea=_cut(c.get("summary") or c.get("reason") or c.get("note") or "—", 240),
-                         dd=f"{t0['eq_dd_max_pct']}%" if t0.get("eq_dd_max_pct") is not None else "—",
+                         dd=f"{_dd}%" if (_dd := t0.get("eq_dd_rel_pct") if t0.get("eq_dd_rel_pct") is not None else t0.get("eq_dd_max_pct")) is not None else "—",
                          trades=str(t0.get("trades", "—")), gate="Pass" if verdict.upper() == "PASS" else _title(verdict.lower()) or "Not Yet",
                          next=_cut(f"{_title(str(c.get('status')))} · Step {c.get('step', '—')}" + (f" · {c['job']}" if c.get("job") else ""), 60),
                          file=f"docs/gates/{c.get('id')}.json"))

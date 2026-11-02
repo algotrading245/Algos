@@ -62,6 +62,12 @@ def rjson(p, default=None):
         return default
 
 
+def eq_dd(r):
+    """The relative equity drawdown (the prop-rule measure), else the maximal one (owner 2026-11-02)."""
+    v = r.get("eq_dd_rel_pct")
+    return v if v is not None else r.get("eq_dd_max_pct")
+
+
 def jsonl(p):
     out = []
     t = rtext(p)
@@ -179,7 +185,7 @@ def result_summary(folder):
         ret = r.get("return_pct")
         if ret is None and dep and r.get("net") is not None:
             ret = round(100 * r["net"] / dep, 2)
-        out.update({"return_pct": ret, "eq_dd_pct": r.get("eq_dd_max_pct"), "pf": r.get("profit_factor"),
+        out.update({"return_pct": ret, "eq_dd_pct": eq_dd(r), "pf": r.get("profit_factor"),
                     "trades": r.get("trades"), "win_rate": r.get("win_rate"), "period": r.get("period"),
                     "sharpe": r.get("sharpe"), "worst_day": r.get("worst_day"), "deposit": dep,
                     "months_positive": r.get("months_positive"), "months_n": r.get("months"),

@@ -272,6 +272,8 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var css = function (v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); };
   var fmt = function (x, d) { return x == null || isNaN(x) ? "-" : Number(x).toFixed(d == null ? 2 : d); };
+  // relative equity drawdown (the prop-rule measure), else the maximal one (owner 2026-11-02)
+  var ddp = function (r) { return !r ? null : r.eq_dd_rel_pct != null ? r.eq_dd_rel_pct : r.eq_dd_max_pct; };
   var pct = function (x, d) { return x == null ? "-" : (x * 100).toFixed(d == null ? 1 : d) + "%"; };
   var charts = {};
   function chart(id, cfg) { if (charts[id]) charts[id].destroy(); if (!window.Chart) return; charts[id] = new Chart(document.getElementById(id), cfg); }
@@ -361,7 +363,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
       ["Book Sharpe 2018+", fmt(baseS), "equal risk, with the risk layer; worst month " + (BT.worst_month != null ? fmt(BT.worst_month * 100, 1) + "%" : "-")],
       ["Candidates", cands.length, cands.filter(function (c) { return c.gates && c.gates.verdict === "PASS"; }).length + " pass all gates"],
       ["Rejected families", D.ledger.rejected.length, (47 + D.trials) + " trials counted for the DSR"],
-      ["Last tester run", lr ? (lr.return_pct > 0 ? "+" : "") + fmt(lr.return_pct, 1) + "%" : "-", lr ? esc(lr.expert) + " " + esc(lr.symbol) + ", DD " + fmt(lr.eq_dd_max_pct, 1) + "%, PF " + fmt(lr.profit_factor) : "none yet"],
+      ["Last tester run", lr ? (lr.return_pct > 0 ? "+" : "") + fmt(lr.return_pct, 1) + "%" : "-", lr ? esc(lr.expert) + " " + esc(lr.symbol) + ", DD " + fmt(ddp(lr), 1) + "%, PF " + fmt(lr.profit_factor) : "none yet"],
       ["Demo today", demoT.error ? "-" : demoT.alert ? '<span class="down">ALERT</span>' : '<span class="up">ok</span>', demoT.error ? "checker unavailable" : (demoT.experts_lines || 0) + " EA lines in the log"],
       ["Agents", D.agents.length, "finder, builder, tester, judge, monitor, reviewer"]
     ];
@@ -431,7 +433,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
           '<div class="gnode ' + cls + (selGate[c.id] === i ? " sel" : "") + '" data-c="' + c.id + '" data-i="' + i + '" title="' + esc(x.gate) + '">' + (x.pass ? "✓" : x.pass === false ? "✕" : "?") + "</div>";
       }).join("");
       var gi = selGate[c.id] != null ? gs[selGate[c.id]] : null;
-      var tester = (c.tester || []).map(function (t) { return '<div class="sub">Tester ' + esc(t.symbol) + ": " + t.trades + " trades, " + (t.return_pct > 0 ? "+" : "") + t.return_pct + "%, DD " + t.eq_dd_max_pct + "%, PF " + t.profit_factor + " · " + esc(t.verdict) + "</div>"; }).join("");
+      var tester = (c.tester || []).map(function (t) { return '<div class="sub">Tester ' + esc(t.symbol) + ": " + t.trades + " trades, " + (t.return_pct > 0 ? "+" : "") + t.return_pct + "%, DD " + ddp(t) + "%, PF " + t.profit_factor + " · " + esc(t.verdict) + "</div>"; }).join("");
       return '<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">' + esc(c.name) + "</h3>" + (g ? verdictChip(g.verdict) : '<span class="chip idle">not gated</span>') + "</div>" +
         '<div class="row" style="margin:6px 0"><span class="chip gold">' + esc(c.status) + '</span><span class="chip idle">step ' + c.step + " / 5</span>" + (c.stress_sharpe != null ? '<span class="chip idle">Sharpe at 1.5× cost ' + c.stress_sharpe + "</span>" : "") + "</div>" +
         '<p class="sub" style="margin:6px 0">' + inline(c.summary || "") + "</p>" +
@@ -463,14 +465,14 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
     if (x) {
       h += '<div class="grid g4">' + [["Return", (x.return_pct > 0 ? "+" : "") + fmt(x.return_pct, 2) + "%", fmt(x.net, 2) + " on " + fmt(x.deposit, 0)],
         ["Trades", fmt(x.trades, 0), fmt(x.win_rate, 1) + "% winners"], ["Profit factor", fmt(x.profit_factor), "Sharpe (tester) " + fmt(x.sharpe)],
-        ["Max equity DD", fmt(x.eq_dd_max_pct, 2) + "%", "worst day " + (x.worst_day ? fmt(x.worst_day.pct) + "% on " + x.worst_day.day : "-")]]
+        ["Equity DD (relative)", fmt(ddp(x), 2) + "%", "worst day " + (x.worst_day ? fmt(x.worst_day.pct) + "% on " + x.worst_day.day : "-")]]
         .map(function (k) { return '<div class="card kpi"><div class="l">' + k[0] + '</div><div class="v">' + k[1] + '</div><div class="d">' + k[2] + "</div></div>"; }).join("") + "</div>";
       h += '<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3>Balance</h3><span class="sub">' + esc(x.expert) + " · " + esc(x.symbol) + " · " + esc(x.history_quality || "") + '</span></div><div class="chartbox"><canvas id="eqChart"></canvas></div></div>';
       h += '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Net by month</h3><div class="sub">' + x.months_positive + " of " + x.months + ' months positive</div><div class="chartbox sm"><canvas id="moChart"></canvas></div></div>';
       if (e) {
-        var rows = [["Trades", e.trades, x.trades, 0, ""], ["Winners", e.win_rate, x.win_rate, 1, "%"], ["Profit factor", e.profit_factor, x.profit_factor, 2, ""], ["Return", e.return_pct, x.return_pct, 2, "%"], ["Max equity DD", e.eq_dd_max_pct, x.eq_dd_max_pct, 2, "%"]];
+        var rows = [["Trades", e.trades, x.trades, 0, ""], ["Winners", e.win_rate, x.win_rate, 1, "%"], ["Profit factor", e.profit_factor, x.profit_factor, 2, ""], ["Return", e.return_pct, x.return_pct, 2, "%"], ["Equity DD (relative)", ddp(e), ddp(x), 2, "%"]];
         h += '<div class="card"><h3>Expected vs tester</h3><div class="tablewrap"><table><tr><th></th><th>Python</th><th>Tester</th><th>Gap</th></tr>' + rows.filter(function (q) { return q[1] != null; }).map(function (q) {
-          var gap = q[2] - q[1], good = q[0] === "Max equity DD" ? gap <= 0 : gap >= 0;
+          var gap = q[2] - q[1], good = q[0] === "Equity DD (relative)" ? gap <= 0 : gap >= 0;
           return "<tr><td>" + q[0] + '</td><td class="mono">' + fmt(q[1], q[3]) + q[4] + '</td><td class="mono">' + fmt(q[2], q[3]) + q[4] + '</td><td class="mono ' + (good ? "up" : "down") + '">' + (gap > 0 ? "+" : "") + fmt(gap, q[3]) + "</td></tr>"; }).join("") + "</table></div></div>";
       } else h += '<div class="card"><h3>Net by year</h3><div class="tablewrap"><table>' + Object.keys(x.by_year || {}).map(function (y) { return "<tr><td>" + y + '</td><td class="mono ' + (x.by_year[y] >= 0 ? "up" : "down") + '">' + fmt(x.by_year[y]) + "</td></tr>"; }).join("") + "</table></div></div>";
       h += "</div>";
