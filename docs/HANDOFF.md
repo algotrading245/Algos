@@ -322,6 +322,9 @@ each finished piece of work.
     The claim that "no tester job is needed" is unverified. Builder item `fix_refused_retry2`: commit both compile
     logs, then run a 1.23-vs-1.24 tester pair and check that the trade lists match. Minor findings: Send drops the
     caller's price (Legs.mqh:106); other legs still log every tick while backed off; the back-off uses TimeLocal.
+  - **Judge 2026-11-02 11:52, seventh ALERT (11:48:10):** this is the last send of the burst already counted at 11:50.
+    The day log still has 785 failed sends, the last at 11:48:10.944, and none after it. Same cause (a7). No new
+    action. Next: the builder's `fix_refused_retry2`.
     **Owner:** do not deploy 1.24 until `fix_refused_retry2` passes.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
