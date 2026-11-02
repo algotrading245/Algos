@@ -480,3 +480,7 @@
 {"id": "arxiv_qfin_pm_2510", "gap": "weeks+ horizon", "kind": "paper", "title": "arXiv q-fin.PM Oct 2025 listing (non-trend allocation rules, sizing)", "link": "https://arxiv.org/list/q-fin.PM/2510", "note": "Look for sizing or regime rules applicable to existing legs; 429 risk.", "status": "dropped", "added": "2026-11-02", "result": "listing URL 404"}
 {"id": "ofr_wp_2025", "status": "dropped", "result": "read OFR 2024-25 list: odd-lot liquidity (single stocks), CDS price discovery; no index/FX/gold rule", "added": "2026-11-02"}
 {"id": "riksbank_wp_2025", "status": "dropped", "result": "listing URL 404 on 2026-11-02; overnight-return web search found only Boyarchenko et al 1998-2019 (no post-2018 OOS, swap-heavy)", "added": "2026-11-02"}
+{"closed": "2026-11-02", "id": "alphaarchitect_blog", "result": "replaced by named strategy leads 2026-11-02", "status": "dropped"}
+{"closed": "2026-11-02", "id": "jfm_futures_2025", "result": "replaced by named strategy leads 2026-11-02", "status": "dropped"}
+{"closed": "2026-11-02", "id": "boc_swp_2025", "result": "replaced by named strategy leads 2026-11-02", "status": "dropped"}
+{"closed": "2026-11-02", "id": "boe_swp_2025", "result": "replaced by named strategy leads 2026-11-02", "status": "dropped"}

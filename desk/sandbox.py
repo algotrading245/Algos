@@ -154,6 +154,18 @@ def context(e, market, cfg=None):
     return ctx
 
 
+def edge_trades(name, market, params=None, cfg=None, start=None, end=None):
+    """The trades of one edge on one market before the holdout, at real costs (view sim edge resamples them)."""
+    cfg = cfg or paths.config()
+    e = edges.get(name)
+    spec = cfg["instruments"].get(market, {})
+    if spec.get("cost") is None:
+        raise ValueError(f"no cost for {market} in config.json")
+    df = _cut(base.hist_bars(market, e["tf"], cfg), start, end)
+    sigs = edges.run(name, df, params, context(e, market, cfg))
+    return simulate(df, sigs, costs(df, spec["cost"], spec.get("class")))
+
+
 def run_edge(name, market=None, params=None, start=None, end=None, cfg=None, save=True):
     """Backtest one edge on one market (or all its markets); update its card. Returns {market: stats}."""
     cfg = cfg or paths.config()
@@ -187,6 +199,58 @@ def run_edge(name, market=None, params=None, start=None, end=None, cfg=None, sav
                 results={m: {k: s.get(k) for k in ("trades", "pf", "total_r", "max_dd_r", "error") if k in s}
                          for m, s in out.items()})
     return out
+
+
+def _tweak(defaults, k):
+    """One parameter change to test against the defaults: the k-th numeric one, up or down by half."""
+    nums = sorted(p for p, v in defaults.items() if isinstance(v, (int, float)) and not isinstance(v, bool) and v)
+    if not nums:
+        return {}
+    p = nums[k % len(nums)]
+    v = defaults[p]
+    f = 1.5 if (k // len(nums)) % 2 == 0 else 0.67
+    new = max(1, round(v * f)) if isinstance(v, int) else round(v * f, 4)
+    return {p: new} if new != v else {p: v + 1 if isinstance(v, int) else round(v * 1.5, 4)}
+
+
+def week_of(t):
+    y, w, _ = t.isocalendar()
+    return f"{y}-W{w:02d}"
+
+
+def weekly_task(pod, owns, t=None, cfg=None):
+    """One concrete sandbox task a week for a pod (owner 2026-11-02: 0 sandbox calls in 96 pod runs). Picked by the pod
+    and the ISO week, so it stays put all week: a library edge on one of the pod's home markets, those with no card run
+    on that market first, plus one parameter change to test against the defaults. Done when the journal holds a
+    sandbox run by the pod of that edge this week."""
+    from desk import clocks
+    import zlib
+    cfg = cfg or paths.config()
+    t = t or clocks.now()
+    week = week_of(t)
+    mkts = [m for m in owns if cfg["instruments"].get(m, {}).get("cost") is not None
+            and cfg["instruments"][m].get("hist")]
+    names = sorted(n for n, e in edges.EDGES.items() if e.get("kind") == "reference")
+    if not mkts or not names:
+        return None
+    pairs = [(n, m) for n in names for m in mkts]
+    fresh = [(n, m) for n, m in pairs
+             if m not in (paths.read_json(CARDS / f"{n}.json", {}).get("backtest") or {})]
+    pool = fresh or pairs
+    k = zlib.crc32(f"{pod}|{week}".encode())
+    name, market = pool[k % len(pool)]
+    tweak = _tweak(edges.EDGES[name]["defaults"], k // len(pool))
+    kv = " ".join(f"{p}={v}" for p, v in tweak.items())
+    start = (t - dt.timedelta(days=t.weekday())).date().isoformat()
+    done = [r for r in journal.recent(["sandbox"], 8) if r.get("by") == pod and r.get("edge") == name
+            and r.get("t", "")[:10] >= start]
+    return {"week": week, "edge": name, "market": market, "tweak": tweak,
+            "steps": [f"edge sandbox {name} {market}", f"edge sandbox {name} {market} {kv}".strip(),
+                      f"view sim edge {name} {market} n=20",
+                      f"memory learn \"{name} {market}: which version held up in both halves after costs, and why\" "
+                      f"instrument={market}"],
+            "card": edges.EDGES[name].get("card", "")[:300],
+            "done": bool(done), "runs": len(done)}
 
 
 def parse(argv):

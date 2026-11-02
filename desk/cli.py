@@ -7,6 +7,7 @@ runs with no role) approves; only the owner resumes after a kill. Orders are nev
 python -m desk.cli status
 python -m desk.cli view account|positions|tickets [--all]|quote SYM [SYM ...]|bars SYM [SYM ...] TF [N]
                         |calendar [HOURS]|triggers [POD]|journal [KIND] [DAYS]|limits|config
+                        |sim SYM ENTRY STOP TARGET HOURS [tf=] [atr=]|sim edge NAME MARKET [n=20] [live=R]
 python -m desk.cli ticket new '<json>' | @file.json
 python -m desk.cli ticket approve|reject ID "why"
 python -m desk.cli ticket cancel|close ID "why"
@@ -150,6 +151,8 @@ def view(args):
     if what == "config":
         name, prof = risk_gate.profile()
         return {"profile": name, "risk": prof, "pods": cfg["pods"], "instruments": sorted(cfg["instruments"])}
+    if what == "sim":
+        return _sim(args[1:], cfg)
     if what == "bars":
         at = next((i for i, a in enumerate(args) if i > 1 and a.upper() in TIMEFRAMES), None)
         if at is None:
@@ -176,6 +179,50 @@ def view(args):
     finally:
         b.shutdown()
     raise Refused(f"unknown view {what}")
+
+
+SIM_USE = ("view sim SYM ENTRY STOP TARGET HOURS [tf=H1] [atr=X] [n=10000]  |  "
+           "view sim edge NAME MARKET [n=20] [live=R] [key=value ...]")
+
+
+def _live_atr(sym, tf):
+    """Today's ATR(14) from the terminal, or None when it is not connected (the simulator then says so)."""
+    try:
+        from desk import broker, executor
+        b = broker.connect(paths.config())
+        if not b.connected():
+            return None
+        try:
+            a = executor.atr(b, b.resolve(sym) or sym, tf, 14)
+            return float(a) if a else None
+        finally:
+            b.shutdown()
+    except Exception:  # noqa: BLE001  (a read-only view never fails on the terminal)
+        return None
+
+
+def _sim(args, cfg):
+    """The 10,000-path simulator (desk/sim.py): read-only, history before the holdout."""
+    from desk import sim
+    pos = [a for a in args if "=" not in a]
+    kv = dict(a.split("=", 1) for a in args if "=" in a)
+    try:
+        if pos and pos[0] == "edge":
+            if len(pos) < 3:
+                raise Refused(SIM_USE)
+            from desk import sandbox
+            _, _, params, _, _ = sandbox.parse([pos[1]] + [f"{k}={v}" for k, v in kv.items() if k not in ("n", "live")])
+            return sim.edge(pos[1], pos[2], int(kv.get("n", 20)), kv.get("live"), params or None, cfg=cfg)
+        if len(pos) != 5:
+            raise Refused(SIM_USE)
+        sym = pos[0].upper()
+        hours = float(pos[4])
+        tf = (kv.get("tf") or sim.auto_tf(hours)).upper()
+        atr_now, src = (float(kv["atr"]), "given") if "atr" in kv else (_live_atr(sym, tf), "live terminal")
+        return sim.ticket(sym, *pos[1:5], atr_now=atr_now, tf=tf, n=int(kv.get("n", sim.N_PATHS)), cfg=cfg,
+                          atr_from=src if atr_now else None)
+    except (ValueError, KeyError, FileNotFoundError) as e:
+        raise Refused(str(e)) from None
 
 
 # ---- tickets ---------------------------------------------------------------------------------------------------------

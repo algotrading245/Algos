@@ -174,6 +174,17 @@ def build(role, job=None):
         out.append(_section("Armed legs" if role == systematic.POD else "Your armed legs",
                             armed if role == systematic.POD else [a for a in armed if a.get("pod") == role]))
         if owns:
+            from desk import sandbox
+            try:
+                task = sandbox.weekly_task(role, owns, t)
+            except Exception as e:
+                task = f"unavailable: {type(e).__name__}: {e}"
+            head = ("Your sandbox task this week: DONE, thanks; more runs on any edge are welcome"
+                    if isinstance(task, dict) and task["done"] else
+                    "Your sandbox task this week (one per pod per week, open until you run it; the Saturday build run "
+                    "is the time if no weekday run gets to it): run both versions, compare total R and both halves "
+                    "after costs, then share what you found")
+            out.append(_section(head, task))
             out.append(_section("Edges firing on your home markets (precomputed over the whole library, reference "
                                 "edges too, on the last 3 closed bars; evidence, not orders)", _firing(owns)))
         if role == systematic.POD:

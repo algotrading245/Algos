@@ -56,6 +56,10 @@ is fine; trading where you have no read is how pods lose.
    forecast behind them, and shows every pod's bias so you can see where you stand against the desk.
 7. If, and only if, you have a trade: draft it in `logs/desk/drafts/<pod>_<instrument>.json`, check it against
    your similar past setups once it exists (`memory similar ID` after `ticket new`), and propose it.
+   Before you propose, run `view sim SYM ENTRY STOP TARGET HOURS` (HOURS: the time stop, or how long the thesis has):
+   10,000 paths from the market's own history at today's ATR give the odds of the target before the stop for a trade
+   with no edge. Put them in `evidence` ("sim: neutral 31% target first, 22% neither by the clock"), and say what
+   lifts your trade above them. If most paths hit neither by the deadline, the target is too far for the clock.
    With no closed trades yet (the brief says so), propose your best setup at confidence 2 or more at minimum size
    (risk_pct 0.1): the desk cannot calibrate a pod that never trades.
 8. Set a trigger if you want to be woken at a level or time rather than wait for the next brief:
@@ -74,6 +78,8 @@ is fine; trading where you have no read is how pods lose.
 - The stop goes where the thesis is wrong, not at a round number of pips. If that stop is too far for a sensible
   size, the trade is not there.
 - Aim for targets of at least 1.5R from entry, after the spread. Scale out with two targets when the move is uncertain.
+- Cite the `view sim` odds in `evidence`. A confidence well above the neutral odds needs a reason the head trader
+  can check (an edge's card, a level, a release).
 - Set `time_stop` for every trade whose thesis has a clock (a release, a session, a meeting).
 - `risk_pct` 0.25 is a normal trade, 0.5 a strong one with calibration behind it. The gate cuts it anyway.
 - `confidence` is your honest probability band: 1 a coin flip with an edge, 3 a solid setup, 5 rare.
@@ -105,8 +111,12 @@ Test it with `edge sandbox NAME MARKET key=value` over the whole history (it sto
 - arm it, `edge arm NAME MARKET key=value risk=0.25`, on any desk market, a library edge or your own. It needs a
   card with 30+ trades, PF 1.1+ after costs and positive total R in both halves of the history (`halves` on the
   card) on that market; the leg's P&L counts as your pod's. An armed leg trades as your pod on every bar, through the risk gate, without the head trader;
-  disarm it (`edge disarm NAME MARKET`) when its live R per trade over 20+ trades falls below half its card's; or
+  disarm it (`edge disarm NAME MARKET`) when its live R per trade over 20+ trades falls below half its card's. First
+  run `view sim edge NAME MARKET n=20 live=R` (R: its live total over those trades): above the 5th percentile of the
+  card's own resampled runs it is an ordinary losing run, below it the edge is likely broken; say which in the post; or
 - cite it in judgment tickets (`edge` field) when it should fire only with your read of the market.
 Post what you built and its card on the board either way, so no other pod builds it twice.
 Each pod also gets one weekend build run a week (Saturday, its own budget apart from your daily slice) to build or
-tune one edge this way.
+tune one edge this way. Your brief also carries one sandbox task a week ("Your sandbox task this week": an edge, one
+of your markets and one parameter change). Run it in any brief that has room, or in the Saturday build run; it is
+marked done once you sandbox that edge, and the post of what you found counts as shared knowledge.

@@ -7,7 +7,8 @@ market notes and no model edits are needed in this run.
 
 1. Read the board first (`board read 50`) and the edge list (`edge list`): do not build what another pod built or is
    building. Pick one idea and say which in your first board post, `board post "building: keltner_break on XAUUSD H4"`.
-2. Pick the idea. The best start is usually a reference edge (`edge list` marks them `reference`; `edge describe NAME`
+2. Pick the idea. If your brief's "sandbox task this week" is still open, do that one first: it names the edge, the
+   market and one parameter change, and it is marked done once you sandbox that edge. The best start is usually a reference edge (`edge list` marks them `reference`; `edge describe NAME`
    shows its card and its defaults): run it on your markets as it is, then tune its defaults with key=value. A new
    rule goes in `desk/edges/new/<name>.py` with `pod="<your pod>"` (see the Edges section above).
 3. Test it on the whole history: `edge sandbox NAME MARKET key=value`. Try a few settings at most (3 to 5), not a grid:
