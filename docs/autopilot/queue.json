@@ -521,12 +521,12 @@
       ],
       "from": "2024.01.01",
       "to": "2025.09.30",
-      "status": "running",
+      "status": "done",
       "needs": null,
       "expect": "Check for fix_refused_retry2 on AurumFunded v1.25 (build 04006be + input InpRefuseBackoffSec). Off run = back-off 0 = the v1.23 behaviour, on run = 60 s back-off (v1.24 behaviour); the month-reversal leg stays off (InpGrzMult=0), so the book is the j19 off run (about 2298 trades, +137%, equity DD 7.75%). Expect the two trade lists to match: same count, same open times and prices. Any difference is a retry the tester made after a 10018/10027 refusal at a session edge that the 60 s back-off delayed; list those (compare deal times and the 'server refused an order' log lines). Do not tune on this window.",
       "folder": "backtests\\2026-11-02_1156_AurumFunded_bko0_off",
       "terminal": "C:\\MetaTrader 5 - Tester",
-      "note": "Off run collected, on run started by tools/autopilot/tester_step.py 2026-11-02 12:33. Started by tools/autopilot/tester_step.py 2026-11-02 11:56 on MetaTrader 5 - Tester.",
+      "note": "Collected by tools/autopilot/tester_step.py 2026-11-02 13:08: net +13,340 (+133%), 2289.0 trades, PF 1.65, equity DD 7.06% (relative); summary.md written. Off run collected, on run started by tools/autopilot/tester_step.py 2026-11-02 12:33. Started by tools/autopilot/tester_step.py 2026-11-02 11:56 on MetaTrader 5 - Tester.",
       "folder_on": "backtests\\2026-11-02_1233_AurumFunded_bko0_on"
     }
   ]

@@ -182,3 +182,4 @@ committed).
 | 2026-11-02 12:02 | judge | review fix_refused_retry2 (77df371) | CLEAN: input 0 = v1.23, compile 1.25/1.45 0/0; j21 queued, deploy waits for its trade-list match |
 | 2026-11-02 12:33 | tester | Collected j21 off run, started the on run | j21 running |
 | 2026-11-02 12:35 | judge | demo ALERT 12:30 (midday EURUSD 10017) | same trade-disabled cause (a7), 173 sends in 1 min, 958 failed today; covered by the 1.25 shared back-off (waits for j21 + owner); no new item |
+| 2026-11-02 13:08 | tester | Collected j21 (AurumFunded bko0): net +13,340 (+133%), 2289.0 trades, PF 1.65, equity DD 7.06% (relative) | j21 done, needs judging |
