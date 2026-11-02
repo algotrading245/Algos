@@ -583,7 +583,7 @@ footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px
       var f = Math.min(1, B.fraction || 0), col = B.skip ? "var(--bad)" : f > 0.5 ? "var(--warn)" : "var(--ok)";
       var roles = Object.keys(B.today || {}).sort(function (a, b) { return B.today[b].cost_usd - B.today[a].cost_usd; });
       $("#budget").innerHTML = '<div class="row" style="justify-content:space-between"><h3 style="margin:0">Token budget this week</h3>' +
-        '<span class="chip ' + (B.skip ? "bad" : "ok") + '">' + (B.skip ? "over " + pct(B.skip_above, 0) + ": the finder waits" : "all roles run") + "</span></div>" +
+        '<span class="chip ' + (B.skip ? "bad" : "ok") + '">' + (B.skip ? "over " + pct(B.skip_above, 0) + ": the finder waits" : B.enforce === false ? "no budget limit" : "all roles run") + "</span></div>" +
         '<div class="sub" style="margin:6px 0">$' + fmt(B.week_usd) + " of $" + fmt(B.weekly_usd, 0) + " (" + pct(B.fraction, 0) + "), " + B.week_runs + " runs since " + esc(B.week_start.replace("T", " ")) + "</div>" +
         '<div style="height:10px;border-radius:5px;background:var(--grid);overflow:hidden"><div style="height:100%;width:' + (f * 100).toFixed(1) + "%;background:" + col + '"></div></div>' +
         (roles.length ? '<div class="tablewrap" style="margin-top:10px"><table><tr><th>Today</th><th>Runs</th><th>Cost</th><th>Tokens</th></tr>' +

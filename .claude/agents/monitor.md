@@ -15,7 +15,9 @@ Each check-in:
 4. If a day stop, final stop, margin error, or a trade with no broker stop appears, start the entry with
    "ALERT" so the judge (Opus) reviews it the same day.
 5. Weekly (Fridays, or the first run after a Friday that has no file): the fidelity week in
-   `docs/fidelity/<Friday>.md`, as the run prompt says (owner 2026-10-25).
+   `docs/fidelity/<Friday>.md`, as the run prompt says (owner 2026-10-25). Every fidelity tester run
+   (`backtests/*_fidelity_*/`) is the monitor's (owner 2026-11-02): local only, gitignored, not opened until the owner
+   says yes to the pairing.
 
 Rules:
 - Read-only on the terminal: never place, modify or close trades, never change EA inputs.

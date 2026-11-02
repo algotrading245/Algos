@@ -25,7 +25,7 @@ LOGS = ROOT / "logs" / "autopilot"
 EVENTS = LOGS / "events"
 USAGE = LOGS / "usage.jsonl"
 CONFIG = Path(__file__).with_name("budget.json")
-DEFAULTS = {"weekly_usd": 150.0, "reset_weekday": 4, "reset_hour": 18, "skip_above": 0.7}
+DEFAULTS = {"weekly_usd": 150.0, "reset_weekday": 4, "reset_hour": 18, "skip_above": 0.7, "enforce": True}
 
 
 def config():
@@ -255,7 +255,9 @@ def status(now=None, with_outside=True):
     res = {"now": now.isoformat(timespec="minutes"), "week_start": start.isoformat(timespec="minutes"),
             "week_runs": len(week), "week_usd": round(used, 2), "autopilot_usd": round(auto, 2),
             "outside_usd": out["usd"], "outside_by": out["by"], "weekly_usd": c["weekly_usd"],
-            "fraction": round(frac, 3), "skip_above": c["skip_above"], "skip": skip_frac >= c["skip_above"],
+            # "enforce": false (owner 2026-11-02, the budget boundary removed): spend is still counted, never skipped
+            "fraction": round(frac, 3), "skip_above": c["skip_above"], "enforce": bool(c.get("enforce", True)),
+            "skip": bool(c.get("enforce", True)) and skip_frac >= c["skip_above"],
             "desk_reserve_usd": reserve, "desk_reserve_left_usd": round(left, 2), "skip_fraction": round(skip_frac, 3),
             "today": roles, "week_days": days}
     if with_outside:

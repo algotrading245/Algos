@@ -79,3 +79,17 @@ def test_status_lists_every_pod(cfg, ap):
     s = allowance.status(cfg)
     assert s["pool"] == 800_000 and set(s["pods"]) == set(cfg["pods"])
     assert all({"share", "slice", "spent", "wake_cap", "wakes"} <= set(v) for v in s["pods"].values())
+
+
+def test_enforce_off_removes_the_dollar_limits(cfg, ap, monkeypatch):
+    """Owner 2026-11-02: the budget boundary removed. With enforce false the pool is the configured one, never fitted
+    or throttled, and the build job has no dollar cap; enforce true brings both back."""
+    cfg["budgets"]["pod_weekly_usd"] = 1
+    cfg["budgets"]["build_weekly_usd"] = 0
+    journal.log("agent_run", role=phase.pods_active(cfg)[0], kind="brief", tokens=100, usd=500.0)
+    (ap / "budget.json").write_text(json.dumps(dict(allowance.AP_DEFAULTS, enforce=False)))
+    assert allowance.fit(cfg) == {"configured": 800000, "pool": 800000, "enforce": False}
+    st = allowance.build_status(cfg)
+    assert not st["over"] and st["why"] == ""
+    (ap / "budget.json").write_text(json.dumps(allowance.AP_DEFAULTS))
+    assert allowance.build_status(cfg)["over"]

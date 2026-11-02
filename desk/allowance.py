@@ -8,6 +8,10 @@
              among the pods trading now.
   wake cap   wakes_per_pod_day scaled by the same share against an equal split, 1 to twice the base; a paused pod 0.
 
+With "enforce": false in tools/autopilot/budget.json (owner 2026-11-02: the budget boundary removed) no dollar limit
+applies: the pool is budgets.pod as configured, never fitted or throttled, and the build job has no dollar cap. The
+daily token caps (budgets.pod and the per-role caps in config.json) stay as runaway guards.
+
 Dollars come from the agent_run rows (usd, from Claude's result event); a row without one is priced at the desk's own
 tokens per dollar. Only runs before today's trading day count against the week, so the day's pool does not shrink while
 the day spends it; the day's own spend is held by the pod slice and the pool.
@@ -22,7 +26,7 @@ from desk import clocks, journal, paths, phase
 BUDGET = paths.STATE / "budget.json"  # runner.add_spend writes it: {trading day: {"pod" and each role: tokens}}
 AP_LOGS = Path(os.environ.get("AURUM_AUTOPILOT_LOGS", paths.ROOT / "logs" / "autopilot"))
 AP_BUDGET = paths.ROOT / "tools" / "autopilot" / "budget.json"
-AP_DEFAULTS = {"weekly_usd": 100.0, "reset_weekday": 4, "reset_hour": 18, "skip_above": 0.7}
+AP_DEFAULTS = {"weekly_usd": 100.0, "reset_weekday": 4, "reset_hour": 18, "skip_above": 0.7, "enforce": True}
 TOKENS_PER_USD = 270_000  # measured on Sonnet pod runs, 2026-10; replaced by the desk's own rows once it has some
 
 
@@ -134,9 +138,12 @@ def fit(cfg, t=None):
         return {"pool": None}
     out = {"configured": base, "pool": base}
     weekly = b.get("pod_weekly_usd")
+    c = _ap_config()
     if weekly is None:
         return out
-    c = _ap_config()
+    if not c.get("enforce", True):
+        out["enforce"] = False
+        return out
     rows = _week_rows(t, c)
     tpu = tokens_per_usd(rows)
     today = clocks.trading_day(t)
@@ -173,7 +180,7 @@ def build_status(cfg, t=None):
     used = sum(_usd(r, tpu) for r in rows if _build(r))
     cap = float(cfg.get("budgets", {}).get("build_weekly_usd", 0) or 0)
     frac = account_fraction(t, c)
-    why = ("no build_weekly_usd" if not cap else f"build dollars spent ({used:.2f} of {cap:g})" if used >= cap
+    why = ("" if not c.get("enforce", True) else "no build_weekly_usd" if not cap else f"build dollars spent ({used:.2f} of {cap:g})" if used >= cap
            else f"account at {frac:.0%} of its weekly cap" if frac >= BUILD_STOP else "")
     return {"used_usd": round(used, 2), "cap_usd": cap, "account_fraction": round(frac, 3), "over": bool(why),
             "why": why}

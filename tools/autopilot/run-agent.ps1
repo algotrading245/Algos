@@ -127,6 +127,11 @@ print an API key, an account number or any credential.
 
 --- This run's tools (Claude Code, model $($route.model)) ---
 Run every command with the Bash tool, one command per call, in exactly the form the instructions give.
+The run has no approver: a command the settings do not list is refused (owner 2026-11-02, gap 8). So no command
+substitution, no "&&" or ";", no pipe into a command that is not itself allowed, and no redirect into /tmp or any
+file; read a file with the Read tool, search with Grep, list a folder with ls or Glob. The tester folders
+C:/MetaTrader 5 - Tester and the MetaQuotes Terminal data folder are readable; "Get-Process terminal64" is allowed,
+starting or stopping terminal64 is not (tools/autopilot/terminal.ps1 does that).
 "@ }
 
     # Prompt order (owner 2026-10-18): the fixed parts (memory, role prompt, memory instructions) come first so a

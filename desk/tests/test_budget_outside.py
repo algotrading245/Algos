@@ -60,3 +60,18 @@ def test_allowance_adds_the_chat_share(tmp_path, monkeypatch):
     old = datetime.now().timestamp() - 3 * 3600
     os.utime(p, (old, old))
     assert allowance.chat_usd(start) == 0.0              # stale
+
+
+def test_status_never_skips_with_enforce_off(tmp_path, monkeypatch):
+    cfgf = tmp_path / "budget.json"
+    monkeypatch.setattr(budget, "CONFIG", cfgf)
+    monkeypatch.setattr(budget, "STATUS", tmp_path / "status.json")
+    monkeypatch.setattr(budget, "desk_reserve_usd", lambda: 0.0)
+    now = datetime(2026, 11, 2, 12)
+    monkeypatch.setattr(budget, "load", lambda: [{"ts": "2026-11-02T10:00:00", "role": "finder", "cost_usd": 99.0,
+                                                  "input": 1, "output": 1, "cache_read": 0, "cache_create": 0}])
+    cfgf.write_text(json.dumps({"weekly_usd": 100, "skip_above": 0.7}))
+    assert budget.status(now, with_outside=False)["skip"]
+    cfgf.write_text(json.dumps({"weekly_usd": 100, "skip_above": 0.7, "enforce": False}))
+    s = budget.status(now, with_outside=False)
+    assert not s["skip"] and s["enforce"] is False and s["fraction"] == 0.99

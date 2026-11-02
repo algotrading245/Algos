@@ -66,4 +66,8 @@ desk/memory/lessons.jsonl
 desk/memory/knowledge.jsonl
 desk/state/intel.json
 backtests/2026-10-25_1557_AurumFunded_fidelity_1019/
+# every fidelity run is over demo days past the holdout: local only, the monitor's (owner 2026-11-02, gap 8 item 2)
+backtests/*_fidelity_*/
 desk/reports/range_hold_*.md
+# the finder's one-off lead-closing scripts (run once, never imported; owner 2026-11-02, gap 8 item 4)
+research/fetch/_*.py

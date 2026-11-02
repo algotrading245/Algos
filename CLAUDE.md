@@ -5,9 +5,9 @@ Autopilot runs pass --model or --agent, so this file and the "opusplan" default 
 
 - Chat runs on `opusplan`: Opus in plan mode, Sonnet otherwise. Switch to `/model opus` only for hard judgment
   (a gate verdict, a research design, a tricky bug), then back with `/model opusplan`.
-- Budget (owner 2026-11-02, the week at 84% of weekly_usd 250): above 75% no `/model opus` in chat except a gate
-  verdict or a live-money decision; build, fix and dashboard work stay on Sonnet. Check the share with the budget line
-  on the dashboard before switching.
+- Budget: no weekly-dollar limit (owner 2026-11-02, `"enforce": false` in tools/autopilot/budget.json; spend is still
+  counted on the dashboard, and the daily token caps in desk/config.json stay as runaway guards). The model split above
+  still holds: build, fix and dashboard work on Sonnet.
 - Searches across many files: the Explore agent (Haiku), which returns the conclusion, not the file dumps.
 - Delegate by role, on the role's own model (the 5-step loop, owner 2026-10-22): tester-operator, monitor
   (Haiku); finder and builder (Sonnet); judge, reviewer and the weekly portfolio-manager (Opus).
