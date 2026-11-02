@@ -129,6 +129,11 @@ def history(pod, n=20):
     return paths.read_jsonl(DIR / f"{pod}.log.jsonl")[-n:]
 
 
+def touched_since(pod, since):
+    """True when the pod set, viewed or dropped anything in its model at or after `since` (an ISO time)."""
+    return any(r.get("t", "") >= since for r in paths.read_jsonl(DIR / f"{pod}.log.jsonl"))
+
+
 def consensus(t=None):
     """Every pod's bias per market, so a pod can see where it stands with or against the desk."""
     t = t or clocks.now()
@@ -147,7 +152,12 @@ def brief(pod, t=None):
     m = get(pod)
     called = {f["instrument"] for f in forecasts.open_for(pod)}
     markets = {s: e | ({"stale": True} if _stale(e, t) else {}) for s, e in m["markets"].items()}
-    return {"view": m.get("view") or "(none yet: one line on what drives the markets this week)",
+    out = {}
+    if not markets:
+        out["todo"] = ("Your model is EMPTY: the live watcher has no level, edge or market of yours to wake you on, "
+                       "and each brief you leave it untouched is journaled and costs IQ. Set at least your home "
+                       "markets now (model set SYM bias=.. levels=.. edges=..).")
+    return out | {"view": m.get("view") or "(none yet: one line on what drives the markets this week)",
             "markets": markets,
             "stale": sorted(s for s, e in markets.items() if e.get("stale")),
             "biases_with_no_forecast": sorted(s for s, e in markets.items()

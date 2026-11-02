@@ -77,7 +77,8 @@ def test_profile_counts_real_work():
     journal.log("agent_run", role="fxmacro", ok=False)
     journal.log("missing_notes", pod="fxmacro", markets=["GBPUSD"])
     p = intel.profile("fxmacro")
-    assert p["work"] == {"runs": 1, "notes": 1, "missed_notes": 1, "coverage": 0.5}
+    assert p["work"] == {"runs": 1, "notes": 1, "missed_notes": 1, "coverage": 0.5,
+                         "model_untouched": 0}
     assert p["talk"]["answered"] == 1 and p["share"] == {"shared": 1, "endorsed": 1, "cited": 2}
     assert p["xp"] == 10 + 2 + 6 + 5 + 8 + 2 * 15
     assert intel.profile("metals")["talk"]["asked"] == 1
@@ -210,3 +211,17 @@ def test_runner_journals_unanswered_asks():
     memory.ask("metals", "all", "anyone?")
     assert runner.unanswered_asks({"id": "j1"}, ["fxmacro", "indices"]) == {"fxmacro": [q["id"]]}
     assert journal.recent(["unanswered_asks"], 1)[0]["asks"] == [q["id"]]
+
+
+def test_runner_journals_untouched_models_and_iq_pays():
+    from desk import brief, market_model
+    since = "2000-01-01T00:00:00"
+    base = intel.profile("fxmacro")["iq"]
+    assert "Your model is EMPTY" in brief.build("fxmacro")
+    market_model.set_market("metals", "XAUUSD", bias="up")
+    assert runner.untouched_models({"id": "j1"}, ["metals", "fxmacro"], since) == ["fxmacro"]
+    row = journal.recent(["model_untouched"], 1)[0]
+    assert row["pod"] == "fxmacro" and row["empty"] is True
+    prof = intel.profile("fxmacro")
+    assert prof["work"]["model_untouched"] == 1 and prof["iq"] == base - 3
+    assert "Your model is EMPTY" not in brief.build("metals")

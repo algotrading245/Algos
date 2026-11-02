@@ -59,7 +59,7 @@ def _where(trades):
 
 def _rows(state=None):
     """Everything profile() reads, once, so write() does not read the files six times."""
-    return {"journal": journal.recent(["agent_run", "missing_notes"], JOURNAL_DAYS),
+    return {"journal": journal.recent(["agent_run", "missing_notes", "model_untouched"], JOURNAL_DAYS),
             "board": paths.read_jsonl(memory.BOARD), "knowledge": memory.knowledge(),
             "closed": memory._closed(state), "tickets": list((state or tickets.fold()).values())}
 
@@ -69,6 +69,7 @@ def profile(pod, state=None, rows=None):
     runs = sum(1 for j in r["journal"] if j.get("kind") == "agent_run" and j.get("role") == pod and j.get("ok"))
     missed = sum(len(j.get("markets") or []) for j in r["journal"] if j.get("kind") == "missing_notes"
                  and j.get("pod") == pod)
+    model_miss = sum(1 for j in r["journal"] if j.get("kind") == "model_untouched" and j.get("pod") == pod)
     posts = [b for b in r["board"] if b.get("pod") == pod]
     mine = {b["id"] for b in posts if b.get("id")}
     notes = sum(1 for b in posts if not b.get("kind"))
@@ -92,8 +93,10 @@ def profile(pod, state=None, rows=None):
     iq = 100 + max(-30.0, min(30.0, 60 * skill)) + 10 * (calib or 0) + 10 * min(1.0, (cited + endorsed) / 20)
     if coverage is not None:
         iq -= 10 * (1 - coverage)
+    iq -= 3 * min(model_miss, 4)  # a brief that left the market model untouched: up to -12
     return {"pod": pod, "xp": xp, "level": level(xp), "iq": int(round(max(60, min(160, iq)))),
-            "work": {"runs": runs, "notes": notes, "missed_notes": missed, "coverage": coverage},
+            "work": {"runs": runs, "notes": notes, "missed_notes": missed, "coverage": coverage,
+                     "model_untouched": model_miss},
             "talk": {"asked": asked, "answered": answered, "open_to_it": len(memory.open_asks(pod))},
             "share": {"shared": len(shared), "endorsed": endorsed, "cited": cited},
             "trading": {"trades": len(trades), "hit": round(wins / len(rs), 2) if rs else None,

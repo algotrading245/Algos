@@ -108,8 +108,10 @@ def build(role, job=None):
                             forecasts.brief(role, t)))
         out.append(_section("Your market model: your own view of the markets, kept between runs (model set SYM "
                             "bias=.. regime=.. levels=a,b conviction=1-3 edges=x,y \"drivers\"; model view \"..\"). "
-                            "Refresh the stale ones or drop them. The model itself is not graded: put a forecast on "
-                            "each bias you hold, or it earns nothing. desk_biases is every pod's live bias",
+                            "Refresh the stale ones or drop them. The live watcher wakes you only on the levels, "
+                            "edges and markets in it, and a brief that leaves it untouched is journaled and costs IQ. "
+                            "Put a forecast on each bias you hold: the forecast is what feeds your token share. "
+                            "desk_biases is every pod's live bias",
                             market_model.brief(role, t)))
         try:
             from desk import allowance

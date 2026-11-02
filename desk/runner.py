@@ -282,6 +282,16 @@ def unanswered_asks(job, pods):
     return out
 
 
+def untouched_models(job, pods, since):
+    """The pods that ran a brief and did not touch their market model (owner 2026-11-02: 4 of 6 left it empty on
+    11-01, so the watcher had nothing to wake them on). Journaled; returns the pods."""
+    from desk import market_model
+    out = [p for p in pods if not market_model.touched_since(p, since)]
+    for p in out:
+        journal.log("model_untouched", job=job["id"], pod=p, empty=not market_model.get(p)["markets"])
+    return out
+
+
 def refresh_intel(cfg):
     """Recompute every pod's profile after a job, so the dashboards and the next brief see the work just done."""
     try:
@@ -301,6 +311,7 @@ def run_job(job, cfg):
             ran = [p for p, r in zip(pods, res) if r == "ok"]
             missing_notes(job, ran, since, cfg)
             unanswered_asks(job, ran)
+            untouched_models(job, ran, since)
         elif kind == "wake":
             res = _with_head([job["pod"]], job, cfg)
         elif kind == "debrief":
