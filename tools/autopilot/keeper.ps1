@@ -10,7 +10,11 @@
 # own lock and exits at once when locked, paused or idle): tester_step.py starts and collects tester jobs without a
 # Claude run, idea_engine.py tests the finder's rule specs, and dispatch.py wakes the
 # relay within a minute of a new demo order/ALERT or a new work file (owner 2026-10-21). dashboard_live.py keeps
-# dashboard/live.js current every second and rebuilds data.js every minute (owner 2026-10-22).
+# dashboard/live.js current every second and rebuilds data.js every minute (owner 2026-10-22). It keeps the research
+# page (tools/live_server.py) up on 127.0.0.1:8766 (owner 2026-11-02).
+#
+# Task Scheduler shows 0x800710E0 as the task's last result while this keeper runs: the 15-minute trigger is refused
+# because an instance is already running (MultipleInstances IgnoreNew). That is expected, not a failure.
 param([int]$Seconds = 60, [switch]$Once)
 . "$PSScriptRoot\common.ps1"
 
@@ -33,6 +37,22 @@ $Steps = [ordered]@{
     "dashboard_live" = "tools\dashboard_live.py"
 }
 
+# The research page (tools/live_server.py, owner 2026-11-02) on 127.0.0.1:8766, since the desk Command Center holds
+# 8765. Started only when no live_server.py process is up: on Windows a second server could bind the same port.
+$ResearchPort = 8766
+function Start-Research {
+    $up = Get-CimInstance Win32_Process -Filter "Name like 'python%'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -match 'live_server\.py' }
+    if ($up) { return $null }
+    $py = Get-Command python.exe -ErrorAction SilentlyContinue
+    if (-not $py) { return "no python" }
+    $pyw = Join-Path (Split-Path $py.Source) "pythonw.exe"
+    $exe = if (Test-Path $pyw) { $pyw } else { $py.Source }
+    $p = Start-Process -FilePath $exe -ArgumentList "`"$(Join-Path $Repo 'tools\live_server.py')`" --port $ResearchPort" `
+        -WorkingDirectory $Repo -WindowStyle Hidden -PassThru
+    return "pid $($p.Id)"
+}
+
 Add-Type -Namespace Aurum -Name Power -MemberDefinition @"
 [DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);
 "@
@@ -51,6 +71,9 @@ while ($true) {
             Write-Log "keeper-steps" "$name started ($r)"
         }
     } elseif ($lastPause -ne $true) { Write-Log "keeper-steps" "paused: no steps started" }
+    # The research page stays up under PAUSE too: it only reads, and its own buttons are how a pause is cleared.
+    try { $r = Start-Research; if ($r) { Write-Log "keeper" "research page started on 127.0.0.1:$ResearchPort ($r)" } }
+    catch { Write-Log "keeper" "research page error: $($_.Exception.Message)" }
     # Who sets or clears PAUSE (owner 2026-10-25, after an unexplained night pause): no script writes it, so log the
     # change with the file's time and its first line - whoever pauses writes their name and reason in it.
     $nowPause = Test-Path $Pause
