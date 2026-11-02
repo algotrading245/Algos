@@ -305,6 +305,9 @@ each finished piece of work.
     builder item `fix_refused_retry` (back off on 10017/10018/10027/10044, log once). It is separate from
     `fix_stop_switch`, which covers only the dashboard stop flag. Until a7 is resolved, expect more of these ALERTs
     whenever a leg's entry window opens.
+  - **Judge 2026-11-02 11:40, third ALERT (11:36):** the tail of the same USDJPY burst, nothing new. The day's log
+    holds 444 failed sends; the last one is at 11:36:00.977 and no later lines exist yet. Still a7 (pending) and
+    `fix_refused_retry`.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
