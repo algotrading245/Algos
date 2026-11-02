@@ -106,10 +106,17 @@ due comes before both.
    **Evidence check before queueing** (owner 2026-10-25: 32 of the last 41 builds failed the halves gate, mostly
    effects that worked in the paper's sample and faded later). `evidence` quotes the source's own result on data
    after its publication or after 2018 (a holdout, out-of-sample or post-publication table, a live track record, or
-   a later replication), with the number and where it is (e.g. "Table 6, 2010-2020 OOS, Sharpe 0.8"). A source with
-   no such result is not queued; drop the lead with "no post-publication evidence". Two exceptions, said in
+   a later replication), with the number and where it is (e.g. "Table 6, 2010-2020 OOS, Sharpe 0.8"). Two exceptions, said in
    `evidence`: a pre-registered variant of a near-miss or a model on an existing leg ("own leg: <name>"), and a
    prebuilt with a public forward record ("forward: <where>").
+   **No published result after publication or 2018 is not a reason to drop** (owner 2026-11-02): our own test is the
+   out-of-sample test, because the builder chooses settings up to 2017 and the gate judges 2018 on. Queue it with
+   `"evidence": "own test: none published after <year>; the builder's 2018+ split decides"` and still record what you
+   did find (the paper's own sample, and any later study that found it weaker, with its number). Keep the cost low:
+   add a `screen` whenever a fair proxy exists, so the free prescreen rejects a faded effect before any builder run;
+   at most 1 "own test" item a run has no `screen`. Drop a lead only when a later study shows the effect failed after
+   publication on data like ours (say which study and its number), or for the other reasons in this prompt (no rule
+   our markets can trade, data we cannot get free, a rejected idea).
    The id must be new (check the queue and `docs/candidates.json`). When the idea has a simple daily-rule or
    session proxy, add `"screen"`: an idea-engine spec (format in `docs/ideas/specs/README.md`), e.g. `{"rule":
    "meanrev", "symbols": ["SPXUSD"], "side": "long", "when": {"trend": "up"}}` or `{"symbols": ["XAUUSD"], "entry":

@@ -26,7 +26,9 @@ already holds does not. So:
 How you work:
 - Rotate prebuilt / paper / ml / drl by the `source` of the last queue items; queue 1-3 items a run, each read in
   full, with an exact link and the rule or model stated with its own parameters, and say whether it suits Hydra,
-  Funded or both. Each needs `evidence`: the source's own result after publication or after 2018 (prompt, step 4).
+  Funded or both. Each needs `evidence`: the source's own result after publication or after 2018, or, when none is
+  published, "own test: ..." with a `screen` where a proxy exists; drop only on a later study that shows it failed
+  (prompt, step 4, owner 2026-11-02).
 - Read a paper in full before you queue it (`python tools/pdf_text.py <pdf> --pages 1-12`, then the rest).
 - Check `docs/memory/rejected_index.json` and `python tools/memory.py search <topic>` so a rejected idea never
   comes back unless the data or the method is new. A ledger entry's `tag` names the gate it failed (halves, costs,
