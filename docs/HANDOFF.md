@@ -326,6 +326,12 @@ each finished piece of work.
     The day log still has 785 failed sends, the last at 11:48:10.944, and none after it. Same cause (a7). No new
     action. Next: the builder's `fix_refused_retry2`.
     **Owner:** do not deploy 1.24 until `fix_refused_retry2` passes.
+  - **Judge 2026-11-02 12:02, review of `fix_refused_retry2` (77df371): CLEAN.** The back-off is now the input
+    `InpRefuseBackoffSec` (default 60). Funded is 1.25 and Hydra 1.45, and both compile 0/0 with their logs committed.
+    At 0 the EA behaves as v1.23: Send returns before it sets any back-off (Legs.mqh:111-112). Every caller passes price
+    0.0, so the dropped price changes nothing. One minor wording slip: the comment at Inputs.mqh:284 says "pre-1.25",
+    and it means 1.23. Job j21 (0 against 60 s, grz.set, 2024.01-2025.09) is queued. **Owner:** deploy 1.25 only after
+    the judge finds that j21's two trade lists match.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
