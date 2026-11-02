@@ -370,3 +370,19 @@ Owner's yes 2026-11-01. 1.23 adds the dashboard stop switch (ff247e2) on top of 
 - **Loaded:** the journal at 21:57:52 shows 23 inputs read from AurumFunded_FTMO_phase1_legs_nyclock_dual.set and "expert AurumFunded (XAUUSD,M15) loaded successfully". The .ex5 (21:12) is newer than the 1.23 source. 0 positions, 0 orders at restart.
 - **Clock line:** the EA logs "3 expected" for the server offset. That is a weekend artifact: TimeCurrent is Friday's last tick, still before the US DST end. From Monday's first tick it expects 2.
 - **AurumHydra 1.43:** compiled, but Hydra is not attached on T16, so nothing changes there.
+
+## 2026-11-02 (Monday), 23:15 check (monitor): ALERT, trading disabled on the demo server, no fills
+
+ALERT: 958 order sends in the day's experts log (AurumFunded, all logged in the "other" bucket by demo_check), each
+refused with retcode 10017 "trade disabled" (the 10 sample lines shown, e.g. midday EURUSD market sell 0.18 with sl
+1.12322). The journal has 0 trade lines, so no trade opened or closed today. This matches the judge's same-day notes
+(04:45, 11:34-11:48 USDJPY burst, 12:30 midday EURUSD; judge entries in docs/memory/decisions.jsonl) and the 958 count
+in those notes. Not logged: P/L of the day (no closes), slippage (no fills). No day stop, final stop, or trade without a
+broker stop.
+
+- Trades per leg: none filled. Sends: 958 (not split by leg in demo_check).
+- Skipped: bell move +3.04 below 1.5 x average 3.05, no trade today.
+- Account leverage line (logged twice): 1:100. Not compared with the 1:33 of Terminal 16 in earlier runs; not checked.
+- Clock-check skips: none today. Duplicate closes: none. Done-reported-failed: none.
+- Odd: the failed send repeats all day with no re-enable line in the journal read by demo_check. Needs the owner or the
+  judge to look at the server-side trading state; the monitor cannot change it.
