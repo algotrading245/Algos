@@ -87,7 +87,11 @@ due comes before both.
    - **paper**: journals, NBER, BIS / ECB / Fed staff papers, arXiv q-fin. Read it in full before you queue it:
      `python tools/pdf_text.py <pdf link> --pages 1-12`, then `--pages 13-30` or `--find "Table 3"`. SSRN refuses
      downloads (403); use the authors' pages or a working-paper copy. Write the paper's own definitions and
-     parameters into `why`.
+     parameters into `why`. **A journal paywall is not a reason to drop** (owner 2026-11-02: 2 of 3 reopened leads
+     were dropped as "behind a paywall" though free copies exist): before dropping, try the NBER working paper
+     (nber.org/papers/w<number>.pdf), each author's university page, RePEc/IDEAS, a university repository or a
+     course reading list, and the "All N versions" links on Google Scholar. Drop for "no free full text" only after
+     naming the places you tried.
    - **ml**: a supervised model (sklearn, lightgbm, xgboost, torch; CPU) with a stated target, past-only features and
      the paper or write-up it follows, if any.
    - **drl**: a reinforcement-learning policy (gymnasium, stable-baselines3; CPU) with the state, actions, reward and
