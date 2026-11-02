@@ -316,6 +316,13 @@ each finished piece of work.
   - **Judge 2026-11-02 11:46, fifth ALERT (11:45:54):** the same burst again; 659 failed sends in the day log, last at
     11:46:10.955, same 0.02 USDJPY buy at stop 157.448, same cause (a7). No new action; the next judge run reviews
     `fix_refused_retry` (1.24) so it is ready when the owner allows the deploy.
+  - **Judge 2026-11-02 11:50, sixth ALERT (11:47:30):** same burst, 785 failed sends, last at 11:48:10.944, same
+    cause (a7). Reviewer on 04006be: **REDO**. (1) No compile logs exist for Funded 1.24 or Hydra 1.44. (2) The tester
+    itself returns 10018 (market closed) at session edges, so the new 60 s symbol back-off can delay tester entries.
+    The claim that "no tester job is needed" is unverified. Builder item `fix_refused_retry2`: commit both compile
+    logs, then run a 1.23-vs-1.24 tester pair and check that the trade lists match. Minor findings: Send drops the
+    caller's price (Legs.mqh:106); other legs still log every tick while backed off; the back-off uses TimeLocal.
+    **Owner:** do not deploy 1.24 until `fix_refused_retry2` passes.
 
 - **(a6) Decided 2026-10-25 (owner's session): keep, frozen.** Breakout stays on in the demo at its current weight; no
   weight increase, no new EA use, no live money. Interim check 2026-11-22 (pull only on a clear break from
