@@ -170,3 +170,4 @@ committed).
 | 2026-11-01 03:42 | tester | Collected j20 off run, started the on run | j20 running |
 | 2026-11-01 04:17 | tester | Collected j20 (AurumFunded grz2): net +13,732 (+137%), 2298.0 trades, PF 1.63, equity DD 7.75% | j20 done, needs judging |
 | 2026-11-01 08:45 | judge | judge j20 (graziani_rev, AurumFunded v1.22) | FAIL on model fidelity: the Python close is about 09:00 NY (16:00 server file clock), not the EA clock; on-off +392.58 USD, DD +0.69 pt; candidate rejected, leg off; fix_graziani_clock queued |
+| 2026-11-02 10:30 | owner | review 7d4306e (v1.19), 18757d2 (v1.20), ff247e2 (v1.23 / Hydra 1.43), none reviewed before; compile logs compile_v1.23 / compile_v1.43 0/0 (scratchpad copies, T16 untouched) | 1.19 CLEAN, 1.20 CLEAN, 1.23 MINOR (shared stop flag; refused orders retried and Dual's 8 tries spent while stopped); fix_stop_switch queued; owner check: T16 InpFixRiskPct shows 0.25 (chart inputs may keep 0.5) |
