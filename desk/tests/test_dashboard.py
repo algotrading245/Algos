@@ -235,7 +235,7 @@ def test_command_center_eas_shows_live_state():
     raw = base64.b64decode(e["data"])
     eas = json.loads(cc._TEMPLATE.search((gzip.decompress(raw) if e.get("compressed") else raw).decode("utf-8")).group(2))
     assert "KILL = 9311.30;" in eas and "Balance 9,958.40" in eas
-    assert "'Max Loss Kill', '9,311.30', 'Halted', 'red'" in eas and "fundedState: 'Halted'" in eas
+    assert '["Max Loss Kill", "9,311.30", "Halted", "red"]' in eas and "fundedState: 'Halted'" in eas
     assert "name: 'AurumFunded', ver: '" + cc._ea_versions()["AurumFunded"] + "'" in eas
     assert "'/' + e.name + '.mq5'" in eas and "['Bell', 'Hydra']" in eas
     assert "value: '1', sub: 'EURUSD 0.05 · fix'" in eas

@@ -2,35 +2,29 @@
 
 The file is a bundle: an outer page whose manifest holds one gzipped inner page per screen (Main, Pods, EAs,
 Processes, Research, Controls, Agents). Each inner page carries its HTML as a JSON string in a template script.
-build() decodes each screen, patches it, and packs it back, so the design stays exactly as uploaded.
+build() decodes each screen, patches it, and packs it back, so the design stays exactly as uploaded. Only real data
+goes in: where a source is missing the page shows a dash or "No Data", never the design's sample.
 
-Live on every screen: the "Live Snapshot" label and chip, and the sample simulation is stopped (the clock still ticks).
-Live on Main: role runs, tokens, last run and task (this budget week), the agent talk feed from the relay log, the
-desk's open positions, and the kill button, which POSTs /api/kill. With extra = {"state": /api/state, "queue": queue
-rows}: the desk card (equity, balance, P/L, margin, last tick), drawdown and daily loss, the live-gate checks, the pod
-rows, the needs-you alerts and the idea queue. The alerts card also lists every desk/inbox/ALERT.md section (dated) and
-the doctor's open items from docs/autopilot/gaps_report.md, with text-hashed ids so an ack holds. From the usage log and docs/: the token chart (today, per role), the
-recent runs, the Tokens/Runs Today KPIs, the funnel (log-scale bars) and the first failing gate per gate file. From
-the machine itself (psutil): the process list (MT5 terminals, desk servers, Hermes, Claude) and the RAM and commit
-lines. The activity feed: today's agent runs, journal rows and git commits, newest first. The funded card and Funded
-Equity KPI from the T16 AurumFunded EA log (read only; private lines dropped). Live on Pods (from the same state): each pod's allocation, work and
-talk counts, and its scorekeeper record in place of the old XP, level and IQ (P&L, hit rate, trades, R, profit factor,
-drawdown and score, last 8 weeks, from logs/desk/state/scores.json), the board posts, the tickets, the KPI row, each
-pod's brief line (markets owned, state, P&L and hit rate), its wakes from the config schedule and what it knows (its own
-knowledge entries, most endorsed first); the rules are still design text. Live on EAs: equity, balance, the kill floor,
-the daily-loss and kill guards (red when halted), open positions, each EA's version from its .mq5 file, the archive
-list from mql5/Experts/_archive, and the Hydra legs from the armed edges (risk per leg); trade counts, today's
-P/L per leg, the diff rows and the other guards are still design text. Live on Processes: each scheduled job's last run
-and state (Late past its window, Failed if its newest runner job failed), the recent runs and the run and failure KPIs
-from the desk runner, and the MT5, relay, scheduler and feed heartbeats; Doctor, Watchdog, the finder loop, the tester
-queue and beat, and the demo beat are still design text. Live on Research: the funnel counts, the candidates, the
-gaps, the rejected list and the KPI row from docs/. Live on Controls: the pod, pipeline and demo-leg switches (paused,
-halted, last run), the locks (risk file, halt, live trading, pending approvals), the funded risk block from
-desk/risk.json and the desk limits, and the change log from the journal; the 5x EA risk block, the MT5 lock and the
-trades-per-day limit are still design text. Live on Agents: each role's tier, model, turn and minute caps from the
-router, its runs, tokens and last run this week, its last reason, the finder back-off, runs today, the provider and
-fallback, the next role in the hand-over, the last limit hit and the relay log; the weekly charts, seats, steps, retry
-ladder and empty-run list are still design text. The rest is still the design's sample content.
+Every screen: the "Live Snapshot" chip; the sample simulation timers are stopped (the clock still ticks).
+Main: role runs and tokens (this budget week), the agent talk feed, open positions, the kill button (POST /api/kill),
+and, with extra = {"state": /api/state, "queue": rows}: the desk card, drawdown, daily loss, the Equity Against The
+Floors bar (kill, week and day floors from state.limits), live-gate checks, pod rows, needs-you alerts, the idea queue,
+the funded card from the T16 AurumFunded EA log (read only), the funnel, recent runs, the activity feed and the
+machine's process list.
+Pods (state): allocation, work and talk counts, scorekeeper record, board posts, tickets, the cross-review rows
+(from tickets; "No Cross-Review Yet" when none), the KPI row, each pod's brief, wakes and knowledge.
+EAs: equity, balance, guards from desk/risk.json (red when halted), open positions, versions from the .mq5 files,
+the archive list, per-leg trades from closed tickets and today's P/L, the diff rows, and which EA is attached to T16
+(tools/dashboard.py ea_presence; Hydra is not attached).
+Processes: every scheduled job's last run and state, the recent runs from the runner and the role logs, the heartbeats
+(a tester older than a day is Late), the tester queue, the Scheduled Tasks panel (tools/task_health.py), and the
+roles' ages (doctor daily 06:00, monitor Mon-Fri, portfolio Saturday).
+Research: funnel, candidates, gaps, rejected list and KPIs from docs/.
+Controls: pod, pipeline and demo-leg switches, locks, the risk blocks from desk/risk.json and docs/book.json, limits
+and the change log from the journal.
+Agents: each role's tier, model, caps, runs, tokens, last run and reason, the finder back-off, the weekly charts and
+steps (usage.jsonl, last-<role>.json), the desk seats (allowance, budgets) and the weekly-limit retry ladder
+(router.py). What has no source (a seat's next wake text, the rules text, the descriptions) stays the design's wording.
 """
 import base64
 import collections
@@ -213,6 +207,29 @@ def _sgn(v):
     return ("+" if v >= 0 else "−") + f"{abs(v):,.2f}"
 
 
+def _patch_floor_bar(src, lim):
+    """Main page "Equity Against The Floors": label, legend and marker positions from state.limits (kill, week, day
+    floors and equity); the 750-wide axis starts just under the kill floor like the design."""
+    fl = lim.get("floors") or {}
+    eq, kill, wk, dy = (float(lim.get(k) or 0) if k == "equity" else float(fl.get(k) or 0) for k in ("equity", "kill", "week", "day"))
+    if not (eq and kill and wk and dy):
+        return src
+    lo = kill - 11.25
+    pc = lambda v: max(0.0, min(100.0, (v - lo) / 750.0 * 100))
+    k, w, d, e = pc(kill), pc(wk), pc(dy), pc(eq)
+    label = (f"Equity {eq:,.2f} Is {eq - dy:,.2f} Above The Day Floor, {eq - wk:,.2f} Above The Week Floor "
+             f"And {eq - kill:,.2f} Above The Kill Floor")
+    src = re.sub(r'aria-label="Equity [\d,.]+ Is [^"]*Kill Floor"', lambda _: f'aria-label="{label}"', src, count=1)
+    src = src.replace("left: 35%; top: 0; bottom: 0; width: 53.4%;", f"left: {d:.1f}%; top: 0; bottom: 0; width: {max(0.0, e - d):.1f}%;", 1)
+    src = src.replace("left: 1.5%; top: -5px", f"left: {k:.1f}%; top: -5px", 1)
+    src = src.replace("left: 26.7%; top: -5px", f"left: {w:.1f}%; top: -5px", 1)
+    src = src.replace("left: 35%; top: -5px", f"left: {d:.1f}%; top: -5px", 1)
+    src = src.replace("left: calc(88.4% - 8px)", f"left: calc({e:.1f}% - 8px)", 1)
+    for a, b in (("Kill 9,311.30", f"Kill {kill:,.2f}"), ("Week 9,500.00", f"Week {wk:,.2f}"), ("Day 9,562.86", f"Day {dy:,.2f}")):
+        src = src.replace(a, b, 1)
+    return src
+
+
 def _patch_desk(src, state, positions):
     lim = state["limits"]
     eq = float(lim["equity"])
@@ -239,6 +256,7 @@ def _patch_desk(src, state, positions):
     src = re.sub(r"gv\('Daily Loss', '[^']*', [\d.]+,",
                  lambda _: f"gv('Daily Loss', '{loss:.2f}% Of 4%', {min(100.0, loss / 4 * 100):.1f},", src, count=1)
     floor = float(((lim.get("floors") or {}).get("day")) or 0)
+    src = _patch_floor_bar(src, lim)
     src = re.sub(r"label: 'Desk Equity', value: '[^']*', sub: '[^']*'", lambda _: (
         f"label: 'Desk Equity', value: '{eq:,.2f}', sub: 'To Day Floor {eq - floor:,.2f}'"), src, count=1)
     return re.sub(r"label: 'Open Positions', value: '[^']*', sub: '[^']*'",
@@ -947,8 +965,12 @@ def _patch_pods_page(src, state):
         rev.append(f"{{ ticket: '{_js(str(t.get('id') or '?'))} · {_js(str(pn).title())}', "
                    f"what: '{_js(str(t.get('side') or '').title())} {_js(str(t.get('instrument') or ''))}{risk}{res}', "
                    f"note: '{_js(str(t.get('why') or t.get('thesis') or '')[:140])}',state: '{name}', pill: {pl} }}")
-    if rev:
-        src = re.sub(r"const reviews = \[\n.*?\n    \];", lambda _: "const reviews = [" + ", ".join(rev) + "];", src, count=1, flags=re.S)
+    if not rev:
+        rev = ["{ ticket: 'No Cross-Review Yet', what: 'No tickets on the board', note: 'A ticket appears here when a pod files one.', "
+               "state: 'No Data', pill: pill('#E8E8ED', '#424245') }"]
+    src = re.sub(r"const reviews = \[\n.*?\n    \];", lambda _: "const reviews = [" + ", ".join(rev) + "];", src, count=1, flags=re.S)
+    hint = _js(str(tickets[0].get("id"))) if tickets and tickets[0].get("id") else "&lt;ticket&gt;"
+    src = src.replace("python desk/board.py review T-1031-03", f"python desk/board.py review {hint}", 1)
 
     today = str(state.get("t") or dt.datetime.now().isoformat())[:10]
     msgs = sum(1 for b in board if str(b.get("t") or "")[:10] == today)
@@ -993,6 +1015,51 @@ def _archived(root=None):
     except OSError:
         return None
     return [[n, _ARCHIVE_TO.get(n, "Retired")] for n in names]
+
+_TOOLS = {}
+
+
+def _tool(name):
+    """tools/<name>.py loaded once by path (read-only helpers the dashboard owns); None when it cannot load."""
+    if name not in _TOOLS:
+        try:
+            import importlib.util
+            import sys
+            if str(ROOT / "tools") not in sys.path:
+                sys.path.insert(0, str(ROOT / "tools"))
+            spec = importlib.util.spec_from_file_location("cc_tool_" + name, ROOT / "tools" / (name + ".py"))
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            _TOOLS[name] = mod
+        except Exception:
+            _TOOLS[name] = None
+    return _TOOLS[name]
+
+
+def _leg_stats(state, today=None):
+    """{design leg id: [closed tickets, summed pnl today]} from the desk tickets: the leg is the thesis prefix before
+    ':' (hold/grid/cross are the desk's names for goldhold/audcad/yen). Open and blocked tickets are not counted."""
+    today = today or dt.datetime.now(dt.timezone.utc).date().isoformat()
+    out = {}
+    for t in state.get("tickets") or []:
+        if not isinstance(t, dict) or t.get("status") != "closed":
+            continue
+        leg = str(t.get("thesis") or "").split(":", 1)[0].strip().lower()
+        if not leg or len(leg) > 20 or " " in leg:
+            continue
+        row = out.setdefault(_LEG_ALIAS.get(leg, leg), [0, 0.0])
+        row[0] += 1
+        if str(t.get("updated") or "")[:10] == today and isinstance(t.get("pnl"), (int, float)):
+            row[1] += float(t["pnl"])
+    return out
+
+
+def _risk_profile():
+    try:
+        risk = json.loads((ROOT / "desk" / "risk.json").read_text(encoding="utf-8-sig"))
+        return risk["profiles"][risk["active"]]
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
 
 
 def _patch_eas_page(src, state, positions, root=None):
@@ -1045,15 +1112,66 @@ def _patch_eas_page(src, state, positions, root=None):
             if g.get("id"):
                 design[g["id"]] = g
         rows = []
+        stats = _leg_stats(state)
         for a in armed:
             eid = str(a.get("edge") or "?")
             d = design.get(_LEG_ALIAS.get(eid, eid), {})
             risk = a.get("risk_pct")
             size = f"{float(risk):.2f}%" if isinstance(risk, (int, float)) else "—"
             rows.append(f"  {{ id: '{_js(eid)}', name: '{_js(d.get('name') or eid.title())}', market: '{_js(str(a.get('market') or '—'))}', "
-                        f"window: '{_js(d.get('window') or '—')}', pod: '{_js(d.get('pod') or '—')}', size: '{size}', trades: '—', on: true }}")
+                        f"window: '{_js(d.get('window') or '—')}', pod: '{_js(d.get('pod') or '—')}', size: '{size}', trades: '{stats.get(_LEG_ALIAS.get(eid, eid), [0])[0]}', on: true }}")
         src = src[:m.start()] + "const LEGS = [\n" + ",\n".join(rows) + "\n];" + src[m.end():]
         src = src.replace("legs: '11 Of 12 Armed'", f"legs: '{len(rows)} Armed'", 1)
+
+    # Today per leg (closed desk tickets' P/L as a share of the balance) and the sample's random-walk ticks, removed.
+    base = bal or eq or 10000.0
+    today = {k: round(v[1] / base * 100, 2) for k, v in _leg_stats(state).items() if v[1]}
+    src = src.replace("today[l.id] = 0; });", "today[l.id] = (TODAY_PL[l.id] || 0); });", 1)
+    src = src.replace("const TONES = {", "const TODAY_PL = " + json.dumps(today) + ";\nconst TONES = {", 1)
+    src = src.replace("const drift = Math.sin(tick / 7) * 0.9 + Math.cos(tick / 3) * 0.4;", "const drift = 0;", 1)
+    src = re.sub(r"const today = \{ \.\.\.s\.today \}; if \(tick % 5 === 0\) \{.*?\n", "const today = { ...s.today };\n", src, count=1, flags=re.S)
+    src = src.replace("l.probation ? 'Probation 6/20' : 'Armed'", "'Armed'", 1)
+    src = src.replace("probation: true", "probation: false")
+
+    # Guards from the active desk risk profile (desk/risk.json); "No Source" where it has no such field.
+    prof = _risk_profile()
+    def pct(k):
+        return f"{float(prof[k]):g}%" if isinstance(prof.get(k), (int, float)) else "No Source"
+    cut = prof.get("weekend_cutoff_ny")
+    guards = [["Daily Loss Guard", f"{day:,.2f}" if day else pct("daily_loss_pct"), "Armed", "green"],
+              ["Max Loss Kill", f"{kill:,.2f}" if kill else pct("max_loss_pct"), "Halted" if halt else "Armed", "red" if halt else "green"],
+              ["Max Open Risk", pct("desk_open_pct"), "Armed" if prof else "No Data", "green" if prof else "grey"],
+              ["News Blackout", f"±{prof['news_window_min']} Min" if prof.get("news_window_min") is not None else "No Source",
+               "Armed" if prof.get("news_window_min") else "No Data", "green" if prof.get("news_window_min") else "grey"],
+              ["Friday Flat", f"{cut} New York" if cut and prof.get("flat_before_weekend") else "No Source",
+               "Armed" if cut and prof.get("flat_before_weekend") else "No Data", "green" if cut and prof.get("flat_before_weekend") else "grey"],
+              ["Max Lot", "No Source", "No Data", "grey"],
+              ["Weekend Hold", "No Source" if "flat_before_weekend" not in prof else ("Off" if prof["flat_before_weekend"] else "On"),
+               "No Data" if "flat_before_weekend" not in prof else ("Off" if prof["flat_before_weekend"] else "On"), "grey"]]
+    src = re.sub(r"const guards = \[.*?\]\.map\(\(\[name", lambda _: "const guards = " + json.dumps(guards, ensure_ascii=False) + ".map(([name", src, count=1, flags=re.S)
+
+    # The version diff: T16 against the source file; leg settings have no diff source.
+    dep, ver = _deployed_funded(), _ea_versions(root).get("AurumFunded")
+    diff = [{"what": "AurumFunded Version", "a": dep or "No Data", "b": ver or "No Data"},
+            {"what": "Leg Settings", "a": "No Data", "b": "No Data"}, {"what": "Guards", "a": "No Data", "b": "No Data"}]
+    src = re.sub(r"const diff = \[.*?\n\s*\];", lambda _: "const diff = " + json.dumps(diff) + ";", src, count=1, flags=re.S)
+
+    # Presence on Terminal 16 (tools/dashboard.py ea_presence, redacted): an EA with no log line today is not attached.
+    d = _tool("dashboard")
+    pres = d.ea_presence() if d and hasattr(d, "ea_presence") else {}
+    if isinstance(pres, dict) and "error" not in pres:
+        def seen(name):
+            r = pres.get(name) or {}
+            if r.get("attached"):
+                return f"{name}: attached, {r.get('today_lines')} log lines today."
+            last = f" Last log line {r['last_day']}: {r['last_lines'][-1]}" if r.get("last_day") and r.get("last_lines") else " No log line in the last 30 days."
+            return f"{name}: not attached: no log line today.{last}"
+        hy, fu = pres.get("AurumHydra") or {}, pres.get("AurumFunded") or {}
+        if not hy.get("attached"):
+            src = src.replace("state: 'Demo · Forward Test', tone: 'blue', term: 'FTMO Demo'", "state: 'Not Attached', tone: 'grey', term: 'No Terminal'", 1)
+        if not fu.get("attached"):
+            src = src.replace("state: 'Live · T16', tone: 'green'", "state: 'No Log Line Today', tone: 'grey'", 1)
+        src = src.replace("Morning Is On Probation At Half Size Until Trade 20.", html.escape(seen("AurumHydra") + " " + seen("AurumFunded")), 1)
     return src
 
 
@@ -1088,6 +1206,112 @@ def _dur(sec):
     return f"{sec // 60}m {sec % 60:02d}s" if sec >= 60 else f"{sec}s"
 
 
+_ROLE_DUE = {"doctor": (6, 0, None), "monitor": (23, 15, (0, 1, 2, 3, 4)), "portfolio": (10, 0, (5,))}
+
+
+def _role_ended(role):
+    """(last-<role>.json, its local 'ended' time or None)."""
+    d = _relay(role)
+    try:
+        return d, dt.datetime.fromisoformat(str(d.get("ended")))
+    except ValueError:
+        return d, None
+
+
+def _role_late(role, ended, now):
+    """True when the role's newest scheduled window (daily 06:00 doctor, Mon-Fri 23:15 monitor, Sat 10:00
+    portfolio; install.ps1) has passed by 90 minutes with no run since. Weekend days are skipped for the monitor."""
+    h, m, days = _ROLE_DUE[role]
+    due = now.replace(hour=h, minute=m, second=0, microsecond=0)
+    for _ in range(8):
+        if due <= now and (days is None or due.weekday() in days):
+            break
+        due -= dt.timedelta(days=1)
+    return ended is None or (ended < due and now > due + dt.timedelta(minutes=90))
+
+
+def _mtime(p):
+    try:
+        return pathlib.Path(p).stat().st_mtime
+    except OSError:
+        return None
+
+
+def _tester_queue():
+    """Jobs of docs/autopilot/queue.json: (not done, latest done/failed job)."""
+    try:
+        jobs = json.loads((DOCS / "autopilot" / "queue.json").read_text(encoding="utf-8-sig")).get("jobs") or []
+    except (OSError, ValueError):
+        return [], None
+    live = [j for j in jobs if isinstance(j, dict) and j.get("status") in ("queued", "running")]
+    live.sort(key=lambda j: j.get("status") != "running")
+    done = [j for j in jobs if isinstance(j, dict) and j.get("status") not in ("queued", "running")]
+    return live, (done[-1] if done else None)
+
+
+def _set_row(src, name, last, state):
+    def sub(m):
+        row = re.sub(r"last: '[^']*'", lambda _: f"last: '{_js(last)}'", m.group(0), count=1)
+        return re.sub(r"state: '[^']*'", lambda _: f"state: '{state}'", row, count=1)
+    return re.sub(r"\{ name: '" + re.escape(name) + r"', [^\n]*", sub, src, count=1)
+
+
+def _patch_tester_queue(src, qlive, qlast):
+    """Tester queue panel and KPI from docs/autopilot/queue.json (no invented progress)."""
+    def item(j):
+        what = " ".join([str(j.get("expert") or ""), str(j.get("symbol") or ""), str(j.get("period") or "")]).strip()
+        what += f" · {j['tag']}" if j.get("tag") else ""
+        return {"name": f"{j.get('id')} · {what}", "what": _cut(j.get("expect") or "", 110) or "No Note.",
+                "state": str(j.get("status") or "?").title(), "tone": "blue" if j.get("status") == "running" else "grey"}
+    if qlive:
+        q = [item(j) for j in qlive[:6]]
+        kpi = (f"{len(qlive)}", f"{qlive[0].get('id')} {str(qlive[0].get('status')).title()}")
+    else:
+        last = item(qlast) if qlast else None
+        q = [{"name": "Nothing Queued", "what": ("Last Job " + last["name"] + " · " + last["state"]) if last else "The Queue File Has No Jobs.",
+              "state": "Idle", "tone": "grey"}]
+        kpi = ("Idle", "Queue Empty")
+    js = "const QUEUE = " + json.dumps(q, ensure_ascii=False) + ";"
+    src = re.sub(r"const QUEUE = \[.*?\n\];", lambda _: js, src, count=1, flags=re.S)
+    src = src.replace("const t = TONES[q.tone], run = i === 0;", "const t = TONES[q.tone], run = false;", 1)
+    src = src.replace("state: run ? q.state : 'Queued · ' + i", "state: q.state", 1)
+    src = src.replace("value: Math.floor(s.progress) + '%', sub: 'Morning Probation Check'",
+                      f"value: '{_js(kpi[0])}', sub: '{_js(kpi[1])}'", 1)
+    return src
+
+
+_TASK_PILL = {"ok": ("OK", "#E9F7EC", "#248A3D"), "running": ("Running", "#E8F2FF", "#0066CC"),
+              "late": ("Late", "#FFF4E0", "#8A4B00"), "failed": ("Failed", "#FDECEC", "#B3261E"),
+              "disabled": ("Off", "#E8E8ED", "#424245"), "missing": ("Missing", "#FDECEC", "#B3261E")}
+
+
+def _tasks_panel():
+    """Plain-HTML "Scheduled Tasks" section: one row per Windows task from tools/task_health.py (read only),
+    or a No Data note when Task Scheduler cannot be read."""
+    try:
+        rows = (_tool("task_health").health() or {}).get("rows") or []
+    except Exception:
+        rows = []
+    e = html.escape
+    out = []
+    for r in rows:
+        lab, bg, fg = _TASK_PILL.get(str(r.get("verdict")), ("No Data", "#E8E8ED", "#424245"))
+        last = e(str(r.get("last") or "—"))
+        nxt = e(str(r.get("next") or "—"))
+        why = f" · {e(str(r['why']))}" if r.get("why") else ""
+        out.append(
+            '<div style="display: grid; grid-template-columns: minmax(120px, 1fr) 2fr auto; gap: 12px; align-items: center; '
+            'padding: 10px 0; border-top: 1px solid #E8E8ED"><span style="font-weight: 600">' + e(str(r.get("name") or "?"))
+            + '</span><span style="min-width: 0; color: #6E6E73">' + e(str(r.get("does") or "")) + f" · Last {last} · Next {nxt}{why}"
+            + f'</span><span style="padding: 3px 10px; border-radius: 980px; font-size: 12px; font-weight: 600; background: {bg}; '
+            f'color: {fg}">{lab}</span></div>')
+    body = "".join(out) or '<div style="color: #6E6E73; padding: 10px 0">No Data: Task Scheduler could not be read.</div>'
+    return ('<section aria-label="Scheduled Tasks" style="background: #FFFFFF; border-radius: 24px; padding: 28px; display: flex; '
+            'flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; gap: 8px; align-items: baseline">'
+            '<h3 style="margin: 0; font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: -0.012em">Scheduled Tasks</h3>'
+            '<span style="font-size: 13px; color: #6E6E73">Windows Task Scheduler, Read Only</span></div>' + body + '</section>')
+
+
 def _patch_processes_page(src, state, live):
     now = _ts(state.get("t")) or dt.datetime.now(dt.timezone.utc)
     sched = {str(r.get("name")): _ts(r.get("ran")) for r in state.get("schedule") or [] if isinstance(r, dict)}
@@ -1119,6 +1343,35 @@ def _patch_processes_page(src, state, live):
     src = src.replace("const t = j.state === 'OK' ? TONES.green : TONES.amber",
                       "const t = j.state === 'OK' ? TONES.green : j.state === 'Failed' ? TONES.red : TONES.amber", 1)
 
+    marker = '<section aria-label="Heartbeats"'
+    if marker in src:
+        src = src.replace(marker, _tasks_panel() + marker, 1)
+
+    # Autopilot roles (logs/autopilot/last-<role>.json, local times): Doctor, Code Monitor, the finder/builder loop.
+    local = dt.datetime.now()
+
+    def when(t):
+        return f"{t:%a %H:%M} · {_ago((local - t).total_seconds())}"
+
+    for jname, role in (("Doctor", "doctor"), ("Code Monitor", "monitor")):
+        d, t = _role_ended(role)
+        if t is None:
+            src = _set_row(src, jname, "No Run Logged", "Late")
+            continue
+        st = "Failed" if d.get("failed") else "Late" if _role_late(role, t, local) else "OK"
+        src = _set_row(src, jname, when(t), st)
+    fd, ft = _role_ended("finder")
+    bd, bt = _role_ended("builder")
+    ts_ = [t for t in (ft, bt) if t]
+    if ts_:
+        newest = max(ts_)
+        why = str((fd if ft and ft == newest else bd).get("reason") or "").strip()
+        st = ("Failed" if fd.get("failed") or bd.get("failed") else "Late" if (local - newest).total_seconds() > 6 * 3600
+              else "Backing Off" if int(fd.get("empty_streak") or 0) >= 2 else "OK")
+        src = _set_row(src, "Finder · Builder Loop", f"{newest:%a %H:%M} · " + (_cut(why, 34) if why else _ago((local - newest).total_seconds())), st)
+    else:
+        src = _set_row(src, "Finder · Builder Loop", "No Run Logged", "Late")
+
     # Recent runs from the desk runner.
     label = {k: n for n, (k, _) in _JOBS.items()}
     rows = []
@@ -1136,6 +1389,15 @@ def _patch_processes_page(src, state, live):
             note += " · " + str(r["why"])
         name = str(r.get("name") or r.get("pod") or "?")
         rows.append([_js(label.get(name, name.replace("_", " ").title())), _js(note), res, tone, t0.isoformat()])
+    for role in ("finder", "builder", "judge", "tester", "doctor", "monitor", "portfolio"):
+        d, t = _role_ended(role)
+        if t is None:
+            continue
+        res, tone = (("Failed", "red") if d.get("failed") else ("Idle", "grey") if d.get("idle") else ("OK", "green"))
+        note = _cut(d.get("reason") or "", 60) or f"Exit {d.get('exit', '?')}"
+        rows.append([_js(_ROLE_NAME.get(role, role.title())), _js(note), res, tone, t.astimezone().isoformat()])
+    rows.sort(key=lambda r: dt.datetime.fromisoformat(r[4]), reverse=True)
+    rows = rows[:8]
     if rows:
         src = src.replace("class Component extends DCLogic {",
                           "const LIVE_RUNS = " + json.dumps(rows, ensure_ascii=False) + ";\nclass Component extends DCLogic {", 1)
@@ -1176,12 +1438,47 @@ def _patch_processes_page(src, state, live):
         if ran:
             age["sched"] = max(0, int((now - max(ran)).total_seconds()))
             detail["sched"] = f"{len(ran)} Jobs Tracked"
-        age["data"] = 0
-        detail["data"] = "Built On Each Page Load"
-        detail.setdefault("tester", "—")  # the design's 'Running Job 1 Of 4' had no source
+        # Feed: dashboard/live.js; demo: docs/demo_log.md; tester: last-tester.json against the queue.
+        epoch = time.time()
+        lim = {"relay": 7200, "mt5": 120, "sched": 3900, "data": 7200, "demo": 26 * 3600, "tester": 72 * 3600}
+        mt = _mtime(ROOT / "dashboard" / "live.js")
+        if mt:
+            age["data"] = max(0, int(epoch - mt))
+            detail["data"] = f"live.js · Written {dt.datetime.fromtimestamp(mt):%a %H:%M}"
+        else:
+            age["data"], detail["data"] = 0, "Built On Each Page Load"
+        mt = _mtime(DOCS / "demo_log.md")
+        if mt:
+            if local.weekday() in (5, 6, 0):
+                lim["demo"] = 74 * 3600  # the monitor writes Mon-Fri evenings
+            age["demo"] = max(0, int(epoch - mt))
+            detail["demo"] = f"Demo Log · Written {dt.datetime.fromtimestamp(mt):%a %d %b %H:%M}"
+        else:
+            age["demo"], lim["demo"], detail["demo"] = 0, 10 ** 9, "No Demo Log"
+        qlive, qlast = _tester_queue()
+        td, tt = _role_ended("tester")
+        if tt:
+            age["tester"] = max(0, int((local - tt).total_seconds()))
+        else:
+            age["tester"], lim["tester"] = 0, 10 ** 9
+        if qlive:
+            lim["tester"] = 3 * 3600  # jobs waiting: the tester should be working
+            detail["tester"] = f"{len(qlive)} Job{'s' if len(qlive) != 1 else ''} Waiting · {qlive[0].get('status')}"
+        else:
+            lim["tester"] = 24 * 3600  # the tester has run every day; a gap of a day or more is real lateness
+            detail["tester"] = "Queue Empty" + (f" · Last {qlast.get('id')} {str(qlast.get('status') or '').title()}" if qlast else "")
+            if tt:
+                detail["tester"] += f" · Last Run {_ago((local - tt).total_seconds())}"
         src = src[:m.start()] + "const age = " + json.dumps(age) + ";" + src[m.end():]
-        for bid, lim in (("relay", 7200), ("mt5", 120), ("sched", 3900), ("data", 60)):
-            src = re.sub(r"(\{ id: '" + bid + r"', [^\n]*?limit: )\d+", lambda g: g.group(1) + str(lim), src, count=1)
+        src = re.sub(r"const RUN_POOL = \[.*?\n\];", "const RUN_POOL = [];", src, count=1, flags=re.S)
+        src = src.replace("progress: 38", "progress: 0", 1)
+        src = _patch_tester_queue(src, qlive, qlast)
+        for bid, lv in lim.items():
+            src = re.sub(r"(\{ id: '" + bid + r"', [^\n]*?limit: )\d+", lambda g: g.group(1) + str(lv), src, count=1)
+        late_n = sum(age[b] > lim[b] for b in lim)
+        keeper = _mtime(max((ROOT / "logs" / "autopilot").glob("*_keeper.log"), default=ROOT / "none"))
+        wd_ok = bool(keeper) and epoch - keeper < 1200
+        src = _set_row(src, "Watchdog", f"{len(lim) - late_n} Of {len(lim)} Beats In", "OK" if wd_ok else "Late")
         for bid, text in detail.items():
             src = re.sub(r"(\{ id: '" + bid + r"', [^\n]*?detail: ')[^']*'", lambda g: g.group(1) + _js(text) + "'", src, count=1)
         src = src.replace("age: a === 0 ? 'Now' : a + 's Ago', limit: b.limit + 's'",
@@ -1422,6 +1719,8 @@ _CTRL_JS = [
     ("<span>Switches Here Write A Draft Only; Nothing Places, Closes Or Sizes A Trade.",
      "<span>Switches Apply On Confirm (desk/controls.py) And Go Into The Journal; Nothing Places, Closes Or Sizes A Trade."),
     ("The AurumFunded 1.20 Deploy And The Fidelity", "The AurumFunded Deploy And The Fidelity"),
+    ("const f = Math.min(1, used / limit), col", "const f = used == null || !limit ? 0 : Math.min(1, used / limit), col"),
+    ("used: used + unit, limit: limit + unit,", "used: used == null ? '—' : used + unit, limit: limit == null ? '—' : limit + unit,"),
 ]
 
 
@@ -1557,6 +1856,26 @@ def _patch_controls_page(src, state, positions=None):
         src = re.sub(r"funded: \{ title: .*?\n  fivex:", lambda _: block, src, count=1, flags=re.S)
         src = src.replace("sub: 'Funded · Halts At 3%'", f"sub: 'Funded · Halts At {g('daily_loss_pct'):g}%'", 1)
 
+    # 5x EA (Hydra) block: only what has a real source. The book weights come from docs/book.json;
+    # the Hydra demo account has no desk gauge, so its loss and position rows show a dash.
+    book = _jfile(DOCS / "book.json") or {}
+    wts = [float((v or {}).get("weight") or 0) * 100 for v in (book.get("legs") or {}).values() if isinstance(v, dict)]
+    m = re.search(r"cap (\d+(?:\.\d+)?)%", str(book.get("rule") or ""))
+    cap = float(m.group(1)) if m else None
+    m = re.search(r"half size past (\d+(?:\.\d+)?)% drawdown, quarter past (\d+(?:\.\d+)?)%", str(book.get("rule") or ""))
+    arm = [float(a.get("risk_pct") or 0) for a in (state.get("edges") or {}).get("armed") or [] if isinstance(a, dict)]
+    fx = [["Daily Loss", "No Desk Gauge On The Hydra Account", None, None, "%"],
+          ["Max Drawdown", f"Book Halves Size Past {m.group(1)}%, Quarters It Past {m.group(2)}%" if m else "No Desk Gauge On The Hydra Account",
+           None, float(m.group(2)) if m else None, "%"],
+          ["Risk Per Trade", "Largest Armed Leg, Of Balance", max(arm, default=None), float(prof.get("per_trade_pct") or 0.5) if prof else None, "%"],
+          ["Open Positions", "No Desk Gauge On The Hydra Account", None, len(arm) or None, ""],
+          ["Leg Weight Cap", "Largest Single Leg In docs/book.json", round(max(wts), 1) if wts else None, cap, "%"],
+          ["Correlated Exposure", "No Source Yet", None, None, ""]] if prof else None
+    if fx:
+        block = ("fivex: { title: '5x EA · Hydra Demo', tag: " + json.dumps("Book " + str(book.get("when") or "?")[:10], ensure_ascii=False) +
+                 ", rows: " + json.dumps(fx, ensure_ascii=False) + " }\n};")
+        src = re.sub(r"fivex: \{ title: .*?\n\};", lambda _: block, src, count=1, flags=re.S)
+
     jr = [j for j in state.get("journal") or [] if isinstance(j, dict)]
     keep = ("ticket_block", "ticket_approve", "ticket_new", "pause", "resume", "halt", "unhalt")
     pick = [j for j in jr if j.get("kind") in keep] or jr
@@ -1570,6 +1889,79 @@ def _patch_controls_page(src, state, positions=None):
                      src, count=1, flags=re.S)
     for old, new in _CTRL_JS:
         src = src.replace(old, new, 1)
+    return src
+
+
+_SEAT_KEY = {"Systematic Pod": "systematic", "FX Macro Pod": "fxmacro", "Metals Pod": "metals", "Indices Pod": "indices",
+             "Event Pod": "event", "Crypto Pod": "crypto"}
+_SEAT_BUDGET = {"Head Trader": "head-trader", "Debrief": "debrief", "Desk Monitor": "monitor", "Scorekeeper": "scorekeeper"}
+
+
+def _retry_ladder():
+    """Hours between probes after the 1st, 2nd, 3rd and 4th weekly limit hit: WEEKLY_HOURS in tools/autopilot/router.py."""
+    try:
+        txt = (ROOT / "tools" / "autopilot" / "router.py").read_text(encoding="utf-8", errors="replace")
+        probe = int(re.search(r"^PROBE_HOURS\s*=\s*(\d+)", txt, re.M).group(1))
+        raw = re.search(r"^WEEKLY_HOURS\s*=\s*\(([^)]*)\)", txt, re.M).group(1)
+        hrs = [probe if x.strip() == "PROBE_HOURS" else int(x.strip()) for x in raw.split(",") if x.strip()]
+        return hrs if len(hrs) == 4 else None
+    except (OSError, AttributeError, ValueError):
+        return None
+
+
+def _role_steps(rid):
+    """What the last run of a role did, from logs/autopilot/last-<role>.json: start, length, model, outcome, hand-over."""
+    st = _relay(rid)
+    if not st:
+        return ["No Run On Record"]
+    out = []
+    try:
+        a, b = dt.datetime.fromisoformat(str(st["started"])[:19]), dt.datetime.fromisoformat(str(st["ended"])[:19])
+        out.append(f"Started {a:%a %H:%M} On {_title(str(st.get('provider') or '?'))} {_title(str(st.get('model') or '?'))}")
+        out.append(f"Ran {max(0, int((b - a).total_seconds() // 60))} Min, Exit {st.get('exit', '?')}")
+    except (KeyError, ValueError):
+        out.append(f"Model {_title(str(st.get('model') or '?'))}, Exit {st.get('exit', '?')}")
+    if st.get("reason"):
+        out.append(_cut(_title(_js(str(st["reason"]))), 110))
+    if st.get("limit_hits"):
+        out.append(f"Limit Hits: {st['limit_hits']}")
+    if st.get("timed_out"):
+        out.append("Timed Out")
+    if int(st.get("empty_streak") or 0):
+        out.append(f"Empty Runs In A Row: {st['empty_streak']}")
+    out.append(f"Done: {'Failed' if st.get('failed') else 'Hand-Over To ' + _title(str(st['next'])) if st.get('next') and st['next'] != 'none' else 'No Hand-Over'}")
+    return out
+
+
+def _patch_agents_real(src, state):
+    """Agents page: the seat rows (pods: tokens and wakes today from the allowance; the other desk seats: tokens today from the
+    budgets), the step lists (last run of each role) and the retry ladder (router.py)."""
+    allow = (state.get("allowance") or {}).get("pods") or {}
+    buds = {b.get("group"): b for b in state.get("budgets") or [] if isinstance(b, dict)}
+
+    def seat(m):
+        row = m.group(0)
+        name = re.match(r"\[\s*'([^']*)'", row).group(1)
+        pod = allow.get(_SEAT_KEY.get(name, ""))
+        bud = buds.get(_SEAT_BUDGET.get(name, ""))
+        if pod is not None:
+            count, tok = int(pod.get("wakes") or 0), int(pod.get("spent") or 0)
+        elif bud is not None:
+            count, tok = "—", int(bud.get("spent") or 0)
+        else:
+            count, tok = "—", 0
+        return re.sub(r", (?:\d+|'—'), \d+, ('[^']*')\]$", lambda mm: f", {json.dumps(count)}, {tok}, {mm.group(1)}]", row)
+
+    src = re.sub(r"const SEATS = \[.*?\n\];",
+                 lambda m: re.sub(r"\['[^\[\]]*'[^\[\]]*\]", seat, m.group(0)), src, count=1, flags=re.S)
+    src = src.replace("fmtTok(tok) + ' Of 800K'", "fmtTok(tok) + ' Tokens Today · Wakes ' + count", 1)
+    src = src.replace("Of 800K", "Tokens Today")
+    steps = {r: _role_steps(r) for r in ROLES}
+    src = re.sub(r"const STEPS = \{.*?\n\};", lambda _: "const STEPS = " + json.dumps(steps, ensure_ascii=False) + ";", src, count=1, flags=re.S)
+    hrs = _retry_ladder()
+    labels = ["1st Hit", "2nd Hit", "3rd Hit", "4th And On"]
+    ladder = [[l, f"{h}h"] for l, h in zip(labels, hrs)] if hrs else [[l, "No Data"] for l in labels]
+    src = src.replace("[['1st Hit', '3h'], ['2nd Hit', '3h'], ['3rd Hit', '6h'], ['4th And On', '12h']]", json.dumps(ladder).replace('"', "'"), 1)
     return src
 
 
@@ -2217,6 +2609,8 @@ def patch_page(src, i, live, usage, positions, label, extra=None):
         src = _safe(_patch_controls_page, src, extra["state"], positions)
     elif i == 6 and live:
         src = _safe(_patch_agents_page, src, live, usage)
+    if i == 6 and isinstance((extra or {}).get("state"), dict):
+        src = _safe(_patch_agents_real, src, extra["state"])
     if isinstance((extra or {}).get("state"), dict):
         src = _safe(_patch_phase, src, extra["state"])
     vers, dep = _ea_versions(), _funded_deploy()
