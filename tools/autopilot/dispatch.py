@@ -6,7 +6,8 @@
 # What counts as new:
 # - A demo ORDER or ALERT line of AurumFunded in Terminal 16's MQL5 log (MQL5/Logs/YYYYMMDD.log). It is written to
 #   logs/autopilot/demo-event.json ({at, kind, line}); relay.ps1 starts the judge for it (at the judge tier
-#   for an ALERT) when the judge has not started since.
+#   for an ALERT) when the judge has not started since. An ALERT with the same cause (retcode, or the text with
+#   numbers blanked) as one sent in the last 24 h is only logged (logs/autopilot/alert-seen.json, owner 2026-11-02).
 # - A work file the scripts wrote or rewrote: logs/autopilot/to-judge.json, tester-help.json.
 # Then, when PAUSE is absent and no agent holds Local\AurumAgent, it starts relay.ps1 hidden; the relay decides who
 # runs. The first run only notes where the log stands, so old lines never fire.
@@ -29,6 +30,16 @@ MQL_LOGS = Path(os.environ.get("APPDATA", "")) / "MetaQuotes" / "Terminal" / "66
 ORDER = re.compile(r"\b(sold|bought|broke its range)\b")
 ALERT = re.compile(r"closing everything until|at the final stop|halting|failed|retcode|no money|invalid stops", re.I)
 DRY = "--dry-run" in sys.argv
+# Repeat ALERTs (owner 2026-11-02: 8 of 10 judge runs in a day were the same retcode 10017, each "same cause, no new
+# action"): an ALERT whose cause woke the judge in the last REPEAT_HOURS is logged here, not sent to the judge.
+SEEN_ALERTS = LOGDIR / "alert-seen.json"
+REPEAT_HOURS = 24
+
+
+def alert_cause(text):
+    """An ALERT's cause: its retcode when it has one, else the text with numbers blanked."""
+    m = re.search(r"retcode\s*(\d+)", text)
+    return f"retcode {m.group(1)}" if m else re.sub(r"\d+(?:[.:]\d+)*", "#", text).strip()
 
 
 def log(text):
@@ -120,6 +131,23 @@ def main():
         log(f"dispatch: first run, watching {state.get('log')} from line {state.get('lines')}")
         work = []
     if events:
+        seen = load(SEEN_ALERTS, {})
+        now = dt.datetime.now()
+        fresh, repeats = [], {}
+        for e in events:
+            c = alert_cause(e[2]) if e[1] == "ALERT" else None
+            try:
+                recent = c in seen and now - dt.datetime.fromisoformat(seen[c]) < dt.timedelta(hours=REPEAT_HOURS)
+            except ValueError:
+                recent = False
+            if recent:
+                repeats[c] = repeats.get(c, 0) + 1
+            else:
+                fresh.append(e)
+        for c, n in repeats.items():
+            log(f"demo ALERT repeat x{n} ({c}): the judge saw this cause at {seen[c]}, not woken (again after {REPEAT_HOURS} h)")
+        events = fresh
+    if events:
         # An ALERT outranks orders; the newest line of that kind is the one the relay reports.
         kind = "ALERT" if any(k == "ALERT" for _, k, _ in events) else "order"
         at, _, text = [e for e in events if e[1] == kind][-1]
@@ -133,6 +161,10 @@ def main():
         if not DRY:
             EVENT.write_text(json.dumps({"at": at.isoformat(timespec="seconds"), "kind": kind, "line": text,
                                          "count": len(events)}, indent=1), encoding="utf-8")
+            if kind == "ALERT":
+                seen = load(SEEN_ALERTS, {})
+                seen[alert_cause(text)] = dt.datetime.now().isoformat(timespec="seconds")
+                SEEN_ALERTS.write_text(json.dumps(seen, indent=1), encoding="utf-8")
     pending = load(EVENT, {}) if EVENT.exists() else {}
     last = load(LOGDIR / "last-judge.json", {})
     unhandled = bool(pending) and pending.get("at", "") > str(last.get("started", ""))

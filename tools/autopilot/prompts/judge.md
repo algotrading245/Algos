@@ -29,6 +29,8 @@ Do the single most useful task, in this order:
    tester job goes on "hold".
 4. Demo against tester: `python tools/demo_check.py`, sizing toward the goal with `tools/prop_dp.py`. A finding
    becomes a tester job or a handoff note, never a direct change of the demo's inputs.
+5. A queue item at "ask_judge" (owner 2026-11-02): answer its `ask` on the item, then set it "done" with the reason
+   or back to "queued" with what is still needed in `why`. The builder does not take an "ask_judge" item.
 Funded first (owner 2026-10-22): when two items are equally urgent, take the AurumFunded one; Hydra is a capped side
 bet. A leg is judged by what it adds to the book (`docs/gates/<id>.json` book gate), not by its Sharpe alone.
 

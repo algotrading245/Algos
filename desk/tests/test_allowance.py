@@ -31,8 +31,12 @@ def test_pool_fitted_to_the_week_and_throttled_near_the_cap(cfg, ap, monkeypatch
     assert f["used_usd"] == 12.0 and f["pool"] == 270_000  # $3 left / 3 days
     (ap / "usage.jsonl").write_text(json.dumps({"ts": "2026-10-20T10:00:00", "cost_usd": 60}) + "\n"
                                     + json.dumps({"ts": "2026-10-15T10:00:00", "cost_usd": 500}) + "\n")  # last week
-    f = allowance.fit(cfg)
-    assert f["account_fraction"] == 0.77 and f["throttle"] == 0.5 and f["pool"] == 135_000
+    f = allowance.fit(cfg)  # past skip_above: the pods' own slice is not cut (A7, owner 2026-11-02)
+    assert f["account_fraction"] == 0.77 and f["throttle"] == 1.0 and f["pool"] == 270_000
+    with open(ap / "usage.jsonl", "a") as fh:
+        fh.write(json.dumps({"ts": "2026-10-20T11:00:00", "cost_usd": 30}) + "\n")
+    f = allowance.fit(cfg)  # the whole weekly cap spent: a quarter
+    assert f["account_fraction"] == 1.07 and f["throttle"] == 0.25 and f["pool"] == 67_500
 
 
 def test_today_spend_does_not_shrink_todays_pool(cfg, ap):

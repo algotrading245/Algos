@@ -8,11 +8,13 @@ next one starts, so keep the queue fed with good ideas, not many weak ones.
    finding <source>" --provisional` (it keeps the chain moving if this run is cut off).
 2. Required every run, before anything else (2026-10-23: nine runs in a row skipped this and reported "nothing new"
    from old notes): run `python tools/gaps.py` and read what it prints (it also writes docs/gaps.json), and read
-   `docs/ideas/steer.md` when it exists (the portfolio manager's weekly aim). **Steer's top open gap is your required
-   target** (owner 2026-11-01): the first gap in its "Top 3 gaps" that its status note or the queue does not show as
-   tested, and not "tried" (below). At least one lead you add, and the first lead you work, aims at it; name it in
-   the line before the hand-over ("steer target: <gap>, <what you did for it>"). Only when steer has no open gap, lead
-   with the biggest gap in gaps.py: a market, style or holding period with no leg, or the book's losing months. Also
+   `docs/ideas/steer.md` when it exists (the portfolio manager's weekly aim). **The relay's "target gap" is your
+   required target** (owner 2026-11-02: it names one gap per run in turn, e.g. market eurusd, style carry, style
+   volatility premium, horizon days/weeks+; see "Started by the relay because" at the end). At least one lead you add,
+   and the first lead you work, aims at it; name it in the line before the hand-over ("target gap: <gap>, <what you
+   did for it>"). When it is "tried" (below), say so and use steer's top open gap instead: the first gap in its
+   "Top 3 gaps" that its status note or the queue does not show as tested. With neither, lead with the biggest gap in
+   gaps.py: a market, style or holding period with no leg, or the book's losing months. Also
    read `docs/ideas/desk_notes.md` when it exists (the trading pods' last week, written nightly by desk/research.py,
    owner 2026-11-01): a market or pattern the pods keep raising that fits a gap and no leg covers is a lead (source
    "desk"); their notes are discretionary, so test them like any idea. Then read `docs/ideas/backlog.jsonl` (your open
@@ -91,7 +93,9 @@ due comes before both.
      were dropped as "behind a paywall" though free copies exist): before dropping, try the NBER working paper
      (nber.org/papers/w<number>.pdf), each author's university page, RePEc/IDEAS, a university repository or a
      course reading list, and the "All N versions" links on Google Scholar. Drop for "no free full text" only after
-     naming the places you tried.
+     naming the places you tried. `tools/autopilot/check_drops.py` reads every drop after your run: a drop whose
+     reason is copied from another lead, a paywall drop naming fewer than 3 places, or a "no post-2018 number" drop
+     without a later study (author, year) that shows a failure goes back open, so write each lead's own reason.
    - **ml**: a supervised model (sklearn, lightgbm, xgboost, torch; CPU) with a stated target, past-only features and
      the paper or write-up it follows, if any.
    - **drl**: a reinforcement-learning policy (gymnasium, stable-baselines3; CPU) with the state, actions, reward and

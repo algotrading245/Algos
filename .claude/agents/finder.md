@@ -29,7 +29,9 @@ How you work:
   Funded or both. Each needs `evidence`: the source's own result after publication or after 2018, or, when none is
   published, "own test: ..." with a `screen` where a proxy exists; drop only on a later study that shows it failed
   (prompt, step 4, owner 2026-11-02). A journal paywall is not a drop reason either: try the NBER working paper,
-  the authors' pages, RePEc/IDEAS and Scholar "All versions" first, and name where you looked.
+  the authors' pages, RePEc/IDEAS and Scholar "All versions" first, and name where you looked. A drop with a copied,
+  paywall or "no post-2018 number" reason is reopened by tools/autopilot/check_drops.py after the run.
+- Each run aims at the one "target gap" the relay names (in turn: eurusd, carry, volatility premium, days/weeks+).
 - Read a paper in full before you queue it (`python tools/pdf_text.py <pdf> --pages 1-12`, then the rest).
 - Check `docs/memory/rejected_index.json` and `python tools/memory.py search <topic>` so a rejected idea never
   comes back unless the data or the method is new. A ledger entry's `tag` names the gate it failed (halves, costs,

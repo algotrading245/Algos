@@ -343,6 +343,12 @@ while ($true) {
     }
     $t0 = Get-Date
     $leads0 = Get-OpenLeads; $queue0 = Get-QueueLines
+    if ($role -eq "finder") {
+        # One named gap per run, in turn (owner 2026-11-02); the prompt makes it the run's required target.
+        $tgArgs = @((Join-Path $PSScriptRoot "finder_target.py")); if ($DryRun) { $tgArgs += "--peek" }
+        $tg = (& python.exe @tgArgs 2>$null | Select-Object -First 1)
+        if ("$tg".Trim()) { $why = "$why; $tg" }
+    }
     Start-Agent $role $why $tier
     if ($DryRun) { break }
     $lr = Get-Last $role
@@ -355,6 +361,9 @@ while ($true) {
                            else { "ended after $([int]((Get-Date) - $t0).TotalSeconds) s with exit $($lr.exit)" }
     }
     if ($role -eq "finder") {
+        # Drops that break the owner's rules (copied, paywall, "no post-2018 number") go back open first (owner
+        # 2026-11-02), so a run whose only work was such drops counts as empty.
+        & python.exe (Join-Path $PSScriptRoot "check_drops.py") 2>&1 | ForEach-Object { if ("$_".Trim()) { Write-Log "relay" "check_drops: $_" } }
         # Empty = the run changed neither the queue nor the open leads (a scout that adds leads is not empty).
         # A data-item run (it writes a fetch script) is not counted.
         $empty = ($why -like "queue low*") -and ((Get-OpenLeads) -eq $leads0) -and ((Get-QueueLines) -le $queue0)

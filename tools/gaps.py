@@ -25,7 +25,7 @@ import book_sim  # noqa: E402
 OUT = ROOT / "docs" / "gaps.json"
 
 # market groups as traded on FTMO (docs/memory/mission.md), styles and holding periods we want covered
-MARKETS = ["gold", "usdjpy", "eurusd", "dollar pairs", "yen crosses", "aud/cad", "us indices"]
+MARKETS = ["gold", "usdjpy", "eurusd", "dollar pairs", "yen crosses", "aud/cad", "us indices", "eu/asia indices"]
 STYLES = ["trend", "mean reversion", "breakout", "calendar / flow", "carry", "volatility premium", "cross-asset reaction",
           "intraday momentum", "seasonal session"]
 HORIZONS = ["intraday", "days", "weeks+"]
@@ -42,6 +42,9 @@ LEG_TAGS = {
     "breakout": {"markets": ["usdjpy"], "style": "breakout", "horizon": "intraday"},
     "noise": {"markets": ["us indices"], "style": "intraday momentum", "horizon": "intraday"},
     "drift": {"markets": ["us indices"], "style": "calendar / flow", "horizon": "days"},
+    # SPX, NSX, GER40 (GRX), JP225 (JPX), equal weight; Dual Thrust opening range, flat by the close
+    "prebuilt_dual_thrust_four_indices_ew": {"markets": ["us indices", "eu/asia indices"], "style": "breakout",
+                                             "horizon": "intraday"},
 }
 
 

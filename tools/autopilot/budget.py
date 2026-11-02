@@ -238,6 +238,11 @@ def status(now=None, with_outside=True):
     out = outside(start, rows) if with_outside else {"usd": 0.0, "tokens": 0, "by": {}}
     used = auto + out["usd"]
     frac = used / c["weekly_usd"] if c["weekly_usd"] else 0.0
+    # The desk's pods own a slice of the week (desk/config.json budgets.pod_weekly_usd; owner 2026-11-02, A7): its
+    # unspent part counts as used when the autopilot decides to skip, so the autopilot cannot eat it.
+    reserve = desk_reserve_usd()
+    left = max(0.0, reserve - float(out["by"].get("desk/other") or 0))
+    skip_frac = (used + left) / c["weekly_usd"] if c["weekly_usd"] else 0.0
     roles = {}
     for r in today:
         x = roles.setdefault(r["role"], {"runs": 0, "cost_usd": 0.0, "tokens": 0})
@@ -250,11 +255,21 @@ def status(now=None, with_outside=True):
     res = {"now": now.isoformat(timespec="minutes"), "week_start": start.isoformat(timespec="minutes"),
             "week_runs": len(week), "week_usd": round(used, 2), "autopilot_usd": round(auto, 2),
             "outside_usd": out["usd"], "outside_by": out["by"], "weekly_usd": c["weekly_usd"],
-            "fraction": round(frac, 3), "skip_above": c["skip_above"], "skip": frac >= c["skip_above"],
+            "fraction": round(frac, 3), "skip_above": c["skip_above"], "skip": skip_frac >= c["skip_above"],
+            "desk_reserve_usd": reserve, "desk_reserve_left_usd": round(left, 2), "skip_fraction": round(skip_frac, 3),
             "today": roles, "week_days": days}
     if with_outside:
         _write_json(STATUS, res)      # desk/allowance.py adds the chat share from here (it counts the desk itself)
     return res
+
+
+def desk_reserve_usd():
+    """The pods' weekly dollars from desk/config.json (budgets.pod_weekly_usd), 0 when unset or unreadable."""
+    try:
+        cfg = json.loads((ROOT / "desk" / "config.json").read_text(encoding="utf-8"))
+        return float((cfg.get("budgets") or {}).get("pod_weekly_usd") or 0)
+    except (OSError, ValueError, TypeError, AttributeError):
+        return 0.0
 
 
 def _write_json(path, obj):

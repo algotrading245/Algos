@@ -1,9 +1,9 @@
 """The pods' token allowance (owner 2026-11-01): how much each pod may think with today, and how often it may be woken.
 
   pool       the pods' daily tokens: budgets.pod in config.json, cut to what the pods' weekly dollars
-             (budgets.pod_weekly_usd) leave for the weekdays to the plan's weekly reset, and cut again when the whole
-             account nears its weekly cap (tools/autopilot/budget.json: half above skip_above, a quarter above 90%;
-             the account = the autopilot + the desk + chat sessions).
+             (budgets.pod_weekly_usd, the pods' own slice) leave for the weekdays to the plan's weekly reset; cut to a
+             quarter only when the whole account has spent its weekly cap (tools/autopilot/budget.json; the account =
+             the autopilot + the desk + chat sessions). Chat use below the cap does not cut the slice (A7, 2026-11-02).
   pod slice  the pool split by the token shares (alloc.json token_shares, base shares before the first allocation)
              among the pods trading now.
   wake cap   wakes_per_pod_day scaled by the same share against an equal split, 1 to twice the base; a paused pod 0.
@@ -146,7 +146,10 @@ def fit(cfg, t=None):
     left = days_left(t, c)
     fitted = max(0.0, weekly - used) / left * tpu
     frac = account_fraction(t, c)
-    throttle = 0.25 if frac >= 0.9 else 0.5 if frac >= c["skip_above"] else 1.0
+    # pod_weekly_usd is the pods' own slice of the week (owner 2026-11-02, gap report A7): chat or the autopilot taking
+    # the account past skip_above no longer cuts it; only the whole weekly cap spent does (a quarter, the last guard).
+    # tools/autopilot/budget.py keeps the slice's unspent part out of the autopilot's room instead.
+    throttle = 0.25 if frac >= 1.0 else 1.0
     out.update(weekly_usd=weekly, used_usd=round(used, 2), days_left=left, tokens_per_usd=int(tpu),
                fitted=int(fitted), account_fraction=round(frac, 3), throttle=throttle,
                pool=int(min(base, fitted) * throttle))
