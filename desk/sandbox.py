@@ -125,7 +125,18 @@ def stats(trades):
     return {"trades": len(r), "pf": round(float(win / loss), 2) if loss else None, "win": round(float((r > 0).mean()), 3),
             "avg_r": round(float(r.mean()), 3), "total_r": round(float(r.sum()), 2), "max_dd_r": round(dd, 2),
             "first": str(base.date_of(trades[0]["t"] // base.DAY)), "last": str(base.date_of(trades[-1]["t"] // base.DAY)),
-            "by_year": years}
+            "by_year": years, "halves": halves(trades)}
+
+
+def halves(trades):
+    """Total R of the trades entered before and after the midpoint in time between the first and the last entry: an
+    edge tuned to one stretch of history shows it as one losing half (the arm bar, owner 2026-11-02)."""
+    if not trades:
+        return [0.0, 0.0]
+    ts = [x["t"] for x in trades]
+    mid = (min(ts) + max(ts)) / 2
+    return [round(float(sum(x["r"] for x in trades if x["t"] <= mid)), 2),
+            round(float(sum(x["r"] for x in trades if x["t"] > mid)), 2)]
 
 
 def _cut(df, start, end):

@@ -16,7 +16,7 @@ os.environ.update({
     "AURUM_DESK_MEMORY": str(TMP / "memory"), "AURUM_DESK_INBOX": str(TMP / "inbox"),
     "AURUM_DESK_REPORTS": str(TMP / "reports"), "AURUM_DESK_PLAYBOOKS": str(TMP / "playbooks"),
     "AURUM_DESK_TICKETS": str(TMP / "tickets.jsonl"), "AURUM_DESK_RISK": str(TMP / "risk.json"),
-    "AURUM_DESK_CONFIG": str(TMP / "config.json"), "AURUM_DESK_NOLAUNCH": "1",
+    "AURUM_DESK_CONFIG": str(TMP / "config.json"), "AURUM_DESK_NOLAUNCH": "1", "AURUM_DESK_NOSIGNALS": "1",
     "AURUM_DESK_MUTEX_SUFFIX": "_test", "AURUM_DESK_NOW": "2026-10-21T14:00:00",  # a Wednesday, London/NY overlap
     "AURUM_DESK_BOARD": str(TMP / "board.jsonl"),
     "AURUM_AUTOPILOT_LOGS": str(TMP / "autopilot"), "AURUM_MT5_COMMON": str(TMP / "common"),  # controls.py

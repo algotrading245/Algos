@@ -11,7 +11,7 @@ it may not replace an edge that is already registered or call itself a benchmark
 import ast
 import importlib.util
 
-from desk.edges import benchmark, legs  # noqa: F401  (registers the edges)
+from desk.edges import benchmark, legs, prebuilt  # noqa: F401  (registers the edges)
 from desk.edges.base import EDGES, describe, get, hist_bars, run  # noqa: F401
 from desk import paths
 

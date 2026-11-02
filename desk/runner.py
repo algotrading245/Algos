@@ -63,6 +63,17 @@ def add_spend(role, tokens, cfg, t=None):
     paths.write_json(BUDGET, b)
 
 
+def _add_build_spend(pod, tokens, t=None):
+    """A build run's tokens under "build" and "build:<pod>", so the pods' daily pool and slices stay untouched."""
+    day = clocks.trading_day(t)
+    cutoff = (day - dt.timedelta(days=14)).isoformat()
+    b = {d: v for d, v in paths.read_json(BUDGET, {}).items() if d >= cutoff}
+    g = b.setdefault(day.isoformat(), {})
+    for k in ("build", f"build:{pod}"):
+        g[k] = g.get(k, 0) + int(tokens)
+    paths.write_json(BUDGET, b)
+
+
 def pod_budget(pod, cfg, t=None):
     """A pod's own daily tokens: the pods' pool (fitted to the weekly dollars, desk/allowance.py) split by the token
     shares among the pods trading now, so a pod that scores well gets more tokens and one that scores badly fewer."""
@@ -77,8 +88,11 @@ def over_budget(role, cfg, t=None):
 
 
 def prompt_for(role, job):
-    """guide.md, then pod.md for any pod, then the role's own file, then the brief and the job."""
+    """guide.md, then pod.md for any pod, then the role's own file (build.md last for a build job), then the brief
+    and the job."""
     names = ["guide.md"] + (["pod.md"] if role in paths.config().get("pods", {}) else []) + [f"{role}.md"]
+    if job.get("kind") == "build":
+        names.append("build.md")
     parts = [(AGENTS / n).read_text(encoding="utf-8") for n in names if (AGENTS / n).exists()]
     parts.append(brief.build(role, job))
     parts.append("## The job\n```json\n" + json.dumps(job, indent=1, default=str) + "\n```\n")
@@ -158,19 +172,31 @@ def _denial(d):
 
 
 def run_agent(role, job, cfg):
-    """One agent run inside a job. Returns 'ok', 'failed' or 'budget'."""
-    if over_budget(role, cfg):
+    """One agent run inside a job. Returns 'ok', 'failed' or 'budget'.
+    A build job (the weekend edge build, owner 2026-11-02) runs on its own weekly dollars and its own model, turns
+    and minutes (the "build" keys), and its tokens never touch the pods' daily slices."""
+    build = job.get("kind") == "build"
+    if build:
+        st = allowance.build_status(cfg)
+        if st["over"]:
+            journal.log("agent_skipped", job=job["id"], role=role, why="budget", detail=st["why"])
+            return "budget"
+    elif over_budget(role, cfg):
         journal.log("agent_skipped", job=job["id"], role=role, why="budget")
         return "budget"
-    model = _cfg_for("models", role, cfg, "sonnet")
-    turns = _cfg_for("max_turns", role, cfg, 30)
-    minutes = _cfg_for("timeout_min", role, cfg, 20)
+    key = "build" if build else group(role, cfg)
+    model = cfg.get("models", {}).get(key, "sonnet")
+    turns = cfg.get("max_turns", {}).get(key, 30)
+    minutes = cfg.get("timeout_min", {}).get(key, 20)
     t0 = clocks.now()
     try:
         res = call(role, model, prompt_for(role, job), turns, minutes, job)
     except Exception as e:  # a missing claude.exe or a broken prompt fails the run, not the runner
         res = {"ok": False, "tokens": 0, "result": "", "why": f"{type(e).__name__}: {e}"}
-    add_spend(role, res.get("tokens", 0), cfg)
+    if build:
+        _add_build_spend(role, res.get("tokens", 0))
+    else:
+        add_spend(role, res.get("tokens", 0), cfg)
     denied = res.get("denied") or []
     journal.log("agent_run", job=job["id"], kind=job["kind"], role=role, model=model, ok=res["ok"],
                 tokens=res.get("tokens", 0), seconds=round((clocks.now() - t0).total_seconds()),
@@ -327,6 +353,13 @@ def run_job(job, cfg):
             res = [run_agent("scorekeeper", job, cfg)]
         elif kind == "monitor":
             res = [run_agent("monitor", job, cfg)]
+        elif kind == "build":  # one run per pod, in turn: each builds or tunes one edge (agents/build.md)
+            res = []
+            for p in job.get("pods") or []:
+                r = run_agent(p, job, cfg)
+                res.append(r)
+                if r in ("budget", "limit"):  # the build dollars or the account are spent: the rest wait a week
+                    break
         else:
             jobs.mark(job["id"], "skipped", why=f"unknown kind {kind}")
             return "skipped"

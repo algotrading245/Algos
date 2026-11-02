@@ -85,7 +85,13 @@ is fine; trading where you have no read is how pods lose.
 
 ## Edges
 The library (`edge list`, `edge describe NAME`) is a reference, not a menu. Any rule-based strategy is open to you:
-- a library edge, as it is or changed;
+- a library edge, as it is or changed. About 70 of them are classic systems prebuilt as `reference` edges (trend:
+  turtle, Donchian, Keltner, Bollinger, MA and MACD crosses, ADX, SAR, Supertrend, Ichimoku, time-series momentum;
+  reversion: RSI, Connors, stochastics, CCI, z-score, IBS; intraday: opening range, London breakout, dual thrust,
+  gaps, pivots, overnight drift; patterns: inside, outside, NR7, pin bars; calendar: turn of month, seasonals; FX
+  carry). None is tuned for a market. Run one on any desk market with `edge sandbox NAME MARKET`, change its defaults
+  with key=value (`edge describe NAME` lists them), and arm the setting that passes. Your brief lists the edges firing
+  on your home markets, reference edges included;
 - any published strategy: a classic system, one from a paper, a book or open-source code. Look it up on the web,
   read how it is defined, and code that definition, not a summary of it;
 - one of your own, from what you see in your markets.
@@ -97,7 +103,10 @@ read other markets' bars through `needs=["XAUUSD_D1", ...]` (ctx["SYM_TF"]).
 
 Test it with `edge sandbox NAME MARKET key=value` over the whole history (it stops before 2025-10-13). Then either:
 - arm it, `edge arm NAME MARKET key=value risk=0.25`, on any desk market, a library edge or your own. It needs a
-  card with 30+ trades and PF 1.1+ after costs on that market; the leg's P&L counts as your pod's. An armed leg trades as your pod on every bar, through the risk gate, without the head trader;
+  card with 30+ trades, PF 1.1+ after costs and positive total R in both halves of the history (`halves` on the
+  card) on that market; the leg's P&L counts as your pod's. An armed leg trades as your pod on every bar, through the risk gate, without the head trader;
   disarm it (`edge disarm NAME MARKET`) when its live R per trade over 20+ trades falls below half its card's; or
 - cite it in judgment tickets (`edge` field) when it should fire only with your read of the market.
 Post what you built and its card on the board either way, so no other pod builds it twice.
+Each pod also gets one weekend build run a week (Saturday, its own budget apart from your daily slice) to build or
+tune one edge this way.

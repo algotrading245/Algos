@@ -25,6 +25,24 @@ def _section(title, obj):
     return f"## {title}\n{obj if isinstance(obj, str) else _j(obj)}\n"
 
 
+def _firing(owns):
+    """extras.firing on the pod's home markets through the desk terminal; a note instead when it cannot run."""
+    import os
+    if os.environ.get("AURUM_DESK_NOSIGNALS"):  # the tests: no terminal
+        return "skipped (AURUM_DESK_NOSIGNALS)"
+    from desk import extras
+    try:
+        b = cli._broker()
+    except Exception as e:
+        return f"unavailable: {e}; run edge signal all SYM"
+    try:
+        return extras.firing(b, owns)
+    except Exception as e:
+        return f"unavailable: {type(e).__name__}: {e}; run edge signal all SYM"
+    finally:
+        b.shutdown()
+
+
 def _shadow():
     s = paths.read_json(systematic.SHADOW, {})
     if not s:
@@ -155,6 +173,9 @@ def build(role, job=None):
         armed = systematic.state()["armed"]
         out.append(_section("Armed legs" if role == systematic.POD else "Your armed legs",
                             armed if role == systematic.POD else [a for a in armed if a.get("pod") == role]))
+        if owns:
+            out.append(_section("Edges firing on your home markets (precomputed over the whole library, reference "
+                                "edges too, on the last 3 closed bars; evidence, not orders)", _firing(owns)))
         if role == systematic.POD:
             out.append(_section("Shadow benchmark (the tested edges on paper since day 0)", _shadow()))
     elif role == HEAD:

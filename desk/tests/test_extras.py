@@ -107,7 +107,7 @@ def armable(tmp_path, monkeypatch):
     paths.write_json(systematic.FILE, {"armed": []})
 
     def card(**run):
-        r = {"params": {"n": 3}, "from": None, "to": None, "trades": 40, "pf": 1.3}
+        r = {"params": {"n": 3}, "from": None, "to": None, "trades": 40, "pf": 1.3, "halves": [4.0, 6.0]}
         r.update(run)
         paths.write_json(tmp_path / "t_leg.json", {"backtest": {"EURUSD": r}})
     return card

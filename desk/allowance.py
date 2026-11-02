@@ -75,6 +75,11 @@ def _usd(r, tpu):
     return r["usd"] if r.get("usd") is not None else (r.get("tokens") or 0) / tpu
 
 
+def _build(r):
+    """An agent_run row of the weekend build job: journal.log keeps a `kind=` field as data_kind."""
+    return r.get("data_kind") == "build"
+
+
 def _week_rows(t, c):
     start = week_start(t, c)
     return [r for r in journal.recent(["agent_run"], 8) if _local(dt.datetime.fromisoformat(r["t"])) >= start]
@@ -136,7 +141,7 @@ def fit(cfg, t=None):
     tpu = tokens_per_usd(rows)
     today = clocks.trading_day(t)
     pods = cfg.get("pods", {})
-    used = sum(_usd(r, tpu) for r in rows if r.get("role") in pods
+    used = sum(_usd(r, tpu) for r in rows if r.get("role") in pods and not _build(r)  # build: own budget
                and clocks.trading_day(dt.datetime.fromisoformat(r["t"])) < today)
     left = days_left(t, c)
     fitted = max(0.0, weekly - used) / left * tpu
@@ -150,6 +155,25 @@ def fit(cfg, t=None):
 
 def pool(cfg, t=None):
     return fit(cfg, t)["pool"]
+
+
+BUILD_STOP = 0.9  # the account's weekly share at which the weekend build job does not run
+
+
+def build_status(cfg, t=None):
+    """The weekend build job's own weekly dollars (budgets.build_weekly_usd, apart from the pods' brief pool; owner
+    2026-11-02): spent this week, the cap, and whether it is spent or the account is too near its weekly cap."""
+    t = t or clocks.now()
+    c = _ap_config()
+    rows = _week_rows(t, c)
+    tpu = tokens_per_usd(rows)
+    used = sum(_usd(r, tpu) for r in rows if _build(r))
+    cap = float(cfg.get("budgets", {}).get("build_weekly_usd", 0) or 0)
+    frac = account_fraction(t, c)
+    why = ("no build_weekly_usd" if not cap else f"build dollars spent ({used:.2f} of {cap:g})" if used >= cap
+           else f"account at {frac:.0%} of its weekly cap" if frac >= BUILD_STOP else "")
+    return {"used_usd": round(used, 2), "cap_usd": cap, "account_fraction": round(frac, 3), "over": bool(why),
+            "why": why}
 
 
 def pod_budget(pod, cfg, t=None, pool_=None):

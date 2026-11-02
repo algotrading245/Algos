@@ -15,7 +15,7 @@ from desk import clocks, journal, mutex, paths
 FILE = paths.STATE / "jobs.jsonl"
 RUNNER = paths.STATE / "runner.json"
 RUNNER_MUTEX = "Local\\AurumDesk"
-PRIORITY = {"monitor": 0, "wake": 1, "brief": 2, "debrief": 3, "scorekeeper": 4, "weekly": 5}
+PRIORITY = {"monitor": 0, "wake": 1, "brief": 2, "debrief": 3, "scorekeeper": 4, "weekly": 5, "build": 6}
 STALE = dt.timedelta(hours=6)  # a job still waiting after this is skipped, its moment has passed
 
 

@@ -96,6 +96,10 @@ def schedule(b, cfg, summary, t):
             elif k in AGENT_KINDS:
                 if active and not jobs.has_pending(k):
                     jobs.queue(k, t, name=ev["name"])
+            elif k == "build":  # the weekend edge build: each active pod builds or tunes one edge (owner 11-02)
+                pods = [p for p in active if p in ev.get("pods", active)]
+                if pods and not jobs.has_pending("build"):
+                    jobs.queue("build", t, name=ev["name"], pods=pods)
             elif k == "calendar":
                 ok = news.fetch(cfg) is not None
             elif k == "monitor":

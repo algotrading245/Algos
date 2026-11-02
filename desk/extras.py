@@ -269,6 +269,42 @@ def signal_all(b, market, lookback=SIGNAL_LOOKBACK):
     return out
 
 
+def firing(b, markets, limit=40, fresh=3, max_s=90):
+    """Every edge in the library (reference edges too) on each market, for a pod's brief (owner 2026-11-02): the
+    signals on the last closed bar and those within `fresh` bars, armed and newest first, at most `limit` rows.
+    Precomputed so a pod spends no turns on edge signal; stops after max_s seconds and says so."""
+    import time
+    from desk import edges, systematic
+    edges.load_new()
+    armed, cache, rows, t0, cut = systematic.state()["armed"], {}, [], time.monotonic(), None
+    for m in markets:
+        for name in sorted(edges.EDGES):
+            if time.monotonic() - t0 > max_s:
+                cut = f"stopped after {max_s}s at {m}: run edge signal all {m} for the rest"
+                break
+            e = edges.EDGES[name]
+            if e.get("kind") == "reference" and m.upper() not in e["markets"]:
+                continue  # a reference edge is scanned on its own markets; edge sandbox runs it on any market
+            try:
+                r = signal(b, name, m, None, fresh, armed, cache)
+            except Exception:  # a market that does not resolve, or an edge that cannot run on it, is left out
+                continue
+            for s in r["recent"]:
+                if s.get("close"):
+                    continue
+                rows.append({"market": r["market"], "edge": name, "tf": r["tf"], "side": s["side"],
+                             "bars_ago": s["bars_ago"], "stop": s["stop"], "price": r["price"], "why": s.get("why"),
+                             "kind": edges.EDGES[name].get("kind"), "armed_by": r["armed_by"] or None})
+        if cut:
+            break
+    rows.sort(key=lambda x: (not x["armed_by"], x["bars_ago"], x["market"], x["edge"]))
+    out = {"rows": [{k: v for k, v in x.items() if v is not None} for x in rows[:limit]],
+           "shown": min(limit, len(rows)), "found": len(rows)}
+    if cut:
+        out["note"] = cut
+    return out
+
+
 def _signal_cmd(args):
     import json
     from desk import edges
@@ -339,6 +375,14 @@ def _arm(op, e, args):
     if (run.get("trades") or 0) < ARM_MIN_TRADES or (run.get("pf") or 0) < ARM_MIN_PF:
         raise Refused(f"{name} on {market}: {run.get('trades')} trades, PF {run.get('pf')} after costs; arming needs "
                       f"{ARM_MIN_TRADES}+ trades and PF {ARM_MIN_PF}+")
+    hv = run.get("halves")
+    if not hv:
+        raise Refused(f"the card of {name} on {market} has no halves (it predates the halves rule): re-run edge "
+                      f"sandbox {name} {market}")
+    if min(hv) <= 0:
+        raise Refused(f"{name} on {market}: total R {hv[0]} in the first half of its history and {hv[1]} in the "
+                      "second; arming needs both halves positive (a rule that made its money in one stretch is tuned "
+                      "to it)")
     over = _spread_over_cost(market, cfg)
     if over:
         raise Refused(f"{market}'s normal broker spread {over[0]:.6g} is above its cost in config.json ({over[1]:.6g}), "
