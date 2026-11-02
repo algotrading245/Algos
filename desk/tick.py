@@ -69,7 +69,10 @@ def schedule(b, cfg, summary, t):
             continue
         k, ok = ev["kind"], True
         try:
-            if k == "brief":
+            if k == "brief" and jobs.weekend_closed(t):
+                # no ticket can pass before Monday; mark it ran so it does not fire late once the cutoff ends
+                journal.log("brief_skipped", event=ev["name"], why="past the weekend cutoff (flat_before_weekend)")
+            elif k == "brief":
                 pods = [p for p in active if p in ev.get("pods", active)]
                 if pods and not jobs.has_pending("brief", name=ev["name"]):
                     jobs.queue("brief", t, name=ev["name"], pods=pods)

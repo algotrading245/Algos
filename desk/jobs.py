@@ -56,6 +56,18 @@ def has_pending(kind, **match):
     return any(j["kind"] == kind and all(j.get(k) == v for k, v in match.items()) for j in pending())
 
 
+def weekend_closed(t=None):
+    """True while the active risk profile is flat over the weekend and past its Friday cutoff: every ticket is refused
+    then (risk_gate.weekend_cutoff), so a pod's wake or brief would spend its tokens on tickets that cannot pass
+    (11-01: the crypto pod spent 58k tokens against a 39k slice on weekend tickets all blocked)."""
+    from desk import risk_gate
+    try:
+        _, prof = risk_gate.profile()
+    except Exception:
+        return False
+    return risk_gate.weekend_cutoff(prof, t or clocks.now())
+
+
 def wake(pod, trigger_ids, cfg, t=None, **data):
     """Queue a wake for a pod, unless it used its wake cap today (which follows its token share, allowance.wake_cap)
     or its token slice is spent. data (the watcher's `watch` rows) goes into the job, so the brief says why the pod
@@ -63,7 +75,9 @@ def wake(pod, trigger_ids, cfg, t=None, **data):
     from desk import allowance, triggers
     cap = allowance.wake_cap(pod, cfg)
     why = None
-    if triggers.wakes_today(pod, t) >= cap:
+    if weekend_closed(t):
+        why = "past the weekend cutoff: the profile is flat over the weekend, so no ticket can pass"
+    elif triggers.wakes_today(pod, t) >= cap:
         why = f"{cap} wakes already today (the cap follows the token share)"
     elif allowance.slice_spent(pod, cfg, t):
         why = "token slice spent for today"

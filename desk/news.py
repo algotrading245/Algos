@@ -33,17 +33,22 @@ def fetch(cfg=None):
     except Exception as e:
         journal.log("calendar_error", error=str(e))
         return None
-    rows = []
+    rows, span = [], []
     for r in raw:
-        if r.get("impact") != "High":
-            continue
         try:
             t = dt.datetime.fromisoformat(r["date"]).astimezone(clocks.UTC)
         except (KeyError, ValueError):
             continue
+        span.append(t.isoformat(timespec="seconds"))
+        if r.get("impact") != "High":
+            continue
         rows.append({"t": t.isoformat(timespec="seconds"), "ccy": r.get("country"), "title": r.get("title"),
                      "forecast": r.get("forecast"), "previous": r.get("previous")})
     old = paths.read_json(FILE, {}).get("events", [])
+    # The feed is the truth for the days it covers: a stored row inside its span that it no longer lists was moved or
+    # dropped (10-30: the BOJ rows at 02:30 stayed beside the moved ones at 03:02). Rows outside it are kept.
+    lo, hi = (min(span), max(span)) if span else ("", "")
+    old = [e for e in old if not (lo <= e["t"] <= hi)]
     keep = {(e["t"], e["ccy"], e["title"]): e for e in old + rows}
     cutoff = (clocks.now() - dt.timedelta(days=14)).isoformat()
     events = sorted((e for e in keep.values() if e["t"] >= cutoff), key=lambda e: e["t"])
