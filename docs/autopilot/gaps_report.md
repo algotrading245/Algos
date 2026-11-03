@@ -1,82 +1,84 @@
-# Gaps report - 2026-11-02 06:00 (doctor)
+# Gaps report - 2026-11-03 06:05 (doctor)
 
-Health: **red**. The FTMO demo, which is the clean out-of-sample test, cannot trade. The server disabled trading at the
-03:14 reconnect, and every order since then fails with 10017 (owner item a7). Two more problems: the 5-hour usage limit
-is not caught by the relay's backoff, and the week's budget is at 0.94 (chat $205 of $235).
+Health: **red**. Overnight the account on Terminal 16 was replaced, and trading is enabled again (journal 01:18:39).
+But AurumFunded failed to start at 01:55:24 ("symbol synchronization timeout") and was removed. The demo has had no EA
+since then, on a weekday. The research loop is healthy.
 
 ## Fixed this run
-- Nothing needed an agent fix. `queue.jsonl` has 116 lines and all of them parse: 98 rejected, 16 done, 1 funded and
-  1 queued (`fix_stop_switch`, added today). No id appears twice and nothing is at testing or tester. In
-  `data-tries.json` only `data_ftmo_m1_spread_history` is at 3, and it is done.
+- **`data_fred_umcsent` set to done.** `marketdata/fred/UMCSENT.csv` exists: 887 rows, 1952-11-01 to 2026-09-01. The
+  dependent `paper_fisher_statman_confidence_us100_month` was built and rejected at 23:41 on 11-02. The item still said
+  "new", so the relay logged "stuck after 3 finder runs" on every tick from 00:00 to 05:50 (about 70 lines in
+  `2026-11-03_relay.log`). The decision is logged.
+- **Queue check:** `queue.jsonl` has 130 lines and all of them parse. There are no duplicate ids and nothing is at
+  testing or tester.
 
 ## Open, for Opus
-1. **The demo cannot trade (a7).** The T16 journal at 03:14:19 says "trading has been disabled - disabled on server".
-   `demo-event.json` (04:36) shows 3 Dual Thrust JP225 orders failing with 10017. The balance is 10050.36 with 0
-   positions, so no rule was breached (judge 04:39). No demo day counts until this is fixed. Suggest: the owner checks
-   the FTMO demo or trial status, renews it or opens a new demo, and then re-attaches through t16_attach.ini.
-2. **The 5-hour limit is not caught by the backoff.** "You've hit your 5-hour limit" appears in the judge log at 02:00,
-   04:19, 04:20 (x2) and 06:25 on 11-01, in the finder log at 02:00 and in the doctor log at 06:00. All of these ran
-   after the 10-30 regex fix. `provider-backoff.json` still holds only the 10-25 entry. The judge was started 3 times in
-   2.5 min (relay 04:17:46, 04:20:06, 04:20:33) and was then paused only by the failure count. That cost the 11-01
-   doctor run. Suggest: add "5-hour limit" (or any "hit your .* limit") to the relay's limit regex, and pause the
-   provider until the reset time given in the message.
-3. **The `fix_stop_switch` fix is waiting.** While the stop flag is set, each leg sends again every call and Dual
-   spends its 8 daily tries (`Legs.mqh:2836,2861`). With trading disabled on the server, the same thing happens with
-   10017 now. Suggest: the builder takes it next. Do not reload T16 without the owner's yes.
-4. **Denied reads still block agents.** The judge was denied piped and compound Bash calls 6 times on 11-01 (log lines
-   27, 92-94, 111, 118). The tester was denied Get-Process and an `ls` of the tester data folder (lines 12-13, 28). The
-   tester then said it could not confirm that j19 was running. Suggest: allow read-only `Get-Process terminal64`, and
-   tell the roles to use one command per call, as the doctor prompt does.
-5. **A builder run hit max turns.** The 11-01 run at 01:59:21 ended `error_max_turns` after 12 min
-   (`2026-11-01_agent-builder.log:62`). The next run finished the work. Suggest: watch for a repeat on fix items.
-6. **Tool-results reads (10-31 item 5).** No new denial on 11-01-02. It is still unverified whether the path is
-   allowed. Suggest: allow Read and Grep on `.claude/projects/.../tool-results`.
-7. **The tester commit has no attribution.** Commit `751dcd8` has no Co-Authored-By line, and the amend was denied
-   (`2026-11-01_agent-tester.log:25,29`). This is cosmetic. Suggest: leave it, or the owner amends it.
-8. **Holdout rows on disk.** `marketdata/ftmo_spread/EURUSD_M1.csv.gz` is still there (it runs to 2026-07 per the
-   10-31 report). Suggest: cut it at 2025-10-12 through tools/holdout.py.
-9. **Uncommitted work.** 16 files are modified (dashboard/data.js, 13 desk files, docs/candidates.md, docs/gaps.json).
-   Untracked: `docs/gates/graziani_ea.json`, `desk/edges/prebuilt.py`, `desk/agents/build.md`,
-   `docs/ideas/desk_notes.md`, `backtests/2026-11-01_2146_AurumFunded116_fidelity_1028/`, plus the temp file
-   `research/fetch/_tmp_close_leads.py`. Nothing is staged. Suggest: commit the gate JSON and the fidelity folder, and
-   delete the temp file.
-10. **Fidelity has no role.** There are now two untracked fidelity folders (10-25 and 11-01).
-11. **The summary.md drawdown row** still shows the absolute max, not `eq_dd_rel` (`tester_step.py`).
+1. **No EA on the demo since 01:55.** In the T16 journal (`66FB.../logs/20261103.log`): at 00:03 the old account
+   was deleted. At 00:04 and 01:17 the new login was in investor mode. At 01:18:39 trading was enabled. At 01:50 the
+   terminal restarted from a scratchpad config (`t16_attach_audcad`), not t16_attach.ini. The AddSymbol script failed
+   at 01:55:12, and AurumFunded failed init at 01:55:24 (symbol sync timeout). The experts log says "AUDCAD n/a" at
+   00:04, 01:17 and 01:18. There is no authorize line after the 01:50 restart. The keeper still reports "running".
+   Suggest: the owner session logs T16 in, adds AUDCAD (or drops it from the preset), and re-attaches through the
+   standard t16_attach.ini. Then the owner confirms which build is loaded. The repo has Funded **1.26** (7220ad8,
+   01:52), and the demo_log has no deploy entry after 1.23. Write the account change and the new start balance (10000)
+   into demo_log.
+2. **The keeper does not notice an EA that failed init.** It logged "Terminal 16: running" at 01:51:22 and has logged
+   nothing since. Suggest: the keeper or demo_check should look for "initializing of AurumFunded ... failed" or
+   "removed" in the journal with no later "loaded successfully", and raise an ALERT.
+3. **The builder loops on items blocked on data.** On 11-02 it ran 10 times, every 5 min (17:00-17:40), on
+   `paper_aligned_sentiment_us500_pls`, which was waiting for `data_wurgler_sentiment`. It ran 7 more times from 23:02
+   to 23:35 on fisher_statman, which was waiting for UMCSENT (`2026-11-02_agent-builder.log:65-151, 152-220`). Each
+   run took about 20 s and ended "no buildable item". Suggest: the relay counts a paper item as waiting only when the
+   data items it names are done, or backs the builder off 30-60 min after a "blocked on data" handoff.
+4. **Judge storm on repeated ALERTs (11-02).** The judge was started 6 times in 17 min (11:34-11:51) on the same 10017
+   USDJPY burst (relay log). Commit ad7529c ("alert dedupe") came later, at 19:52. Suggest: watch for a repeat once
+   T16 trades again.
+5. **`fix_stop_switch` has been at `ask_judge` since 11-02.** The judge has not run since 13:10 on 11-02. Suggest:
+   check that `ask_judge` wakes the judge. Expected answer: superseded by 1.25 (j21 PASS), keeping F1 (login in the
+   flag name, flag age on the dashboard) as a new item.
+6. **Builder gate JSONs are not committed.** Six files are untracked: `docs/gates/{avg_industry_correlation,
+   fisher_statman_confidence, own_implied_move_fade_3mkts, paper_bab_index_beta_neutral, paper_post_ecb_drift_indices,
+   variant_yen_cross_carry_vix_calm}.json`. Also untracked: `marketdata/french_48ind_daily.csv` (it runs to
+   2026-09-30 and sits outside any ignored subfolder), `research/paper_post_ecb_drift_indices_ger40_daily.csv`, 5
+   desk cards, and 3 owner backtest folders from 11-03 00:20-00:40. Suggest: the builder adds its gate JSON to its
+   commit, and the owner moves the French CSV under an ignored folder.
+7. **Holdout rows on disk (carried over).** `marketdata/ftmo_spread/EURUSD_M1.csv.gz` is still there, and UMCSENT and
+   French 48 also run past 2025-10-12. Suggest: cut them at 2025-10-12 with tools/holdout.py, or confirm every reader
+   goes through it.
+8. **Fidelity has no role (carried over).** The 10-25 and 11-01 fidelity folders are now tracked.
+9. **The summary.md drawdown row (carried over)** still shows the absolute max (`tester_step.py`). The dashboard and
+   research pages now show the relative figure (7ee93d0).
+10. **Temp file:** `research/fetch/_tmp_close_leads.py` is still there (tracked). Suggest: delete it.
 
-## Earlier items (10-31 report)
-- 1 PropDays to +25: **fixed** in 1.19 (magics up to +35, demo_log 10-31 18:11).
-- 2 1.18 load: **fixed**. 1.19 loaded at 18:11:34, and 1.23 loaded at 21:57:52 on 11-01 (demo_log). The repo has
-  Funded 1.23 and Hydra 1.43, the same build as T16.
-- 3 1.18 review: **fixed**. The 1.19 review, the compile logs and commit 7d4306e are in the repo.
-- 4 weekly-limit loop: **open, now 2**. The fix does not match the 5-hour message.
-- 5 tool-results: **open** (now 6). 6 "ended at once" message: **fixed or quiet**, with 0 matches in the 11-01 and 11-02
-  relay logs.
-- 7 staged files: **fixed**, nothing is staged. 8 gap-day risk: **closed**, the window ended 11-01 and it returns
-  2027-03-14.
-- 9 fidelity, 10 strays, 11 holdout, 13 dd row: **open** (now 10, 9, 8, 11). 12 owner questions: closed 10-31.
+## Earlier items (11-02 report)
+- 1 demo 10017: **changed**. Trading is enabled on the new account, but the EA is down (now item 1).
+- 2 5-hour limit: **fixed**. `run-agent.ps1:339-342` now matches it, and there are 0 limit lines on 11-02 or 11-03.
+- 3 fix_stop_switch: **mostly superseded** by 1.25 (now item 5). 4 denied reads: **mostly fixed**. Since gap 8
+  (ff5a093) there has been 1 denial, a compound judge command at 11:51 on 11-02.
+- 5 max turns: **quiet**. 6 tool-results: **quiet**. 7 attribution: cosmetic, dropped. 8, 10, 11: open (now 7, 8, 9).
+- 9 uncommitted work: **partly fixed**. The graziani gate and the fidelity folders are committed, and there are new
+  strays (item 6).
 
-## Tokens by role (week from 10-30 18:00, 2.5 of 7 days, against the mean of the 3 weeks before)
-Week totals (`budget.py trend`). The mean counts the 10-09 week, which logged 0, and roles that did not exist then
-as 0.
-- finder 23.7M (46 runs) against 88.4M. builder 8.5M (15) against 16.7M. tester 2.0M (2) against 4.8M. doctor 0.6M
-  (2) against 3.7M. monitor 0.8M (1) against 1.1M.
-- **judge 9.8M (11 runs) against 10.1M.** That is 97% after 2.5 days, so on pace for about 27M, about 2.7x the mean.
-  The cause is more runs: 11 runs, on pace for about 31 (the mean is about 9). Tokens per run are about 0.9M against
-  0.78M. j19, j20, the graziani reviews and the limit retries drove it.
-- **portfolio 0.84M (1 run) against 0.44M, up 92%.** The cause is the base: portfolio did not exist in the 10-16 and
-  10-09 weeks. Tokens per run are lower (0.84M against 1.31M).
-- **desk:crypto 137k (4) against 61k, up 125%.** The cause is more tokens per run (34k against 23k). It is small.
-  The other desk roles are under their means.
+## Tokens by role (week from 10-30 18:00, 4.5 of 7 days, against the mean of the 3 weeks before)
+The 10-09 week logged 0. Roles that did not exist in a week count as 0 there, which inflates the new roles.
+- **judge 14.6M (20 runs) against 10.1M, +44% already, on pace for about 23M (2.2x).** The cause is more runs: 20,
+  against a mean of about 9. Tokens per run are 0.73M, against 0.78-2.0M. The demo ALERT retriggers (11-02) and
+  j19-j21 drove it.
+- **builder 15.3M (42 runs) against 16.7M, 91%, on pace for about 24M (+42%).** The cause is more tokens per run
+  (0.36M against 0.14-0.21M). The blocked-on-data loop (item 3) adds runs.
+- **portfolio 0.84M (1) against 0.44M, +92%.** Base effect: the role is new. Tokens per run are lower.
+- **The desk roles are up but small.** crypto 176k (5) against 61k (+189%), fxmacro 216k (5) against 79k (+172%),
+  scorekeeper 88k (4) against 32k (+176%, more runs), indices 121k (3) against 59k (+104%, more tokens per run).
+  head-trader is new (79k). These are mostly the base effect, because the desk did not exist before 10-23.
+- Under the mean: finder 46.4M (103) against 88.4M, tester 2.0M against 4.8M, doctor 1.5M against 3.7M. monitor is
+  1.25M against 1.10M (+13%).
 
 ## Watching
-- **Finder `empty_streak` 6** (`last-finder.json` 09:50, 11-01, 20 runs that day). `finder-empty.json` shows 0. The
-  finder is backed off until 11-02 09:50 ("3 empty runs, 22 open leads"). This is the owner's choice, not a fault.
-- **Budget** 0.941 of weekly_usd 250 (skip true, skip_above 0.7). Autopilot $26.9, chat $205.0. This is information
-  only. CLAUDE.md: above 75%, no `/model opus` in chat.
-- **Roles due.** The monitor last ran Fri 10-30 23:15 and is next due tonight at 23:15. The portfolio ran Sat 10-31
-  10:00. The doctor failed on 11-01 at 06:00 (the limit, exit 1). The judge ran 04:37-04:40 today, exit 0.
-- **Scheduled tasks.** The relay logged 299 lines on 11-01, with its largest gap 26 min (01:15). Today it has 76 lines,
-  every 5 min, to 05:55. Keeper-steps logged its last line at 06:00:41, with its largest gap today 61 s.
-- **Tester.** There is no `tester-help.json` or `to-judge.json`. j15-j20 are all done in `queue.json`.
-- **Demo.** The repo and T16 both have Funded 1.23 (deployed 11-01 21:57). Hydra 1.43 is not attached. The demo log
-  has no 11-02 entry yet, and the judge recorded the ALERT in HANDOFF and a7.
+- **Finder `empty_streak` 0** (`last-finder.json` 05:52, 9 runs today). It queued 1 idea at 05:51, and the builder
+  rejected it at 06:01. The 60-120 min backoff after an empty run is in place.
+- **Budget** (information only, `enforce` false): 0.997 of the week's figure.
+- **Roles due:** monitor ran Mon 11-02 23:15, next due tonight. portfolio ran Sat 10-31 10:00. doctor ran 11-02 06:00.
+- **Scheduled tasks:** the relay logged every 5 min from 00:00 to 06:00 today. keeper-steps logged at 06:03.
+- **Tester:** there is no `tester-help.json` or `to-judge.json`, and j21 is done.
+- **Data tries:** `data_wurgler_sentiment` 3 (rejected, untestable) and `data_ftmo_m1_spread_history` 3 (done). Both
+  are closed.
