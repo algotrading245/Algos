@@ -582,3 +582,5 @@
 {"id": "own_implied_move_fade_3mkts", "when": "2026-11-02T23:46:54", "verdict": "FAIL at halves"}
 {"id": "avg_industry_correlation", "when": "2026-11-02T23:50:20", "verdict": "FAIL at halves"}
 {"id": "paper_gold_silver_spread_meanrev", "when": "2026-11-03T01:08:39", "verdict": "FAIL at halves"}
+{"id": "paper_bab_index_beta_neutral", "when": "2026-11-03T01:17:11", "verdict": "FAIL at halves"}
+{"id": "paper_post_ecb_drift_indices", "when": "2026-11-03T01:32:33", "verdict": "FAIL at book"}
