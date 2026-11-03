@@ -1,0 +1,21 @@
+{
+  "id": "f_tsmom_xauusd_vh",
+  "title": "tsmom on XAUUSD when vol high",
+  "source": "spec factory grid: time-series momentum (Moskowitz, Ooi & Pedersen 2012), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "XAUUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "tsmom",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-23",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-23T05:00:33"
+}

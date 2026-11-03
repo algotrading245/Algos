@@ -1,0 +1,109 @@
+{
+ "name": "donchian_trend",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "AUDUSD",
+  "XAUUSD",
+  "US500"
+ ],
+ "tf": "D1",
+ "pod": "systematic",
+ "kind": "benchmark",
+ "bars": 80,
+ "needs": [],
+ "defaults": {
+  "n": 20,
+  "k": 2.0,
+  "hold": 60
+ },
+ "card": "Donchian breakout: a close beyond the prior 20-day high or low, stop and trail 2 ATR, out after 60 days.",
+ "backtest": {
+  "US500": {
+   "params": {
+    "n": 20,
+    "k": 2.0,
+    "hold": 60
+   },
+   "from": null,
+   "to": null,
+   "trades": 178,
+   "pf": 0.84,
+   "win": 0.348,
+   "avg_r": -0.068,
+   "total_r": -12.11,
+   "max_dd_r": 24.91,
+   "first": "2010-12-22",
+   "last": "2025-10-02",
+   "by_year": {
+    "2010": {
+     "trades": 1,
+     "r": 0.86
+    },
+    "2011": {
+     "trades": 10,
+     "r": 2.92
+    },
+    "2012": {
+     "trades": 12,
+     "r": -2.27
+    },
+    "2013": {
+     "trades": 17,
+     "r": -5.83
+    },
+    "2014": {
+     "trades": 14,
+     "r": -2.93
+    },
+    "2015": {
+     "trades": 8,
+     "r": -2.01
+    },
+    "2016": {
+     "trades": 9,
+     "r": 0.66
+    },
+    "2017": {
+     "trades": 12,
+     "r": 3.09
+    },
+    "2018": {
+     "trades": 12,
+     "r": -6.24
+    },
+    "2019": {
+     "trades": 11,
+     "r": 2.26
+    },
+    "2020": {
+     "trades": 13,
+     "r": 0.35
+    },
+    "2021": {
+     "trades": 16,
+     "r": -6.47
+    },
+    "2022": {
+     "trades": 11,
+     "r": -0.19
+    },
+    "2023": {
+     "trades": 12,
+     "r": -0.32
+    },
+    "2024": {
+     "trades": 12,
+     "r": 0.37
+    },
+    "2025": {
+     "trades": 8,
+     "r": 3.69
+    }
+   },
+   "run": "2026-10-27T18:24:31+00:00"
+  }
+ },
+ "live": {}
+}

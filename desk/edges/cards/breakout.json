@@ -1,0 +1,122 @@
+{
+ "name": "breakout",
+ "markets": [
+  "USDJPY"
+ ],
+ "tf": "M15",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 120,
+ "needs": [],
+ "defaults": {
+  "r_from": 60,
+  "r_to": 540,
+  "e_from": 600,
+  "e_to": 1080,
+  "exit": [
+   23,
+   0
+  ],
+  "margin": 0,
+  "fri_cut": 840
+ },
+ "card": "USDJPY Tokyo-range breakout. The range of 01:00-09:00 server time (Tokyo's session); the first close beyond it between\n10:00 and 18:00 enters that way, stop at the far side of the range. One trade a day; out at 23:00 server. No new entry\non Fridays from 14:00 server (end of the London morning): the weekend flatten would cut it (sandbox 11-02, before the\nholdout: PF 1.10 both ways, total R 123 vs 126, max drawdown 30.3R vs 32.0R; 2018 on 54.6R vs 48.7R). A margin past\nthe range (lesson 10-30) was tested at 5-30% of its width and is off: it cut total R (114R at 10%) and did not lift PF.",
+ "backtest": {
+  "USDJPY": {
+   "params": {
+    "r_from": 60,
+    "r_to": 540,
+    "e_from": 600,
+    "e_to": 1080,
+    "exit": [
+     23,
+     0
+    ],
+    "margin": 0,
+    "fri_cut": 840
+   },
+   "from": null,
+   "to": null,
+   "trades": 3535,
+   "pf": 1.1,
+   "win": 0.48,
+   "avg_r": 0.035,
+   "total_r": 123.43,
+   "max_dd_r": 30.3,
+   "first": "2009-01-02",
+   "last": "2025-10-09",
+   "by_year": {
+    "2009": {
+     "trades": 209,
+     "r": -8.51
+    },
+    "2010": {
+     "trades": 219,
+     "r": 14.07
+    },
+    "2011": {
+     "trades": 203,
+     "r": -21.71
+    },
+    "2012": {
+     "trades": 209,
+     "r": 9.91
+    },
+    "2013": {
+     "trades": 203,
+     "r": 33.64
+    },
+    "2014": {
+     "trades": 205,
+     "r": 27.16
+    },
+    "2015": {
+     "trades": 214,
+     "r": 9.54
+    },
+    "2016": {
+     "trades": 193,
+     "r": 2.94
+    },
+    "2017": {
+     "trades": 220,
+     "r": 1.8
+    },
+    "2018": {
+     "trades": 203,
+     "r": 5.07
+    },
+    "2019": {
+     "trades": 194,
+     "r": -5.96
+    },
+    "2020": {
+     "trades": 218,
+     "r": 16.1
+    },
+    "2021": {
+     "trades": 230,
+     "r": 2.17
+    },
+    "2022": {
+     "trades": 211,
+     "r": 15.52
+    },
+    "2023": {
+     "trades": 230,
+     "r": -6.0
+    },
+    "2024": {
+     "trades": 212,
+     "r": 17.47
+    },
+    "2025": {
+     "trades": 162,
+     "r": 10.23
+    }
+   },
+   "run": "2026-11-02T02:44:32+00:00"
+  }
+ },
+ "live": {}
+}

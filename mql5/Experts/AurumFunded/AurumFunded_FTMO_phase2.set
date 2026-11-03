@@ -6,9 +6,12 @@ InpPropMinDays=4
 InpPropDayStopPct=3.0
 InpPropMaxStopPct=8.5
 InpPropTrailing=false
-InpPropRoomPct=6.5
+InpPropRoomPct=8.5
+InpPropCap=1.4
 InpPropResetHHMM=100
 InpEuClock=true
 InpSizeMult=0.5
 InpGridRiskPct=0.0
 InpHoldVolPct=0.0
+; Fast sizing while in profit: set true only after live results confirm the edge (tools/prop_dp.py)
+InpPropFast=false

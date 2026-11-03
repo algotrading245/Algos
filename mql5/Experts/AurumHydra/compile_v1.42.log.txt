@@ -1,0 +1,15 @@
+AurumHydra.mq5 v1.42 compile, 2026-11-01, via tools/autopilot/compile.ps1 -Expert AurumHydra
+Source: mql5/Experts/AurumHydra/AurumHydra.mq5 with mql5/Include/Aurum/Legs.mqh (line 146: #include <Aurum\Legs.mqh>),
+the same Legs.mqh used by AurumFunded v1.22 (commit 622e9a6 and later).
+
+Result: 0 errors, 0 warnings, 6126 ms elapsed, cpu='X64 Regular'
+
+Raw compiler log (mql5/Experts/AurumHydra/AurumHydra.log, ignored by git), summary:
+- compiling AurumHydra.mq5
+- including Math\Stat\Normal.mqh, Math\Stat\Math.mqh, Trade\Trade.mqh (and its Trade includes)
+- generating code 100%, code generated
+- Result: 0 errors, 0 warnings, 4968 ms elapsed
+Note: the compiler log does not list the Aurum\*.mqh includes by name; the include is at AurumHydra.mq5:146.
+
+Live note (describe only): the tester clock cut (EU/US DST gap) also fires live for presets with InpEuClock=true
+on a broker on EU summer time (AurumFunded_FundedNext_instant.set:19).

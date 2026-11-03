@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurum agents live</title>
+<style>
+:root{
+  --fg:#0b0b0b;--fg2:#52514e;--muted:#898781;--bg:#f9f9f7;--panel:#fff;--pop:#fff;
+  --line:rgba(11,11,11,.10);--strong:rgba(11,11,11,.20);--wash:rgba(11,11,11,.05);
+  --ok:#006300;--bad:#8e2626;--warn:#734500;--blue:#2a78d6;--blue-tx:#184f95;--blue-bg:#cde2fb;
+  --clay:#d97757;--clay-tx:#c6613f;--ink:#0b0b0b;--ink-tx:#fff;
+  --fill-ok:#009300;--fill-bad:#d03b3b;--fill-warn:#fab219;--bg-ok:#caeac7;--bg-bad:#fad6d6;--bg-warn:#f9dca4;
+  --shadow:0 8px 24px #0000001f,0 2px 6px #00000014;
+  --sans:"Anthropic Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Anthropic Serif",ui-serif,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --cap:.75rem;--body:.875rem;--head:.9375rem;--title:1.375rem;
+  --gap-sm:.5rem;--gap-md:.75rem;--gap-lg:1.25rem;--pad:1.25rem;--r:.4375rem;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --fg:#f0efec;--fg2:#c3c2b7;--muted:#898781;--bg:#0b0b0b;--panel:#1a1a19;--pop:#20201f;
+  --line:rgba(255,255,255,.10);--strong:rgba(255,255,255,.20);--wash:rgba(240,239,236,.05);
+  --ok:#0ca30c;--bad:#ec7e7e;--warn:#db9300;--blue-tx:#6da7ec;--blue-bg:#032042;
+  --ink:#fff;--ink-tx:#0b0b0b;--bg-ok:#11260f;--bg-bad:#3c0e0e;--bg-warn:#311a00;
+  --shadow:0 8px 24px #00000052,0 2px 6px #0003;color-scheme:dark}}
+:root[data-theme=dark]{
+  --fg:#f0efec;--fg2:#c3c2b7;--muted:#898781;--bg:#0b0b0b;--panel:#1a1a19;--pop:#20201f;
+  --line:rgba(255,255,255,.10);--strong:rgba(255,255,255,.20);--wash:rgba(240,239,236,.05);
+  --ok:#0ca30c;--bad:#ec7e7e;--warn:#db9300;--blue-tx:#6da7ec;--blue-bg:#032042;
+  --ink:#fff;--ink-tx:#0b0b0b;--bg-ok:#11260f;--bg-bad:#3c0e0e;--bg-warn:#311a00;
+  --shadow:0 8px 24px #00000052,0 2px 6px #0003;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font:400 var(--body)/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.ae{display:flex;flex-direction:column;gap:var(--gap-lg);height:100vh;max-width:110rem;margin:0 auto;padding:1.75rem 1.5rem 1.5rem}
+.top{display:flex;gap:var(--gap-md);align-items:flex-start;flex-wrap:wrap}
+.top .t{flex:1;min-width:14rem}
+h1{font:400 var(--title)/1.25 var(--serif);margin:0;letter-spacing:-.005em}
+.take{color:var(--muted);margin:.25rem 0 0}
+.take b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr));gap:var(--gap-md)}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:.875rem 1rem}
+.tile .l{font-size:var(--cap);color:var(--muted)}
+.tile .v{font:400 var(--title)/1.3 var(--serif);font-variant-numeric:tabular-nums;margin-top:.125rem;display:flex;align-items:center;gap:.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b{font-weight:400}
+.dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--fill-bad);display:inline-block;flex:none}
+.dot.on{background:var(--fill-ok);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.badge{display:inline-flex;align-items:center;gap:.375rem;padding:.125rem .5rem;border-radius:99px;font-size:var(--cap);font-weight:500;background:var(--wash);color:var(--fg2)}
+.badge.warn{background:var(--bg-warn);color:var(--warn)}
+.badges{display:flex;gap:.375rem;flex-wrap:wrap;margin-top:.5rem}
+.badges:not(:has(.badge:not(.hide))){display:none}
+main{display:grid;grid-template-columns:17rem minmax(0,1fr) 20rem;gap:var(--gap-md);flex:1;min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--pad);overflow:auto;min-height:0}
+h2{font-size:var(--head);font-weight:500;margin:0 0 .25rem}
+.card h2:not(:first-child){margin-top:var(--gap-lg)}
+.ae-note{font-size:var(--cap);color:var(--muted);margin:0 0 var(--gap-md)}
+.agent{padding:.625rem .75rem;border:1px solid var(--line);border-radius:var(--r);margin-bottom:.5rem;cursor:pointer;transition:border-color .15s,background .15s}
+.agent:hover{background:var(--wash)}
+.agent.sel{border-color:var(--fg);background:var(--wash)}
+.agent .n{display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.agent .s{color:var(--muted);font-size:var(--cap);margin-top:.125rem;font-variant-numeric:tabular-nums}
+.agent.live .n::after{content:"live";color:var(--ok);background:var(--bg-ok);font-size:.6875rem;font-weight:500;border-radius:99px;padding:0 .5rem;animation:pulse 1.2s infinite}
+section.card{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.fh{padding:var(--pad) var(--pad) 0}
+.bar{display:flex;gap:.375rem;padding:.75rem var(--pad);border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.chip{padding:.25rem .75rem;border-radius:99px;border:1px solid var(--line);cursor:pointer;user-select:none;font-size:var(--cap);color:var(--muted);transition:.15s}
+.chip:hover{border-color:var(--strong)}
+.chip.on{color:var(--fg);border-color:var(--strong);background:var(--wash)}
+input,select,button{font:inherit;font-size:var(--cap)}
+input[type=search],.ctl select,.qf input,.qf select{background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:var(--r);padding:.375rem .5rem;min-width:0}
+input[type=search]{min-width:10rem;flex:1;max-width:16rem}
+input:focus,select:focus{outline:none;border-color:var(--strong);box-shadow:0 0 0 3px var(--wash)}
+input[type=checkbox]{accent-color:var(--fg);margin:0}
+.bar label{display:inline-flex;align-items:center;gap:.375rem;font-size:var(--cap);color:var(--muted)}
+button{background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:var(--r);padding:.375rem .75rem;cursor:pointer;transition:.15s}
+button:hover{background:var(--wash);border-color:var(--strong)}
+button.pri,.qf button{background:var(--ink);color:var(--ink-tx);border-color:var(--ink);font-weight:500}
+button.pri:hover,.qf button:hover{opacity:.85;background:var(--ink)}
+#feed{flex:1;overflow:auto;padding:.75rem var(--pad) var(--pad);scroll-behavior:auto}
+.run{margin:1.25rem 0 .5rem;color:var(--muted);font-size:var(--cap);font-weight:500;border-bottom:1px solid var(--line);padding-bottom:.25rem}
+.run:first-child{margin-top:.25rem}
+.ev{margin:.375rem 0;padding:.625rem .75rem;border-radius:var(--r);border:1px solid var(--line);border-left-width:3px;background:var(--panel);white-space:pre-wrap;word-break:break-word;animation:in .18s}
+@keyframes in{from{opacity:0;transform:translateY(4px)}}
+.ev .h{font-size:var(--cap);color:var(--muted);margin-bottom:.25rem;display:flex;gap:.5rem;font-family:var(--sans);font-style:normal;white-space:normal}
+.ev .h span:first-child{color:var(--fg2);font-weight:500}
+.ev .h span:last-child{margin-left:auto;font-variant-numeric:tabular-nums}
+.ev.text{border-left-color:var(--fg)}
+.ev.thinking{border-left-color:var(--clay);color:var(--fg2);font-style:italic}
+.ev.thinking .h span:first-child{color:var(--clay-tx)}
+.ev.tool{border-left-color:var(--blue);font-family:var(--mono);font-size:.8125rem;cursor:pointer}
+.ev.tool .h span:first-child{color:var(--blue-tx)}
+.ev.tool .res{margin-top:.375rem;padding-top:.375rem;border-top:1px solid var(--line);color:var(--ok);max-height:5.6em;overflow:hidden}
+.ev.tool.open .res{max-height:none}
+.ev.tool .res.err{color:var(--bad)}
+.ev.sys,.ev.done{font-size:var(--cap);color:var(--muted);border-left-color:var(--strong)}
+.ev.done{border-left-color:var(--fill-ok)}.ev.done.bad{border-left-color:var(--fill-bad)}
+.live-caret::after{content:"▍";animation:pulse .8s infinite;color:var(--clay)}
+.hide{display:none!important}
+.kv{display:flex;justify-content:space-between;gap:.75rem;font-size:var(--cap);padding:.3125rem 0;color:var(--muted);border-bottom:1px solid var(--line)}
+.kv b{color:var(--fg);font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.job{font-size:var(--cap);padding:.3125rem 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.job span{float:right;font-weight:500}
+.st-done{color:var(--ok)}.st-failed{color:var(--bad)}.st-queued,.st-running,.st-hold{color:var(--warn)}
+.ctl{display:flex;flex-wrap:wrap;gap:.375rem;margin-bottom:.5rem}
+.ctl select{flex:1}
+.qf{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:var(--cap);margin-top:.5rem}
+.qf label{display:flex;flex-direction:column;gap:.25rem;color:var(--muted)}.qf .w{grid-column:1/-1}
+#msg{font-size:var(--cap);color:var(--muted);min-height:1.2em;white-space:pre-wrap;margin-top:.5rem}#msg.bad{color:var(--bad)}#msg.ok{color:var(--ok)}
+details{border:1px solid var(--line);border-radius:var(--r);padding:.5rem .75rem}
+details summary{cursor:pointer;color:var(--fg2);font-size:var(--cap);font-weight:500}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:3px solid transparent;background-clip:padding-box}
+@media (max-width:1100px){main{grid-template-columns:15rem minmax(0,1fr)}aside.r{grid-column:1/-1}}
+@media (max-width:760px){
+  .ae{height:auto;padding:1.25rem 1rem}
+  main{grid-template-columns:1fr}
+  section.card{height:75vh}
+  .card{overflow:visible}
+  #agents{order:-1}
+}
+</style>
+</head>
+<body>
+<div class="ae">
+<header class="top">
+  <div class="t">
+    <h1>Aurum agents live</h1>
+    <p class="take">What each autopilot agent says, thinks and runs, streamed as it happens.</p>
+    <div class="badges"><span id="pause" class="badge hide warn">Paused (PAUSE file)</span><span id="hold" class="badge hide warn"></span></div>
+  </div>
+  <button id="theme">Theme</button>
+</header>
+<div class="tiles">
+  <div class="tile"><div class="l">Connection</div><div class="v"><span id="dot" class="dot"></span><span id="conn">connecting</span></div></div>
+  <div class="tile stat"><div class="l">Events per second</div><div class="v"><b id="eps">0</b></div></div>
+  <div class="tile stat"><div class="l">Events this session</div><div class="v"><b id="tot">0</b></div></div>
+  <div class="tile stat"><div class="l">Last event</div><div class="v"><b id="age">-</b></div></div>
+</div>
+<main>
+  <aside id="agents" class="card"><h2>Agents</h2><p class="ae-note">Click one to show only its events.</p><div id="alist"></div></aside>
+  <section class="card">
+    <div class="fh"><h2>Live feed</h2><p class="ae-note" style="margin:0">Tool calls open on click.</p></div>
+    <div class="bar">
+      <span class="chip on" data-k="text">Says</span>
+      <span class="chip on" data-k="thinking">Thinking</span>
+      <span class="chip on" data-k="tool">Tools</span>
+      <span class="chip on" data-k="sys">System</span>
+      <input id="q" type="search" placeholder="Filter text…">
+      <label class="stat"><input id="follow" type="checkbox" checked> Follow</label>
+      <button id="expand">Expand all</button>
+      <button id="clear">Clear view</button>
+    </div>
+    <div id="feed"></div>
+  </section>
+  <aside class="r card">
+    <h2>Controls</h2>
+    <p class="ae-note">Pause or start agents, or queue a tester job.</p>
+    <div class="ctl">
+      <button id="bpause" class="pri">Pause agents</button>
+      <button id="brelease">Release T16 hold</button>
+    </div>
+    <div class="ctl">
+      <select id="role"><option>finder</option><option>builder</option><option>judge</option><option>tester</option><option>monitor</option></select>
+      <button id="bagent">Start now</button>
+    </div>
+    <details><summary>Queue a tester job</summary>
+      <form id="qf" class="qf">
+        <label>EA<select name="expert"><option>AurumHydra</option><option>AurumFunded</option></select></label>
+        <label>Symbol<input name="symbol" value="XAUUSD"></label>
+        <label class="w">Preset<input name="preset" value="mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set"></label>
+        <label>Period<select name="period"><option>M15</option><option>M1</option><option>M5</option><option>M30</option><option>H1</option></select></label>
+        <label>Tag<input name="tag" value="own1"></label>
+        <label>Deposit<input name="deposit" value="10000"></label>
+        <label>Leverage<input name="leverage" value="500"></label>
+        <label>Months from<input name="months_from" placeholder="2025.01"></label>
+        <label>Months to<input name="months_to" placeholder="2025.09"></label>
+        <label>Or from<input name="from" placeholder="2024.01.01"></label>
+        <label>To<input name="to" placeholder="2025.09.30"></label>
+        <label class="w">Set (Name=value,...)<input name="set" placeholder="InpBreakRiskPct=0"></label>
+        <label class="w">What to expect<input name="expect"></label>
+        <button class="w" type="submit">Queue job</button>
+      </form>
+    </details>
+    <div id="msg"></div>
+    <h2>Relay</h2><div id="relay"></div>
+    <h2>Last run per agent</h2><div id="lastruns"></div>
+    <h2>Queue</h2><p class="ae-note">Last 12 jobs.</p><div id="jobs"></div>
+  </aside>
+</main>
+</div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), feed=$("#feed");
+let selRole=null, total=0, win=[], lastEv=0, lastRun=null;
+const filters={text:true,thinking:true,tool:true,sys:true};
+const blocks=new Map();      // run:index -> element being streamed
+const tools=new Map();       // tool_use id -> element
+const streamedLeft=new Map();// run -> blocks started and not yet confirmed by a full message
+const MAX=2500;
+
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function ts(t){return new Date(t*1000).toLocaleTimeString([], {hour12:false})+"."+String(Math.floor(t*1000)%1000).padStart(3,"0")}
+function runHeader(d){
+  if(lastRun===d.run)return; lastRun=d.run;
+  const h=el("div","run",`${d.role} · run ${d.run}`);h.dataset.role=d.role;feed.append(h);
+}
+function mk(d,kind,head,body){
+  runHeader(d);
+  const e=el("div","ev "+kind);e.dataset.role=d.role;e.dataset.kind=kind;
+  const h=el("div","h");h.append(el("span",null,head),el("span",null,d.role),el("span",null,ts(d.t)));
+  const b=el("div","body",body||"");e.append(h,b);feed.append(e);apply(e);return e;
+}
+function apply(e){
+  const k=e.dataset.kind, hidden=(selRole&&e.dataset.role!==selRole)||!filters[k==="done"?"sys":k]||
+    ($("#q").value&&!e.textContent.toLowerCase().includes($("#q").value.toLowerCase()));
+  e.classList.toggle("hide",!!hidden);
+}
+function refilter(){
+  feed.querySelectorAll(".ev").forEach(apply);
+  feed.querySelectorAll(".run").forEach(r=>r.classList.toggle("hide",!!(selRole&&r.dataset.role!==selRole)));
+}
+function toolCard(d,name,inp,id){
+  const e=mk(d,"tool","tool · "+name,inp);e.addEventListener("click",()=>e.classList.toggle("open"));
+  if(id)tools.set(id,e);return e;
+}
+function handle(d){
+  total++;win.push(Date.now());lastEv=Date.now();
+  const key=d.run+":"+d.i;
+  switch(d.k){
+    case "start":
+      if(d.ch==="text"||d.ch==="thinking"||d.ch==="tool_use"){
+        streamedLeft.set(d.run,(streamedLeft.get(d.run)||0)+1);
+        let e;
+        if(d.ch==="tool_use"){e=toolCard(d,d.name,"");e.dataset.pending="1"}
+        else e=mk(d,d.ch==="text"?"text":"thinking",d.ch==="text"?"says":"thinking","");
+        e.lastChild.classList.add("live-caret");blocks.set(key,e);
+      }break;
+    case "delta":{
+      const e=blocks.get(key);if(e){e.lastChild.textContent+=d.s;apply(e)}break}
+    case "msg":
+      for(const p of d.parts){
+        if(p.k==="result"){
+          const t=tools.get(p.id);
+          if(t){const r=el("div","res"+(p.err?" err":""),p.s);t.append(r)}
+          else{mk(d,"tool","result",p.s)}
+          continue;
+        }
+        const left=streamedLeft.get(d.run)||0;
+        if(left>0&&(p.k==="text"||p.k==="thinking"||p.k==="tool")){
+          streamedLeft.set(d.run,left-1);
+          // finalize the streamed block with the complete text
+          for(const [k2,e] of blocks){ if(k2.startsWith(d.run+":")&&e.dataset.kind===(p.k==="tool"?"tool":p.k)&&e.lastChild.classList.contains("live-caret")){
+            e.lastChild.classList.remove("live-caret");
+            if(p.k==="tool"){e.lastChild.textContent=p.input;tools.set(p.id,e);e.firstChild.firstChild.textContent="tool · "+p.name}
+            else e.lastChild.textContent=p.s;
+            blocks.delete(k2);break}}
+        }else if(p.k==="tool")toolCard(d,p.name,p.input,p.id);
+        else if(p.k==="text")mk(d,"text","says",p.s);
+        else if(p.k==="thinking")mk(d,"thinking","thinking",p.s);
+      }break;
+    case "init":mk(d,"sys","session",`model ${d.model} · ${d.tools} tools · permission mode ${d.perm}`);break;
+    case "turn":break;
+    case "sys":mk(d,"sys","system",d.s);break;
+    case "done":{
+      const u=d.usage||{};
+      const e=mk(d,"done",d.ok?"finished":"ended with error",
+        `${d.turns??"?"} turns · ${(d.ms/1000).toFixed(1)} s · stop: ${d.stop??"?"} · denied tool calls: ${d.denied}`+
+        `\ntokens in ${u.input_tokens??"?"} / cache read ${u.cache_read_input_tokens??"?"} / out ${u.output_tokens??"?"}`+
+        (d.cost!=null?` · reported cost $${Number(d.cost).toFixed(4)} (as reported by the CLI; subscription runs are not billed per token)`:""));
+      if(!d.ok)e.classList.add("bad");
+      for(const [k2,b] of blocks)if(k2.startsWith(d.run+":")){b.lastChild.classList.remove("live-caret");blocks.delete(k2)}
+      break}
+  }
+}
+function ingest(batch){
+  const atBottom=feed.scrollHeight-feed.scrollTop-feed.clientHeight<80;
+  for(const d of batch)handle(d);
+  while(feed.childElementCount>MAX)feed.firstChild.remove();
+  if($("#follow").checked&&atBottom)feed.scrollTop=feed.scrollHeight;
+}
+function fmtAge(ms){return ms<1000?ms+" ms":ms<60000?(ms/1000).toFixed(1)+" s":Math.round(ms/60000)+" min"}
+setInterval(()=>{
+  const now=Date.now();win=win.filter(t=>now-t<1000);
+  $("#eps").textContent=win.length;$("#tot").textContent=total;
+  $("#age").textContent=lastEv?fmtAge(now-lastEv)+" ago":"-";
+},100);
+
+let paused=false;
+async function post(path,body){
+  const m=$("#msg");m.className="";m.textContent="…";
+  try{
+    const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","X-Aurum":"1"},body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>({ok:false,msg:"HTTP "+r.status}));
+    m.className=j.ok?"ok":"bad";m.textContent=j.msg;
+  }catch(e){m.className="bad";m.textContent=String(e)}
+  poll();
+}
+$("#bpause").onclick=()=>post(paused?"/api/resume":"/api/pause");
+$("#brelease").onclick=()=>post("/api/release");
+$("#bagent").onclick=()=>post("/api/agent",{role:$("#role").value});
+$("#qf").onsubmit=e=>{e.preventDefault();post("/api/queue",Object.fromEntries(new FormData(e.target)))};
+function renderState(s){
+  paused=s.paused;$("#bpause").textContent=paused?"Resume agents":"Pause agents";
+  $("#pause").classList.toggle("hide",!s.paused);
+  const h=$("#hold");h.classList.toggle("hide",!s.hold);if(s.hold)h.textContent="Terminal 16 held until "+(s.hold.until||"?").replace("T"," ").slice(0,16);
+  const al=$("#alist");al.replaceChildren();
+  for(const [r,a] of Object.entries(s.agents)){
+    const c=el("div","agent"+(a.live?" live":"")+(selRole===r?" sel":""));
+    const n=el("div","n");n.append(el("span",null,r));
+    const l=a.last||{};
+    c.append(n,el("div","s",l.ended?`last ended ${l.ended.replace("T"," ")} · exit ${l.exit}`:"no run yet"),el("div","s",`${a.runs} run files`));
+    c.onclick=()=>{selRole=selRole===r?null:r;refilter();renderState(s)};
+    al.append(c);
+  }
+  const rl=$("#relay");rl.replaceChildren();
+  const rel=s.relay||{};
+  for(const [k,v] of [["from",rel.from],["next",rel.next],["due",(rel.due||"").replace("T"," ")],["why",rel.reason],["backoff until",rel.backoff_until]]){
+    if(v){const d=el("div","kv");d.append(el("span",null,k),el("b",null,String(v).slice(0,70)));rl.append(d)}
+  }
+  const lr=$("#lastruns");lr.replaceChildren();
+  const jb=$("#jobs");jb.replaceChildren();
+  for(const j of s.jobs){const d=el("div","job");d.append(document.createTextNode(j.id+" "),el("span","st-"+j.status,j.status));jb.append(d)}
+}
+async function poll(){try{renderState(await (await fetch("/api/state")).json())}catch(e){}}
+
+function connect(){
+  const es=new EventSource("/stream");
+  es.onopen=()=>{$("#dot").classList.add("on");$("#conn").textContent="live"};
+  es.onmessage=m=>{try{ingest(JSON.parse(m.data).batch)}catch(e){console.error(e)}};
+  es.addEventListener("state",m=>renderState(JSON.parse(m.data)));
+  es.onerror=()=>{$("#dot").classList.remove("on");$("#conn").textContent="reconnecting…"};
+}
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{filters[c.dataset.k]=!filters[c.dataset.k];c.classList.toggle("on");refilter()});
+$("#q").oninput=refilter;
+$("#clear").onclick=()=>{feed.replaceChildren();blocks.clear();tools.clear();lastRun=null};
+let ex=false;$("#expand").onclick=()=>{ex=!ex;feed.querySelectorAll(".ev.tool").forEach(e=>e.classList.toggle("open",ex));$("#expand").textContent=ex?"Collapse all":"Expand all"};
+$("#theme").onclick=()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==="dark"?"light":"dark"};
+poll();connect();
+</script>
+</body>
+</html>

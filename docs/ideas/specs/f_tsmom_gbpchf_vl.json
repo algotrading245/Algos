@@ -1,0 +1,21 @@
+{
+  "id": "f_tsmom_gbpchf_vl",
+  "title": "tsmom on GBPCHF when vol low",
+  "source": "spec factory grid: time-series momentum (Moskowitz, Ooi & Pedersen 2012), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "GBPCHF"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "tsmom",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-24T14:00:17"
+}

@@ -1,0 +1,4 @@
+{
+  "about": "Scan requests for the scanner script (tools/autopilot/scanner_step.py, owner 2026-10-18). The orchestrator appends a request when tools/edge_scan.py has a family or data worth scanning; the script runs the scan and the gates on the keeper's schedule, records the outcome in docs/autopilot/scans.md and sets the request to done or failed. The scanner agent only runs when the script raises logs/autopilot/scanner-flag.json (a survivor passed every gate, or a scan broke); it clears the flag with python tools/autopilot/handoff.py --scan-done. A family already scanned (docs/trials.jsonl) is refused: a repeat only raises the DSR bar. Fields: id, family (slot|own|cal|vol|all), why, status (pending|done|failed), result, when.",
+  "requests": []
+}

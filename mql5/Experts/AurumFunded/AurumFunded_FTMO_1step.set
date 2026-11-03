@@ -1,0 +1,19 @@
+; AurumFunded - FTMO 1-Step Challenge: 10% target, 3% daily loss, 10% maximum loss trailing the end-of-day balance,
+; Best Day rule 50% (rules from 2026 reviews - verify on ftmo.com; one review gives a 6% maximum loss, which would need
+; InpPropMaxStopPct 4.5 instead). EA day stop 2% (x1.2 slip stays inside the 3%), final stop 1.5% inside the trailing
+; line. tools/prop_ftmo_1step.py at 70% of the edge: first payout median 7.8 months, none failed (also at half the
+; edge). Load on a gold chart of the FTMO account. Inputs not listed keep the EA's defaults.
+InpPropTargetPct=10.0
+InpPropRound=1
+InpPropMinDays=4
+InpPropDayStopPct=2.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=true
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+InpPropFast=false

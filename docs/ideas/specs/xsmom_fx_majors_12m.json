@@ -1,0 +1,33 @@
+{
+  "id": "xsmom_fx_majors_12m",
+  "title": "Cross-sectional 12-month currency momentum across seven FX majors, long top 1, short bottom 1, monthly",
+  "source": "Asness, Moskowitz & Pedersen (2013), Value and Momentum Everywhere, Journal of Finance 68(3)",
+  "link": "https://pages.stern.nyu.edu/~lpederse/papers/ValMomEverywhere.pdf",
+  "read": "in full",
+  "why": "Paper ranks each asset class by its past 12-month return and goes long the top third, short the bottom third (currencies, 1979-2011, P3-P1 Sharpe 0.34). This spec takes the one-basket version on seven liquid majors, using the paper's 12-month lookback with a 21-day monthly hold. Deviation: the paper skips the most recent month (12-1); the engine has no skip, so the lookback is the plain 252-day return. Top 1 of 7 is a narrower cut than the paper's terciles.",
+  "rule": "xsmom",
+  "symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "USDCAD",
+    "USDCHF",
+    "NZDUSD"
+  ],
+  "params": {
+    "lookback": [
+      252
+    ],
+    "hold": [
+      21
+    ],
+    "top": [
+      1
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T00:47:59"
+}

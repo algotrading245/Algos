@@ -1,0 +1,101 @@
+{
+ "name": "london_breakout",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "AUDUSD",
+  "XAUUSD",
+  "US500"
+ ],
+ "tf": "M15",
+ "pod": "systematic",
+ "kind": "benchmark",
+ "bars": 120,
+ "needs": [],
+ "defaults": {},
+ "card": "London breakout: the Asian range (00:00-07:00 London); the first close beyond it from 07:00 to 12:00 London enters,\nstop at the far side; out at 16:00 London. One trade a day.",
+ "backtest": {
+  "US500": {
+   "params": {},
+   "from": null,
+   "to": null,
+   "trades": 3217,
+   "pf": 0.87,
+   "win": 0.387,
+   "avg_r": -0.068,
+   "total_r": -218.68,
+   "max_dd_r": 241.29,
+   "first": "2010-11-15",
+   "last": "2025-10-10",
+   "by_year": {
+    "2010": {
+     "trades": 29,
+     "r": -1.8
+    },
+    "2011": {
+     "trades": 225,
+     "r": -15.09
+    },
+    "2012": {
+     "trades": 215,
+     "r": -24.73
+    },
+    "2013": {
+     "trades": 214,
+     "r": -30.42
+    },
+    "2014": {
+     "trades": 213,
+     "r": -26.65
+    },
+    "2015": {
+     "trades": 225,
+     "r": -11.71
+    },
+    "2016": {
+     "trades": 215,
+     "r": -20.73
+    },
+    "2017": {
+     "trades": 196,
+     "r": -43.92
+    },
+    "2018": {
+     "trades": 214,
+     "r": -29.41
+    },
+    "2019": {
+     "trades": 198,
+     "r": -4.91
+    },
+    "2020": {
+     "trades": 199,
+     "r": -7.95
+    },
+    "2021": {
+     "trades": 212,
+     "r": -12.34
+    },
+    "2022": {
+     "trades": 226,
+     "r": 24.64
+    },
+    "2023": {
+     "trades": 234,
+     "r": 15.2
+    },
+    "2024": {
+     "trades": 230,
+     "r": -22.97
+    },
+    "2025": {
+     "trades": 172,
+     "r": -5.48
+    }
+   },
+   "run": "2026-10-27T18:24:44+00:00"
+  }
+ },
+ "live": {}
+}

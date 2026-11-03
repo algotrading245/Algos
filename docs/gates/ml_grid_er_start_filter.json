@@ -1,0 +1,51 @@
+{
+ "id": "ml_grid_er_start_filter",
+ "when": "2026-10-24T22:27:45",
+ "verdict": "FAIL at belief",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "0.92 / 0.76 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.75",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.04, max leg quartet +0.07",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": false,
+   "figure": "no source, no other markets",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": true,
+   "figure": "book 2018+ 3.11 -> 3.15 replacing grid",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26753, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [
+  "grid"
+ ],
+ "published": null,
+ "profitable_months_2018": [
+  0.777,
+  0.777
+ ]
+}

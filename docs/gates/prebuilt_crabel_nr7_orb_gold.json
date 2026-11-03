@@ -1,0 +1,49 @@
+{
+ "id": "prebuilt_crabel_nr7_orb_gold",
+ "when": "2026-10-25T15:52:18",
+ "verdict": "FAIL at halves",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": false,
+   "figure": "-0.05 / -0.06 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": false,
+   "figure": "-0.22",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.03, max leg breakout +0.09",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published https://www.mql5.com/en/code/78259",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": false,
+   "figure": "book 2018+ 3.11 -> 2.97",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26756, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [],
+ "published": "https://www.mql5.com/en/code/78259",
+ "profitable_months_2018": [
+  0.777,
+  0.777
+ ]
+}

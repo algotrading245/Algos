@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": [
+      "Bash(python -m desk.cli *)",
+      "Bash(python -m desk.sandbox *)",
+      "Read",
+      "Grep",
+      "Glob",
+      "WebSearch",
+      "WebFetch",
+      "Write(desk/edges/new/**)",
+      "Edit(desk/edges/new/**)",
+      "Write(logs/desk/drafts/**)",
+      "Edit(logs/desk/drafts/**)"
+    ],
+    "deny": [
+      "Edit(desk/risk.json)",
+      "Write(desk/risk.json)",
+      "Edit(desk/tickets.jsonl)",
+      "Write(desk/tickets.jsonl)",
+      "Edit(desk/playbooks/**)",
+      "Write(desk/playbooks/**)",
+      "Bash(python tools/holdout_check.py*)"
+    ]
+  }
+}

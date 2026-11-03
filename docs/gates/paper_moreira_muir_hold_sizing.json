@@ -1,0 +1,51 @@
+{
+ "id": "paper_moreira_muir_hold_sizing",
+ "when": "2026-10-25T17:56:06",
+ "verdict": "FAIL at book",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "0.42 / 0.23 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.21",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book -0.00, max leg quartet +0.03",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": false,
+   "figure": "book 2018+ 3.11 -> 2.96 replacing hold",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26764, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [
+  "hold"
+ ],
+ "published": "https://www.nber.org/system/files/working_papers/w22208/w22208.pdf",
+ "profitable_months_2018": [
+  0.777,
+  0.777
+ ]
+}

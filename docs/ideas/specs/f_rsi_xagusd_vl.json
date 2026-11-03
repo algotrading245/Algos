@@ -1,0 +1,21 @@
+{
+  "id": "f_rsi_xagusd_vl",
+  "title": "rsi on XAGUSD when vol low",
+  "source": "spec factory grid: RSI extremes (Wilder 1978; Connors RSI-2), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "XAGUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "rsi",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-25",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-25T03:07:54"
+}

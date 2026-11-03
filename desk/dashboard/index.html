@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurum Command Center</title>
+<style>
+:root{--bg:#F5F5F7;--card:#fff;--tx:#1D1D1F;--tx2:#424245;--mut:#6E6E73;--line:rgba(0,0,0,.08);--acc:#0071E3;--ok:#1D8A3A;--okbg:#E7F6EA;--warn:#8A4B00;--warnbg:#FFF4E5;--bad:#C0211A;--badbg:#FDEBEA;--chip:#EDEDF0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.47 -apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+nav{position:sticky;top:0;z-index:20;background:rgba(251,251,253,.8);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+.nv{max-width:1280px;margin:0 auto;padding:6px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 20px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px;letter-spacing:-.01em;min-height:44px}
+.tabs{display:flex;flex-wrap:wrap;gap:0 4px;flex:1}
+.tabs a{display:flex;align-items:center;min-height:44px;padding:0 10px;color:var(--tx2);font-size:13px;text-decoration:none;border-bottom:2px solid transparent}
+.tabs a.on{color:var(--tx);font-weight:600;border-bottom-color:var(--acc)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:980px;font-size:12px;font-weight:600;background:var(--chip);color:var(--mut)}
+.pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-ok{background:var(--okbg);color:var(--ok)}.p-bad{background:var(--badbg);color:var(--bad)}.p-warn{background:var(--warnbg);color:var(--warn)}
+main{max-width:1280px;margin:0 auto;padding:22px}
+h1{font-size:28px;letter-spacing:-.02em;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 18px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}.c12{grid-column:span 12}
+@media(max-width:900px){.c3,.c4,.c6,.c8{grid-column:span 12}}
+.card{background:var(--card);border-radius:18px;padding:18px 20px;box-shadow:0 1px 2px rgba(0,0,0,.04);min-width:0}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ch h2{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+.chip{font-size:11px;padding:2px 8px;border-radius:980px;background:var(--chip);color:var(--mut);white-space:nowrap}
+.chip.stale{background:var(--warnbg);color:var(--warn)}.chip.tw{background:#E8E8ED;color:#6E6E73;font-weight:600}
+.big{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.lab{font-size:12px;color:var(--mut)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line)}.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--mut);font-size:12px;padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+td{padding:7px 8px 7px 0;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:break-word}
+tr:last-child td{border-bottom:0}
+.scroll{overflow:auto;max-height:340px}
+.empty{padding:22px 8px;text-align:center;color:var(--mut)}.empty b{display:block;color:var(--tx2);font-weight:600;margin-bottom:2px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.mut{color:var(--mut)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.bar{height:6px;border-radius:3px;background:#E8E8ED;overflow:hidden}.bar>i{display:block;height:100%;background:var(--acc)}
+button,.btn{font:inherit;font-size:13px;min-height:36px;padding:0 16px;border-radius:980px;border:0;background:var(--acc);color:#fff;cursor:pointer}
+button.sec{background:var(--chip);color:var(--tx)}button.dng{background:var(--bad)}button:disabled{background:#E8E8ED;color:#AEAEB2;cursor:default}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input[type=text]{font:inherit;min-height:36px;padding:0 12px;border-radius:10px;border:1px solid #D2D2D7;width:100%}
+.cmd{display:flex;gap:8px;align-items:center;background:#F5F5F7;border-radius:10px;padding:6px 6px 6px 12px;margin-top:6px}
+.cmd code{flex:1;white-space:pre-wrap;overflow-wrap:anywhere}.cmd button{min-height:28px;padding:0 12px;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spark{width:100%;height:60px}
+.err{background:var(--badbg);color:var(--bad);padding:8px 12px;border-radius:10px;margin-bottom:12px;display:none}
+</style></head><body>
+<nav><div class="nv">
+<div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Aurum</div>
+<div class="tabs" id="tabs" role="navigation" aria-label="Screens"></div>
+<span class="pill" id="pill"><i></i><span id="pilltx">Connecting</span></span>
+</div></nav>
+<main><div class="err" id="err"></div><div id="view"></div></main>
+<script>
+"use strict";
+const TABS=[['command','Command Center'],['pods','Pods'],['eas','EAs'],['processes','Processes'],['research','Research'],['controls','Controls'],['agents','Agents']];
+const D={state:null,live:null,aurum:null,queue:null,usage:null}, T={state:0,live:0,aurum:0,queue:0,usage:0};
+const STALE={state:30,live:20,aurum:900,queue:900,usage:900};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const g=(o,p,d)=>{let v=o;for(const k of p.split('.')){if(v==null)return d;v=v[k]}return v==null?d:v};
+const num=(v,n=2)=>typeof v==='number'&&isFinite(v)?v.toFixed(n):'-';
+const money=v=>typeof v==='number'?'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'-';
+const tok=n=>typeof n!=='number'?'-':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(0)+'k':String(n);
+const ago=sec=>sec==null||!isFinite(sec)?'-':sec<90?Math.round(sec)+'s ago':sec<5400?Math.round(sec/60)+'m ago':sec<172800?(sec/3600).toFixed(1)+'h ago':Math.round(sec/86400)+'d ago';
+const tsAge=iso=>{if(!iso)return null;const t=Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(iso)?iso:iso+'Z');return isFinite(t)?(Date.now()-t)/1000:null};
+const localAge=iso=>{if(!iso)return null;const t=Date.parse(iso);return isFinite(t)?(Date.now()-t)/1000:null};
+const cls=v=>v>0?'ok':v<0?'bad':'';
+// ---- building blocks
+function chip(src,key){let st='',tx='';if(key){const a=(Date.now()-T[key])/1000;const fa=key==='live'&&D.live&&D.live.file_age_s!=null?D.live.file_age_s:key==='aurum'&&D.aurum&&D.aurum.file_age_s!=null?D.aurum.file_age_s:a;if(!T[key])tx=' · no answer';else{tx=' · '+ago(fa);if(fa>STALE[key]){st=' stale';tx+=' · stale'}}}return `<span class="chip${st}">${esc(src)}${tx}</span>`}
+const toWire=src=>`<span class="chip tw">To wire</span>`;
+const empty=(src,why)=>`<div class="empty"><b>No data yet</b>Waits for ${esc(src)}${why?'. '+esc(why):''}</div>`;
+const card=(title,src,key,body,span='c6',extra='')=>`<section class="card ${span}"><div class="ch"><h2>${esc(title)}</h2><span class="row">${extra}${key===false?toWire():chip(src,key)}</span></div>${body}</section>`;
+const wire=(title,src,why,span)=>card(title,src,false,empty(src,why),span);
+const kv=(a,b)=>`<div class="kv"><span>${esc(a)}</span><span>${b}</span></div>`;
+const table=(heads,rows,max)=>rows.length?`<div class="scroll"${max?` style="max-height:${max}px"`:''}><table><thead><tr>${heads.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'';
+const bar=p=>`<div class="bar"><i style="width:${Math.max(0,Math.min(100,p||0))}%"></i></div>`;
+const spark=pts=>{if(!pts||pts.length<2)return '';const lo=Math.min(...pts),hi=Math.max(...pts),r=(hi-lo)||1;const d=pts.map((v,i)=>`${i?'L':'M'}${(i/(pts.length-1)*300).toFixed(1)},${(58-(v-lo)/r*54).toFixed(1)}`).join('');return `<svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="#0071E3" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`};
+const cmd=(c,note)=>`<div class="cmd"><code class="mono">${esc(c)}</code><button class="sec" data-copy="${esc(c)}">Copy</button></div>${note?`<div class="lab" style="margin-top:4px">${esc(note)}</div>`:''}`;
+// ---- panels
+const S=()=>D.state||{}, L=()=>D.live||{}, A=()=>D.aurum||{};
+function accounts(){const s=S();if(!s.limits)return wire('Accounts','desk /api/state');const a=g(s,'live.account',{}),f=g(s,'limits.floors',{});
+ return card('Accounts','desk /api/state','state',`<div class="lab">${esc(g(s,'limits.account','-'))}</div><div class="big">${money(g(s,'limits.equity'))}</div>
+ ${kv('Balance',money(g(s,'limits.balance')))}${kv('Peak',money(g(s,'limits.peak')))}${kv('Day floor',money(f.day))}${kv('Week floor',money(f.week))}${kv('Kill floor',money(f.kill))}${kv('Max drawdown',num(g(s,'limits.record.max_dd_pct'),3)+'%')}${kv('Feed',esc(g(s,'live.source','-'))+(a.leverage?' · 1:'+a.leverage:''))}${spark((s.equity_series||[]).map(x=>x[1]))}`,'c4')}
+function positions(){const s=S();if(!s.tickets)return wire('Tickets','desk /api/state');const live=s.tickets.filter(t=>!['closed','rejected','cancelled'].includes(t.status));
+ return card('Tickets','desk /api/state','state',(live.length?'':'<div class="lab">No open tickets. Latest closed below.</div>')+table(['Pod','Instrument','Side','Status','R','P/L'],(live.length?live:s.tickets.slice(-8).reverse()).slice(0,12).map(t=>[esc(t.pod),esc(t.instrument),esc(t.side),esc(t.status),`<span class="${cls(t.R)}">${num(t.R,2)}</span>`,`<span class="${cls(t.pnl)}">${num(t.pnl)}</span>`])),'c8')}
+function legs(){const e=g(S(),'edges.armed');if(!e)return wire('Legs','desk /api/state');return card('Armed Legs','desk /api/state','state',table(['Edge','Market','Risk %'],e.map(x=>[esc(x.edge),esc(x.market),num(x.risk_pct)]))+kv('Shadow total R',num(g(S(),'edges.shadow_total_r'))),'c4')}
+function guards(){const gt=S().live_gate;if(!gt)return wire('Guards','desk /api/state');const ch=gt.checks||{};
+ return card('Guards: Live Gate','desk /api/state','state',`<div class="row"><span class="pill ${gt.passed?'p-ok':'p-warn'}">${esc(gt.verdict)}</span><span class="lab">counted from ${esc((gt.since||'').slice(0,10))}</span></div>`+table(['Check','Need','Have',''],Object.entries(ch).map(([k,v])=>[esc(k),esc(v.need),esc(v.have),v.ok?'<span class="ok">ok</span>':'<span class="bad">no</span>'])),'c4')}
+function relay(){const r=L().relay;if(!r)return wire('Relay','live.js');const st=g(L(),'steps.relay',[]).slice(-6).reverse();
+ return card('Relay','live.js','live',`${kv('From',esc(r.from))}${kv('Next',`<b>${esc(r.next)}</b>`)}${kv('Due',esc((r.due||'').replace('T',' ')))}${kv('Reason',esc(r.reason))}${kv('Paused',L().paused?'<span class="bad">yes</span>':'no')}<div class="mono mut" style="margin-top:8px;white-space:pre-wrap">${st.map(esc).join('\n')}</div>`,'c4')}
+function funnel(){const f=A().funnel;if(!f)return wire('Funnel','dashboard/data.js');const mx=Math.max(1,...Object.values(f.by_status||{}));
+ return card('Funnel','dashboard/data.js','aurum',`<div class="big">${f.total}</div><div class="lab">ideas seen</div>${Object.entries(f.by_status||{}).map(([k,v])=>`<div class="kv"><span>${esc(k)}</span><span>${v}</span></div>${bar(v/mx*100)}`).join('')}<div class="lab" style="margin-top:8px">By source: ${Object.entries(f.by_source||{}).map(([k,v])=>esc(k)+' '+v).join(', ')}</div>`,'c4')}
+function agentsMini(){const r=L().roles;if(!r)return wire('Agents','live.js');return card('Agents','live.js','live',table(['Role','State','Model','Last'],Object.entries(r).map(([k,v])=>[esc(k),v.running?'<span class="ok">running</span>':v.state&&v.state.failed?'<span class="bad">failed</span>':'idle',esc(g(v,'state.model','-')),esc(g(v,'state.reason','-'))])),'c8')}
+function inbox(){const n=S().needs_you;if(!n)return wire('Owner Inbox','desk /api/state');return card('Owner Inbox','desk /api/state','state',n.length?n.map(x=>`<div class="kv"><span class="${x.level==='WARN'||x.level==='ALERT'?'warn':''}">${esc(x.level)}</span><span style="text-align:right">${esc(x.what)}</span></div>`).join(''):'<div class="empty"><b>Nothing needs you</b></div>','c6')}
+function alerts(){const a=S().alert_file;return card('Alerts','desk ALERT.md','state',a?`<div><b>${esc(a.title)}</b></div>${(a.items||[]).map(i=>`<div class="kv"><span></span><span style="text-align:right">${esc(i)}</span></div>`).join('')}<div class="lab">${esc(a.t)}</div>`+cmd('python -m desk.cli alert ack "why"','Owner only: archives the alert once dealt with.'):'<div class="empty"><b>No alert file</b>desk/inbox/ALERT.md is absent.</div>','c6')}
+function replay(){return wire('Replay','a replay source (none exists on disk)','Trade replay needs bar and fill history that no file provides yet.','c12')}
+// ---- tabs
+const V={};
+V.command=()=>`<h1>Command Center</h1><p class="sub">Live state of the desk and the autopilot.</p><div class="grid">${accounts()}${positions()}${legs()}${guards()}${relay()}${funnel()}${agentsMini()}${inbox()}${alerts()}${replay()}</div>`;
+V.pods=()=>{const p=S().pods,sc=g(S(),'scores.pods',{});
+ const intel=p?card('Intelligence','desk /api/state','state',table(['Pod','Level','XP','IQ','Coverage','Weak spot'],p.map(x=>{const i=x.intel||{};return [esc(x.name),esc(g(i,'level.name','-')+' '+g(i,'level.n','')),esc(i.xp),esc(i.iq),num(g(i,'work.coverage'),2),esc(g(i,'weaknesses.0.what','-'))]})),'c12'):wire('Intelligence','desk /api/state','','c12');
+ const lv=p?card('Pods','desk /api/state','state',table(['Pod','Active','Share','Trades','Total R','R/trade','PF','Tokens'],p.map(x=>{const s=x.score||{};return [esc(x.name),x.paused?'<span class="bad">paused</span>':x.active?'<span class="ok">active</span>':'<span class="mut">off</span>',num(x.share),s.trades,`<span class="${cls(s.total_R)}">${num(s.total_R)}</span>`,num(s.R_per_trade),s.pf==null?'-':num(s.pf),tok(g(x,'tokens.spent'))+' / '+tok(g(x,'tokens.budget'))]})),'c12'):wire('Pods','desk /api/state','','c12');
+ const talk=S().talk;const tk=talk&&talk.length?card('Talk','desk /api/state','state',table(['When','Who','Text'],talk.slice(-15).reverse().map(t=>[esc(t.t),esc(t.by||t.pod),esc(t.text||t.msg)])),'c6'):card('Talk','desk /api/state','state',empty('desk /api/state talk','The list is empty: no pod conversations recorded.'),'c6');
+ const kn=S().level_ups;const lu=kn&&kn.length?card('Levels','desk /api/state','state',table(['When','Pod','Level'],kn.map(k=>[esc(k.t),esc(k.pod),esc(JSON.stringify(k.level||k.to||''))])),'c6'):card('Levels','desk /api/state','state',empty('desk /api/state level_ups','No level-ups recorded yet.'),'c6');
+ const al=S().allowance;const xr=al&&al.pods?card('Allowance Today','desk /api/state allowance','state',table(['Pod','Share','Slice','Spent','Wakes'],Object.entries(al.pods).map(([k,v])=>[esc(k),num(v.share),v.slice==null?'-':tok(v.slice),`<span class="${v.slice&&v.spent>=v.slice?'bad':''}">${tok(v.spent)}</span>`,`${v.wakes} / ${v.wake_cap}`]))+`<div class="lab">Pool ${tok(al.pool)} (spent ${tok(al.spent)})${al.weekly_usd!=null?` · $${num(al.used_usd)} of $${num(al.weekly_usd)} this week, ${al.days_left} day(s) left`:''}${al.throttle!=null?` · account ${num(100*al.account_fraction,1)}% of the weekly cap, throttle ${num(al.throttle)}`:''}</div>`,'c6'):wire('Allowance Today','desk /api/state allowance','','c6');
+ const wt=S().watch;const wc=Array.isArray(wt)?card('Watcher','desk /api/state watch','state',wt.length?table(['When','Pod','Kind','Market','What'],wt.map(w=>[esc(w.t),esc(w.pod),w.kind==='refused'?'<span class="bad">refused</span>':esc(w.kind),esc(w.market),esc(w.what)]),320):empty('desk /api/state watch','Nothing fired in the last two days: no level crossed, no listed edge fired, no shock bar.'),'c12'):wire('Watcher','desk /api/state watch','','c12');
+ const sk=sc&&Object.keys(sc).length?card('Scorekeeper','scores','state',table(['Pod','Trades','Total R','PF','Hit','Max DD R','Score'],Object.entries(sc).map(([k,v])=>[esc(k),v.trades,`<span class="${cls(v.total_R)}">${num(v.total_R)}</span>`,v.pf==null?'-':num(v.pf),v.hit==null?'-':num(v.hit),num(v.max_dd_R),num(v.score,3)]))+`<div class="lab">Window ${esc((g(S(),'scores.window',[])).join(' to '))}</div>`,'c6'):wire('Scorekeeper','scores','','c6');
+ return `<h1>Pods</h1><p class="sub">Six desk pods, their scores and their talk.</p><div class="grid">${intel}${lv}${lu}${talk.length?'':''}${tk}${xr}${sk}${wc}</div>`};
+V.eas=()=>{const b=A().book,pr=A().props,c=A().ledger;
+ const fund=pr?card('Funded Account','dashboard/data.js','aurum',`${kv('Chosen route',esc(pr.chosen))}${kv('Day stop',num(g(pr,'guard.day_stop_pct'),1)+'%')}${kv('Final stop',num(g(pr,'guard.final_stop_pct'),1)+'%')}${kv('Firm daily / max',esc(g(pr,'guard.firm_daily_pct'))+'% / '+esc(g(pr,'guard.firm_max_pct'))+'%')}`+table(['Route','Median months','Preset'],(pr.routes||[]).map(r=>[esc(r.route),num(r.median_months,1),esc(r.preset)])),'c6'):wire('Funded Account','dashboard/data.js','','c6');
+ const w=b&&b.legs?card('Hydra Legs','dashboard/data.js','aurum',table(['Leg','Weight','Sharpe'],Object.entries(b.legs).map(([k,v])=>[esc(k),num(g(b,'weights.'+k),3),num(v.sharpe)]))+kv('Book Sharpe (raw)',num(b.book_raw_sharpe))+kv('Since',esc(b.since)),'c6'):wire('Hydra Legs','dashboard/data.js','','c6');
+ const all=c&&c.candidates?card('All EAs and Candidates','docs/gates','aurum',table(['Id','Name','Status','Step','EA'],c.candidates.map(x=>[esc(x.id),esc(x.name),esc(x.status),esc(x.step),esc(x.ea||'')]),420),'c12'):wire('All EAs','dashboard/data.js','','c12');
+ const arch=c&&c.rejected?card('Archived: Rejected Families','dashboard/data.js','aurum',table(['Family','Why'],c.rejected.map(x=>[esc(x.family),esc(x.why)]),300),'c12'):wire('Archived','dashboard/data.js','','c12');
+ return `<h1>EAs</h1><p class="sub">The funded-account EA, the Hydra book and every candidate.</p><div class="grid">${fund}${w}${all}${arch}</div>`};
+V.processes=()=>{const sc=S().schedule,r=S().runner,hb=g(S(),'status.heartbeat'),runs=A().runs;
+ const sch=sc?card('Schedule','desk /api/state','state',table(['Job','Last run','Age'],sc.map(x=>[esc(x.name),esc((x.ran||'').replace('T',' ').slice(0,16)),ago((x.age_min||0)*60)])),'c6'):wire('Schedule','desk /api/state','','c6');
+ const jobs=r?card('Jobs','desk /api/state','state',`${kv('Busy',r.busy?'yes':'no')}${kv('Pending',(r.pending||[]).length)}`+table(['Id','Kind','Name','Status','Done'],(r.recent||[]).slice(0,10).map(j=>[esc(j.id),esc(j.kind),esc(j.name),esc(j.status),esc((j.done||'').slice(0,16).replace('T',' '))])),'c6'):wire('Jobs','desk /api/state','','c6');
+ const h=hb?card('Heartbeats','desk /api/state','state',`${kv('Desk clock',hb.ok?'<span class="ok">ok</span>':'<span class="bad">down</span>')}${kv('Last beat',esc(ago(tsAge(hb.t))))}${kv('Broker',esc(hb.broker))}${kv('Why',esc(hb.why||'-'))}${kv('Halt',esc(g(S(),'status.halt','none')))}`,'c4'):wire('Heartbeats','desk /api/state','','c4');
+ const tq=runs?card('Tester Queue','dashboard/data.js','aurum',table(['Run','State'],runs.filter(x=>/no report|running|queued|pending/i.test(x.state||'')).map(x=>[esc(x.name),esc(x.state)]))||'<div class="empty"><b>Queue empty</b></div>','c8'):wire('Tester Queue','dashboard/data.js','','c8');
+ const rr=runs?card('Recent Runs','dashboard/data.js','aurum',table(['Run','Outcome'],runs.slice(-15).reverse().map(x=>[esc(x.name),esc(typeof x.state==='string'?x.state:JSON.stringify(x.state))]),360),'c12'):wire('Recent Runs','dashboard/data.js','','c12');
+ return `<h1>Processes</h1><p class="sub">What is scheduled, running and queued.</p><div class="grid">${sch}${jobs}${h}${tq}${rr}</div>`};
+V.research=()=>{const f=A().funnel,q=D.queue,gp=g(D.queue,'gaps'),gs=A().gates,rej=g(A(),'ledger.rejected');
+ const fn=f?funnel().replace('c4','c4'):wire('Funnel','dashboard/data.js','','c4');
+ const qq=q&&q.queue?card('Candidates: Idea Queue','docs/ideas','queue',table(['Id','Source','Title','Status','Added'],q.queue.slice().reverse().map(x=>[esc(x.id),esc(x.source),esc(x.title),esc(x.status),esc(x.added)]),360),'c8'):card('Candidates','docs/ideas','queue',empty('docs/ideas/queue.jsonl','The file is missing or unreadable.'),'c8');
+ const gaps=gp&&gp.legs?card('Book Gaps','docs/gaps.json','queue',`<div class="lab">Book Sharpe from 2018: ${num(gp.book_sharpe_2018)} · data to ${esc(gp.ends)}</div>`+table(['Leg','Style','Horizon','Sharpe','Corr rest','Book without'],gp.legs.map(l=>[esc(l.leg),esc(l.style),esc(l.horizon),num(l.sharpe_2018),num(l.corr_rest),num(l.book_without)])),'c12'):wire('Book Gaps','docs/gaps.json','','c12');
+ const pm=wire('Portfolio Manager','docs/ideas/steer.md','No steer.md exists yet; the weekly portfolio-manager writes it.','c6');
+ const gt=gs?card('Gate Verdicts','docs/gates','aurum',table(['Idea','Verdict','Run'],Object.values(gs).sort((a,b)=>(b.when||'').localeCompare(a.when||'')).slice(0,40).map(x=>[esc(x.id),/PASS/i.test(x.verdict)&&!/FAIL/i.test(x.verdict)?`<span class="ok">${esc(x.verdict)}</span>`:`<span class="bad">${esc(x.verdict)}</span>`,esc((x.when||'').slice(0,10))]),360),'c6'):wire('Gate Verdicts','docs/gates','','c6');
+ const rj=rej?card('Rejected','dashboard/data.js','aurum',table(['Family','Why'],rej.map(x=>[esc(x.family),esc(x.why)]),300),'c12'):wire('Rejected','dashboard/data.js','','c12');
+ return `<h1>Research</h1><p class="sub">From idea to gate verdict.</p><div class="grid">${fn}${qq}${gaps}${pm}${gt}${rj}</div>`};
+let killStage=0;
+V.controls=()=>{const s=S(),h=g(s,'status.halt'),lim=s.limits,lg=s.live_gate;
+ const kill=`<section class="card c6"><div class="ch"><h2>Pause And Stop</h2><span class="row">${chip('desk /api/state','state')}</span></div>
+ <div class="kv"><span>Desk</span><span>${h?'<span class="bad">halted</span>':'<span class="ok">armed for use</span>'}</span></div>
+ ${h?`<p class="lab">Halted: ${esc(typeof h==='string'?h:JSON.stringify(h))}</p>`+cmd('python -m desk.cli resume','Resume is owner only, on the command line.'):`
+ ${killStage===0?`<div style="margin-top:10px"><button class="dng" id="killarm">Kill Switch</button></div>`:killStage===1?`<div style="margin-top:10px"><input type="text" id="killwhy" placeholder="Reason (optional)"><div class="row" style="margin-top:8px"><button class="dng" id="killgo">Confirm: close everything now</button><button class="sec" id="killno">Cancel</button></div></div>`:`<p class="${killStage===2?'ok':'bad'}" id="killmsg">${esc(window.__killmsg||'')}</p>`}
+ <p class="lab">POST /api/kill. The clock closes every desk position on its next pass and the desk stays stopped.</p>`}
+ <div class="kv"><span>Pause autopilot</span><span class="lab">creates the PAUSE file</span></div>${cmd('New-Item -ItemType File logs\\autopilot\\PAUSE','Run in PowerShell from the repo. Not executed from this page.')}
+ ${cmd('Remove-Item logs\\autopilot\\PAUSE','Resumes every agent.')}</section>`;
+ const locks=`<section class="card c6"><div class="ch"><h2>Owner-Only Locks</h2><span class="row">${chip('desk /api/state','state')}</span></div>${kv('Resume after a kill','<span class="mono">desk.cli resume</span>')}${kv('Approve a ticket','head trader or owner')}${kv('Ack an alert','owner only')}${kv('Live money','needs your edit of desk/risk.json')}
+ ${cmd('python -m desk.cli ticket approve TICKET_ID "why"','Approve a proposed ticket. Needs a real ticket id.')}${cmd('python -m desk.cli alert ack "why"')}
+ <div class="lab" style="margin-top:8px">Autopilot approvals: no CLI exists. Edit docs/autopilot/approvals.json and set the item status to approved.</div></section>`;
+ const rl=lim?card('Risk Limits','desk /api/state','state',`${kv('Equity',money(lim.equity))}${kv('Day floor',money(g(lim,'floors.day')))}${kv('Week floor',money(g(lim,'floors.week')))}${kv('Kill floor',money(g(lim,'floors.kill')))}${kv('Risk scale',esc(g(s,'status.risk_scale','-')))}${kv('Profile',esc(g(s,'status.profile','-')))}${kv('Phase',esc(g(s,'status.phase','-'))+' (day '+esc(g(s,'status.phase_day','-'))+')')}`+cmd('python -m desk.cli view limits'),'c6'):wire('Risk Limits','desk /api/state','','c6');
+ const cl=s.journal?card('Change Log','desk /api/state','state',table(['When','Kind','By','Detail'],s.journal.slice(0,15).map(j=>[esc((j.t||'').slice(5,16).replace('T',' ')),esc(j.kind),esc(j.by),esc(j.did?j.did.join('; '):j.issues!=null?j.issues+' issues':j.role||'')]),360),'c6'):wire('Change Log','desk /api/state','','c6');
+ return `<h1>Controls</h1><p class="sub">Only the kill switch acts from this page. Everything else shows the command to run.</p><div class="grid">${kill}${locks}${rl}${cl}</div>`};
+V.agents=()=>{const r=L().roles,st=L().steps,b=L().budget,tk=L().tokens;
+ const roles=r?card('Roles','live.js','live',table(['Role','State','Model','Tier','Runs today','Ended','Result'],Object.entries(r).map(([k,v])=>{const s=v.state||{};return [esc(k),v.running?'<span class="ok">running</span>':s.failed?'<span class="bad">failed</span>':s.idle?'<span class="mut">idle</span>':'done',esc(s.model),esc(s.tier),esc(s.runs_today),esc((s.ended||'').slice(5,16).replace('T',' ')),esc(s.reason)]})),'c12'):wire('Roles','live.js','','c12');
+ const roleNames=r?Object.keys(r):[];
+ const run=card('Run Now','tools/autopilot','false',roleNames.length?roleNames.filter(n=>['finder','builder','judge','tester','monitor','portfolio','doctor'].includes(n)).map(n=>`<div class="lab" style="margin-top:6px">${esc(n)}</div>`+cmd(`powershell -ExecutionPolicy Bypass -File tools\\autopilot\\run-agent.ps1 -Role ${n}`)).join('')+'<div class="lab" style="margin-top:8px">Other roles (fidelity, miner, orchestrator, researcher, scanner, worker): no run-agent command is documented for them.</div>':empty('live.js roles'),'c6').replace('<span class="chip tw">To wire</span>','<span class="chip">tools/autopilot/run-agent.ps1</span>');
+ const log=st?card('Run Log','live.js','live',Object.entries(st).map(([k,v])=>`<div class="lab" style="margin-top:6px">${esc(k)}</div><div class="mono mut" style="white-space:pre-wrap">${(v||[]).slice(-4).map(esc).join('\n')}</div>`).join(''),'c6'):wire('Run Log','live.js','','c6');
+ const bo=wire('Finder Backoff','logs/autopilot/provider-backoff.json','The file is absent: no provider is backed off right now.','c4');
+ const tr=b?card('Tokens By Role','live.js','live',`${kv('Today tokens (live)',tok(g(tk,'today_tokens_live')))}${kv('Today USD (live)',money(g(tk,'today_usd_live')))}${kv('Week USD',money(g(b,'week_usd'))+' of '+money(g(b,'weekly_usd')))}`+bar((g(b,'fraction',0))*100)+table(['Role','Runs','Tokens','USD'],Object.entries(b.today||{}).map(([k,v])=>[esc(k),esc(v.runs),tok(v.tokens),money(v.cost_usd??v.usd)])),'c4'):wire('Tokens By Role','live.js','','c4');
+ const ds=S().budgets?card('Desk Seats','desk /api/state','state',table(['Group','Spent','Limit'],S().budgets.map(x=>[esc(x.group),tok(x.spent),tok(x.limit)])),'c4'):wire('Desk Seats','desk /api/state','','c4');
+ const rt=card('Router','tools/autopilot/router.py','false',cmd('python tools/autopilot/router.py show')+cmd('python tools/autopilot/router.py use qwen')+cmd('python tools/autopilot/router.py use claude'),'c6').replace('<span class="chip tw">To wire</span>','<span class="chip">router.py</span>');
+ const us=D.usage&&D.usage.rows?card('Recent Usage','usage.jsonl','usage',table(['When','Role','Model','USD','Output tok'],D.usage.rows.slice(-12).reverse().map(x=>[esc((x.ts||'').slice(5,16).replace('T',' ')),esc(x.role),esc(x.model),num(x.cost_usd,3),tok(x.output)])),'c6'):wire('Recent Usage','usage.jsonl','','c6');
+ return `<h1>Agents</h1><p class="sub">The autopilot roles, their cost and how to start them.</p><div class="grid">${roles}${run}${log}${bo}${tr}${ds}${rt}${us}</div>`};
+// ---- render + routing
+function route(){const h=(location.hash||'#command').slice(1);return V[h]?h:'command'}
+function render(){const r=route();$('tabs').innerHTML=TABS.map(([k,n])=>`<a href="#${k}" class="${k===r?'on':''}"${k===r?' aria-current="page"':''}>${n}</a>`).join('');
+ const act=document.activeElement;if(act&&act.id==='killwhy'){return pill()}
+ try{$('view').innerHTML=V[r]()}catch(e){$('view').innerHTML='<div class="card"><b>Render error</b><div class="mono">'+esc(e.message)+'</div></div>';console.error(e)}
+ bind();pill()}
+function pill(){const p=$('pill'),h=g(S(),'status.halt'),n=(S().needs_you||[]).length;let c='',t='Connecting';
+ if(!T.state)t='Waiting for desk';else if((Date.now()-T.state)/1000>STALE.state){c='p-bad';t='Desk data stale'}else if(h){c='p-bad';t='Halted'}else if(n){c='p-warn';t=n+' need you'}else{c='p-ok';t='Running'}
+ p.className='pill '+c;$('pilltx').textContent=t;document.title=(h?'[halted] ':n?'(!) ':'')+'Aurum Command Center'}
+function bind(){document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied'}catch(e){const t=document.createElement('textarea');t.value=b.dataset.copy;document.body.appendChild(t);t.select();try{document.execCommand('copy');b.textContent='Copied'}catch(_){b.textContent='Copy failed'}t.remove()}setTimeout(()=>b.textContent='Copy',1500)});
+ const a=$('killarm');if(a)a.onclick=()=>{killStage=1;render();const w=$('killwhy');if(w)w.focus()};
+ const n=$('killno');if(n)n.onclick=()=>{killStage=0;render()};
+ const go=$('killgo');if(go)go.onclick=doKill}
+async function doKill(){const why=($('killwhy')||{}).value||'';
+ try{const r=await fetch('/api/kill',{method:'POST',headers:{'Content-Type':'application/json','X-Desk':'kill'},body:JSON.stringify({why})});const j=await r.json().catch(()=>({}));
+  if(r.ok&&j.ok){killStage=2;window.__killmsg='Kill sent. The clock closes every desk position on its next pass. Resume: python -m desk.cli resume'}else{killStage=3;window.__killmsg='Kill refused: '+(j.error||r.status)}}
+ catch(e){killStage=3;window.__killmsg='Kill failed: '+e.message}
+ render();poll('state')}
+// ---- polling
+const URLS={state:'/api/state',live:'/api/live',aurum:'/api/aurum',queue:'/api/queue',usage:'/api/usage'};
+const busy={};
+async function poll(k){if(busy[k])return;busy[k]=1;try{const r=await fetch(URLS[k],{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);D[k]=await r.json();T[k]=Date.now();$('err').style.display='none'}
+ catch(e){const el=$('err');el.textContent='/'+URLS[k].slice(1)+' not answering: '+e.message;el.style.display='block'}finally{busy[k]=0}
+ render()}
+window.addEventListener('hashchange',render);
+setInterval(()=>{const a=document.activeElement;if(a&&a.id==='killwhy')return;render()},1000);
+poll('state');poll('live');poll('aurum');poll('queue');poll('usage');
+setInterval(()=>poll('state'),5000);setInterval(()=>poll('live'),2000);setInterval(()=>poll('aurum'),60000);setInterval(()=>poll('queue'),60000);setInterval(()=>poll('usage'),60000);
+</script></body></html>

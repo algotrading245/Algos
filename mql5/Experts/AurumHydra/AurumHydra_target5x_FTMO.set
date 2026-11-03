@@ -1,0 +1,32 @@
+; AurumHydra - target 5x a month (InpTarget=5: goal 5x, the best tested scale 2.5) on FTMO's symbol names.
+; Otherwise the inputs of AurumHydra_5x_month_FTMO.set. tools/target_odds.py gives the odds of each target.
+; Inputs not listed keep the EA's defaults (run-tester.ps1 writes the source defaults first).
+InpGold=XAUUSD
+InpYen=USDJPY
+InpEuro=EURUSD
+InpGridSymbol=AUDCAD
+InpStocks=US500.cash
+InpPound=GBPUSD
+InpAussie=AUDUSD
+InpLoonie=USDCAD
+InpSwissy=USDCHF
+InpFixCross1=AUDJPY
+InpFixCross2=CADJPY
+InpFixCross3=GBPJPY
+InpMorn1=EURJPY
+InpMorn2=GBPJPY
+InpMorn3=CADJPY
+InpNasdaq=US100.cash
+InpTarget=5
+InpGoalMult=0.0
+InpGoalDays=23
+InpGoalCap=50.0
+InpGoalBold=false
+InpGoalScale=2.5
+InpGoalDayVolPct=1.56
+InpGoalRepeat=false
+InpMonthEndBoost=2.0
+InpGoalStop=true
+InpGoalRound=1
+InpMaxDrawdownPct=0.0
+InpBrakePct=0.0

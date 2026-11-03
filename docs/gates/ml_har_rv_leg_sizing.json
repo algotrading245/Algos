@@ -1,0 +1,52 @@
+{
+ "id": "ml_har_rv_leg_sizing",
+ "when": "2026-10-24T13:49:36",
+ "verdict": "FAIL at book",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "1.18 / 1.27 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.73",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book -0.02, max leg grid +0.02",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published https://doi.org/10.1093/jjfinec/nbp001",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": false,
+   "figure": "book 2018+ 3.34 -> 3.24 replacing breakout,noise",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26749, luck bar 1.04)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [
+  "breakout",
+  "noise"
+ ],
+ "published": "https://doi.org/10.1093/jjfinec/nbp001",
+ "profitable_months_2018": [
+  0.798,
+  0.787
+ ]
+}

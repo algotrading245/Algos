@@ -1,5 +1,11 @@
 """LBMA auction drift: gold falls into the 10:30 London AM auction (12:30 server). Check on M15 since 2022 by year,
-weekday, the PM auction (15:00 London = 17:00 server), M5 leg detail, M1 minute path, and a short trade net of cost."""
+weekday, the PM auction (15:00 London = 17:00 server), M5 leg detail, M1 minute path, and a short trade net of cost.
+
+Full-history check (2026-10-15, histdata minute closes 2009-2026, before cost): gold falls 1.2 bp in the 15 minutes
+before the AM auction (t -9.2; 1.56 bp to 2017, 0.87 bp from 2018) and 1.0 bp before the PM (t -4.0; 1.57 / 0.46),
+and rises 0.65 bp in the 30 minutes after the PM since 2018 (t 1.2).  Real, but halved since 2018 and now at or below
+gold's 0.5-1 bp round trip - the rejection stands.
+"""
 import sys
 from pathlib import Path
 import numpy as np
