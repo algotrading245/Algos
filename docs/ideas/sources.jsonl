@@ -1437,3 +1437,4 @@
 {"date": "2026-11-03", "kind": "paper", "title": "Iwanaga: prior-day S&P 500 and Nikkei 225 futures intraday returns (FRO 2026; JIS 2023)", "link": "https://www.sciencedirect.com/science/article/pii/S3050700626000204", "read": "unverified", "specs": []}
 {"date": "2026-11-03", "kind": "paper", "title": "AAII sentiment survey contrarian (Fisher and Statman 2000; LPL 2025 note)", "link": "https://www.aaii.com/sentimentsurvey", "read": "unverified", "specs": ["paper_aaii_spread_contrarian_us_indices"]}
 {"date": "2026-11-03", "kind": "paper", "title": "Serikova: The role of daytime stock auctions in intraday return seasonality", "link": "https://ux-tauri.unisg.ch/RePEc/usg/sfwpfi/WPF-1914.pdf", "read": "unverified", "specs": []}
+{"date": "2026-11-03", "kind": "paper", "title": "Da, Engelberg, Gao: The Sum of All FEARS (RFS 2015)", "link": "https://www3.nd.edu/~pgao/papers/FEARS_20131007.pdf", "read": "unverified", "specs": []}
