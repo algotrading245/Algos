@@ -386,3 +386,18 @@ broker stop.
 - Clock-check skips: none today. Duplicate closes: none. Done-reported-failed: none.
 - Odd: the failed send repeats all day with no re-enable line in the journal read by demo_check. Needs the owner or the
   judge to look at the server-side trading state; the monitor cannot change it.
+
+## 2026-11-03 (Tuesday), 23:15 check (monitor): no alert, 2 noise closes
+
+demo_check (Terminal 16, two experts logs for 20261103): 16 EA lines, 8 journal trade lines.
+
+- **Trades per leg:** noise 2 sends (orders {'noise': 2}), 2 closes. Closes: US500.cash 0.5 at 7581.05 and US100.cash 0.06 at 28215.43. No other leg sent an order.
+- **P/L of the day:** -6.2 EUR over 2 closes (US500.cash -2.43 EUR, US100.cash -3.77 EUR), from demo_check's closes and pl_of_day.
+- **Slippage on fills:** not logged (demo_check prints no requested-versus-filled price).
+- **Skipped:** bell move +0.73 below 1.5 x average 3.03, no trade today.
+- **Clock check:** "no trading today, the server clock is 2.0 hours ahead of GMT, 3 expected". This is the summer/winter time mismatch by design (owner 2026-10-27), a one-line note only.
+- **Phase line:** "phase 1 started, initial balance 10000.00, target 11000.00, day stop 300.00, final stop at 9150.00" is logged once today. Not clear whether it is a fresh start or a restart of the EA; not checked further.
+- **Leverage line (logged four times):** account leverage 1:100. Margin of 1 lot in EUR is logged for XAUUSD, USDJPY, EURUSD, AUDCAD (n/a in three lines) and US500.cash.
+- **Errors, duplicate closes, done-reported-failed:** none listed by demo_check. The 2026-11-02 trade-disabled burst (retcode 10017) does not recur in today's read.
+- **Not logged:** day stop, final stop, margin error, trade without a broker stop. None appears in the check.
+- **Odd:** only the noise leg traded; the bell leg was skipped on its move threshold.
