@@ -585,3 +585,4 @@
 {"id": "paper_bab_index_beta_neutral", "when": "2026-11-03T01:17:11", "verdict": "FAIL at halves"}
 {"id": "paper_post_ecb_drift_indices", "when": "2026-11-03T01:32:33", "verdict": "FAIL at book"}
 {"id": "variant_yen_cross_carry_vix_calm", "when": "2026-11-03T06:01:24", "verdict": "FAIL at halves"}
+{"id": "paper_dollar_carry_basket_lrv", "when": "2026-11-03T08:59:35", "verdict": "FAIL at halves"}
