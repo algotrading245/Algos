@@ -333,6 +333,13 @@ each finished piece of work.
     waits for j21 (running) and then the owner's yes to deploy. More ALERTs will come at each leg's entry window until
     a7 is resolved.
     **Owner:** do not deploy 1.24 until `fix_refused_retry2` passes.
+  - **Judge 2026-11-03 17:01, monitor ALERT of 2026-11-02 23:15, same cause (a7):** 958 refused sends (10017) on
+    11-02 and no fills. This is the day total the judge already counted at 12:35, so there is nothing new. **The demo is
+    trading again:** the relay saw a fill on 2026-11-03 at 16:59:58, an AurumFunded US100.cash buy of 0.06 at 28284.58.
+    The judge did not check whether the owner restored the account (a7 is still "pending" in approvals.json), whether
+    it is the same account, or when trading came back. **Owner:** if this is a new account or trial, write its
+    start date in `docs/demo_log.md` as the start of a new record, then set a7 to done. The record from 2026-11-03 on
+    counts only if the account and the EA version (1.23 or 1.25) are noted.
   - **Judge 2026-11-02 12:02, review of `fix_refused_retry2` (77df371): CLEAN.** The back-off is now the input
     `InpRefuseBackoffSec` (default 60). Funded is 1.25 and Hydra 1.45, and both compile 0/0 with their logs committed.
     At 0 the EA behaves as v1.23: Send returns before it sets any back-off (Legs.mqh:111-112). Every caller passes price

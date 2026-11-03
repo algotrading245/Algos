@@ -184,3 +184,4 @@ committed).
 | 2026-11-02 12:35 | judge | demo ALERT 12:30 (midday EURUSD 10017) | same trade-disabled cause (a7), 173 sends in 1 min, 958 failed today; covered by the 1.25 shared back-off (waits for j21 + owner); no new item |
 | 2026-11-02 13:08 | tester | Collected j21 (AurumFunded bko0): net +13,340 (+133%), 2289.0 trades, PF 1.65, equity DD 7.06% (relative) | j21 done, needs judging |
 | 2026-11-02 13:10 | judge | judge j21 (refuse back-off 0 vs 60 s) | PASS: identical results, 1.25 ready for owner deploy |
+| 2026-11-03 17:01 | judge | ask_judge fix_stop_switch + demo ALERT 11-02 23:15 | NOT superseded: stop flag bypasses the 1.25 back-off (Legs.mqh:97, Dual 2917-2920), item queued with rewritten why; ALERT = a7 already counted, demo filled US100 16:59:58 so trading is back, owner to record account in demo_log |
