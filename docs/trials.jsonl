@@ -586,3 +586,5 @@
 {"id": "paper_post_ecb_drift_indices", "when": "2026-11-03T01:32:33", "verdict": "FAIL at book"}
 {"id": "variant_yen_cross_carry_vix_calm", "when": "2026-11-03T06:01:24", "verdict": "FAIL at halves"}
 {"id": "paper_dollar_carry_basket_lrv", "when": "2026-11-03T08:59:35", "verdict": "FAIL at halves"}
+{"id": "iwanaga_usrev", "when": "2026-11-03T21:10:44", "verdict": "FAIL at halves"}
+{"id": "aaii_contrarian", "when": "2026-11-03T21:15:56", "verdict": "FAIL at halves"}
