@@ -2,6 +2,8 @@
 ; Dual inputs as the j18 on run (InpDualMult=0.25). FTMO's server stays New York + 7 hours all year, so InpEuClock=false.
 InpPropTargetPct=10.0
 InpPropRound=1
+; FTMO account size (owner 2026-11-03): a new count after a reset starts from 10000, not from the balance at the time
+InpPropStart=10000.0
 InpPropMinDays=4
 InpPropDayStopPct=3.0
 InpPropMaxStopPct=8.5

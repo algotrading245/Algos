@@ -121,12 +121,13 @@
 //| Defaults: FTMO 2-Step Challenge, Swing account (no news or       |
 //| weekend rule, 1:30). Phase 2: InpPropTargetPct 5, InpPropRound 2.|
 //| Funded: InpPropTargetPct 0, InpPropRound 3. The initial balance  |
-//| and the day's start are kept in the terminal's global variables. |
+//| and the day's start are kept in the terminal's global variables, |
+//| tied to the account: a different account starts a new count.     |
 //| Attach to a gold chart on a hedging account.                     |
 //| Backtest: tools/backtest_prop.py, tools/backtest_hydra.py        |
 //+------------------------------------------------------------------+
 #property copyright "algotrading245"
-#property version   "1.25"
+#property version   "1.26"
 #define AURUM_NAME "AurumFunded"
 #define AURUM_GOLD "XAUUSD"
 #define AURUM_YEN "USDJPY"
@@ -195,6 +196,16 @@ datetime g_propNote=0;         // day on which the clock last reported a problem
 string PropKey(string name)
   {
    return("AurumFunded."+IntegerToString(InpMagic)+".phase"+IntegerToString(InpPropRound)+"."+name);
+  }
+
+// Id of the account the saved values belong to: FNV-1a 32-bit of server and login (fits a double, avoids writing the login in plain text).
+double AccountId()
+  {
+   string t=AccountInfoString(ACCOUNT_SERVER)+"|"+IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN));
+   uint h=2166136261;
+   for(int i=0;i<StringLen(t);i++)
+      h=(h^(uint)StringGetCharacter(t,i))*16777619;
+   return((double)h);
   }
 
 // Equity under which the final stop closes everything.
@@ -350,9 +361,25 @@ bool PropGuard()
   {
    double eq=AccountInfoDouble(ACCOUNT_EQUITY);
    double bal=AccountInfoDouble(ACCOUNT_BALANCE);
+   bool tester=(MQLInfoInteger(MQL_TESTER)!=0);
+   // The values in memory belong to the account and phase they were loaded under. A reinit in place (another account,
+   // another InpPropRound) keeps the program's globals, so they are dropped and loaded again for the new keys.
+   static string loadedAs="";
+   if(g_propStart>0 && AccountInfoInteger(ACCOUNT_LOGIN)!=0 && PropKey("")+DoubleToString(AccountId(),0)!=loadedAs)
+     {
+      g_propStart=0.0;
+      g_propDay=0;
+      g_propClose=0;
+      g_propCoast=false;
+     }
    if(g_propStart<=0)
      {
-      if(GlobalVariableCheck(PropKey("start")))
+      if(!tester && AccountInfoInteger(ACCOUNT_LOGIN)==0)
+         return(false);
+      double acct=AccountId();
+      loadedAs=PropKey("")+DoubleToString(acct,0);
+      bool hadStart=GlobalVariableCheck(PropKey("start"));
+      if(hadStart && GlobalVariableCheck(PropKey("acct")) && GlobalVariableGet(PropKey("acct"))==acct)
         {
          g_propStart=GlobalVariableGet(PropKey("start"));
          g_propSince=(datetime)GlobalVariableGet(PropKey("since"));
@@ -364,12 +391,36 @@ bool PropGuard()
         }
       else
         {
+         if(!tester)
+           {
+            static datetime seen=0;
+            if(!TerminalInfoInteger(TERMINAL_CONNECTED))
+              {
+               seen=0;
+               return(false);
+              }
+            if(seen==0)
+               seen=TimeLocal();
+            if(TimeLocal()-seen<10 || MathAbs((double)(TimeCurrent()-TimeGMT()))>3*86400)
+               return(false);
+           }
+         if((!tester && AccountInfoString(ACCOUNT_SERVER)=="") || bal<=0)
+            return(false);
+         if(hadStart)
+            Print("AurumFunded: the saved values belong to another account (or an older version), a new count starts");
          g_propStart=(InpPropStart>0 ? InpPropStart : bal);
          g_propSince=TimeCurrent();
          g_propPeak=g_propStart;
+         g_propLocked=false;
+         g_propDayStop=false;
+         g_propDay=0;
+         GlobalVariableSet(PropKey("acct"),acct);
          GlobalVariableSet(PropKey("start"),g_propStart);
          GlobalVariableSet(PropKey("since"),(double)g_propSince);
          GlobalVariableSet(PropKey("peak"),g_propPeak);
+         GlobalVariableSet(PropKey("lock"),0.0);
+         GlobalVariableSet(PropKey("daystop"),0.0);
+         GlobalVariablesFlush();
          PrintFormat("AurumFunded: phase %d started, initial balance %.2f, target %.2f, day stop %.2f, final stop at %.2f",
                      InpPropRound,g_propStart,g_propStart*(1.0+InpPropTargetPct/100.0),g_propStart*InpPropDayStopPct/100.0,PropFloor());
         }
@@ -377,7 +428,9 @@ bool PropGuard()
          return(false);
      }
    datetime day=DayOf(TimeCurrent()-HHMMSec(InpPropResetHHMM));
-   if(day!=g_propDay)
+   // A new firm day is rolled only forward and only while connected; otherwise the day's levels stay as they are and
+   // the stops below keep working with them (a clock that went back must not switch the guard off).
+   if(day!=g_propDay && (tester || TerminalInfoInteger(TERMINAL_CONNECTED)) && (g_propDay==0 || day>g_propDay))
      {
       g_propDay=day;
       g_propDayBal=MathMax(bal,eq);
@@ -387,6 +440,12 @@ bool PropGuard()
       GlobalVariableSet(PropKey("daybal"),g_propDayBal);
       GlobalVariableSet(PropKey("peak"),g_propPeak);
       GlobalVariableSet(PropKey("daystop"),0.0);
+      GlobalVariableSet(PropKey("acct"),AccountId());
+      GlobalVariableSet(PropKey("start"),g_propStart);
+      GlobalVariableSet(PropKey("since"),(double)g_propSince);
+      if(g_propLocked)
+         GlobalVariableSet(PropKey("lock"),1.0);
+      GlobalVariablesFlush();
       // Once a firm day the levels the guard works with, so a demo or tester log can be set against the firm's own.
       PrintFormat("AurumFunded: firm day %s, day start %.2f (balance %.2f, equity %.2f), day stop at %.2f, highest day start %.2f, final stop at %.2f (%s)",
                   TimeToString(day,TIME_DATE),g_propDayBal,bal,eq,g_propDayBal-g_propStart*InpPropDayStopPct/100.0,g_propPeak,PropFloor(),
@@ -396,6 +455,7 @@ bool PropGuard()
      {
       g_propLocked=true;
       GlobalVariableSet(PropKey("lock"),1.0);
+      GlobalVariablesFlush();
       PrintFormat("AurumFunded: equity %.2f is %.1f%% up, the final stop moves to %.2f for good",eq,InpPropLockPct,PropFloor());
      }
    double target=g_propStart*(1.0+InpPropTargetPct/100.0);
@@ -415,6 +475,7 @@ bool PropGuard()
      {
       g_propDayStop=true;
       GlobalVariableSet(PropKey("daystop"),1.0);
+      GlobalVariablesFlush();
       PrintFormat("AurumFunded: equity %.2f is %.1f%% of the initial balance under the day's start %.2f, closing everything until the firm's next day",
                   eq,InpPropDayStopPct,g_propDayBal);
      }
@@ -422,6 +483,7 @@ bool PropGuard()
      {
       g_propDayStop=true;
       GlobalVariableSet(PropKey("daystop"),1.0);
+      GlobalVariablesFlush();
       PrintFormat("AurumFunded: open positions are %.2f in loss together (%.1f%% of the initial balance), closing everything until the firm's next day",
                   bal-eq,InpPropFloatPct);
      }
