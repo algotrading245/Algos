@@ -1,0 +1,113 @@
+{
+ "name": "bollinger_pctb",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "USDCHF",
+  "USDCAD",
+  "AUDUSD",
+  "NZDUSD",
+  "EURJPY",
+  "GBPJPY",
+  "AUDJPY",
+  "CADJPY",
+  "NZDJPY",
+  "EURGBP",
+  "EURCHF",
+  "EURAUD",
+  "AUDCAD",
+  "AUDNZD",
+  "GBPCHF",
+  "NZDCAD",
+  "XAUUSD",
+  "XAGUSD",
+  "WTI",
+  "US500",
+  "US100",
+  "GER40",
+  "JP225",
+  "BTCUSD",
+  "ETHUSD"
+ ],
+ "tf": "D1",
+ "pod": "library",
+ "kind": "reference",
+ "bars": 60,
+ "needs": [],
+ "defaults": {
+  "k": 2.0,
+  "side": "both",
+  "hold": 10,
+  "trail": 0,
+  "n": 20,
+  "m": 2.0
+ },
+ "card": "Bollinger %b re-entry: a close back inside the lower band (%b crossing above 0) buys for the SMA, back inside the\nupper band (%b under 1) sells.",
+ "backtest": {
+  "BTCUSD": {
+   "params": {
+    "k": 1.34,
+    "side": "both",
+    "hold": 10,
+    "trail": 0,
+    "n": 20,
+    "m": 2.0
+   },
+   "from": null,
+   "to": null,
+   "trades": 166,
+   "pf": 0.7,
+   "win": 0.41,
+   "avg_r": -0.158,
+   "total_r": -26.22,
+   "max_dd_r": 31.04,
+   "first": "2017-09-16",
+   "last": "2025-10-08",
+   "by_year": {
+    "2017": {
+     "trades": 9,
+     "r": -4.52
+    },
+    "2018": {
+     "trades": 15,
+     "r": -5.03
+    },
+    "2019": {
+     "trades": 23,
+     "r": -6.34
+    },
+    "2020": {
+     "trades": 20,
+     "r": -11.82
+    },
+    "2021": {
+     "trades": 18,
+     "r": -0.83
+    },
+    "2022": {
+     "trades": 19,
+     "r": 0.55
+    },
+    "2023": {
+     "trades": 19,
+     "r": 3.09
+    },
+    "2024": {
+     "trades": 24,
+     "r": -3.94
+    },
+    "2025": {
+     "trades": 19,
+     "r": 2.83
+    }
+   },
+   "halves": [
+    -26.78,
+    0.57
+   ],
+   "run": "2026-11-02T23:49:51+00:00"
+  }
+ },
+ "live": {}
+}

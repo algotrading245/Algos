@@ -1,7 +1,7 @@
 {
- "when": "2026-10-31T10:00:42",
+ "when": "2026-11-04T00:00:43",
  "ends": "2025-10-10",
- "book_sharpe_2018": 3.11,
+ "book_sharpe_2018": 3.29,
  "legs": [
   {
    "leg": "quartet",
@@ -11,9 +11,9 @@
    "style": "seasonal session",
    "horizon": "intraday",
    "sharpe_2018": 2.36,
-   "weight_now": 0.032,
-   "corr_rest": 0.02,
-   "book_without": 2.61
+   "weight_now": 0.028,
+   "corr_rest": -0.0,
+   "book_without": 2.71
   },
   {
    "leg": "grid",
@@ -23,9 +23,9 @@
    "style": "mean reversion",
    "horizon": "days",
    "sharpe_2018": 0.75,
-   "weight_now": 0.09,
-   "corr_rest": 0.01,
-   "book_without": 3.18
+   "weight_now": 0.079,
+   "corr_rest": 0.0,
+   "book_without": 3.24
   },
   {
    "leg": "hold",
@@ -35,9 +35,9 @@
    "style": "trend",
    "horizon": "weeks+",
    "sharpe_2018": 0.62,
-   "weight_now": 0.055,
+   "weight_now": 0.048,
    "corr_rest": -0.05,
-   "book_without": 3.05
+   "book_without": 3.15
   },
   {
    "leg": "fix",
@@ -47,9 +47,9 @@
    "style": "calendar / flow",
    "horizon": "intraday",
    "sharpe_2018": 1.41,
-   "weight_now": 0.113,
-   "corr_rest": 0.1,
-   "book_without": 3.14
+   "weight_now": 0.049,
+   "corr_rest": 0.08,
+   "book_without": 3.21
   },
   {
    "leg": "cross",
@@ -60,9 +60,9 @@
    "style": "calendar / flow",
    "horizon": "intraday",
    "sharpe_2018": 1.24,
-   "weight_now": 0.091,
-   "corr_rest": 0.18,
-   "book_without": 3.21
+   "weight_now": 0.079,
+   "corr_rest": 0.07,
+   "book_without": 3.22
   },
   {
    "leg": "fall",
@@ -72,9 +72,9 @@
    "style": "cross-asset reaction",
    "horizon": "intraday",
    "sharpe_2018": 1.08,
-   "weight_now": 0.122,
-   "corr_rest": -0.04,
-   "book_without": 3.04
+   "weight_now": 0.106,
+   "corr_rest": -0.03,
+   "book_without": 3.18
   },
   {
    "leg": "morning",
@@ -84,9 +84,9 @@
    "style": "cross-asset reaction",
    "horizon": "intraday",
    "sharpe_2018": 1.11,
-   "weight_now": 0.133,
-   "corr_rest": -0.01,
-   "book_without": 3.18
+   "weight_now": 0.116,
+   "corr_rest": 0.02,
+   "book_without": 3.3
   },
   {
    "leg": "after",
@@ -96,9 +96,9 @@
    "style": "calendar / flow",
    "horizon": "intraday",
    "sharpe_2018": 1.19,
-   "weight_now": 0.073,
-   "corr_rest": 0.01,
-   "book_without": 3.0
+   "weight_now": 0.063,
+   "corr_rest": -0.0,
+   "book_without": 3.09
   },
   {
    "leg": "breakout",
@@ -109,8 +109,8 @@
    "horizon": "intraday",
    "sharpe_2018": 0.84,
    "weight_now": 0.25,
-   "corr_rest": -0.01,
-   "book_without": 3.08
+   "corr_rest": 0.01,
+   "book_without": 3.21
   },
   {
    "leg": "noise",
@@ -120,22 +120,36 @@
    "style": "intraday momentum",
    "horizon": "intraday",
    "sharpe_2018": 1.3,
-   "weight_now": 0.041,
-   "corr_rest": -0.02,
-   "book_without": 2.86
+   "weight_now": 0.036,
+   "corr_rest": 0.05,
+   "book_without": 3.08
+  },
+  {
+   "leg": "prebuilt_dual_thrust_four_indices_ew",
+   "markets": [
+    "us indices",
+    "eu/asia indices"
+   ],
+   "style": "breakout",
+   "horizon": "intraday",
+   "sharpe_2018": 0.95,
+   "weight_now": 0.144,
+   "corr_rest": 0.07,
+   "book_without": 3.17
   }
  ],
  "risk_by_market": {
-  "gold": 0.087,
+  "gold": 0.076,
   "usdjpy": 0.25,
   "eurusd": 0,
-  "dollar pairs": 0.353,
-  "yen crosses": 0.178,
-  "aud/cad": 0.09,
-  "us indices": 0.041
+  "dollar pairs": 0.258,
+  "yen crosses": 0.155,
+  "aud/cad": 0.079,
+  "us indices": 0.108,
+  "eu/asia indices": 0.072
  },
  "legs_by_horizon": {
-  "intraday": 8,
+  "intraday": 9,
   "days": 1,
   "weeks+": 1
  },
@@ -151,95 +165,77 @@
    "days",
    "weeks+"
   ],
-  "crowded_markets": [
-   "dollar pairs"
-  ],
+  "crowded_markets": [],
   "untagged_legs": []
  },
  "losing_months_2018": [
   {
    "month": "2018-03",
-   "book_pct": -1.11
+   "book_pct": -0.66
   },
   {
    "month": "2018-06",
-   "book_pct": -2.43
+   "book_pct": -2.04
   },
   {
    "month": "2019-09",
-   "book_pct": -0.57
+   "book_pct": -1.55
   },
   {
    "month": "2019-10",
-   "book_pct": -3.49
+   "book_pct": -2.43
+  },
+  {
+   "month": "2019-11",
+   "book_pct": -0.14
   },
   {
    "month": "2020-05",
-   "book_pct": -3.47
+   "book_pct": -3.41
+  },
+  {
+   "month": "2020-08",
+   "book_pct": -0.93
   },
   {
    "month": "2020-12",
-   "book_pct": -3.43
+   "book_pct": -2.45
   },
   {
    "month": "2021-02",
-   "book_pct": -3.03
-  },
-  {
-   "month": "2021-04",
-   "book_pct": -2.94
-  },
-  {
-   "month": "2021-10",
-   "book_pct": -2.23
+   "book_pct": -6.05
   },
   {
    "month": "2021-11",
-   "book_pct": -8.5
-  },
-  {
-   "month": "2022-01",
-   "book_pct": -2.22
+   "book_pct": -4.77
   },
   {
    "month": "2022-10",
-   "book_pct": -1.41
+   "book_pct": -0.07
   },
   {
    "month": "2023-02",
-   "book_pct": -1.05
+   "book_pct": -2.93
   },
   {
    "month": "2023-04",
-   "book_pct": -2.28
+   "book_pct": -3.24
   },
   {
    "month": "2023-05",
-   "book_pct": -6.23
+   "book_pct": -6.3
   },
   {
    "month": "2023-06",
-   "book_pct": -2.55
-  },
-  {
-   "month": "2024-02",
-   "book_pct": -0.72
+   "book_pct": -0.03
   },
   {
    "month": "2024-05",
-   "book_pct": -4.22
-  },
-  {
-   "month": "2024-07",
-   "book_pct": -3.75
+   "book_pct": -4.78
   },
   {
    "month": "2024-08",
-   "book_pct": -2.3
-  },
-  {
-   "month": "2025-06",
-   "book_pct": -0.28
+   "book_pct": -2.19
   }
  ],
  "aim": "Queue ideas that fill a gap (a market, style or horizon with no leg), made money in the losing months, and are likely to have corr <= 0.30 with the book. A leg that only repeats a crowded market or style rarely lifts the book by the 0.03 the gate needs."

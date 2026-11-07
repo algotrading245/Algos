@@ -1,0 +1,107 @@
+{
+ "name": "pivot_break",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "USDCHF",
+  "USDCAD",
+  "AUDUSD",
+  "NZDUSD",
+  "EURJPY",
+  "GBPJPY",
+  "AUDJPY",
+  "CADJPY",
+  "NZDJPY",
+  "EURGBP",
+  "EURCHF",
+  "EURAUD",
+  "AUDCAD",
+  "AUDNZD",
+  "GBPCHF",
+  "NZDCAD",
+  "XAUUSD",
+  "XAGUSD",
+  "WTI",
+  "US500",
+  "US100",
+  "GER40",
+  "JP225"
+ ],
+ "tf": "M15",
+ "pod": "library",
+ "kind": "reference",
+ "bars": 200,
+ "needs": [],
+ "defaults": {
+  "k": 2.0,
+  "side": "both",
+  "hold": 0,
+  "trail": 0
+ },
+ "card": "Floor pivot breakout: the first close of the day above yesterday's R1 buys, stop the pivot, target R2 (the mirror\nbelow S1); out at the day's end.",
+ "backtest": {
+  "BTCUSD": {
+   "params": {
+    "k": 1.34,
+    "side": "both",
+    "hold": 0,
+    "trail": 0
+   },
+   "from": null,
+   "to": null,
+   "trades": 2039,
+   "pf": 1.12,
+   "win": 0.572,
+   "avg_r": 0.034,
+   "total_r": 68.93,
+   "max_dd_r": 44.57,
+   "first": "2017-08-18",
+   "last": "2025-10-11",
+   "by_year": {
+    "2017": {
+     "trades": 93,
+     "r": 17.61
+    },
+    "2018": {
+     "trades": 241,
+     "r": 16.86
+    },
+    "2019": {
+     "trades": 235,
+     "r": 14.55
+    },
+    "2020": {
+     "trades": 236,
+     "r": 17.62
+    },
+    "2021": {
+     "trades": 267,
+     "r": 23.18
+    },
+    "2022": {
+     "trades": 260,
+     "r": -38.04
+    },
+    "2023": {
+     "trades": 230,
+     "r": 1.83
+    },
+    "2024": {
+     "trades": 262,
+     "r": 20.67
+    },
+    "2025": {
+     "trades": 215,
+     "r": -5.4
+    }
+   },
+   "halves": [
+    85.24,
+    -16.31
+   ],
+   "run": "2026-11-03T07:35:35+00:00"
+  }
+ },
+ "live": {}
+}

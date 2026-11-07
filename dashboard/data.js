@@ -1,5 +1,5 @@
 window.AURUM = {
- "generated": "2026-11-01T02:34",
+ "generated": "2026-11-08T00:40",
  "pipeline": {
   "about": "The 5 steps every idea goes through, one idea after another (owner 2026-10-22); an idea stops at the first failed gate and the next starts at once. The one queue is docs/ideas/queue.jsonl (new -> testing -> tester -> hydra/funded/both, or rejected). 'agent' is the role file in .claude/agents/ or the prompt in tools/autopilot/prompts/. The dashboard (python tools/dashboard.py) reads this file.",
   "phases": {
@@ -5402,7 +5402,7 @@ window.AURUM = {
    {
     "id": "graziani_rev",
     "name": "graziani_rev",
-    "status": "tester",
+    "status": "rejected",
     "job": "j20",
     "step": 2,
     "published": "https://afajof.org/management/viewp.php?n=133448",
@@ -5455,7 +5455,641 @@ window.AURUM = {
       0.777
      ]
     },
-    "note": "2026-11-01 builder: rerun with FTMO swaps per symbol (2.38/2.91 bp/night, triple Friday), gates PASS; EA v1.22 fixes the review findings; j19 diagnostic only, j20 is the Step 15 job."
+    "note": "2026-11-01 judge, j20 FAIL on model fidelity: the gate model (research/graziani_reversal.py) prices the 4th Friday and month end at about 09:00 New York (16:00 server file clock), the EA at the D1 close and 22:30 server, and they trade different months; tester on-off +392.58 USD, equity DD +0.69 pt, return/DD 18.9 -> 17.7. Leg stays off by default (InpGrzMult 0). Re-gate on the EA clock: docs/ideas/queue.jsonl fix_graziani_clock. | 2026-11-01 builder: rerun with FTMO swaps per symbol (2.38/2.91 bp/night, triple Friday), gates PASS; EA v1.22 fixes the review findings; j19 diagnostic only, j20 is the Step 15 job."
+   },
+   {
+    "id": "graziani_ea",
+    "name": "graziani_ea",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Month-reversal on the EA clock (22:30 server, D1-close reference, gap exits, FTMO swaps): Sharpe 0.33 / 0.15 by half, 0.05 at 1.5x, S&P half -0.15 from 2018, 1/2 markets profitable (research/graziani_ea_clock.py). Fails halves and belief; the 0.44/0.57 of graziani_rev came from the 09:00 NY clock. Leg stays off (presets already InpGrzMult=0). New trial: raises the DSR bar.",
+    "tag": "halves",
+    "gates": {
+     "id": "graziani_ea",
+     "when": "2026-11-01T08:38:32",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.33 / 0.15 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.05",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg prebuilt_dual_thrust_four_indices_ew +0.18",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "1/2 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.20",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26820, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.809,
+      0.819
+     ]
+    }
+   },
+   {
+    "id": "fisher_statman_confidence",
+    "name": "fisher_statman_confidence",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Contrarian UMCSENT-change tercile monthly hold on US100 (2010-11 to 2025-10-10, 60m tercile, paper definition from secondary summary): SR -0.25 / -0.07 by halves, -0.21 at 1.5x; US500 control -0.45/+0.05 (also negative); flipped sign also negative (-0.09/-0.19). No edge post-2010. Evidence research/fisher_statman_confidence.py, gates.py output.",
+    "tag": "halves",
+    "gates": {
+     "id": "fisher_statman_confidence",
+     "when": "2026-11-02T23:41:38",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.25 / -0.07 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.21",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.02, max leg fall +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/2 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.10",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26823, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.809,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "own_implied_move_fade_3mkts",
+    "name": "own_implied_move_fade_3mkts",
+    "status": "rejected",
+    "step": 2,
+    "reason": "Fading moves beyond k x implied daily sigma (VIX/GVZ/EVZ) loses on all 3 markets: SR -1.01/-1.37 by halves, -1.66 at 1.5x; k=1.5 also negative (-0.76/-0.90). Evidence research/own_implied_move_fade_3mkts.py",
+    "tag": "halves",
+    "gates": {
+     "id": "own_implied_move_fade_3mkts",
+     "when": "2026-11-02T23:46:54",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-1.01 / -1.37 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-1.66",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.12, max leg grid +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "0/3 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.03",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26836, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.809,
+      0.777
+     ]
+    }
+   },
+   {
+    "id": "avg_industry_correlation",
+    "name": "avg_industry_correlation",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (US500 SR 0.57 / 0.19) and book (3.29 -> 3.22). Long-only filter underperforms buy-and-hold (SR 0.27 vs 0.78); short-when-high is -0.48 on both indices; US100 0.80/0.27 not gated. Evidence research/avg_industry_correlation.py",
+    "tag": "halves",
+    "published": "https://research-repository.griffith.edu.au/server/api/core/bitstreams/d72024b5-249e-4600-9871-6a9de1d3ed6e/content",
+    "gates": {
+     "id": "avg_industry_correlation",
+     "when": "2026-11-02T23:50:20",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.57 / 0.19 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.20",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg prebuilt_dual_thrust_four_indices_ew +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://research-repository.griffith.edu.au/server/api/core/bitstreams/d72024b5-249e-4600-9871-6a9de1d3ed6e/content",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.22",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26837, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://research-repository.griffith.edu.au/server/api/core/bitstreams/d72024b5-249e-4600-9871-6a9de1d3ed6e/content",
+     "profitable_months_2018": [
+      0.809,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "paper_gold_silver_spread_meanrev",
+    "name": "paper_gold_silver_spread_meanrev",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. XAU/XAG log-spread z(60)>2 pair, equal-risk, 20d max hold: net Sharpe -0.26 / -0.56 by halves, negative gross too, also at z120 and entry 1.5 (-0.65, -0.46 from 2018). Evidence research/paper_gold_silver_spread_meanrev.py",
+    "tag": "halves",
+    "gates": {
+     "id": "paper_gold_silver_spread_meanrev",
+     "when": "2026-11-03T01:08:39",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.26 / -0.56 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.44",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.02, max leg fix +0.03",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "no source, no other markets",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 2.98",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26838, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.809,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "paper_bab_index_beta_neutral",
+    "name": "paper_bab_index_beta_neutral",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Index BAB (SPX/NSX/GRX/JPX, monthly low-minus-high beta pair): Sharpe -0.22 to 2017, +0.09 from 2018, -0.05 at 1.5x; rank-weight variant -0.17 from 2018. Only 4 indices, thin cross-section.",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w16601",
+    "gates": {
+     "id": "paper_bab_index_beta_neutral",
+     "when": "2026-11-03T01:17:11",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.22 / 0.09 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.05",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg hold +0.05",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w16601",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.20",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26839, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w16601",
+     "profitable_months_2018": [
+      0.809,
+      0.787
+     ]
+    }
+   },
+   {
+    "id": "paper_post_ecb_drift_indices",
+    "name": "paper_post_ecb_drift_indices",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at book (3.29 -> 2.45). GER40 only: halves 0.28/0.25, 1.5x 0.23, but a 134-trade 12-day hold adds variance the book cannot absorb; US500 -0.29/+0.03 and US100 0.11/0.14 do not replicate. ECB dates detected from EURUSD release-minute range (no calendar in repo), a caveat.",
+    "evidence": "research/paper_post_ecb_drift_indices.py",
+    "tag": "book",
+    "published": "https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+    "gates": {
+     "id": "paper_post_ecb_drift_indices",
+     "when": "2026-11-03T01:32:33",
+     "verdict": "FAIL at book",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": true,
+       "figure": "0.28 / 0.25 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.23",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg fall +0.02",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 2.45",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "0.998 (book, N=26840, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+     "profitable_months_2018": [
+      0.809,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "variant_yen_cross_carry_vix_calm",
+    "name": "variant_yen_cross_carry_vix_calm",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Net Sharpe 0.46 to 2017 / 0.01 from 2018 (1.5x: -0.02); 3 of 4 yen crosses profitable overall (NZDJPY -0.04); book 2018+ 3.29 -> 3.07. Carry swap income too small (about 1.2% a year) for the VIX-calm filter to rescue the post-2018 yen-cross trend. Evidence: research/variant_yen_cross_carry_vix_calm.py",
+    "tag": "halves",
+    "gates": {
+     "id": "variant_yen_cross_carry_vix_calm",
+     "when": "2026-11-03T06:01:24",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.46 / 0.01 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.21",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg prebuilt_dual_thrust_four_indices_ew +0.09",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": false,
+       "figure": "3/4 markets profitable",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.07",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26841, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": null,
+     "profitable_months_2018": [
+      0.809,
+      0.809
+     ]
+    }
+   },
+   {
+    "id": "paper_dollar_carry_basket_lrv",
+    "name": "paper_dollar_carry_basket_lrv",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves. Dollar carry basket Sharpe -0.27 to 2017, 0.45 from 2018 (1.5x 0.02 all; book 3.29 -> 3.23). 2018+ signal was short foreign (long USD) on every day, so it is a USD trend, not carry; spot-only h2 SR 0.36. Evidence: research/paper_dollar_carry_basket_lrv.py",
+    "tag": "halves",
+    "published": "https://www.nber.org/papers/w16427",
+    "gates": {
+     "id": "paper_dollar_carry_basket_lrv",
+     "when": "2026-11-03T08:59:35",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.27 / 0.45 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": true,
+       "figure": "0.02",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book -0.01, max leg quartet +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.nber.org/papers/w16427",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.23",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26842, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.nber.org/papers/w16427",
+     "profitable_months_2018": [
+      0.809,
+      0.798
+     ]
+    }
+   },
+   {
+    "id": "iwanaga_usrev",
+    "name": "iwanaga_usrev",
+    "status": "rejected",
+    "step": 2,
+    "reason": "gates: FAIL at halves (0.41 / -0.09) and costs (-0.04 at 1.5x). Signal is real gross (JPN225 Sharpe +0.63, control -0.85) but 2 bp round trip eats it: JPN net +0.18 at 1x, +0.01 at 1.5x; GER40 -0.30 from 2018. Evidence research/iwanaga_us_reversal.py",
+    "tag": "halves",
+    "published": "https://www.sciencedirect.com/science/article/pii/S3050700626000204",
+    "gates": {
+     "id": "iwanaga_usrev",
+     "when": "2026-11-03T21:10:44",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "0.41 / -0.09 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.04",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.07, max leg morning +0.14",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.sciencedirect.com/science/article/pii/S3050700626000204",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.08",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26843, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.sciencedirect.com/science/article/pii/S3050700626000204",
+     "profitable_months_2018": [
+      0.809,
+      0.766
+     ]
+    }
+   },
+   {
+    "id": "aaii_contrarian",
+    "name": "aaii_contrarian",
+    "status": "rejected",
+    "step": 2,
+    "reason": "AAII bull-bear z<=-1.5/>=+1.5 contrarian, 20d hold, US500+US100: Sharpe -0.40 to 2017 / +0.02 from 2018, -0.16 at 1.5x; the sign is momentum, not contrarian, to 2017. Fails halves, costs, book gain. research/aaii_contrarian.py",
+    "tag": "halves",
+    "published": "https://www.aaii.com/sentimentsurvey",
+    "gates": {
+     "id": "aaii_contrarian",
+     "when": "2026-11-03T21:15:56",
+     "verdict": "FAIL at halves",
+     "gates": [
+      {
+       "gate": "halves",
+       "pass": false,
+       "figure": "-0.40 / 0.02 (to 2017 / from 2018)",
+       "rule": ">= 0.2 each half"
+      },
+      {
+       "gate": "costs",
+       "pass": false,
+       "figure": "-0.16",
+       "rule": "> 0.0 at 1.5x cost"
+      },
+      {
+       "gate": "corr",
+       "pass": true,
+       "figure": "book +0.00, max leg quartet +0.04",
+       "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+      },
+      {
+       "gate": "belief",
+       "pass": true,
+       "figure": "published https://www.aaii.com/sentimentsurvey",
+       "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+      },
+      {
+       "gate": "book",
+       "pass": false,
+       "figure": "book 2018+ 3.29 -> 3.04",
+       "rule": "gain >= 0.03, equal risk, weights walk-forward"
+      },
+      {
+       "gate": "dsr",
+       "pass": true,
+       "figure": "1.000 (book, N=26844, luck bar 1.00)",
+       "rule": ">= 0.9"
+      }
+     ],
+     "replaces": [],
+     "published": "https://www.aaii.com/sentimentsurvey",
+     "profitable_months_2018": [
+      0.809,
+      0.798
+     ]
+    }
    }
   ],
   "rejected": [
@@ -5512,6 +6146,104 @@ window.AURUM = {
   ]
  },
  "gates": {
+  "aaii_contrarian": {
+   "id": "aaii_contrarian",
+   "when": "2026-11-03T21:15:56",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.40 / 0.02 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.16",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg quartet +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.aaii.com/sentimentsurvey",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.04",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26844, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.aaii.com/sentimentsurvey",
+   "profitable_months_2018": [
+    0.809,
+    0.798
+   ]
+  },
+  "avg_industry_correlation": {
+   "id": "avg_industry_correlation",
+   "when": "2026-11-02T23:50:20",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.57 / 0.19 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.20",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg prebuilt_dual_thrust_four_indices_ew +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://research-repository.griffith.edu.au/server/api/core/bitstreams/d72024b5-249e-4600-9871-6a9de1d3ed6e/content",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.22",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26837, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://research-repository.griffith.edu.au/server/api/core/bitstreams/d72024b5-249e-4600-9871-6a9de1d3ed6e/content",
+   "profitable_months_2018": [
+    0.809,
+    0.787
+   ]
+  },
   "baltussen_mac5": {
    "id": "baltussen_mac5",
    "when": "2026-10-24T12:23:05",
@@ -6191,6 +6923,55 @@ window.AURUM = {
     0.787
    ]
   },
+  "fisher_statman_confidence": {
+   "id": "fisher_statman_confidence",
+   "when": "2026-11-02T23:41:38",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.25 / -0.07 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.21",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.02, max leg fall +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/2 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.10",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26823, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.809,
+    0.777
+   ]
+  },
   "fx_carry_g10": {
    "id": "fx_carry_g10",
    "when": "2026-10-24T01:41:17",
@@ -6434,6 +7215,55 @@ window.AURUM = {
    "profitable_months_2018": [
     0.777,
     0.766
+   ]
+  },
+  "graziani_ea": {
+   "id": "graziani_ea",
+   "when": "2026-11-01T08:38:32",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.33 / 0.15 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.05",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg prebuilt_dual_thrust_four_indices_ew +0.18",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "1/2 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.20",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26820, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.809,
+    0.819
    ]
   },
   "graziani_rev": {
@@ -6707,6 +7537,55 @@ window.AURUM = {
    "p5x": [
     0.5618464571293371,
     0.538317884020412
+   ]
+  },
+  "iwanaga_usrev": {
+   "id": "iwanaga_usrev",
+   "when": "2026-11-03T21:10:44",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.41 / -0.09 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.04",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.07, max leg morning +0.14",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.sciencedirect.com/science/article/pii/S3050700626000204",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.08",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26843, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.sciencedirect.com/science/article/pii/S3050700626000204",
+   "profitable_months_2018": [
+    0.809,
+    0.766
    ]
   },
   "leg_cross_dailyz_meanrev_3mkts": {
@@ -7834,6 +8713,55 @@ window.AURUM = {
     0.809
    ]
   },
+  "own_implied_move_fade_3mkts": {
+   "id": "own_implied_move_fade_3mkts",
+   "when": "2026-11-02T23:46:54",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-1.01 / -1.37 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-1.66",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.12, max leg grid +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "0/3 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.03",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26836, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.809,
+    0.777
+   ]
+  },
   "paper_announcement_day_long_indices": {
    "id": "paper_announcement_day_long_indices",
    "when": "2026-10-26T00:52:49",
@@ -7881,6 +8809,104 @@ window.AURUM = {
    "profitable_months_2018": [
     0.777,
     0.766
+   ]
+  },
+  "paper_bab_index_beta_neutral": {
+   "id": "paper_bab_index_beta_neutral",
+   "when": "2026-11-03T01:17:11",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.22 / 0.09 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.05",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg hold +0.05",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w16601",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.20",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26839, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w16601",
+   "profitable_months_2018": [
+    0.809,
+    0.787
+   ]
+  },
+  "paper_dollar_carry_basket_lrv": {
+   "id": "paper_dollar_carry_basket_lrv",
+   "when": "2026-11-03T08:59:35",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.27 / 0.45 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.02",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.01, max leg quartet +0.04",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://www.nber.org/papers/w16427",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.23",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26842, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://www.nber.org/papers/w16427",
+   "profitable_months_2018": [
+    0.809,
+    0.798
    ]
   },
   "paper_driesprong_oil_predicts_index": {
@@ -8077,6 +9103,55 @@ window.AURUM = {
    "profitable_months_2018": [
     0.777,
     0.787
+   ]
+  },
+  "paper_gold_silver_spread_meanrev": {
+   "id": "paper_gold_silver_spread_meanrev",
+   "when": "2026-11-03T01:08:39",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "-0.26 / -0.56 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": false,
+     "figure": "-0.44",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book -0.02, max leg fix +0.03",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "no source, no other markets",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 2.98",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26838, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.809,
+    0.798
    ]
   },
   "paper_hamao_us_close_to_asia_eu_open": {
@@ -8422,6 +9497,55 @@ window.AURUM = {
    "profitable_months_2018": [
     0.777,
     0.787
+   ]
+  },
+  "paper_post_ecb_drift_indices": {
+   "id": "paper_post_ecb_drift_indices",
+   "when": "2026-11-03T01:32:33",
+   "verdict": "FAIL at book",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": true,
+     "figure": "0.28 / 0.25 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.23",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg fall +0.02",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": true,
+     "figure": "published https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 2.45",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "0.998 (book, N=26840, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": "https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+   "profitable_months_2018": [
+    0.809,
+    0.798
    ]
   },
   "paper_rapach_us_lead_weekly_indices": {
@@ -9656,6 +10780,55 @@ window.AURUM = {
     0.787
    ]
   },
+  "variant_yen_cross_carry_vix_calm": {
+   "id": "variant_yen_cross_carry_vix_calm",
+   "when": "2026-11-03T06:01:24",
+   "verdict": "FAIL at halves",
+   "gates": [
+    {
+     "gate": "halves",
+     "pass": false,
+     "figure": "0.46 / 0.01 (to 2017 / from 2018)",
+     "rule": ">= 0.2 each half"
+    },
+    {
+     "gate": "costs",
+     "pass": true,
+     "figure": "0.21",
+     "rule": "> 0.0 at 1.5x cost"
+    },
+    {
+     "gate": "corr",
+     "pass": true,
+     "figure": "book +0.00, max leg prebuilt_dual_thrust_four_indices_ew +0.09",
+     "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+    },
+    {
+     "gate": "belief",
+     "pass": false,
+     "figure": "3/4 markets profitable",
+     "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+    },
+    {
+     "gate": "book",
+     "pass": false,
+     "figure": "book 2018+ 3.29 -> 3.07",
+     "rule": "gain >= 0.03, equal risk, weights walk-forward"
+    },
+    {
+     "gate": "dsr",
+     "pass": true,
+     "figure": "1.000 (book, N=26841, luck bar 1.00)",
+     "rule": ">= 0.9"
+    }
+   ],
+   "replaces": [],
+   "published": null,
+   "profitable_months_2018": [
+    0.809,
+    0.809
+   ]
+  },
   "variant_yield_shock_gold_usdjpy_nextday": {
    "id": "variant_yield_shock_gold_usdjpy_nextday",
    "when": "2026-10-25T18:49:55",
@@ -9944,7 +11117,7 @@ window.AURUM = {
    ]
   }
  },
- "trials": 577,
+ "trials": 590,
  "props": {
   "about": "Prop routes for AurumFunded, from docs/HANDOFF.md (simulators in tools/prop_*.py, 70% of the back-tested edge). Firm rules were read on the firms' own pages on 2026-10-14/15; check again before buying. The dashboard reads this file.",
   "chosen": "FTMO 2-Step Challenge, Swing account",
@@ -10002,8 +11175,9508 @@ window.AURUM = {
  },
  "runs": [
   {
+   "name": "2026-11-03_0040_AurumFundedStage126c_XAU_2025_9m",
+   "job": {
+    "Expert": "AurumFundedStage\\AurumFundedStage.ex5",
+    "Symbol": "XAUUSD",
+    "Started": "2026-11-03T00:40:54.2468502+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFundedStage",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 1000.51,
+    "gross_profit": 1736.53,
+    "gross_loss": -736.02,
+    "profit_factor": 2.36,
+    "recovery": 5.04,
+    "sharpe": 9.54,
+    "trades": 193.0,
+    "won": "113 (58.55%)",
+    "eq_dd_max": "198.51 (1.87%)",
+    "eq_dd_rel": "1.87% (198.51)",
+    "bal_dd_max": "135.64 (1.28%)",
+    "ticks": 4438662.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 58.55,
+    "eq_dd_max_pct": 1.87,
+    "bal_dd_max_pct": 1.28,
+    "eq_dd_rel_pct": 1.87,
+    "deals": 387,
+    "curve": [
+     [
+      "2025-01-02",
+      10179.96
+     ],
+     [
+      "2025-01-03",
+      10159.67
+     ],
+     [
+      "2025-01-06",
+      10159.83
+     ],
+     [
+      "2025-01-07",
+      10199.53
+     ],
+     [
+      "2025-01-08",
+      10236.76
+     ],
+     [
+      "2025-01-09",
+      10222.16
+     ],
+     [
+      "2025-01-10",
+      10171.67
+     ],
+     [
+      "2025-01-13",
+      10152.49
+     ],
+     [
+      "2025-01-14",
+      10153.64
+     ],
+     [
+      "2025-01-15",
+      10218.7
+     ],
+     [
+      "2025-01-16",
+      10371.01
+     ],
+     [
+      "2025-01-17",
+      10452.53
+     ],
+     [
+      "2025-01-20",
+      10459.71
+     ],
+     [
+      "2025-01-21",
+      10499.52
+     ],
+     [
+      "2025-01-22",
+      10520.8
+     ],
+     [
+      "2025-01-23",
+      10553.9
+     ],
+     [
+      "2025-01-24",
+      10588.85
+     ],
+     [
+      "2025-01-27",
+      10580.2
+     ],
+     [
+      "2025-01-28",
+      10600.05
+     ],
+     [
+      "2025-01-29",
+      10566.69
+     ],
+     [
+      "2025-01-30",
+      10570.23
+     ],
+     [
+      "2025-01-31",
+      10490.49
+     ],
+     [
+      "2025-02-03",
+      10513.82
+     ],
+     [
+      "2025-02-04",
+      10494.58
+     ],
+     [
+      "2025-02-05",
+      10619.9
+     ],
+     [
+      "2025-02-06",
+      10622.98
+     ],
+     [
+      "2025-02-07",
+      10689.24
+     ],
+     [
+      "2025-02-10",
+      10753.76
+     ],
+     [
+      "2025-02-11",
+      10712.6
+     ],
+     [
+      "2025-02-12",
+      10720.2
+     ],
+     [
+      "2025-02-13",
+      10817.86
+     ],
+     [
+      "2025-02-14",
+      10919.15
+     ],
+     [
+      "2025-02-17",
+      11000.51
+     ]
+    ],
+    "by_year": {
+     "2025": 1000.51
+    },
+    "by_month": {
+     "2025-01": 490.49,
+     "2025-02": 510.02
+    },
+    "by_symbol": {
+     "EURUSD": 365.4,
+     "GBPUSD": 82.63,
+     "AUDUSD": 18.47,
+     "USDCAD": -0.99,
+     "USDCHF": 65.94,
+     "USDJPY": 51.91,
+     "US100.cash": 75.96,
+     "US500.cash": -3.49,
+     "GER40.cash": 20.76,
+     "JP225.cash": 20.86,
+     "EURJPY": 30.68,
+     "GBPJPY": 39.05,
+     "CADJPY": 31.93,
+     "AUDJPY": 14.71,
+     "XAUUSD": 186.69
+    },
+    "worst_day": {
+     "day": "2025-01-31",
+     "pct": -0.75
+    },
+    "months_positive": 2,
+    "months": 2,
+    "return_pct": 10.01
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-03_0030_AurumFundedStage126_XAU_2025_9m",
+   "job": {
+    "Expert": "AurumFundedStage\\AurumFundedStage.ex5",
+    "Symbol": "XAUUSD",
+    "Started": "2026-11-03T00:30:11.1454906+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFundedStage",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 1000.51,
+    "gross_profit": 1736.53,
+    "gross_loss": -736.02,
+    "profit_factor": 2.36,
+    "recovery": 5.04,
+    "sharpe": 9.54,
+    "trades": 193.0,
+    "won": "113 (58.55%)",
+    "eq_dd_max": "198.51 (1.87%)",
+    "eq_dd_rel": "1.87% (198.51)",
+    "bal_dd_max": "135.64 (1.28%)",
+    "ticks": 4438662.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 58.55,
+    "eq_dd_max_pct": 1.87,
+    "bal_dd_max_pct": 1.28,
+    "eq_dd_rel_pct": 1.87,
+    "deals": 387,
+    "curve": [
+     [
+      "2025-01-02",
+      10179.96
+     ],
+     [
+      "2025-01-03",
+      10159.67
+     ],
+     [
+      "2025-01-06",
+      10159.83
+     ],
+     [
+      "2025-01-07",
+      10199.53
+     ],
+     [
+      "2025-01-08",
+      10236.76
+     ],
+     [
+      "2025-01-09",
+      10222.16
+     ],
+     [
+      "2025-01-10",
+      10171.67
+     ],
+     [
+      "2025-01-13",
+      10152.49
+     ],
+     [
+      "2025-01-14",
+      10153.64
+     ],
+     [
+      "2025-01-15",
+      10218.7
+     ],
+     [
+      "2025-01-16",
+      10371.01
+     ],
+     [
+      "2025-01-17",
+      10452.53
+     ],
+     [
+      "2025-01-20",
+      10459.71
+     ],
+     [
+      "2025-01-21",
+      10499.52
+     ],
+     [
+      "2025-01-22",
+      10520.8
+     ],
+     [
+      "2025-01-23",
+      10553.9
+     ],
+     [
+      "2025-01-24",
+      10588.85
+     ],
+     [
+      "2025-01-27",
+      10580.2
+     ],
+     [
+      "2025-01-28",
+      10600.05
+     ],
+     [
+      "2025-01-29",
+      10566.69
+     ],
+     [
+      "2025-01-30",
+      10570.23
+     ],
+     [
+      "2025-01-31",
+      10490.49
+     ],
+     [
+      "2025-02-03",
+      10513.82
+     ],
+     [
+      "2025-02-04",
+      10494.58
+     ],
+     [
+      "2025-02-05",
+      10619.9
+     ],
+     [
+      "2025-02-06",
+      10622.98
+     ],
+     [
+      "2025-02-07",
+      10689.24
+     ],
+     [
+      "2025-02-10",
+      10753.76
+     ],
+     [
+      "2025-02-11",
+      10712.6
+     ],
+     [
+      "2025-02-12",
+      10720.2
+     ],
+     [
+      "2025-02-13",
+      10817.86
+     ],
+     [
+      "2025-02-14",
+      10919.15
+     ],
+     [
+      "2025-02-17",
+      11000.51
+     ]
+    ],
+    "by_year": {
+     "2025": 1000.51
+    },
+    "by_month": {
+     "2025-01": 490.49,
+     "2025-02": 510.02
+    },
+    "by_symbol": {
+     "EURUSD": 365.4,
+     "GBPUSD": 82.63,
+     "AUDUSD": 18.47,
+     "USDCAD": -0.99,
+     "USDCHF": 65.94,
+     "USDJPY": 51.91,
+     "US100.cash": 75.96,
+     "US500.cash": -3.49,
+     "GER40.cash": 20.76,
+     "JP225.cash": 20.86,
+     "EURJPY": 30.68,
+     "GBPJPY": 39.05,
+     "CADJPY": 31.93,
+     "AUDJPY": 14.71,
+     "XAUUSD": 186.69
+    },
+    "worst_day": {
+     "day": "2025-01-31",
+     "pct": -0.75
+    },
+    "months_positive": 2,
+    "months": 2,
+    "return_pct": 10.01
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-03_0020_AurumFunded125_XAU_2025_9m",
+   "job": {
+    "Expert": "AurumFunded\\AurumFunded.ex5",
+    "Symbol": "XAUUSD",
+    "Started": "2026-11-03T00:20:19.8887763+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2025.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 1000.51,
+    "gross_profit": 1736.53,
+    "gross_loss": -736.02,
+    "profit_factor": 2.36,
+    "recovery": 5.04,
+    "sharpe": 9.54,
+    "trades": 193.0,
+    "won": "113 (58.55%)",
+    "eq_dd_max": "198.51 (1.87%)",
+    "eq_dd_rel": "1.87% (198.51)",
+    "bal_dd_max": "135.64 (1.28%)",
+    "ticks": 4438662.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 58.55,
+    "eq_dd_max_pct": 1.87,
+    "bal_dd_max_pct": 1.28,
+    "eq_dd_rel_pct": 1.87,
+    "deals": 387,
+    "curve": [
+     [
+      "2025-01-02",
+      10179.96
+     ],
+     [
+      "2025-01-03",
+      10159.67
+     ],
+     [
+      "2025-01-06",
+      10159.83
+     ],
+     [
+      "2025-01-07",
+      10199.53
+     ],
+     [
+      "2025-01-08",
+      10236.76
+     ],
+     [
+      "2025-01-09",
+      10222.16
+     ],
+     [
+      "2025-01-10",
+      10171.67
+     ],
+     [
+      "2025-01-13",
+      10152.49
+     ],
+     [
+      "2025-01-14",
+      10153.64
+     ],
+     [
+      "2025-01-15",
+      10218.7
+     ],
+     [
+      "2025-01-16",
+      10371.01
+     ],
+     [
+      "2025-01-17",
+      10452.53
+     ],
+     [
+      "2025-01-20",
+      10459.71
+     ],
+     [
+      "2025-01-21",
+      10499.52
+     ],
+     [
+      "2025-01-22",
+      10520.8
+     ],
+     [
+      "2025-01-23",
+      10553.9
+     ],
+     [
+      "2025-01-24",
+      10588.85
+     ],
+     [
+      "2025-01-27",
+      10580.2
+     ],
+     [
+      "2025-01-28",
+      10600.05
+     ],
+     [
+      "2025-01-29",
+      10566.69
+     ],
+     [
+      "2025-01-30",
+      10570.23
+     ],
+     [
+      "2025-01-31",
+      10490.49
+     ],
+     [
+      "2025-02-03",
+      10513.82
+     ],
+     [
+      "2025-02-04",
+      10494.58
+     ],
+     [
+      "2025-02-05",
+      10619.9
+     ],
+     [
+      "2025-02-06",
+      10622.98
+     ],
+     [
+      "2025-02-07",
+      10689.24
+     ],
+     [
+      "2025-02-10",
+      10753.76
+     ],
+     [
+      "2025-02-11",
+      10712.6
+     ],
+     [
+      "2025-02-12",
+      10720.2
+     ],
+     [
+      "2025-02-13",
+      10817.86
+     ],
+     [
+      "2025-02-14",
+      10919.15
+     ],
+     [
+      "2025-02-17",
+      11000.51
+     ]
+    ],
+    "by_year": {
+     "2025": 1000.51
+    },
+    "by_month": {
+     "2025-01": 490.49,
+     "2025-02": 510.02
+    },
+    "by_symbol": {
+     "EURUSD": 365.4,
+     "GBPUSD": 82.63,
+     "AUDUSD": 18.47,
+     "USDCAD": -0.99,
+     "USDCHF": 65.94,
+     "USDJPY": 51.91,
+     "US100.cash": 75.96,
+     "US500.cash": -3.49,
+     "GER40.cash": 20.76,
+     "JP225.cash": 20.86,
+     "EURJPY": 30.68,
+     "GBPJPY": 39.05,
+     "CADJPY": 31.93,
+     "AUDJPY": 14.71,
+     "XAUUSD": 186.69
+    },
+    "worst_day": {
+     "day": "2025-01-31",
+     "pct": -0.75
+    },
+    "months_positive": 2,
+    "months": 2,
+    "return_pct": 10.01
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-02_1233_AurumFunded_bko0_on",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpRefuseBackoffSec=0,InpRefuseBackoffSec=60",
+    "Started": "2026-11-02T12:33:08.3947466+01:00"
+   },
+   "summary": "# j21: AurumFunded bko0 on XAUUSD M15\n\nWritten by tools/autopilot/tester_step.py 2026-11-02 13:08: figures only, the judge judges.\nPreset `mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_grz.set`, deposit 10000, leverage 1:33, 2024.01.01 to 2025.09.30, set ['InpRefuseBackoffSec=0'], compare_set ['InpRefuseBackoffSec=60'].\n\n## legs off (`2026-11-02_1156_AurumFunded_bko0_off`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,339.78 (+133.4%) |\n| Trades / win rate | 2289.0 / 52.34% |\n| Profit factor | 1.65 |\n| Max equity drawdown (relative) | 7.06% |\n| Worst day | 2024-07-25 -2.59% |\n| Return per unit of drawdown | 18.9 |\n| By year | 2024 +4,191, 2025 +9,149 |\n| History quality | 99% real ticks |\n\n## legs on (`2026-11-02_1233_AurumFunded_bko0_on`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,339.78 (+133.4%) |\n| Trades / win rate | 2289.0 / 52.34% |\n| Profit factor | 1.65 |\n| Max equity drawdown (relative) | 7.06% |\n| Worst day | 2024-07-25 -2.59% |\n| Return per unit of drawdown | 18.9 |\n| By year | 2024 +4,191, 2025 +9,149 |\n| History quality | 99% real ticks |\n\n## On against off\n\nReturn per unit of equity drawdown: off 18.9, on 18.9 (not higher with the legs on).\n\n## Expected (from the job)\n\nCheck for fix_refused_retry2 on AurumFunded v1.25 (build 04006be + input InpRefuseBackoffSec). Off run = back-off 0 = the v1.23 behaviour, on run = 60 s back-off (v1.24 behaviour); the month-reversal leg stays off (InpGrzMult=0), so the book is the j19 off run (about 2298 trades, +137%, equity DD 7.75%). Expect the two trade lists to match: same count, same open times and prices. Any difference is a retry the tester made after a 10018/10027 refusal at a session edge that the 60 s back-off delayed; list those (compare deal times and the 'server refused an order' log lines). Do not tune on this window.\n\n## Log lines worth a look\n\n- None matched (not found, cannot, failed, margin, invalid, error).\n",
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13339.78,
+    "gross_profit": 33854.32,
+    "gross_loss": -20514.54,
+    "profit_factor": 1.65,
+    "recovery": 16.09,
+    "sharpe": 6.71,
+    "trades": 2289.0,
+    "won": "1198 (52.34%)",
+    "eq_dd_max": "829.33 (7.06%)",
+    "eq_dd_rel": "7.06% (829.33)",
+    "bal_dd_max": "723.95 (6.17%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.34,
+    "eq_dd_max_pct": 7.06,
+    "bal_dd_max_pct": 6.17,
+    "eq_dd_rel_pct": 7.06,
+    "deals": 4579,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10535.02
+     ],
+     [
+      "2024-02-01",
+      10501.11
+     ],
+     [
+      "2024-02-02",
+      10622.52
+     ],
+     [
+      "2024-02-05",
+      10696.61
+     ],
+     [
+      "2024-02-06",
+      10667.81
+     ],
+     [
+      "2024-02-07",
+      10614.87
+     ],
+     [
+      "2024-02-08",
+      10635.63
+     ],
+     [
+      "2024-02-09",
+      10697.12
+     ],
+     [
+      "2024-02-12",
+      10683.16
+     ],
+     [
+      "2024-02-13",
+      10660.1
+     ],
+     [
+      "2024-02-14",
+      10643.51
+     ],
+     [
+      "2024-02-15",
+      10666.69
+     ],
+     [
+      "2024-02-16",
+      10690.68
+     ],
+     [
+      "2024-02-19",
+      10730.29
+     ],
+     [
+      "2024-02-20",
+      10557.99
+     ],
+     [
+      "2024-02-21",
+      10523.78
+     ],
+     [
+      "2024-02-22",
+      10550.6
+     ],
+     [
+      "2024-02-23",
+      10495.74
+     ],
+     [
+      "2024-02-26",
+      10478.76
+     ],
+     [
+      "2024-02-27",
+      10462.19
+     ],
+     [
+      "2024-02-28",
+      10476.16
+     ],
+     [
+      "2024-02-29",
+      10527.52
+     ],
+     [
+      "2024-03-01",
+      10580.0
+     ],
+     [
+      "2024-03-04",
+      10594.99
+     ],
+     [
+      "2024-03-05",
+      10588.49
+     ],
+     [
+      "2024-03-06",
+      10599.71
+     ],
+     [
+      "2024-03-07",
+      10614.92
+     ],
+     [
+      "2024-03-08",
+      10575.97
+     ],
+     [
+      "2024-04-01",
+      10517.16
+     ],
+     [
+      "2024-04-02",
+      10456.6
+     ],
+     [
+      "2024-04-03",
+      10394.5
+     ],
+     [
+      "2024-04-04",
+      10549.07
+     ],
+     [
+      "2024-04-05",
+      10697.63
+     ],
+     [
+      "2024-04-08",
+      10724.79
+     ],
+     [
+      "2024-04-09",
+      10673.31
+     ],
+     [
+      "2024-04-10",
+      10795.22
+     ],
+     [
+      "2024-04-11",
+      10820.98
+     ],
+     [
+      "2024-04-12",
+      10820.6
+     ],
+     [
+      "2024-04-15",
+      10846.29
+     ],
+     [
+      "2024-04-16",
+      10733.76
+     ],
+     [
+      "2024-04-17",
+      10825.36
+     ],
+     [
+      "2024-04-18",
+      10793.15
+     ],
+     [
+      "2024-04-19",
+      10986.42
+     ],
+     [
+      "2024-04-22",
+      10963.63
+     ],
+     [
+      "2024-04-23",
+      10948.45
+     ],
+     [
+      "2024-04-24",
+      10954.61
+     ],
+     [
+      "2024-04-25",
+      11050.86
+     ],
+     [
+      "2024-04-26",
+      11143.82
+     ],
+     [
+      "2024-04-29",
+      11116.09
+     ],
+     [
+      "2024-04-30",
+      11225.55
+     ],
+     [
+      "2024-05-01",
+      11245.26
+     ],
+     [
+      "2024-05-02",
+      11237.16
+     ],
+     [
+      "2024-05-03",
+      11227.07
+     ],
+     [
+      "2024-05-06",
+      11220.01
+     ],
+     [
+      "2024-05-07",
+      11191.56
+     ],
+     [
+      "2024-05-08",
+      11205.89
+     ],
+     [
+      "2024-05-09",
+      11201.06
+     ],
+     [
+      "2024-05-10",
+      11107.97
+     ],
+     [
+      "2024-05-13",
+      11073.31
+     ],
+     [
+      "2024-05-14",
+      11066.47
+     ],
+     [
+      "2024-05-15",
+      11109.39
+     ],
+     [
+      "2024-05-16",
+      11117.24
+     ],
+     [
+      "2024-05-17",
+      11089.4
+     ],
+     [
+      "2024-05-20",
+      11045.38
+     ],
+     [
+      "2024-05-21",
+      11058.85
+     ],
+     [
+      "2024-05-22",
+      11097.22
+     ],
+     [
+      "2024-05-23",
+      11061.3
+     ],
+     [
+      "2024-05-24",
+      11155.66
+     ],
+     [
+      "2024-05-27",
+      11146.04
+     ],
+     [
+      "2024-05-28",
+      11047.46
+     ],
+     [
+      "2024-05-29",
+      11032.29
+     ],
+     [
+      "2024-05-30",
+      11032.1
+     ],
+     [
+      "2024-05-31",
+      11034.86
+     ],
+     [
+      "2024-06-03",
+      11011.78
+     ],
+     [
+      "2024-06-04",
+      11034.65
+     ],
+     [
+      "2024-06-05",
+      11003.86
+     ],
+     [
+      "2024-06-06",
+      11033.24
+     ],
+     [
+      "2024-06-07",
+      10995.86
+     ],
+     [
+      "2024-06-10",
+      10957.69
+     ],
+     [
+      "2024-06-11",
+      10949.47
+     ],
+     [
+      "2024-06-12",
+      10881.5
+     ],
+     [
+      "2024-06-13",
+      10945.72
+     ],
+     [
+      "2024-06-14",
+      10918.18
+     ],
+     [
+      "2024-06-17",
+      10932.71
+     ],
+     [
+      "2024-06-18",
+      10935.23
+     ],
+     [
+      "2024-06-19",
+      10870.38
+     ],
+     [
+      "2024-06-20",
+      11085.9
+     ],
+     [
+      "2024-06-21",
+      11073.49
+     ],
+     [
+      "2024-06-24",
+      11018.66
+     ],
+     [
+      "2024-06-25",
+      11092.59
+     ],
+     [
+      "2024-06-26",
+      11054.43
+     ],
+     [
+      "2024-06-27",
+      11039.13
+     ],
+     [
+      "2024-06-28",
+      11179.16
+     ],
+     [
+      "2024-07-01",
+      11182.66
+     ],
+     [
+      "2024-07-02",
+      11208.2
+     ],
+     [
+      "2024-07-03",
+      11237.45
+     ],
+     [
+      "2024-07-04",
+      11221.59
+     ],
+     [
+      "2024-07-05",
+      11341.82
+     ],
+     [
+      "2024-07-08",
+      11340.34
+     ],
+     [
+      "2024-07-09",
+      11404.15
+     ],
+     [
+      "2024-07-10",
+      11354.61
+     ],
+     [
+      "2024-07-11",
+      11565.13
+     ],
+     [
+      "2024-07-12",
+      11581.62
+     ],
+     [
+      "2024-07-15",
+      11579.71
+     ],
+     [
+      "2024-07-16",
+      11550.93
+     ],
+     [
+      "2024-07-17",
+      11615.4
+     ],
+     [
+      "2024-07-18",
+      11615.83
+     ],
+     [
+      "2024-07-19",
+      11429.38
+     ],
+     [
+      "2024-07-22",
+      11436.17
+     ],
+     [
+      "2024-07-23",
+      11425.49
+     ],
+     [
+      "2024-07-24",
+      11592.09
+     ],
+     [
+      "2024-07-25",
+      11291.72
+     ],
+     [
+      "2024-07-26",
+      11243.77
+     ],
+     [
+      "2024-07-29",
+      11249.13
+     ],
+     [
+      "2024-07-30",
+      11291.01
+     ],
+     [
+      "2024-07-31",
+      11299.42
+     ],
+     [
+      "2024-08-01",
+      11468.05
+     ],
+     [
+      "2024-08-02",
+      11661.98
+     ],
+     [
+      "2024-08-05",
+      11439.83
+     ],
+     [
+      "2024-08-06",
+      11213.12
+     ],
+     [
+      "2024-08-07",
+      11196.55
+     ],
+     [
+      "2024-08-08",
+      11124.38
+     ],
+     [
+      "2024-08-09",
+      11254.51
+     ],
+     [
+      "2024-08-12",
+      11277.23
+     ],
+     [
+      "2024-08-13",
+      11168.41
+     ],
+     [
+      "2024-08-14",
+      11175.75
+     ],
+     [
+      "2024-08-15",
+      11107.83
+     ],
+     [
+      "2024-08-16",
+      11108.58
+     ],
+     [
+      "2024-08-19",
+      11096.46
+     ],
+     [
+      "2024-08-20",
+      11069.06
+     ],
+     [
+      "2024-08-21",
+      11031.37
+     ],
+     [
+      "2024-08-22",
+      11036.95
+     ],
+     [
+      "2024-08-23",
+      11042.16
+     ],
+     [
+      "2024-08-26",
+      11053.99
+     ],
+     [
+      "2024-08-27",
+      11057.77
+     ],
+     [
+      "2024-08-28",
+      11043.07
+     ],
+     [
+      "2024-08-29",
+      11027.83
+     ],
+     [
+      "2024-08-30",
+      11040.04
+     ],
+     [
+      "2024-09-02",
+      11056.27
+     ],
+     [
+      "2024-09-03",
+      11263.08
+     ],
+     [
+      "2024-09-04",
+      11305.86
+     ],
+     [
+      "2024-09-05",
+      11250.35
+     ],
+     [
+      "2024-09-06",
+      11362.4
+     ],
+     [
+      "2024-09-09",
+      11421.78
+     ],
+     [
+      "2024-09-10",
+      11450.39
+     ],
+     [
+      "2024-09-11",
+      11449.52
+     ],
+     [
+      "2024-09-12",
+      11453.04
+     ],
+     [
+      "2024-09-13",
+      11598.39
+     ],
+     [
+      "2024-09-16",
+      11603.31
+     ],
+     [
+      "2024-09-17",
+      11588.17
+     ],
+     [
+      "2024-09-18",
+      11888.48
+     ],
+     [
+      "2024-09-19",
+      11936.76
+     ],
+     [
+      "2024-09-20",
+      12021.61
+     ],
+     [
+      "2024-09-23",
+      11984.63
+     ],
+     [
+      "2024-09-24",
+      11991.57
+     ],
+     [
+      "2024-09-25",
+      11881.02
+     ],
+     [
+      "2024-09-26",
+      11817.58
+     ],
+     [
+      "2024-09-27",
+      11791.93
+     ],
+     [
+      "2024-09-30",
+      11793.24
+     ],
+     [
+      "2024-10-01",
+      11817.1
+     ],
+     [
+      "2024-10-02",
+      11813.32
+     ],
+     [
+      "2024-10-03",
+      11780.32
+     ],
+     [
+      "2024-10-04",
+      11858.69
+     ],
+     [
+      "2024-10-07",
+      11806.97
+     ],
+     [
+      "2024-10-08",
+      11824.93
+     ],
+     [
+      "2024-10-09",
+      11923.46
+     ],
+     [
+      "2024-10-10",
+      11971.62
+     ],
+     [
+      "2024-10-11",
+      12010.53
+     ],
+     [
+      "2024-10-14",
+      12113.75
+     ],
+     [
+      "2024-10-15",
+      12106.85
+     ],
+     [
+      "2024-10-16",
+      12077.8
+     ],
+     [
+      "2024-10-17",
+      12074.29
+     ],
+     [
+      "2024-10-18",
+      12061.73
+     ],
+     [
+      "2024-10-21",
+      12039.0
+     ],
+     [
+      "2024-10-22",
+      12070.03
+     ],
+     [
+      "2024-10-23",
+      12184.04
+     ],
+     [
+      "2024-10-24",
+      12208.46
+     ],
+     [
+      "2024-10-25",
+      12287.82
+     ],
+     [
+      "2024-11-04",
+      12262.59
+     ],
+     [
+      "2024-11-05",
+      12402.0
+     ],
+     [
+      "2024-11-06",
+      12101.62
+     ],
+     [
+      "2024-11-07",
+      12015.18
+     ],
+     [
+      "2024-11-08",
+      12097.03
+     ],
+     [
+      "2024-11-11",
+      12132.49
+     ],
+     [
+      "2024-11-12",
+      12152.88
+     ],
+     [
+      "2024-11-13",
+      12002.91
+     ],
+     [
+      "2024-11-14",
+      11854.01
+     ],
+     [
+      "2024-11-15",
+      12068.69
+     ],
+     [
+      "2024-11-18",
+      12014.63
+     ],
+     [
+      "2024-11-19",
+      11970.31
+     ],
+     [
+      "2024-11-20",
+      11929.59
+     ],
+     [
+      "2024-11-21",
+      11889.38
+     ],
+     [
+      "2024-11-22",
+      11903.09
+     ],
+     [
+      "2024-11-25",
+      11948.85
+     ],
+     [
+      "2024-11-26",
+      11961.08
+     ],
+     [
+      "2024-11-27",
+      11925.29
+     ],
+     [
+      "2024-11-28",
+      11962.15
+     ],
+     [
+      "2024-11-29",
+      12394.72
+     ],
+     [
+      "2024-12-02",
+      12424.35
+     ],
+     [
+      "2024-12-03",
+      12494.39
+     ],
+     [
+      "2024-12-04",
+      12549.25
+     ],
+     [
+      "2024-12-05",
+      12492.51
+     ],
+     [
+      "2024-12-06",
+      12723.44
+     ],
+     [
+      "2024-12-09",
+      12777.01
+     ],
+     [
+      "2024-12-10",
+      12968.6
+     ],
+     [
+      "2024-12-11",
+      12954.83
+     ],
+     [
+      "2024-12-12",
+      12988.38
+     ],
+     [
+      "2024-12-13",
+      12863.05
+     ],
+     [
+      "2024-12-16",
+      12899.62
+     ],
+     [
+      "2024-12-17",
+      12877.91
+     ],
+     [
+      "2024-12-18",
+      13177.04
+     ],
+     [
+      "2024-12-19",
+      13391.67
+     ],
+     [
+      "2024-12-20",
+      13970.16
+     ],
+     [
+      "2024-12-23",
+      13984.98
+     ],
+     [
+      "2024-12-24",
+      14073.99
+     ],
+     [
+      "2024-12-26",
+      14187.03
+     ],
+     [
+      "2024-12-27",
+      14168.45
+     ],
+     [
+      "2024-12-30",
+      14230.83
+     ],
+     [
+      "2024-12-31",
+      14190.7
+     ],
+     [
+      "2025-01-02",
+      14570.82
+     ],
+     [
+      "2025-01-03",
+      14532.57
+     ],
+     [
+      "2025-01-06",
+      14531.02
+     ],
+     [
+      "2025-01-07",
+      14603.88
+     ],
+     [
+      "2025-01-08",
+      14675.55
+     ],
+     [
+      "2025-01-09",
+      14652.85
+     ],
+     [
+      "2025-01-10",
+      14584.61
+     ],
+     [
+      "2025-01-13",
+      14565.03
+     ],
+     [
+      "2025-01-14",
+      14577.36
+     ],
+     [
+      "2025-01-15",
+      14628.41
+     ],
+     [
+      "2025-01-16",
+      14870.67
+     ],
+     [
+      "2025-01-17",
+      14956.62
+     ],
+     [
+      "2025-01-20",
+      14969.96
+     ],
+     [
+      "2025-01-21",
+      15031.05
+     ],
+     [
+      "2025-01-22",
+      15054.25
+     ],
+     [
+      "2025-01-23",
+      15098.88
+     ],
+     [
+      "2025-01-24",
+      15139.25
+     ],
+     [
+      "2025-01-27",
+      15128.55
+     ],
+     [
+      "2025-01-28",
+      15157.34
+     ],
+     [
+      "2025-01-29",
+      15106.72
+     ],
+     [
+      "2025-01-30",
+      15112.14
+     ],
+     [
+      "2025-01-31",
+      15031.21
+     ],
+     [
+      "2025-02-03",
+      15000.47
+     ],
+     [
+      "2025-02-04",
+      14972.43
+     ],
+     [
+      "2025-02-05",
+      15150.13
+     ],
+     [
+      "2025-02-06",
+      15143.54
+     ],
+     [
+      "2025-02-07",
+      15241.31
+     ],
+     [
+      "2025-02-10",
+      15275.8
+     ],
+     [
+      "2025-02-11",
+      15218.67
+     ],
+     [
+      "2025-02-12",
+      15259.09
+     ],
+     [
+      "2025-02-13",
+      15383.73
+     ],
+     [
+      "2025-02-14",
+      15413.31
+     ],
+     [
+      "2025-02-17",
+      15746.8
+     ],
+     [
+      "2025-02-18",
+      15863.84
+     ],
+     [
+      "2025-02-19",
+      15855.67
+     ],
+     [
+      "2025-02-20",
+      15922.33
+     ],
+     [
+      "2025-02-21",
+      16100.22
+     ],
+     [
+      "2025-02-24",
+      16149.25
+     ],
+     [
+      "2025-02-25",
+      16130.33
+     ],
+     [
+      "2025-02-26",
+      16122.26
+     ],
+     [
+      "2025-02-27",
+      16190.53
+     ],
+     [
+      "2025-02-28",
+      16018.91
+     ],
+     [
+      "2025-03-03",
+      15997.56
+     ],
+     [
+      "2025-03-04",
+      15959.92
+     ],
+     [
+      "2025-03-05",
+      15907.12
+     ],
+     [
+      "2025-03-06",
+      15892.83
+     ],
+     [
+      "2025-03-07",
+      15900.6
+     ],
+     [
+      "2025-03-31",
+      15972.83
+     ],
+     [
+      "2025-04-01",
+      16005.14
+     ],
+     [
+      "2025-04-02",
+      15909.09
+     ],
+     [
+      "2025-04-03",
+      15813.86
+     ],
+     [
+      "2025-04-04",
+      16007.95
+     ],
+     [
+      "2025-04-07",
+      16782.8
+     ],
+     [
+      "2025-04-08",
+      17054.07
+     ],
+     [
+      "2025-04-09",
+      17682.4
+     ],
+     [
+      "2025-04-10",
+      17996.18
+     ],
+     [
+      "2025-04-11",
+      18018.8
+     ],
+     [
+      "2025-04-14",
+      18184.27
+     ],
+     [
+      "2025-04-15",
+      18304.45
+     ],
+     [
+      "2025-04-16",
+      18301.29
+     ],
+     [
+      "2025-04-17",
+      18685.77
+     ],
+     [
+      "2025-04-18",
+      18638.42
+     ],
+     [
+      "2025-04-21",
+      18663.78
+     ],
+     [
+      "2025-04-22",
+      19084.3
+     ],
+     [
+      "2025-04-23",
+      19155.67
+     ],
+     [
+      "2025-04-24",
+      19275.42
+     ],
+     [
+      "2025-04-25",
+      19205.23
+     ],
+     [
+      "2025-04-28",
+      19210.18
+     ],
+     [
+      "2025-04-29",
+      19217.48
+     ],
+     [
+      "2025-04-30",
+      19123.12
+     ],
+     [
+      "2025-05-01",
+      18820.39
+     ],
+     [
+      "2025-05-02",
+      18827.7
+     ],
+     [
+      "2025-05-05",
+      19198.89
+     ],
+     [
+      "2025-05-06",
+      19126.72
+     ],
+     [
+      "2025-05-07",
+      19117.54
+     ],
+     [
+      "2025-05-08",
+      19061.41
+     ],
+     [
+      "2025-05-09",
+      18902.45
+     ],
+     [
+      "2025-05-12",
+      18930.25
+     ],
+     [
+      "2025-05-13",
+      19059.97
+     ],
+     [
+      "2025-05-14",
+      19153.29
+     ],
+     [
+      "2025-05-15",
+      19255.48
+     ],
+     [
+      "2025-05-16",
+      19390.15
+     ],
+     [
+      "2025-05-19",
+      19395.0
+     ],
+     [
+      "2025-05-20",
+      19410.23
+     ],
+     [
+      "2025-05-21",
+      19491.6
+     ],
+     [
+      "2025-05-22",
+      19229.36
+     ],
+     [
+      "2025-05-23",
+      19471.16
+     ],
+     [
+      "2025-05-26",
+      19481.56
+     ],
+     [
+      "2025-05-27",
+      19792.36
+     ],
+     [
+      "2025-05-28",
+      19873.88
+     ],
+     [
+      "2025-05-29",
+      19941.67
+     ],
+     [
+      "2025-05-30",
+      20184.79
+     ],
+     [
+      "2025-06-02",
+      20218.04
+     ],
+     [
+      "2025-06-03",
+      20293.81
+     ],
+     [
+      "2025-06-04",
+      20296.51
+     ],
+     [
+      "2025-06-05",
+      20194.87
+     ],
+     [
+      "2025-06-06",
+      20124.44
+     ],
+     [
+      "2025-06-09",
+      20188.47
+     ],
+     [
+      "2025-06-10",
+      19960.35
+     ],
+     [
+      "2025-06-11",
+      19934.88
+     ],
+     [
+      "2025-06-12",
+      19932.98
+     ],
+     [
+      "2025-06-13",
+      19950.97
+     ],
+     [
+      "2025-06-16",
+      19978.05
+     ],
+     [
+      "2025-06-17",
+      19929.08
+     ],
+     [
+      "2025-06-18",
+      19880.12
+     ],
+     [
+      "2025-06-19",
+      19799.04
+     ],
+     [
+      "2025-06-20",
+      19806.53
+     ],
+     [
+      "2025-06-23",
+      19852.18
+     ],
+     [
+      "2025-06-24",
+      19814.75
+     ],
+     [
+      "2025-06-25",
+      19880.85
+     ],
+     [
+      "2025-06-26",
+      20018.07
+     ],
+     [
+      "2025-06-27",
+      19900.61
+     ],
+     [
+      "2025-06-30",
+      20167.64
+     ],
+     [
+      "2025-07-01",
+      20151.28
+     ],
+     [
+      "2025-07-02",
+      20319.27
+     ],
+     [
+      "2025-07-03",
+      20489.36
+     ],
+     [
+      "2025-07-04",
+      20481.31
+     ],
+     [
+      "2025-07-07",
+      20778.38
+     ],
+     [
+      "2025-07-08",
+      20826.34
+     ],
+     [
+      "2025-07-09",
+      20859.38
+     ],
+     [
+      "2025-07-10",
+      20942.24
+     ],
+     [
+      "2025-07-11",
+      20985.79
+     ],
+     [
+      "2025-07-14",
+      21008.58
+     ],
+     [
+      "2025-07-15",
+      21099.83
+     ],
+     [
+      "2025-07-16",
+      21138.79
+     ],
+     [
+      "2025-07-17",
+      21275.4
+     ],
+     [
+      "2025-07-18",
+      21205.71
+     ],
+     [
+      "2025-07-21",
+      21106.56
+     ],
+     [
+      "2025-07-22",
+      21039.93
+     ],
+     [
+      "2025-07-23",
+      21087.52
+     ],
+     [
+      "2025-07-24",
+      21041.44
+     ],
+     [
+      "2025-07-25",
+      21036.76
+     ],
+     [
+      "2025-07-28",
+      21066.65
+     ],
+     [
+      "2025-07-29",
+      21269.03
+     ],
+     [
+      "2025-07-30",
+      21477.17
+     ],
+     [
+      "2025-07-31",
+      21624.46
+     ],
+     [
+      "2025-08-01",
+      21630.94
+     ],
+     [
+      "2025-08-04",
+      21773.29
+     ],
+     [
+      "2025-08-05",
+      21611.72
+     ],
+     [
+      "2025-08-06",
+      21606.26
+     ],
+     [
+      "2025-08-07",
+      21628.73
+     ],
+     [
+      "2025-08-08",
+      21586.25
+     ],
+     [
+      "2025-08-11",
+      21574.22
+     ],
+     [
+      "2025-08-12",
+      21597.28
+     ],
+     [
+      "2025-08-13",
+      21630.94
+     ],
+     [
+      "2025-08-14",
+      21658.31
+     ],
+     [
+      "2025-08-15",
+      21661.45
+     ],
+     [
+      "2025-08-18",
+      21689.35
+     ],
+     [
+      "2025-08-19",
+      21788.79
+     ],
+     [
+      "2025-08-20",
+      21898.31
+     ],
+     [
+      "2025-08-21",
+      22003.79
+     ],
+     [
+      "2025-08-22",
+      22052.56
+     ],
+     [
+      "2025-08-25",
+      21922.44
+     ],
+     [
+      "2025-08-26",
+      21863.97
+     ],
+     [
+      "2025-08-27",
+      21858.8
+     ],
+     [
+      "2025-08-28",
+      21934.84
+     ],
+     [
+      "2025-08-29",
+      22331.89
+     ],
+     [
+      "2025-09-01",
+      22388.83
+     ],
+     [
+      "2025-09-02",
+      23119.3
+     ],
+     [
+      "2025-09-03",
+      23080.1
+     ],
+     [
+      "2025-09-04",
+      23540.33
+     ],
+     [
+      "2025-09-05",
+      23620.68
+     ],
+     [
+      "2025-09-08",
+      23604.26
+     ],
+     [
+      "2025-09-09",
+      23703.7
+     ],
+     [
+      "2025-09-10",
+      23712.22
+     ],
+     [
+      "2025-09-11",
+      23697.77
+     ],
+     [
+      "2025-09-12",
+      23779.66
+     ],
+     [
+      "2025-09-15",
+      23723.0
+     ],
+     [
+      "2025-09-16",
+      23726.15
+     ],
+     [
+      "2025-09-17",
+      23591.0
+     ],
+     [
+      "2025-09-18",
+      23546.59
+     ],
+     [
+      "2025-09-19",
+      23717.46
+     ],
+     [
+      "2025-09-22",
+      23756.13
+     ],
+     [
+      "2025-09-23",
+      23876.01
+     ],
+     [
+      "2025-09-24",
+      23737.79
+     ],
+     [
+      "2025-09-25",
+      23620.68
+     ],
+     [
+      "2025-09-26",
+      23459.51
+     ],
+     [
+      "2025-09-29",
+      23339.78
+     ]
+    ],
+    "by_year": {
+     "2024": 4190.7,
+     "2025": 9149.08
+    },
+    "by_month": {
+     "2024-01": 535.02,
+     "2024-02": -7.5,
+     "2024-03": 48.45,
+     "2024-04": 649.58,
+     "2024-05": -190.69,
+     "2024-06": 144.3,
+     "2024-07": 120.26,
+     "2024-08": -259.38,
+     "2024-09": 753.2,
+     "2024-10": 494.58,
+     "2024-11": 106.9,
+     "2024-12": 1795.98,
+     "2025-01": 840.51,
+     "2025-02": 987.7,
+     "2025-03": -46.08,
+     "2025-04": 3150.29,
+     "2025-05": 1061.67,
+     "2025-06": -17.15,
+     "2025-07": 1456.82,
+     "2025-08": 707.43,
+     "2025-09": 1007.89
+    },
+    "by_symbol": {
+     "EURUSD": 2859.84,
+     "GBPUSD": 863.23,
+     "AUDUSD": 702.31,
+     "USDCAD": 697.46,
+     "USDCHF": 1032.94,
+     "USDJPY": 2286.91,
+     "US100.cash": 209.38,
+     "US500.cash": 254.16,
+     "XAUUSD": 2639.11,
+     "AUDJPY": 221.11,
+     "CADJPY": 660.14,
+     "GBPJPY": 597.61,
+     "EURJPY": 315.58
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.59
+    },
+    "months_positive": 16,
+    "months": 21,
+    "return_pct": 133.4
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-02_1156_AurumFunded_bko0_off",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpRefuseBackoffSec=0",
+    "Started": "2026-11-02T11:56:44.4325633+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13339.78,
+    "gross_profit": 33854.32,
+    "gross_loss": -20514.54,
+    "profit_factor": 1.65,
+    "recovery": 16.09,
+    "sharpe": 6.71,
+    "trades": 2289.0,
+    "won": "1198 (52.34%)",
+    "eq_dd_max": "829.33 (7.06%)",
+    "eq_dd_rel": "7.06% (829.33)",
+    "bal_dd_max": "723.95 (6.17%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.34,
+    "eq_dd_max_pct": 7.06,
+    "bal_dd_max_pct": 6.17,
+    "eq_dd_rel_pct": 7.06,
+    "deals": 4579,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10535.02
+     ],
+     [
+      "2024-02-01",
+      10501.11
+     ],
+     [
+      "2024-02-02",
+      10622.52
+     ],
+     [
+      "2024-02-05",
+      10696.61
+     ],
+     [
+      "2024-02-06",
+      10667.81
+     ],
+     [
+      "2024-02-07",
+      10614.87
+     ],
+     [
+      "2024-02-08",
+      10635.63
+     ],
+     [
+      "2024-02-09",
+      10697.12
+     ],
+     [
+      "2024-02-12",
+      10683.16
+     ],
+     [
+      "2024-02-13",
+      10660.1
+     ],
+     [
+      "2024-02-14",
+      10643.51
+     ],
+     [
+      "2024-02-15",
+      10666.69
+     ],
+     [
+      "2024-02-16",
+      10690.68
+     ],
+     [
+      "2024-02-19",
+      10730.29
+     ],
+     [
+      "2024-02-20",
+      10557.99
+     ],
+     [
+      "2024-02-21",
+      10523.78
+     ],
+     [
+      "2024-02-22",
+      10550.6
+     ],
+     [
+      "2024-02-23",
+      10495.74
+     ],
+     [
+      "2024-02-26",
+      10478.76
+     ],
+     [
+      "2024-02-27",
+      10462.19
+     ],
+     [
+      "2024-02-28",
+      10476.16
+     ],
+     [
+      "2024-02-29",
+      10527.52
+     ],
+     [
+      "2024-03-01",
+      10580.0
+     ],
+     [
+      "2024-03-04",
+      10594.99
+     ],
+     [
+      "2024-03-05",
+      10588.49
+     ],
+     [
+      "2024-03-06",
+      10599.71
+     ],
+     [
+      "2024-03-07",
+      10614.92
+     ],
+     [
+      "2024-03-08",
+      10575.97
+     ],
+     [
+      "2024-04-01",
+      10517.16
+     ],
+     [
+      "2024-04-02",
+      10456.6
+     ],
+     [
+      "2024-04-03",
+      10394.5
+     ],
+     [
+      "2024-04-04",
+      10549.07
+     ],
+     [
+      "2024-04-05",
+      10697.63
+     ],
+     [
+      "2024-04-08",
+      10724.79
+     ],
+     [
+      "2024-04-09",
+      10673.31
+     ],
+     [
+      "2024-04-10",
+      10795.22
+     ],
+     [
+      "2024-04-11",
+      10820.98
+     ],
+     [
+      "2024-04-12",
+      10820.6
+     ],
+     [
+      "2024-04-15",
+      10846.29
+     ],
+     [
+      "2024-04-16",
+      10733.76
+     ],
+     [
+      "2024-04-17",
+      10825.36
+     ],
+     [
+      "2024-04-18",
+      10793.15
+     ],
+     [
+      "2024-04-19",
+      10986.42
+     ],
+     [
+      "2024-04-22",
+      10963.63
+     ],
+     [
+      "2024-04-23",
+      10948.45
+     ],
+     [
+      "2024-04-24",
+      10954.61
+     ],
+     [
+      "2024-04-25",
+      11050.86
+     ],
+     [
+      "2024-04-26",
+      11143.82
+     ],
+     [
+      "2024-04-29",
+      11116.09
+     ],
+     [
+      "2024-04-30",
+      11225.55
+     ],
+     [
+      "2024-05-01",
+      11245.26
+     ],
+     [
+      "2024-05-02",
+      11237.16
+     ],
+     [
+      "2024-05-03",
+      11227.07
+     ],
+     [
+      "2024-05-06",
+      11220.01
+     ],
+     [
+      "2024-05-07",
+      11191.56
+     ],
+     [
+      "2024-05-08",
+      11205.89
+     ],
+     [
+      "2024-05-09",
+      11201.06
+     ],
+     [
+      "2024-05-10",
+      11107.97
+     ],
+     [
+      "2024-05-13",
+      11073.31
+     ],
+     [
+      "2024-05-14",
+      11066.47
+     ],
+     [
+      "2024-05-15",
+      11109.39
+     ],
+     [
+      "2024-05-16",
+      11117.24
+     ],
+     [
+      "2024-05-17",
+      11089.4
+     ],
+     [
+      "2024-05-20",
+      11045.38
+     ],
+     [
+      "2024-05-21",
+      11058.85
+     ],
+     [
+      "2024-05-22",
+      11097.22
+     ],
+     [
+      "2024-05-23",
+      11061.3
+     ],
+     [
+      "2024-05-24",
+      11155.66
+     ],
+     [
+      "2024-05-27",
+      11146.04
+     ],
+     [
+      "2024-05-28",
+      11047.46
+     ],
+     [
+      "2024-05-29",
+      11032.29
+     ],
+     [
+      "2024-05-30",
+      11032.1
+     ],
+     [
+      "2024-05-31",
+      11034.86
+     ],
+     [
+      "2024-06-03",
+      11011.78
+     ],
+     [
+      "2024-06-04",
+      11034.65
+     ],
+     [
+      "2024-06-05",
+      11003.86
+     ],
+     [
+      "2024-06-06",
+      11033.24
+     ],
+     [
+      "2024-06-07",
+      10995.86
+     ],
+     [
+      "2024-06-10",
+      10957.69
+     ],
+     [
+      "2024-06-11",
+      10949.47
+     ],
+     [
+      "2024-06-12",
+      10881.5
+     ],
+     [
+      "2024-06-13",
+      10945.72
+     ],
+     [
+      "2024-06-14",
+      10918.18
+     ],
+     [
+      "2024-06-17",
+      10932.71
+     ],
+     [
+      "2024-06-18",
+      10935.23
+     ],
+     [
+      "2024-06-19",
+      10870.38
+     ],
+     [
+      "2024-06-20",
+      11085.9
+     ],
+     [
+      "2024-06-21",
+      11073.49
+     ],
+     [
+      "2024-06-24",
+      11018.66
+     ],
+     [
+      "2024-06-25",
+      11092.59
+     ],
+     [
+      "2024-06-26",
+      11054.43
+     ],
+     [
+      "2024-06-27",
+      11039.13
+     ],
+     [
+      "2024-06-28",
+      11179.16
+     ],
+     [
+      "2024-07-01",
+      11182.66
+     ],
+     [
+      "2024-07-02",
+      11208.2
+     ],
+     [
+      "2024-07-03",
+      11237.45
+     ],
+     [
+      "2024-07-04",
+      11221.59
+     ],
+     [
+      "2024-07-05",
+      11341.82
+     ],
+     [
+      "2024-07-08",
+      11340.34
+     ],
+     [
+      "2024-07-09",
+      11404.15
+     ],
+     [
+      "2024-07-10",
+      11354.61
+     ],
+     [
+      "2024-07-11",
+      11565.13
+     ],
+     [
+      "2024-07-12",
+      11581.62
+     ],
+     [
+      "2024-07-15",
+      11579.71
+     ],
+     [
+      "2024-07-16",
+      11550.93
+     ],
+     [
+      "2024-07-17",
+      11615.4
+     ],
+     [
+      "2024-07-18",
+      11615.83
+     ],
+     [
+      "2024-07-19",
+      11429.38
+     ],
+     [
+      "2024-07-22",
+      11436.17
+     ],
+     [
+      "2024-07-23",
+      11425.49
+     ],
+     [
+      "2024-07-24",
+      11592.09
+     ],
+     [
+      "2024-07-25",
+      11291.72
+     ],
+     [
+      "2024-07-26",
+      11243.77
+     ],
+     [
+      "2024-07-29",
+      11249.13
+     ],
+     [
+      "2024-07-30",
+      11291.01
+     ],
+     [
+      "2024-07-31",
+      11299.42
+     ],
+     [
+      "2024-08-01",
+      11468.05
+     ],
+     [
+      "2024-08-02",
+      11661.98
+     ],
+     [
+      "2024-08-05",
+      11439.83
+     ],
+     [
+      "2024-08-06",
+      11213.12
+     ],
+     [
+      "2024-08-07",
+      11196.55
+     ],
+     [
+      "2024-08-08",
+      11124.38
+     ],
+     [
+      "2024-08-09",
+      11254.51
+     ],
+     [
+      "2024-08-12",
+      11277.23
+     ],
+     [
+      "2024-08-13",
+      11168.41
+     ],
+     [
+      "2024-08-14",
+      11175.75
+     ],
+     [
+      "2024-08-15",
+      11107.83
+     ],
+     [
+      "2024-08-16",
+      11108.58
+     ],
+     [
+      "2024-08-19",
+      11096.46
+     ],
+     [
+      "2024-08-20",
+      11069.06
+     ],
+     [
+      "2024-08-21",
+      11031.37
+     ],
+     [
+      "2024-08-22",
+      11036.95
+     ],
+     [
+      "2024-08-23",
+      11042.16
+     ],
+     [
+      "2024-08-26",
+      11053.99
+     ],
+     [
+      "2024-08-27",
+      11057.77
+     ],
+     [
+      "2024-08-28",
+      11043.07
+     ],
+     [
+      "2024-08-29",
+      11027.83
+     ],
+     [
+      "2024-08-30",
+      11040.04
+     ],
+     [
+      "2024-09-02",
+      11056.27
+     ],
+     [
+      "2024-09-03",
+      11263.08
+     ],
+     [
+      "2024-09-04",
+      11305.86
+     ],
+     [
+      "2024-09-05",
+      11250.35
+     ],
+     [
+      "2024-09-06",
+      11362.4
+     ],
+     [
+      "2024-09-09",
+      11421.78
+     ],
+     [
+      "2024-09-10",
+      11450.39
+     ],
+     [
+      "2024-09-11",
+      11449.52
+     ],
+     [
+      "2024-09-12",
+      11453.04
+     ],
+     [
+      "2024-09-13",
+      11598.39
+     ],
+     [
+      "2024-09-16",
+      11603.31
+     ],
+     [
+      "2024-09-17",
+      11588.17
+     ],
+     [
+      "2024-09-18",
+      11888.48
+     ],
+     [
+      "2024-09-19",
+      11936.76
+     ],
+     [
+      "2024-09-20",
+      12021.61
+     ],
+     [
+      "2024-09-23",
+      11984.63
+     ],
+     [
+      "2024-09-24",
+      11991.57
+     ],
+     [
+      "2024-09-25",
+      11881.02
+     ],
+     [
+      "2024-09-26",
+      11817.58
+     ],
+     [
+      "2024-09-27",
+      11791.93
+     ],
+     [
+      "2024-09-30",
+      11793.24
+     ],
+     [
+      "2024-10-01",
+      11817.1
+     ],
+     [
+      "2024-10-02",
+      11813.32
+     ],
+     [
+      "2024-10-03",
+      11780.32
+     ],
+     [
+      "2024-10-04",
+      11858.69
+     ],
+     [
+      "2024-10-07",
+      11806.97
+     ],
+     [
+      "2024-10-08",
+      11824.93
+     ],
+     [
+      "2024-10-09",
+      11923.46
+     ],
+     [
+      "2024-10-10",
+      11971.62
+     ],
+     [
+      "2024-10-11",
+      12010.53
+     ],
+     [
+      "2024-10-14",
+      12113.75
+     ],
+     [
+      "2024-10-15",
+      12106.85
+     ],
+     [
+      "2024-10-16",
+      12077.8
+     ],
+     [
+      "2024-10-17",
+      12074.29
+     ],
+     [
+      "2024-10-18",
+      12061.73
+     ],
+     [
+      "2024-10-21",
+      12039.0
+     ],
+     [
+      "2024-10-22",
+      12070.03
+     ],
+     [
+      "2024-10-23",
+      12184.04
+     ],
+     [
+      "2024-10-24",
+      12208.46
+     ],
+     [
+      "2024-10-25",
+      12287.82
+     ],
+     [
+      "2024-11-04",
+      12262.59
+     ],
+     [
+      "2024-11-05",
+      12402.0
+     ],
+     [
+      "2024-11-06",
+      12101.62
+     ],
+     [
+      "2024-11-07",
+      12015.18
+     ],
+     [
+      "2024-11-08",
+      12097.03
+     ],
+     [
+      "2024-11-11",
+      12132.49
+     ],
+     [
+      "2024-11-12",
+      12152.88
+     ],
+     [
+      "2024-11-13",
+      12002.91
+     ],
+     [
+      "2024-11-14",
+      11854.01
+     ],
+     [
+      "2024-11-15",
+      12068.69
+     ],
+     [
+      "2024-11-18",
+      12014.63
+     ],
+     [
+      "2024-11-19",
+      11970.31
+     ],
+     [
+      "2024-11-20",
+      11929.59
+     ],
+     [
+      "2024-11-21",
+      11889.38
+     ],
+     [
+      "2024-11-22",
+      11903.09
+     ],
+     [
+      "2024-11-25",
+      11948.85
+     ],
+     [
+      "2024-11-26",
+      11961.08
+     ],
+     [
+      "2024-11-27",
+      11925.29
+     ],
+     [
+      "2024-11-28",
+      11962.15
+     ],
+     [
+      "2024-11-29",
+      12394.72
+     ],
+     [
+      "2024-12-02",
+      12424.35
+     ],
+     [
+      "2024-12-03",
+      12494.39
+     ],
+     [
+      "2024-12-04",
+      12549.25
+     ],
+     [
+      "2024-12-05",
+      12492.51
+     ],
+     [
+      "2024-12-06",
+      12723.44
+     ],
+     [
+      "2024-12-09",
+      12777.01
+     ],
+     [
+      "2024-12-10",
+      12968.6
+     ],
+     [
+      "2024-12-11",
+      12954.83
+     ],
+     [
+      "2024-12-12",
+      12988.38
+     ],
+     [
+      "2024-12-13",
+      12863.05
+     ],
+     [
+      "2024-12-16",
+      12899.62
+     ],
+     [
+      "2024-12-17",
+      12877.91
+     ],
+     [
+      "2024-12-18",
+      13177.04
+     ],
+     [
+      "2024-12-19",
+      13391.67
+     ],
+     [
+      "2024-12-20",
+      13970.16
+     ],
+     [
+      "2024-12-23",
+      13984.98
+     ],
+     [
+      "2024-12-24",
+      14073.99
+     ],
+     [
+      "2024-12-26",
+      14187.03
+     ],
+     [
+      "2024-12-27",
+      14168.45
+     ],
+     [
+      "2024-12-30",
+      14230.83
+     ],
+     [
+      "2024-12-31",
+      14190.7
+     ],
+     [
+      "2025-01-02",
+      14570.82
+     ],
+     [
+      "2025-01-03",
+      14532.57
+     ],
+     [
+      "2025-01-06",
+      14531.02
+     ],
+     [
+      "2025-01-07",
+      14603.88
+     ],
+     [
+      "2025-01-08",
+      14675.55
+     ],
+     [
+      "2025-01-09",
+      14652.85
+     ],
+     [
+      "2025-01-10",
+      14584.61
+     ],
+     [
+      "2025-01-13",
+      14565.03
+     ],
+     [
+      "2025-01-14",
+      14577.36
+     ],
+     [
+      "2025-01-15",
+      14628.41
+     ],
+     [
+      "2025-01-16",
+      14870.67
+     ],
+     [
+      "2025-01-17",
+      14956.62
+     ],
+     [
+      "2025-01-20",
+      14969.96
+     ],
+     [
+      "2025-01-21",
+      15031.05
+     ],
+     [
+      "2025-01-22",
+      15054.25
+     ],
+     [
+      "2025-01-23",
+      15098.88
+     ],
+     [
+      "2025-01-24",
+      15139.25
+     ],
+     [
+      "2025-01-27",
+      15128.55
+     ],
+     [
+      "2025-01-28",
+      15157.34
+     ],
+     [
+      "2025-01-29",
+      15106.72
+     ],
+     [
+      "2025-01-30",
+      15112.14
+     ],
+     [
+      "2025-01-31",
+      15031.21
+     ],
+     [
+      "2025-02-03",
+      15000.47
+     ],
+     [
+      "2025-02-04",
+      14972.43
+     ],
+     [
+      "2025-02-05",
+      15150.13
+     ],
+     [
+      "2025-02-06",
+      15143.54
+     ],
+     [
+      "2025-02-07",
+      15241.31
+     ],
+     [
+      "2025-02-10",
+      15275.8
+     ],
+     [
+      "2025-02-11",
+      15218.67
+     ],
+     [
+      "2025-02-12",
+      15259.09
+     ],
+     [
+      "2025-02-13",
+      15383.73
+     ],
+     [
+      "2025-02-14",
+      15413.31
+     ],
+     [
+      "2025-02-17",
+      15746.8
+     ],
+     [
+      "2025-02-18",
+      15863.84
+     ],
+     [
+      "2025-02-19",
+      15855.67
+     ],
+     [
+      "2025-02-20",
+      15922.33
+     ],
+     [
+      "2025-02-21",
+      16100.22
+     ],
+     [
+      "2025-02-24",
+      16149.25
+     ],
+     [
+      "2025-02-25",
+      16130.33
+     ],
+     [
+      "2025-02-26",
+      16122.26
+     ],
+     [
+      "2025-02-27",
+      16190.53
+     ],
+     [
+      "2025-02-28",
+      16018.91
+     ],
+     [
+      "2025-03-03",
+      15997.56
+     ],
+     [
+      "2025-03-04",
+      15959.92
+     ],
+     [
+      "2025-03-05",
+      15907.12
+     ],
+     [
+      "2025-03-06",
+      15892.83
+     ],
+     [
+      "2025-03-07",
+      15900.6
+     ],
+     [
+      "2025-03-31",
+      15972.83
+     ],
+     [
+      "2025-04-01",
+      16005.14
+     ],
+     [
+      "2025-04-02",
+      15909.09
+     ],
+     [
+      "2025-04-03",
+      15813.86
+     ],
+     [
+      "2025-04-04",
+      16007.95
+     ],
+     [
+      "2025-04-07",
+      16782.8
+     ],
+     [
+      "2025-04-08",
+      17054.07
+     ],
+     [
+      "2025-04-09",
+      17682.4
+     ],
+     [
+      "2025-04-10",
+      17996.18
+     ],
+     [
+      "2025-04-11",
+      18018.8
+     ],
+     [
+      "2025-04-14",
+      18184.27
+     ],
+     [
+      "2025-04-15",
+      18304.45
+     ],
+     [
+      "2025-04-16",
+      18301.29
+     ],
+     [
+      "2025-04-17",
+      18685.77
+     ],
+     [
+      "2025-04-18",
+      18638.42
+     ],
+     [
+      "2025-04-21",
+      18663.78
+     ],
+     [
+      "2025-04-22",
+      19084.3
+     ],
+     [
+      "2025-04-23",
+      19155.67
+     ],
+     [
+      "2025-04-24",
+      19275.42
+     ],
+     [
+      "2025-04-25",
+      19205.23
+     ],
+     [
+      "2025-04-28",
+      19210.18
+     ],
+     [
+      "2025-04-29",
+      19217.48
+     ],
+     [
+      "2025-04-30",
+      19123.12
+     ],
+     [
+      "2025-05-01",
+      18820.39
+     ],
+     [
+      "2025-05-02",
+      18827.7
+     ],
+     [
+      "2025-05-05",
+      19198.89
+     ],
+     [
+      "2025-05-06",
+      19126.72
+     ],
+     [
+      "2025-05-07",
+      19117.54
+     ],
+     [
+      "2025-05-08",
+      19061.41
+     ],
+     [
+      "2025-05-09",
+      18902.45
+     ],
+     [
+      "2025-05-12",
+      18930.25
+     ],
+     [
+      "2025-05-13",
+      19059.97
+     ],
+     [
+      "2025-05-14",
+      19153.29
+     ],
+     [
+      "2025-05-15",
+      19255.48
+     ],
+     [
+      "2025-05-16",
+      19390.15
+     ],
+     [
+      "2025-05-19",
+      19395.0
+     ],
+     [
+      "2025-05-20",
+      19410.23
+     ],
+     [
+      "2025-05-21",
+      19491.6
+     ],
+     [
+      "2025-05-22",
+      19229.36
+     ],
+     [
+      "2025-05-23",
+      19471.16
+     ],
+     [
+      "2025-05-26",
+      19481.56
+     ],
+     [
+      "2025-05-27",
+      19792.36
+     ],
+     [
+      "2025-05-28",
+      19873.88
+     ],
+     [
+      "2025-05-29",
+      19941.67
+     ],
+     [
+      "2025-05-30",
+      20184.79
+     ],
+     [
+      "2025-06-02",
+      20218.04
+     ],
+     [
+      "2025-06-03",
+      20293.81
+     ],
+     [
+      "2025-06-04",
+      20296.51
+     ],
+     [
+      "2025-06-05",
+      20194.87
+     ],
+     [
+      "2025-06-06",
+      20124.44
+     ],
+     [
+      "2025-06-09",
+      20188.47
+     ],
+     [
+      "2025-06-10",
+      19960.35
+     ],
+     [
+      "2025-06-11",
+      19934.88
+     ],
+     [
+      "2025-06-12",
+      19932.98
+     ],
+     [
+      "2025-06-13",
+      19950.97
+     ],
+     [
+      "2025-06-16",
+      19978.05
+     ],
+     [
+      "2025-06-17",
+      19929.08
+     ],
+     [
+      "2025-06-18",
+      19880.12
+     ],
+     [
+      "2025-06-19",
+      19799.04
+     ],
+     [
+      "2025-06-20",
+      19806.53
+     ],
+     [
+      "2025-06-23",
+      19852.18
+     ],
+     [
+      "2025-06-24",
+      19814.75
+     ],
+     [
+      "2025-06-25",
+      19880.85
+     ],
+     [
+      "2025-06-26",
+      20018.07
+     ],
+     [
+      "2025-06-27",
+      19900.61
+     ],
+     [
+      "2025-06-30",
+      20167.64
+     ],
+     [
+      "2025-07-01",
+      20151.28
+     ],
+     [
+      "2025-07-02",
+      20319.27
+     ],
+     [
+      "2025-07-03",
+      20489.36
+     ],
+     [
+      "2025-07-04",
+      20481.31
+     ],
+     [
+      "2025-07-07",
+      20778.38
+     ],
+     [
+      "2025-07-08",
+      20826.34
+     ],
+     [
+      "2025-07-09",
+      20859.38
+     ],
+     [
+      "2025-07-10",
+      20942.24
+     ],
+     [
+      "2025-07-11",
+      20985.79
+     ],
+     [
+      "2025-07-14",
+      21008.58
+     ],
+     [
+      "2025-07-15",
+      21099.83
+     ],
+     [
+      "2025-07-16",
+      21138.79
+     ],
+     [
+      "2025-07-17",
+      21275.4
+     ],
+     [
+      "2025-07-18",
+      21205.71
+     ],
+     [
+      "2025-07-21",
+      21106.56
+     ],
+     [
+      "2025-07-22",
+      21039.93
+     ],
+     [
+      "2025-07-23",
+      21087.52
+     ],
+     [
+      "2025-07-24",
+      21041.44
+     ],
+     [
+      "2025-07-25",
+      21036.76
+     ],
+     [
+      "2025-07-28",
+      21066.65
+     ],
+     [
+      "2025-07-29",
+      21269.03
+     ],
+     [
+      "2025-07-30",
+      21477.17
+     ],
+     [
+      "2025-07-31",
+      21624.46
+     ],
+     [
+      "2025-08-01",
+      21630.94
+     ],
+     [
+      "2025-08-04",
+      21773.29
+     ],
+     [
+      "2025-08-05",
+      21611.72
+     ],
+     [
+      "2025-08-06",
+      21606.26
+     ],
+     [
+      "2025-08-07",
+      21628.73
+     ],
+     [
+      "2025-08-08",
+      21586.25
+     ],
+     [
+      "2025-08-11",
+      21574.22
+     ],
+     [
+      "2025-08-12",
+      21597.28
+     ],
+     [
+      "2025-08-13",
+      21630.94
+     ],
+     [
+      "2025-08-14",
+      21658.31
+     ],
+     [
+      "2025-08-15",
+      21661.45
+     ],
+     [
+      "2025-08-18",
+      21689.35
+     ],
+     [
+      "2025-08-19",
+      21788.79
+     ],
+     [
+      "2025-08-20",
+      21898.31
+     ],
+     [
+      "2025-08-21",
+      22003.79
+     ],
+     [
+      "2025-08-22",
+      22052.56
+     ],
+     [
+      "2025-08-25",
+      21922.44
+     ],
+     [
+      "2025-08-26",
+      21863.97
+     ],
+     [
+      "2025-08-27",
+      21858.8
+     ],
+     [
+      "2025-08-28",
+      21934.84
+     ],
+     [
+      "2025-08-29",
+      22331.89
+     ],
+     [
+      "2025-09-01",
+      22388.83
+     ],
+     [
+      "2025-09-02",
+      23119.3
+     ],
+     [
+      "2025-09-03",
+      23080.1
+     ],
+     [
+      "2025-09-04",
+      23540.33
+     ],
+     [
+      "2025-09-05",
+      23620.68
+     ],
+     [
+      "2025-09-08",
+      23604.26
+     ],
+     [
+      "2025-09-09",
+      23703.7
+     ],
+     [
+      "2025-09-10",
+      23712.22
+     ],
+     [
+      "2025-09-11",
+      23697.77
+     ],
+     [
+      "2025-09-12",
+      23779.66
+     ],
+     [
+      "2025-09-15",
+      23723.0
+     ],
+     [
+      "2025-09-16",
+      23726.15
+     ],
+     [
+      "2025-09-17",
+      23591.0
+     ],
+     [
+      "2025-09-18",
+      23546.59
+     ],
+     [
+      "2025-09-19",
+      23717.46
+     ],
+     [
+      "2025-09-22",
+      23756.13
+     ],
+     [
+      "2025-09-23",
+      23876.01
+     ],
+     [
+      "2025-09-24",
+      23737.79
+     ],
+     [
+      "2025-09-25",
+      23620.68
+     ],
+     [
+      "2025-09-26",
+      23459.51
+     ],
+     [
+      "2025-09-29",
+      23339.78
+     ]
+    ],
+    "by_year": {
+     "2024": 4190.7,
+     "2025": 9149.08
+    },
+    "by_month": {
+     "2024-01": 535.02,
+     "2024-02": -7.5,
+     "2024-03": 48.45,
+     "2024-04": 649.58,
+     "2024-05": -190.69,
+     "2024-06": 144.3,
+     "2024-07": 120.26,
+     "2024-08": -259.38,
+     "2024-09": 753.2,
+     "2024-10": 494.58,
+     "2024-11": 106.9,
+     "2024-12": 1795.98,
+     "2025-01": 840.51,
+     "2025-02": 987.7,
+     "2025-03": -46.08,
+     "2025-04": 3150.29,
+     "2025-05": 1061.67,
+     "2025-06": -17.15,
+     "2025-07": 1456.82,
+     "2025-08": 707.43,
+     "2025-09": 1007.89
+    },
+    "by_symbol": {
+     "EURUSD": 2859.84,
+     "GBPUSD": 863.23,
+     "AUDUSD": 702.31,
+     "USDCAD": 697.46,
+     "USDCHF": 1032.94,
+     "USDJPY": 2286.91,
+     "US100.cash": 209.38,
+     "US500.cash": 254.16,
+     "XAUUSD": 2639.11,
+     "AUDJPY": 221.11,
+     "CADJPY": 660.14,
+     "GBPJPY": 597.61,
+     "EURJPY": 315.58
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.59
+    },
+    "months_positive": 16,
+    "months": 21,
+    "return_pct": 133.4
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-01_2146_AurumFunded116_fidelity_1028",
+   "job": {
+    "Expert": "AurumFunded116",
+    "Symbol": "XAUUSD",
+    "From": "2026.10.28",
+    "To": "2026.10.31",
+    "Deposit": 10001,
+    "Leverage": 100,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-11-01T21:46:03.6592657+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded116",
+    "symbol": "XAUUSD",
+    "period": "M15 (2026.10.28 - 2026.10.31)",
+    "deposit": 10001.0,
+    "net": 45.56,
+    "gross_profit": 119.47,
+    "gross_loss": -73.91,
+    "profit_factor": 1.62,
+    "recovery": 0.55,
+    "sharpe": 3.36,
+    "trades": 14.0,
+    "won": "5 (35.71%)",
+    "eq_dd_max": "82.86 (0.82%)",
+    "eq_dd_rel": "0.82% (82.86)",
+    "bal_dd_max": "41.90 (0.42%)",
+    "ticks": 794990.0,
+    "history_quality": "100% real ticks",
+    "win_rate": 35.71,
+    "eq_dd_max_pct": 0.82,
+    "bal_dd_max_pct": 0.42,
+    "eq_dd_rel_pct": 0.82,
+    "deals": 29,
+    "curve": [
+     [
+      "2026-10-28",
+      9961.02
+     ],
+     [
+      "2026-10-29",
+      9991.93
+     ],
+     [
+      "2026-10-30",
+      10046.56
+     ]
+    ],
+    "by_year": {
+     "2026": 45.56
+    },
+    "by_month": {
+     "2026-10": 45.56
+    },
+    "by_symbol": {
+     "USDJPY": -16.47,
+     "EURUSD": 66.29,
+     "US500.cash": -1.04,
+     "US100.cash": -2.3,
+     "AUDUSD": -0.12,
+     "USDCAD": -0.8
+    },
+    "worst_day": {
+     "day": "2026-10-28",
+     "pct": -0.4
+    },
+    "months_positive": 1,
+    "months": 1,
+    "return_pct": 0.46
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-01_0342_AurumFunded_grz2_on",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpGrzMult=0.5",
+    "Started": "2026-11-01T03:42:07.1729214+01:00"
+   },
+   "summary": "# j20: AurumFunded grz2 on XAUUSD M15\n\nWritten by tools/autopilot/tester_step.py 2026-11-01 04:17: figures only, the judge judges.\nPreset `mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_grz2.set`, deposit 10000, leverage 1:33, 2024.01.01 to 2025.09.30, set none, compare_set ['InpGrzMult=0.5'].\n\n## legs off (`2026-11-01_0310_AurumFunded_grz2_off`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,339.78 (+133.4%) |\n| Trades / win rate | 2289.0 / 52.34% |\n| Profit factor | 1.65 |\n| Max equity drawdown (relative) | 7.06% |\n| Worst day | 2024-07-25 -2.59% |\n| Return per unit of drawdown | 18.9 |\n| By year | 2024 +4,191, 2025 +9,149 |\n| History quality | 99% real ticks |\n\n## legs on (`2026-11-01_0342_AurumFunded_grz2_on`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,732.36 (+137.3%) |\n| Trades / win rate | 2298.0 / 52.26% |\n| Profit factor | 1.63 |\n| Max equity drawdown (relative) | 7.75% |\n| Worst day | 2024-07-25 -2.45% |\n| Return per unit of drawdown | 17.7 |\n| By year | 2024 +5,117, 2025 +8,616 |\n| History quality | 99% real ticks |\n\n## On against off\n\nReturn per unit of equity drawdown: off 18.9, on 17.7 (not higher with the legs on).\n\n## Expected (from the job)\n\nStep 15 for AurumFunded v1.22 (month-reversal leg after the 11-01 review fixes; supersedes diagnostic j19). Preset = OFF run; compare_set adds InpGrzMult=0.5 (ON run). Python with FTMO swaps (US500 2.38, US100 2.91 bp/night, triple Friday), research/graziani_reversal.py: Sharpe 0.44/0.57 by half at 1x, 0.36 at 1.5x, 54 + 61 holds 2010-2025, about 40% of months. 2024.01-2025.09: roughly 7 (US500) + 10 (US100) held months, small size (mean notional 0.17-0.22 x equity) so expect about +1 to 2% (+100 to 200 USD, 67-87% in the tester), worst hold-to-date equity loss about -1.7%, worst day -0.85% (research/graziani_book_exits.py: broker stop 5% never reached on closes, no hold would hit the 3% day stop alone). Lesson 21: the book CloseEverything can still close a hold as a bystander, so spot off-schedule closes (empty comment other than sl). Good Friday 2024-03-29 must not be a month-end entry day (March 2024 last trading day is 03-28); renewals keep the hold open past day 40 of the first month.\n\n## Log lines worth a look\n\n- `2026-11-01_0310_AurumFunded_grz2_off`: OQ\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: LS\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0310_AurumFunded_grz2_off`: RR\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: DR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US100.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0310_AurumFunded_grz2_off`: NQ\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: IR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0310_AurumFunded_grz2_off`: GM\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: DN\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: OR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0310_AurumFunded_grz2_off`: EM\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: QN\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:32   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0310_AurumFunded_grz2_off`: NR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:32   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0342_AurumFunded_grz2_on`: OQ\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: LS\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0342_AurumFunded_grz2_on`: RR\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: DR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US100.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0342_AurumFunded_grz2_on`: NQ\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: IR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0342_AurumFunded_grz2_on`: GM\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: DN\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: OR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0342_AurumFunded_grz2_on`: EM\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: QN\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:32   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0342_AurumFunded_grz2_on`: NR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:32   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n",
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13732.36,
+    "gross_profit": 35661.46,
+    "gross_loss": -21929.1,
+    "profit_factor": 1.63,
+    "recovery": 10.23,
+    "sharpe": 5.19,
+    "trades": 2298.0,
+    "won": "1201 (52.26%)",
+    "eq_dd_max": "1 341.97 (7.75%)",
+    "eq_dd_rel": "7.75% (1 341.97)",
+    "bal_dd_max": "1 102.74 (6.39%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.26,
+    "eq_dd_max_pct": 7.75,
+    "bal_dd_max_pct": 6.39,
+    "eq_dd_rel_pct": 7.75,
+    "deals": 4597,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10535.02
+     ],
+     [
+      "2024-02-01",
+      10500.9
+     ],
+     [
+      "2024-02-02",
+      10624.08
+     ],
+     [
+      "2024-02-05",
+      10698.03
+     ],
+     [
+      "2024-02-06",
+      10669.23
+     ],
+     [
+      "2024-02-07",
+      10616.14
+     ],
+     [
+      "2024-02-08",
+      10636.9
+     ],
+     [
+      "2024-02-09",
+      10699.33
+     ],
+     [
+      "2024-02-12",
+      10685.29
+     ],
+     [
+      "2024-02-13",
+      10662.11
+     ],
+     [
+      "2024-02-14",
+      10645.52
+     ],
+     [
+      "2024-02-15",
+      10668.7
+     ],
+     [
+      "2024-02-16",
+      10691.35
+     ],
+     [
+      "2024-02-19",
+      10730.96
+     ],
+     [
+      "2024-02-20",
+      10558.62
+     ],
+     [
+      "2024-02-21",
+      10524.75
+     ],
+     [
+      "2024-02-22",
+      10552.08
+     ],
+     [
+      "2024-02-23",
+      10497.22
+     ],
+     [
+      "2024-02-26",
+      10480.88
+     ],
+     [
+      "2024-02-27",
+      10464.31
+     ],
+     [
+      "2024-02-28",
+      10478.28
+     ],
+     [
+      "2024-02-29",
+      10762.01
+     ],
+     [
+      "2024-03-01",
+      10812.6
+     ],
+     [
+      "2024-03-04",
+      10827.82
+     ],
+     [
+      "2024-03-05",
+      10821.86
+     ],
+     [
+      "2024-03-06",
+      10833.08
+     ],
+     [
+      "2024-03-07",
+      10848.41
+     ],
+     [
+      "2024-03-08",
+      10807.66
+     ],
+     [
+      "2024-04-01",
+      10747.57
+     ],
+     [
+      "2024-04-02",
+      10685.52
+     ],
+     [
+      "2024-04-03",
+      10621.45
+     ],
+     [
+      "2024-04-04",
+      10781.01
+     ],
+     [
+      "2024-04-05",
+      10927.25
+     ],
+     [
+      "2024-04-08",
+      10955.25
+     ],
+     [
+      "2024-04-09",
+      10901.93
+     ],
+     [
+      "2024-04-10",
+      11025.7
+     ],
+     [
+      "2024-04-11",
+      11052.45
+     ],
+     [
+      "2024-04-12",
+      11052.15
+     ],
+     [
+      "2024-04-15",
+      11078.33
+     ],
+     [
+      "2024-04-16",
+      10962.4
+     ],
+     [
+      "2024-04-17",
+      11056.18
+     ],
+     [
+      "2024-04-18",
+      11022.67
+     ],
+     [
+      "2024-04-19",
+      11217.15
+     ],
+     [
+      "2024-04-22",
+      11192.26
+     ],
+     [
+      "2024-04-23",
+      11175.59
+     ],
+     [
+      "2024-04-24",
+      11182.27
+     ],
+     [
+      "2024-04-25",
+      11278.27
+     ],
+     [
+      "2024-04-26",
+      11374.49
+     ],
+     [
+      "2024-04-29",
+      11346.05
+     ],
+     [
+      "2024-04-30",
+      11455.29
+     ],
+     [
+      "2024-05-01",
+      11474.23
+     ],
+     [
+      "2024-05-02",
+      11465.85
+     ],
+     [
+      "2024-05-03",
+      11453.83
+     ],
+     [
+      "2024-05-06",
+      11446.31
+     ],
+     [
+      "2024-05-07",
+      11417.51
+     ],
+     [
+      "2024-05-08",
+      11431.84
+     ],
+     [
+      "2024-05-09",
+      11427.81
+     ],
+     [
+      "2024-05-10",
+      11332.65
+     ],
+     [
+      "2024-05-13",
+      11297.23
+     ],
+     [
+      "2024-05-14",
+      11290.17
+     ],
+     [
+      "2024-05-15",
+      11334.44
+     ],
+     [
+      "2024-05-16",
+      11342.44
+     ],
+     [
+      "2024-05-17",
+      11310.61
+     ],
+     [
+      "2024-05-20",
+      11265.77
+     ],
+     [
+      "2024-05-21",
+      11279.37
+     ],
+     [
+      "2024-05-22",
+      11317.96
+     ],
+     [
+      "2024-05-23",
+      11282.33
+     ],
+     [
+      "2024-05-24",
+      11387.52
+     ],
+     [
+      "2024-05-27",
+      11377.69
+     ],
+     [
+      "2024-05-28",
+      11276.2
+     ],
+     [
+      "2024-05-29",
+      11260.37
+     ],
+     [
+      "2024-05-30",
+      11260.28
+     ],
+     [
+      "2024-05-31",
+      11266.22
+     ],
+     [
+      "2024-06-03",
+      11241.91
+     ],
+     [
+      "2024-06-04",
+      11264.78
+     ],
+     [
+      "2024-06-05",
+      11235.09
+     ],
+     [
+      "2024-06-06",
+      11265.31
+     ],
+     [
+      "2024-06-07",
+      11227.26
+     ],
+     [
+      "2024-06-10",
+      11189.21
+     ],
+     [
+      "2024-06-11",
+      11181.61
+     ],
+     [
+      "2024-06-12",
+      11111.99
+     ],
+     [
+      "2024-06-13",
+      11174.66
+     ],
+     [
+      "2024-06-14",
+      11146.84
+     ],
+     [
+      "2024-06-17",
+      11163.5
+     ],
+     [
+      "2024-06-18",
+      11166.02
+     ],
+     [
+      "2024-06-19",
+      11099.08
+     ],
+     [
+      "2024-06-20",
+      11315.2
+     ],
+     [
+      "2024-06-21",
+      11301.73
+     ],
+     [
+      "2024-06-24",
+      11245.77
+     ],
+     [
+      "2024-06-25",
+      11319.54
+     ],
+     [
+      "2024-06-26",
+      11278.98
+     ],
+     [
+      "2024-06-27",
+      11262.65
+     ],
+     [
+      "2024-06-28",
+      11854.98
+     ],
+     [
+      "2024-07-01",
+      11860.8
+     ],
+     [
+      "2024-07-02",
+      11888.89
+     ],
+     [
+      "2024-07-03",
+      11919.71
+     ],
+     [
+      "2024-07-04",
+      11903.0
+     ],
+     [
+      "2024-07-05",
+      12031.99
+     ],
+     [
+      "2024-07-08",
+      12030.74
+     ],
+     [
+      "2024-07-09",
+      12098.31
+     ],
+     [
+      "2024-07-10",
+      12045.69
+     ],
+     [
+      "2024-07-11",
+      12260.6
+     ],
+     [
+      "2024-07-12",
+      12278.06
+     ],
+     [
+      "2024-07-15",
+      12276.18
+     ],
+     [
+      "2024-07-16",
+      12245.89
+     ],
+     [
+      "2024-07-17",
+      12313.8
+     ],
+     [
+      "2024-07-18",
+      12314.17
+     ],
+     [
+      "2024-07-19",
+      12115.57
+     ],
+     [
+      "2024-07-22",
+      12122.96
+     ],
+     [
+      "2024-07-23",
+      12111.5
+     ],
+     [
+      "2024-07-24",
+      12284.88
+     ],
+     [
+      "2024-07-25",
+      11983.81
+     ],
+     [
+      "2024-07-26",
+      11933.76
+     ],
+     [
+      "2024-07-29",
+      11938.46
+     ],
+     [
+      "2024-07-30",
+      11982.29
+     ],
+     [
+      "2024-07-31",
+      11990.48
+     ],
+     [
+      "2024-08-01",
+      12173.92
+     ],
+     [
+      "2024-08-02",
+      12387.17
+     ],
+     [
+      "2024-08-05",
+      12086.22
+     ],
+     [
+      "2024-08-06",
+      11848.81
+     ],
+     [
+      "2024-08-07",
+      11831.03
+     ],
+     [
+      "2024-08-08",
+      11757.01
+     ],
+     [
+      "2024-08-09",
+      11891.98
+     ],
+     [
+      "2024-08-12",
+      11915.16
+     ],
+     [
+      "2024-08-13",
+      11796.76
+     ],
+     [
+      "2024-08-14",
+      11804.8
+     ],
+     [
+      "2024-08-15",
+      11733.53
+     ],
+     [
+      "2024-08-16",
+      11734.89
+     ],
+     [
+      "2024-08-19",
+      11722.77
+     ],
+     [
+      "2024-08-20",
+      11693.89
+     ],
+     [
+      "2024-08-21",
+      11653.27
+     ],
+     [
+      "2024-08-22",
+      11658.72
+     ],
+     [
+      "2024-08-23",
+      11665.66
+     ],
+     [
+      "2024-08-26",
+      11678.22
+     ],
+     [
+      "2024-08-27",
+      11682.92
+     ],
+     [
+      "2024-08-28",
+      11667.47
+     ],
+     [
+      "2024-08-29",
+      11651.05
+     ],
+     [
+      "2024-08-30",
+      11662.09
+     ],
+     [
+      "2024-09-02",
+      11678.84
+     ],
+     [
+      "2024-09-03",
+      11892.0
+     ],
+     [
+      "2024-09-04",
+      11936.23
+     ],
+     [
+      "2024-09-05",
+      11878.3
+     ],
+     [
+      "2024-09-06",
+      11996.25
+     ],
+     [
+      "2024-09-09",
+      12057.57
+     ],
+     [
+      "2024-09-10",
+      12086.76
+     ],
+     [
+      "2024-09-11",
+      12086.19
+     ],
+     [
+      "2024-09-12",
+      12090.71
+     ],
+     [
+      "2024-09-13",
+      12246.69
+     ],
+     [
+      "2024-09-16",
+      12252.23
+     ],
+     [
+      "2024-09-17",
+      12235.89
+     ],
+     [
+      "2024-09-18",
+      12547.47
+     ],
+     [
+      "2024-09-19",
+      12598.59
+     ],
+     [
+      "2024-09-20",
+      12698.05
+     ],
+     [
+      "2024-09-23",
+      12659.44
+     ],
+     [
+      "2024-09-24",
+      12661.87
+     ],
+     [
+      "2024-09-25",
+      12544.51
+     ],
+     [
+      "2024-09-26",
+      12474.31
+     ],
+     [
+      "2024-09-27",
+      12447.65
+     ],
+     [
+      "2024-09-30",
+      12449.43
+     ],
+     [
+      "2024-10-01",
+      12473.46
+     ],
+     [
+      "2024-10-02",
+      12468.0
+     ],
+     [
+      "2024-10-03",
+      12433.01
+     ],
+     [
+      "2024-10-04",
+      12513.61
+     ],
+     [
+      "2024-10-07",
+      12459.12
+     ],
+     [
+      "2024-10-08",
+      12478.51
+     ],
+     [
+      "2024-10-09",
+      12581.7
+     ],
+     [
+      "2024-10-10",
+      12632.57
+     ],
+     [
+      "2024-10-11",
+      12672.9
+     ],
+     [
+      "2024-10-14",
+      12780.24
+     ],
+     [
+      "2024-10-15",
+      12772.92
+     ],
+     [
+      "2024-10-16",
+      12742.38
+     ],
+     [
+      "2024-10-17",
+      12738.33
+     ],
+     [
+      "2024-10-18",
+      12724.87
+     ],
+     [
+      "2024-10-21",
+      12700.89
+     ],
+     [
+      "2024-10-22",
+      12733.0
+     ],
+     [
+      "2024-10-23",
+      12852.09
+     ],
+     [
+      "2024-10-24",
+      12877.87
+     ],
+     [
+      "2024-10-25",
+      12961.05
+     ],
+     [
+      "2024-10-28",
+      13056.1
+     ],
+     [
+      "2024-11-04",
+      13029.72
+     ],
+     [
+      "2024-11-05",
+      13173.16
+     ],
+     [
+      "2024-11-06",
+      12872.77
+     ],
+     [
+      "2024-11-07",
+      12781.39
+     ],
+     [
+      "2024-11-08",
+      12868.98
+     ],
+     [
+      "2024-11-11",
+      12906.28
+     ],
+     [
+      "2024-11-12",
+      12928.75
+     ],
+     [
+      "2024-11-13",
+      12769.66
+     ],
+     [
+      "2024-11-14",
+      12618.11
+     ],
+     [
+      "2024-11-15",
+      12844.96
+     ],
+     [
+      "2024-11-18",
+      12787.25
+     ],
+     [
+      "2024-11-19",
+      12740.66
+     ],
+     [
+      "2024-11-20",
+      12696.24
+     ],
+     [
+      "2024-11-21",
+      12653.61
+     ],
+     [
+      "2024-11-22",
+      12668.82
+     ],
+     [
+      "2024-11-25",
+      12718.67
+     ],
+     [
+      "2024-11-26",
+      12728.24
+     ],
+     [
+      "2024-11-27",
+      12687.67
+     ],
+     [
+      "2024-11-28",
+      12728.95
+     ],
+     [
+      "2024-11-29",
+      13191.34
+     ],
+     [
+      "2024-12-02",
+      13225.79
+     ],
+     [
+      "2024-12-03",
+      13299.86
+     ],
+     [
+      "2024-12-04",
+      13357.16
+     ],
+     [
+      "2024-12-05",
+      13292.78
+     ],
+     [
+      "2024-12-06",
+      13550.25
+     ],
+     [
+      "2024-12-09",
+      13606.44
+     ],
+     [
+      "2024-12-10",
+      13808.27
+     ],
+     [
+      "2024-12-11",
+      13794.64
+     ],
+     [
+      "2024-12-12",
+      13830.83
+     ],
+     [
+      "2024-12-13",
+      13696.01
+     ],
+     [
+      "2024-12-16",
+      13735.26
+     ],
+     [
+      "2024-12-17",
+      13711.15
+     ],
+     [
+      "2024-12-18",
+      14028.57
+     ],
+     [
+      "2024-12-19",
+      14257.9
+     ],
+     [
+      "2024-12-20",
+      14875.68
+     ],
+     [
+      "2024-12-23",
+      14890.92
+     ],
+     [
+      "2024-12-24",
+      14987.55
+     ],
+     [
+      "2024-12-26",
+      15112.21
+     ],
+     [
+      "2024-12-27",
+      15092.49
+     ],
+     [
+      "2024-12-30",
+      15157.64
+     ],
+     [
+      "2024-12-31",
+      15116.72
+     ],
+     [
+      "2025-01-02",
+      15520.79
+     ],
+     [
+      "2025-01-03",
+      15480.82
+     ],
+     [
+      "2025-01-06",
+      15480.75
+     ],
+     [
+      "2025-01-07",
+      15556.09
+     ],
+     [
+      "2025-01-08",
+      15633.82
+     ],
+     [
+      "2025-01-09",
+      15609.96
+     ],
+     [
+      "2025-01-10",
+      15538.88
+     ],
+     [
+      "2025-01-13",
+      15518.03
+     ],
+     [
+      "2025-01-14",
+      15531.39
+     ],
+     [
+      "2025-01-15",
+      15584.82
+     ],
+     [
+      "2025-01-16",
+      15849.0
+     ],
+     [
+      "2025-01-17",
+      15940.39
+     ],
+     [
+      "2025-01-20",
+      15954.5
+     ],
+     [
+      "2025-01-21",
+      16018.61
+     ],
+     [
+      "2025-01-22",
+      16043.21
+     ],
+     [
+      "2025-01-23",
+      16091.7
+     ],
+     [
+      "2025-01-24",
+      16135.7
+     ],
+     [
+      "2025-01-27",
+      16123.32
+     ],
+     [
+      "2025-01-28",
+      16153.44
+     ],
+     [
+      "2025-01-29",
+      16098.28
+     ],
+     [
+      "2025-01-30",
+      16105.32
+     ],
+     [
+      "2025-01-31",
+      16017.58
+     ],
+     [
+      "2025-02-03",
+      15983.85
+     ],
+     [
+      "2025-02-04",
+      15953.85
+     ],
+     [
+      "2025-02-05",
+      16151.91
+     ],
+     [
+      "2025-02-06",
+      16145.78
+     ],
+     [
+      "2025-02-07",
+      16251.8
+     ],
+     [
+      "2025-02-10",
+      16287.69
+     ],
+     [
+      "2025-02-11",
+      16223.76
+     ],
+     [
+      "2025-02-12",
+      16267.11
+     ],
+     [
+      "2025-02-13",
+      16400.27
+     ],
+     [
+      "2025-02-14",
+      16430.5
+     ],
+     [
+      "2025-02-17",
+      16783.65
+     ],
+     [
+      "2025-02-18",
+      16909.91
+     ],
+     [
+      "2025-02-19",
+      16901.06
+     ],
+     [
+      "2025-02-20",
+      16973.44
+     ],
+     [
+      "2025-02-21",
+      17158.25
+     ],
+     [
+      "2025-02-24",
+      17206.66
+     ],
+     [
+      "2025-02-25",
+      17186.02
+     ],
+     [
+      "2025-02-26",
+      17178.48
+     ],
+     [
+      "2025-02-27",
+      16875.47
+     ],
+     [
+      "2025-02-28",
+      16691.2
+     ],
+     [
+      "2025-03-03",
+      16664.37
+     ],
+     [
+      "2025-03-04",
+      16621.69
+     ],
+     [
+      "2025-03-05",
+      16564.37
+     ],
+     [
+      "2025-03-06",
+      16550.57
+     ],
+     [
+      "2025-03-07",
+      16556.62
+     ],
+     [
+      "2025-03-31",
+      16626.6
+     ],
+     [
+      "2025-04-01",
+      16662.45
+     ],
+     [
+      "2025-04-02",
+      16563.28
+     ],
+     [
+      "2025-04-03",
+      16465.31
+     ],
+     [
+      "2025-04-04",
+      16161.06
+     ],
+     [
+      "2025-04-07",
+      16936.02
+     ],
+     [
+      "2025-04-08",
+      17222.58
+     ],
+     [
+      "2025-04-09",
+      17854.45
+     ],
+     [
+      "2025-04-10",
+      18169.42
+     ],
+     [
+      "2025-04-11",
+      18192.11
+     ],
+     [
+      "2025-04-14",
+      18357.24
+     ],
+     [
+      "2025-04-15",
+      18482.06
+     ],
+     [
+      "2025-04-16",
+      18478.9
+     ],
+     [
+      "2025-04-17",
+      18864.81
+     ],
+     [
+      "2025-04-18",
+      18816.76
+     ],
+     [
+      "2025-04-21",
+      18842.12
+     ],
+     [
+      "2025-04-22",
+      19326.39
+     ],
+     [
+      "2025-04-23",
+      19396.33
+     ],
+     [
+      "2025-04-24",
+      19517.48
+     ],
+     [
+      "2025-04-25",
+      19447.21
+     ],
+     [
+      "2025-04-28",
+      19452.16
+     ],
+     [
+      "2025-04-29",
+      19460.03
+     ],
+     [
+      "2025-04-30",
+      19365.74
+     ],
+     [
+      "2025-05-01",
+      19128.86
+     ],
+     [
+      "2025-05-02",
+      19136.17
+     ],
+     [
+      "2025-05-05",
+      19514.32
+     ],
+     [
+      "2025-05-06",
+      19440.67
+     ],
+     [
+      "2025-05-07",
+      19431.49
+     ],
+     [
+      "2025-05-08",
+      19379.01
+     ],
+     [
+      "2025-05-09",
+      19216.84
+     ],
+     [
+      "2025-05-12",
+      19244.64
+     ],
+     [
+      "2025-05-13",
+      19374.47
+     ],
+     [
+      "2025-05-14",
+      19467.79
+     ],
+     [
+      "2025-05-15",
+      19571.6
+     ],
+     [
+      "2025-05-16",
+      19706.08
+     ],
+     [
+      "2025-05-19",
+      19710.93
+     ],
+     [
+      "2025-05-20",
+      19724.71
+     ],
+     [
+      "2025-05-21",
+      19804.85
+     ],
+     [
+      "2025-05-22",
+      19538.89
+     ],
+     [
+      "2025-05-23",
+      19789.49
+     ],
+     [
+      "2025-05-26",
+      19800.14
+     ],
+     [
+      "2025-05-27",
+      20110.86
+     ],
+     [
+      "2025-05-28",
+      20194.35
+     ],
+     [
+      "2025-05-29",
+      20263.9
+     ],
+     [
+      "2025-05-30",
+      20510.03
+     ],
+     [
+      "2025-06-02",
+      20543.92
+     ],
+     [
+      "2025-06-03",
+      20620.94
+     ],
+     [
+      "2025-06-04",
+      20623.48
+     ],
+     [
+      "2025-06-05",
+      20519.56
+     ],
+     [
+      "2025-06-06",
+      20449.25
+     ],
+     [
+      "2025-06-09",
+      20511.04
+     ],
+     [
+      "2025-06-10",
+      20280.57
+     ],
+     [
+      "2025-06-11",
+      20255.35
+     ],
+     [
+      "2025-06-12",
+      20253.45
+     ],
+     [
+      "2025-06-13",
+      20271.94
+     ],
+     [
+      "2025-06-16",
+      20299.41
+     ],
+     [
+      "2025-06-17",
+      20249.63
+     ],
+     [
+      "2025-06-18",
+      20200.18
+     ],
+     [
+      "2025-06-19",
+      20118.28
+     ],
+     [
+      "2025-06-20",
+      20125.34
+     ],
+     [
+      "2025-06-23",
+      20172.32
+     ],
+     [
+      "2025-06-24",
+      20133.77
+     ],
+     [
+      "2025-06-25",
+      20200.62
+     ],
+     [
+      "2025-06-26",
+      20337.84
+     ],
+     [
+      "2025-06-27",
+      20217.94
+     ],
+     [
+      "2025-06-30",
+      20483.28
+     ],
+     [
+      "2025-07-01",
+      20466.54
+     ],
+     [
+      "2025-07-02",
+      20637.32
+     ],
+     [
+      "2025-07-03",
+      20809.31
+     ],
+     [
+      "2025-07-04",
+      20800.46
+     ],
+     [
+      "2025-07-07",
+      21097.53
+     ],
+     [
+      "2025-07-08",
+      21146.36
+     ],
+     [
+      "2025-07-09",
+      21179.68
+     ],
+     [
+      "2025-07-10",
+      21264.68
+     ],
+     [
+      "2025-07-11",
+      21308.73
+     ],
+     [
+      "2025-07-14",
+      21332.05
+     ],
+     [
+      "2025-07-15",
+      21423.76
+     ],
+     [
+      "2025-07-16",
+      21463.15
+     ],
+     [
+      "2025-07-17",
+      21602.05
+     ],
+     [
+      "2025-07-18",
+      21532.25
+     ],
+     [
+      "2025-07-21",
+      21432.84
+     ],
+     [
+      "2025-07-22",
+      21365.46
+     ],
+     [
+      "2025-07-23",
+      21413.81
+     ],
+     [
+      "2025-07-24",
+      21366.95
+     ],
+     [
+      "2025-07-25",
+      21362.08
+     ],
+     [
+      "2025-07-28",
+      21391.97
+     ],
+     [
+      "2025-07-29",
+      21599.04
+     ],
+     [
+      "2025-07-30",
+      21808.1
+     ],
+     [
+      "2025-07-31",
+      21952.68
+     ],
+     [
+      "2025-08-01",
+      21651.63
+     ],
+     [
+      "2025-08-04",
+      21794.17
+     ],
+     [
+      "2025-08-05",
+      21632.29
+     ],
+     [
+      "2025-08-06",
+      21626.83
+     ],
+     [
+      "2025-08-07",
+      21649.3
+     ],
+     [
+      "2025-08-08",
+      21606.82
+     ],
+     [
+      "2025-08-11",
+      21594.79
+     ],
+     [
+      "2025-08-12",
+      21617.85
+     ],
+     [
+      "2025-08-13",
+      21651.51
+     ],
+     [
+      "2025-08-14",
+      21678.88
+     ],
+     [
+      "2025-08-15",
+      21682.02
+     ],
+     [
+      "2025-08-18",
+      21709.92
+     ],
+     [
+      "2025-08-19",
+      21809.36
+     ],
+     [
+      "2025-08-20",
+      21918.88
+     ],
+     [
+      "2025-08-21",
+      22024.36
+     ],
+     [
+      "2025-08-22",
+      22072.96
+     ],
+     [
+      "2025-08-25",
+      21942.84
+     ],
+     [
+      "2025-08-26",
+      21884.37
+     ],
+     [
+      "2025-08-27",
+      21879.2
+     ],
+     [
+      "2025-08-28",
+      21955.24
+     ],
+     [
+      "2025-08-29",
+      22341.81
+     ],
+     [
+      "2025-09-01",
+      22398.75
+     ],
+     [
+      "2025-09-02",
+      23129.22
+     ],
+     [
+      "2025-09-03",
+      23090.02
+     ],
+     [
+      "2025-09-04",
+      23550.35
+     ],
+     [
+      "2025-09-05",
+      23630.7
+     ],
+     [
+      "2025-09-08",
+      23614.43
+     ],
+     [
+      "2025-09-09",
+      23713.87
+     ],
+     [
+      "2025-09-10",
+      23722.39
+     ],
+     [
+      "2025-09-11",
+      23707.87
+     ],
+     [
+      "2025-09-12",
+      23789.76
+     ],
+     [
+      "2025-09-15",
+      23732.91
+     ],
+     [
+      "2025-09-16",
+      23736.06
+     ],
+     [
+      "2025-09-17",
+      23600.91
+     ],
+     [
+      "2025-09-18",
+      23552.42
+     ],
+     [
+      "2025-09-19",
+      23723.29
+     ],
+     [
+      "2025-09-22",
+      23762.69
+     ],
+     [
+      "2025-09-23",
+      23882.94
+     ],
+     [
+      "2025-09-24",
+      23747.73
+     ],
+     [
+      "2025-09-25",
+      23628.04
+     ],
+     [
+      "2025-09-26",
+      23463.94
+     ],
+     [
+      "2025-09-29",
+      23732.36
+     ]
+    ],
+    "by_year": {
+     "2024": 5116.72,
+     "2025": 8615.64
+    },
+    "by_month": {
+     "2024-01": 535.02,
+     "2024-02": 226.99,
+     "2024-03": 45.65,
+     "2024-04": 647.63,
+     "2024-05": -189.07,
+     "2024-06": 588.76,
+     "2024-07": 135.5,
+     "2024-08": -328.39,
+     "2024-09": 787.34,
+     "2024-10": 606.67,
+     "2024-11": 135.24,
+     "2024-12": 1925.38,
+     "2025-01": 900.86,
+     "2025-02": 673.62,
+     "2025-03": -64.6,
+     "2025-04": 2739.14,
+     "2025-05": 1144.29,
+     "2025-06": -26.75,
+     "2025-07": 1469.4,
+     "2025-08": 389.13,
+     "2025-09": 1390.55
+    },
+    "by_symbol": {
+     "EURUSD": 2897.57,
+     "GBPUSD": 861.95,
+     "AUDUSD": 657.91,
+     "USDCAD": 699.71,
+     "USDCHF": 962.24,
+     "USDJPY": 2407.29,
+     "US100.cash": 384.51,
+     "US500.cash": 608.35,
+     "XAUUSD": 2426.31,
+     "AUDJPY": 228.94,
+     "CADJPY": 664.36,
+     "GBPJPY": 602.7,
+     "EURJPY": 330.52
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.45
+    },
+    "months_positive": 17,
+    "months": 21,
+    "return_pct": 137.32
+   },
+   "expected": null
+  },
+  {
+   "name": "2026-11-01_0310_AurumFunded_grz2_off",
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "",
+    "Started": "2026-11-01T03:10:58.4599499+01:00"
+   },
+   "summary": null,
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13339.78,
+    "gross_profit": 33854.32,
+    "gross_loss": -20514.54,
+    "profit_factor": 1.65,
+    "recovery": 16.09,
+    "sharpe": 6.71,
+    "trades": 2289.0,
+    "won": "1198 (52.34%)",
+    "eq_dd_max": "829.33 (7.06%)",
+    "eq_dd_rel": "7.06% (829.33)",
+    "bal_dd_max": "723.95 (6.17%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.34,
+    "eq_dd_max_pct": 7.06,
+    "bal_dd_max_pct": 6.17,
+    "eq_dd_rel_pct": 7.06,
+    "deals": 4579,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10535.02
+     ],
+     [
+      "2024-02-01",
+      10501.11
+     ],
+     [
+      "2024-02-02",
+      10622.52
+     ],
+     [
+      "2024-02-05",
+      10696.61
+     ],
+     [
+      "2024-02-06",
+      10667.81
+     ],
+     [
+      "2024-02-07",
+      10614.87
+     ],
+     [
+      "2024-02-08",
+      10635.63
+     ],
+     [
+      "2024-02-09",
+      10697.12
+     ],
+     [
+      "2024-02-12",
+      10683.16
+     ],
+     [
+      "2024-02-13",
+      10660.1
+     ],
+     [
+      "2024-02-14",
+      10643.51
+     ],
+     [
+      "2024-02-15",
+      10666.69
+     ],
+     [
+      "2024-02-16",
+      10690.68
+     ],
+     [
+      "2024-02-19",
+      10730.29
+     ],
+     [
+      "2024-02-20",
+      10557.99
+     ],
+     [
+      "2024-02-21",
+      10523.78
+     ],
+     [
+      "2024-02-22",
+      10550.6
+     ],
+     [
+      "2024-02-23",
+      10495.74
+     ],
+     [
+      "2024-02-26",
+      10478.76
+     ],
+     [
+      "2024-02-27",
+      10462.19
+     ],
+     [
+      "2024-02-28",
+      10476.16
+     ],
+     [
+      "2024-02-29",
+      10527.52
+     ],
+     [
+      "2024-03-01",
+      10580.0
+     ],
+     [
+      "2024-03-04",
+      10594.99
+     ],
+     [
+      "2024-03-05",
+      10588.49
+     ],
+     [
+      "2024-03-06",
+      10599.71
+     ],
+     [
+      "2024-03-07",
+      10614.92
+     ],
+     [
+      "2024-03-08",
+      10575.97
+     ],
+     [
+      "2024-04-01",
+      10517.16
+     ],
+     [
+      "2024-04-02",
+      10456.6
+     ],
+     [
+      "2024-04-03",
+      10394.5
+     ],
+     [
+      "2024-04-04",
+      10549.07
+     ],
+     [
+      "2024-04-05",
+      10697.63
+     ],
+     [
+      "2024-04-08",
+      10724.79
+     ],
+     [
+      "2024-04-09",
+      10673.31
+     ],
+     [
+      "2024-04-10",
+      10795.22
+     ],
+     [
+      "2024-04-11",
+      10820.98
+     ],
+     [
+      "2024-04-12",
+      10820.6
+     ],
+     [
+      "2024-04-15",
+      10846.29
+     ],
+     [
+      "2024-04-16",
+      10733.76
+     ],
+     [
+      "2024-04-17",
+      10825.36
+     ],
+     [
+      "2024-04-18",
+      10793.15
+     ],
+     [
+      "2024-04-19",
+      10986.42
+     ],
+     [
+      "2024-04-22",
+      10963.63
+     ],
+     [
+      "2024-04-23",
+      10948.45
+     ],
+     [
+      "2024-04-24",
+      10954.61
+     ],
+     [
+      "2024-04-25",
+      11050.86
+     ],
+     [
+      "2024-04-26",
+      11143.82
+     ],
+     [
+      "2024-04-29",
+      11116.09
+     ],
+     [
+      "2024-04-30",
+      11225.55
+     ],
+     [
+      "2024-05-01",
+      11245.26
+     ],
+     [
+      "2024-05-02",
+      11237.16
+     ],
+     [
+      "2024-05-03",
+      11227.07
+     ],
+     [
+      "2024-05-06",
+      11220.01
+     ],
+     [
+      "2024-05-07",
+      11191.56
+     ],
+     [
+      "2024-05-08",
+      11205.89
+     ],
+     [
+      "2024-05-09",
+      11201.06
+     ],
+     [
+      "2024-05-10",
+      11107.97
+     ],
+     [
+      "2024-05-13",
+      11073.31
+     ],
+     [
+      "2024-05-14",
+      11066.47
+     ],
+     [
+      "2024-05-15",
+      11109.39
+     ],
+     [
+      "2024-05-16",
+      11117.24
+     ],
+     [
+      "2024-05-17",
+      11089.4
+     ],
+     [
+      "2024-05-20",
+      11045.38
+     ],
+     [
+      "2024-05-21",
+      11058.85
+     ],
+     [
+      "2024-05-22",
+      11097.22
+     ],
+     [
+      "2024-05-23",
+      11061.3
+     ],
+     [
+      "2024-05-24",
+      11155.66
+     ],
+     [
+      "2024-05-27",
+      11146.04
+     ],
+     [
+      "2024-05-28",
+      11047.46
+     ],
+     [
+      "2024-05-29",
+      11032.29
+     ],
+     [
+      "2024-05-30",
+      11032.1
+     ],
+     [
+      "2024-05-31",
+      11034.86
+     ],
+     [
+      "2024-06-03",
+      11011.78
+     ],
+     [
+      "2024-06-04",
+      11034.65
+     ],
+     [
+      "2024-06-05",
+      11003.86
+     ],
+     [
+      "2024-06-06",
+      11033.24
+     ],
+     [
+      "2024-06-07",
+      10995.86
+     ],
+     [
+      "2024-06-10",
+      10957.69
+     ],
+     [
+      "2024-06-11",
+      10949.47
+     ],
+     [
+      "2024-06-12",
+      10881.5
+     ],
+     [
+      "2024-06-13",
+      10945.72
+     ],
+     [
+      "2024-06-14",
+      10918.18
+     ],
+     [
+      "2024-06-17",
+      10932.71
+     ],
+     [
+      "2024-06-18",
+      10935.23
+     ],
+     [
+      "2024-06-19",
+      10870.38
+     ],
+     [
+      "2024-06-20",
+      11085.9
+     ],
+     [
+      "2024-06-21",
+      11073.49
+     ],
+     [
+      "2024-06-24",
+      11018.66
+     ],
+     [
+      "2024-06-25",
+      11092.59
+     ],
+     [
+      "2024-06-26",
+      11054.43
+     ],
+     [
+      "2024-06-27",
+      11039.13
+     ],
+     [
+      "2024-06-28",
+      11179.16
+     ],
+     [
+      "2024-07-01",
+      11182.66
+     ],
+     [
+      "2024-07-02",
+      11208.2
+     ],
+     [
+      "2024-07-03",
+      11237.45
+     ],
+     [
+      "2024-07-04",
+      11221.59
+     ],
+     [
+      "2024-07-05",
+      11341.82
+     ],
+     [
+      "2024-07-08",
+      11340.34
+     ],
+     [
+      "2024-07-09",
+      11404.15
+     ],
+     [
+      "2024-07-10",
+      11354.61
+     ],
+     [
+      "2024-07-11",
+      11565.13
+     ],
+     [
+      "2024-07-12",
+      11581.62
+     ],
+     [
+      "2024-07-15",
+      11579.71
+     ],
+     [
+      "2024-07-16",
+      11550.93
+     ],
+     [
+      "2024-07-17",
+      11615.4
+     ],
+     [
+      "2024-07-18",
+      11615.83
+     ],
+     [
+      "2024-07-19",
+      11429.38
+     ],
+     [
+      "2024-07-22",
+      11436.17
+     ],
+     [
+      "2024-07-23",
+      11425.49
+     ],
+     [
+      "2024-07-24",
+      11592.09
+     ],
+     [
+      "2024-07-25",
+      11291.72
+     ],
+     [
+      "2024-07-26",
+      11243.77
+     ],
+     [
+      "2024-07-29",
+      11249.13
+     ],
+     [
+      "2024-07-30",
+      11291.01
+     ],
+     [
+      "2024-07-31",
+      11299.42
+     ],
+     [
+      "2024-08-01",
+      11468.05
+     ],
+     [
+      "2024-08-02",
+      11661.98
+     ],
+     [
+      "2024-08-05",
+      11439.83
+     ],
+     [
+      "2024-08-06",
+      11213.12
+     ],
+     [
+      "2024-08-07",
+      11196.55
+     ],
+     [
+      "2024-08-08",
+      11124.38
+     ],
+     [
+      "2024-08-09",
+      11254.51
+     ],
+     [
+      "2024-08-12",
+      11277.23
+     ],
+     [
+      "2024-08-13",
+      11168.41
+     ],
+     [
+      "2024-08-14",
+      11175.75
+     ],
+     [
+      "2024-08-15",
+      11107.83
+     ],
+     [
+      "2024-08-16",
+      11108.58
+     ],
+     [
+      "2024-08-19",
+      11096.46
+     ],
+     [
+      "2024-08-20",
+      11069.06
+     ],
+     [
+      "2024-08-21",
+      11031.37
+     ],
+     [
+      "2024-08-22",
+      11036.95
+     ],
+     [
+      "2024-08-23",
+      11042.16
+     ],
+     [
+      "2024-08-26",
+      11053.99
+     ],
+     [
+      "2024-08-27",
+      11057.77
+     ],
+     [
+      "2024-08-28",
+      11043.07
+     ],
+     [
+      "2024-08-29",
+      11027.83
+     ],
+     [
+      "2024-08-30",
+      11040.04
+     ],
+     [
+      "2024-09-02",
+      11056.27
+     ],
+     [
+      "2024-09-03",
+      11263.08
+     ],
+     [
+      "2024-09-04",
+      11305.86
+     ],
+     [
+      "2024-09-05",
+      11250.35
+     ],
+     [
+      "2024-09-06",
+      11362.4
+     ],
+     [
+      "2024-09-09",
+      11421.78
+     ],
+     [
+      "2024-09-10",
+      11450.39
+     ],
+     [
+      "2024-09-11",
+      11449.52
+     ],
+     [
+      "2024-09-12",
+      11453.04
+     ],
+     [
+      "2024-09-13",
+      11598.39
+     ],
+     [
+      "2024-09-16",
+      11603.31
+     ],
+     [
+      "2024-09-17",
+      11588.17
+     ],
+     [
+      "2024-09-18",
+      11888.48
+     ],
+     [
+      "2024-09-19",
+      11936.76
+     ],
+     [
+      "2024-09-20",
+      12021.61
+     ],
+     [
+      "2024-09-23",
+      11984.63
+     ],
+     [
+      "2024-09-24",
+      11991.57
+     ],
+     [
+      "2024-09-25",
+      11881.02
+     ],
+     [
+      "2024-09-26",
+      11817.58
+     ],
+     [
+      "2024-09-27",
+      11791.93
+     ],
+     [
+      "2024-09-30",
+      11793.24
+     ],
+     [
+      "2024-10-01",
+      11817.1
+     ],
+     [
+      "2024-10-02",
+      11813.32
+     ],
+     [
+      "2024-10-03",
+      11780.32
+     ],
+     [
+      "2024-10-04",
+      11858.69
+     ],
+     [
+      "2024-10-07",
+      11806.97
+     ],
+     [
+      "2024-10-08",
+      11824.93
+     ],
+     [
+      "2024-10-09",
+      11923.46
+     ],
+     [
+      "2024-10-10",
+      11971.62
+     ],
+     [
+      "2024-10-11",
+      12010.53
+     ],
+     [
+      "2024-10-14",
+      12113.75
+     ],
+     [
+      "2024-10-15",
+      12106.85
+     ],
+     [
+      "2024-10-16",
+      12077.8
+     ],
+     [
+      "2024-10-17",
+      12074.29
+     ],
+     [
+      "2024-10-18",
+      12061.73
+     ],
+     [
+      "2024-10-21",
+      12039.0
+     ],
+     [
+      "2024-10-22",
+      12070.03
+     ],
+     [
+      "2024-10-23",
+      12184.04
+     ],
+     [
+      "2024-10-24",
+      12208.46
+     ],
+     [
+      "2024-10-25",
+      12287.82
+     ],
+     [
+      "2024-11-04",
+      12262.59
+     ],
+     [
+      "2024-11-05",
+      12402.0
+     ],
+     [
+      "2024-11-06",
+      12101.62
+     ],
+     [
+      "2024-11-07",
+      12015.18
+     ],
+     [
+      "2024-11-08",
+      12097.03
+     ],
+     [
+      "2024-11-11",
+      12132.49
+     ],
+     [
+      "2024-11-12",
+      12152.88
+     ],
+     [
+      "2024-11-13",
+      12002.91
+     ],
+     [
+      "2024-11-14",
+      11854.01
+     ],
+     [
+      "2024-11-15",
+      12068.69
+     ],
+     [
+      "2024-11-18",
+      12014.63
+     ],
+     [
+      "2024-11-19",
+      11970.31
+     ],
+     [
+      "2024-11-20",
+      11929.59
+     ],
+     [
+      "2024-11-21",
+      11889.38
+     ],
+     [
+      "2024-11-22",
+      11903.09
+     ],
+     [
+      "2024-11-25",
+      11948.85
+     ],
+     [
+      "2024-11-26",
+      11961.08
+     ],
+     [
+      "2024-11-27",
+      11925.29
+     ],
+     [
+      "2024-11-28",
+      11962.15
+     ],
+     [
+      "2024-11-29",
+      12394.72
+     ],
+     [
+      "2024-12-02",
+      12424.35
+     ],
+     [
+      "2024-12-03",
+      12494.39
+     ],
+     [
+      "2024-12-04",
+      12549.25
+     ],
+     [
+      "2024-12-05",
+      12492.51
+     ],
+     [
+      "2024-12-06",
+      12723.44
+     ],
+     [
+      "2024-12-09",
+      12777.01
+     ],
+     [
+      "2024-12-10",
+      12968.6
+     ],
+     [
+      "2024-12-11",
+      12954.83
+     ],
+     [
+      "2024-12-12",
+      12988.38
+     ],
+     [
+      "2024-12-13",
+      12863.05
+     ],
+     [
+      "2024-12-16",
+      12899.62
+     ],
+     [
+      "2024-12-17",
+      12877.91
+     ],
+     [
+      "2024-12-18",
+      13177.04
+     ],
+     [
+      "2024-12-19",
+      13391.67
+     ],
+     [
+      "2024-12-20",
+      13970.16
+     ],
+     [
+      "2024-12-23",
+      13984.98
+     ],
+     [
+      "2024-12-24",
+      14073.99
+     ],
+     [
+      "2024-12-26",
+      14187.03
+     ],
+     [
+      "2024-12-27",
+      14168.45
+     ],
+     [
+      "2024-12-30",
+      14230.83
+     ],
+     [
+      "2024-12-31",
+      14190.7
+     ],
+     [
+      "2025-01-02",
+      14570.82
+     ],
+     [
+      "2025-01-03",
+      14532.57
+     ],
+     [
+      "2025-01-06",
+      14531.02
+     ],
+     [
+      "2025-01-07",
+      14603.88
+     ],
+     [
+      "2025-01-08",
+      14675.55
+     ],
+     [
+      "2025-01-09",
+      14652.85
+     ],
+     [
+      "2025-01-10",
+      14584.61
+     ],
+     [
+      "2025-01-13",
+      14565.03
+     ],
+     [
+      "2025-01-14",
+      14577.36
+     ],
+     [
+      "2025-01-15",
+      14628.41
+     ],
+     [
+      "2025-01-16",
+      14870.67
+     ],
+     [
+      "2025-01-17",
+      14956.62
+     ],
+     [
+      "2025-01-20",
+      14969.96
+     ],
+     [
+      "2025-01-21",
+      15031.05
+     ],
+     [
+      "2025-01-22",
+      15054.25
+     ],
+     [
+      "2025-01-23",
+      15098.88
+     ],
+     [
+      "2025-01-24",
+      15139.25
+     ],
+     [
+      "2025-01-27",
+      15128.55
+     ],
+     [
+      "2025-01-28",
+      15157.34
+     ],
+     [
+      "2025-01-29",
+      15106.72
+     ],
+     [
+      "2025-01-30",
+      15112.14
+     ],
+     [
+      "2025-01-31",
+      15031.21
+     ],
+     [
+      "2025-02-03",
+      15000.47
+     ],
+     [
+      "2025-02-04",
+      14972.43
+     ],
+     [
+      "2025-02-05",
+      15150.13
+     ],
+     [
+      "2025-02-06",
+      15143.54
+     ],
+     [
+      "2025-02-07",
+      15241.31
+     ],
+     [
+      "2025-02-10",
+      15275.8
+     ],
+     [
+      "2025-02-11",
+      15218.67
+     ],
+     [
+      "2025-02-12",
+      15259.09
+     ],
+     [
+      "2025-02-13",
+      15383.73
+     ],
+     [
+      "2025-02-14",
+      15413.31
+     ],
+     [
+      "2025-02-17",
+      15746.8
+     ],
+     [
+      "2025-02-18",
+      15863.84
+     ],
+     [
+      "2025-02-19",
+      15855.67
+     ],
+     [
+      "2025-02-20",
+      15922.33
+     ],
+     [
+      "2025-02-21",
+      16100.22
+     ],
+     [
+      "2025-02-24",
+      16149.25
+     ],
+     [
+      "2025-02-25",
+      16130.33
+     ],
+     [
+      "2025-02-26",
+      16122.26
+     ],
+     [
+      "2025-02-27",
+      16190.53
+     ],
+     [
+      "2025-02-28",
+      16018.91
+     ],
+     [
+      "2025-03-03",
+      15997.56
+     ],
+     [
+      "2025-03-04",
+      15959.92
+     ],
+     [
+      "2025-03-05",
+      15907.12
+     ],
+     [
+      "2025-03-06",
+      15892.83
+     ],
+     [
+      "2025-03-07",
+      15900.6
+     ],
+     [
+      "2025-03-31",
+      15972.83
+     ],
+     [
+      "2025-04-01",
+      16005.14
+     ],
+     [
+      "2025-04-02",
+      15909.09
+     ],
+     [
+      "2025-04-03",
+      15813.86
+     ],
+     [
+      "2025-04-04",
+      16007.95
+     ],
+     [
+      "2025-04-07",
+      16782.8
+     ],
+     [
+      "2025-04-08",
+      17054.07
+     ],
+     [
+      "2025-04-09",
+      17682.4
+     ],
+     [
+      "2025-04-10",
+      17996.18
+     ],
+     [
+      "2025-04-11",
+      18018.8
+     ],
+     [
+      "2025-04-14",
+      18184.27
+     ],
+     [
+      "2025-04-15",
+      18304.45
+     ],
+     [
+      "2025-04-16",
+      18301.29
+     ],
+     [
+      "2025-04-17",
+      18685.77
+     ],
+     [
+      "2025-04-18",
+      18638.42
+     ],
+     [
+      "2025-04-21",
+      18663.78
+     ],
+     [
+      "2025-04-22",
+      19084.3
+     ],
+     [
+      "2025-04-23",
+      19155.67
+     ],
+     [
+      "2025-04-24",
+      19275.42
+     ],
+     [
+      "2025-04-25",
+      19205.23
+     ],
+     [
+      "2025-04-28",
+      19210.18
+     ],
+     [
+      "2025-04-29",
+      19217.48
+     ],
+     [
+      "2025-04-30",
+      19123.12
+     ],
+     [
+      "2025-05-01",
+      18820.39
+     ],
+     [
+      "2025-05-02",
+      18827.7
+     ],
+     [
+      "2025-05-05",
+      19198.89
+     ],
+     [
+      "2025-05-06",
+      19126.72
+     ],
+     [
+      "2025-05-07",
+      19117.54
+     ],
+     [
+      "2025-05-08",
+      19061.41
+     ],
+     [
+      "2025-05-09",
+      18902.45
+     ],
+     [
+      "2025-05-12",
+      18930.25
+     ],
+     [
+      "2025-05-13",
+      19059.97
+     ],
+     [
+      "2025-05-14",
+      19153.29
+     ],
+     [
+      "2025-05-15",
+      19255.48
+     ],
+     [
+      "2025-05-16",
+      19390.15
+     ],
+     [
+      "2025-05-19",
+      19395.0
+     ],
+     [
+      "2025-05-20",
+      19410.23
+     ],
+     [
+      "2025-05-21",
+      19491.6
+     ],
+     [
+      "2025-05-22",
+      19229.36
+     ],
+     [
+      "2025-05-23",
+      19471.16
+     ],
+     [
+      "2025-05-26",
+      19481.56
+     ],
+     [
+      "2025-05-27",
+      19792.36
+     ],
+     [
+      "2025-05-28",
+      19873.88
+     ],
+     [
+      "2025-05-29",
+      19941.67
+     ],
+     [
+      "2025-05-30",
+      20184.79
+     ],
+     [
+      "2025-06-02",
+      20218.04
+     ],
+     [
+      "2025-06-03",
+      20293.81
+     ],
+     [
+      "2025-06-04",
+      20296.51
+     ],
+     [
+      "2025-06-05",
+      20194.87
+     ],
+     [
+      "2025-06-06",
+      20124.44
+     ],
+     [
+      "2025-06-09",
+      20188.47
+     ],
+     [
+      "2025-06-10",
+      19960.35
+     ],
+     [
+      "2025-06-11",
+      19934.88
+     ],
+     [
+      "2025-06-12",
+      19932.98
+     ],
+     [
+      "2025-06-13",
+      19950.97
+     ],
+     [
+      "2025-06-16",
+      19978.05
+     ],
+     [
+      "2025-06-17",
+      19929.08
+     ],
+     [
+      "2025-06-18",
+      19880.12
+     ],
+     [
+      "2025-06-19",
+      19799.04
+     ],
+     [
+      "2025-06-20",
+      19806.53
+     ],
+     [
+      "2025-06-23",
+      19852.18
+     ],
+     [
+      "2025-06-24",
+      19814.75
+     ],
+     [
+      "2025-06-25",
+      19880.85
+     ],
+     [
+      "2025-06-26",
+      20018.07
+     ],
+     [
+      "2025-06-27",
+      19900.61
+     ],
+     [
+      "2025-06-30",
+      20167.64
+     ],
+     [
+      "2025-07-01",
+      20151.28
+     ],
+     [
+      "2025-07-02",
+      20319.27
+     ],
+     [
+      "2025-07-03",
+      20489.36
+     ],
+     [
+      "2025-07-04",
+      20481.31
+     ],
+     [
+      "2025-07-07",
+      20778.38
+     ],
+     [
+      "2025-07-08",
+      20826.34
+     ],
+     [
+      "2025-07-09",
+      20859.38
+     ],
+     [
+      "2025-07-10",
+      20942.24
+     ],
+     [
+      "2025-07-11",
+      20985.79
+     ],
+     [
+      "2025-07-14",
+      21008.58
+     ],
+     [
+      "2025-07-15",
+      21099.83
+     ],
+     [
+      "2025-07-16",
+      21138.79
+     ],
+     [
+      "2025-07-17",
+      21275.4
+     ],
+     [
+      "2025-07-18",
+      21205.71
+     ],
+     [
+      "2025-07-21",
+      21106.56
+     ],
+     [
+      "2025-07-22",
+      21039.93
+     ],
+     [
+      "2025-07-23",
+      21087.52
+     ],
+     [
+      "2025-07-24",
+      21041.44
+     ],
+     [
+      "2025-07-25",
+      21036.76
+     ],
+     [
+      "2025-07-28",
+      21066.65
+     ],
+     [
+      "2025-07-29",
+      21269.03
+     ],
+     [
+      "2025-07-30",
+      21477.17
+     ],
+     [
+      "2025-07-31",
+      21624.46
+     ],
+     [
+      "2025-08-01",
+      21630.94
+     ],
+     [
+      "2025-08-04",
+      21773.29
+     ],
+     [
+      "2025-08-05",
+      21611.72
+     ],
+     [
+      "2025-08-06",
+      21606.26
+     ],
+     [
+      "2025-08-07",
+      21628.73
+     ],
+     [
+      "2025-08-08",
+      21586.25
+     ],
+     [
+      "2025-08-11",
+      21574.22
+     ],
+     [
+      "2025-08-12",
+      21597.28
+     ],
+     [
+      "2025-08-13",
+      21630.94
+     ],
+     [
+      "2025-08-14",
+      21658.31
+     ],
+     [
+      "2025-08-15",
+      21661.45
+     ],
+     [
+      "2025-08-18",
+      21689.35
+     ],
+     [
+      "2025-08-19",
+      21788.79
+     ],
+     [
+      "2025-08-20",
+      21898.31
+     ],
+     [
+      "2025-08-21",
+      22003.79
+     ],
+     [
+      "2025-08-22",
+      22052.56
+     ],
+     [
+      "2025-08-25",
+      21922.44
+     ],
+     [
+      "2025-08-26",
+      21863.97
+     ],
+     [
+      "2025-08-27",
+      21858.8
+     ],
+     [
+      "2025-08-28",
+      21934.84
+     ],
+     [
+      "2025-08-29",
+      22331.89
+     ],
+     [
+      "2025-09-01",
+      22388.83
+     ],
+     [
+      "2025-09-02",
+      23119.3
+     ],
+     [
+      "2025-09-03",
+      23080.1
+     ],
+     [
+      "2025-09-04",
+      23540.33
+     ],
+     [
+      "2025-09-05",
+      23620.68
+     ],
+     [
+      "2025-09-08",
+      23604.26
+     ],
+     [
+      "2025-09-09",
+      23703.7
+     ],
+     [
+      "2025-09-10",
+      23712.22
+     ],
+     [
+      "2025-09-11",
+      23697.77
+     ],
+     [
+      "2025-09-12",
+      23779.66
+     ],
+     [
+      "2025-09-15",
+      23723.0
+     ],
+     [
+      "2025-09-16",
+      23726.15
+     ],
+     [
+      "2025-09-17",
+      23591.0
+     ],
+     [
+      "2025-09-18",
+      23546.59
+     ],
+     [
+      "2025-09-19",
+      23717.46
+     ],
+     [
+      "2025-09-22",
+      23756.13
+     ],
+     [
+      "2025-09-23",
+      23876.01
+     ],
+     [
+      "2025-09-24",
+      23737.79
+     ],
+     [
+      "2025-09-25",
+      23620.68
+     ],
+     [
+      "2025-09-26",
+      23459.51
+     ],
+     [
+      "2025-09-29",
+      23339.78
+     ]
+    ],
+    "by_year": {
+     "2024": 4190.7,
+     "2025": 9149.08
+    },
+    "by_month": {
+     "2024-01": 535.02,
+     "2024-02": -7.5,
+     "2024-03": 48.45,
+     "2024-04": 649.58,
+     "2024-05": -190.69,
+     "2024-06": 144.3,
+     "2024-07": 120.26,
+     "2024-08": -259.38,
+     "2024-09": 753.2,
+     "2024-10": 494.58,
+     "2024-11": 106.9,
+     "2024-12": 1795.98,
+     "2025-01": 840.51,
+     "2025-02": 987.7,
+     "2025-03": -46.08,
+     "2025-04": 3150.29,
+     "2025-05": 1061.67,
+     "2025-06": -17.15,
+     "2025-07": 1456.82,
+     "2025-08": 707.43,
+     "2025-09": 1007.89
+    },
+    "by_symbol": {
+     "EURUSD": 2859.84,
+     "GBPUSD": 863.23,
+     "AUDUSD": 702.31,
+     "USDCAD": 697.46,
+     "USDCHF": 1032.94,
+     "USDJPY": 2286.91,
+     "US100.cash": 209.38,
+     "US500.cash": 254.16,
+     "XAUUSD": 2639.11,
+     "AUDJPY": 221.11,
+     "CADJPY": 660.14,
+     "GBPJPY": 597.61,
+     "EURJPY": 315.58
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.59
+    },
+    "months_positive": 16,
+    "months": 21,
+    "return_pct": 133.4
+   },
+   "expected": null
+  },
+  {
    "name": "2026-11-01_0220_AurumFunded_grz1_on",
-   "state": "no report (run killed or still going)"
+   "job": {
+    "Expert": "AurumFunded",
+    "Symbol": "XAUUSD",
+    "From": "2024.01.01",
+    "To": "2025.09.30",
+    "Deposit": 10000,
+    "Leverage": 33,
+    "Period": "M15",
+    "Set": "InpGrzMult=0.5",
+    "Started": "2026-11-01T02:20:08.7802671+01:00"
+   },
+   "summary": "# j19: AurumFunded grz1 on XAUUSD M15\n\nWritten by tools/autopilot/tester_step.py 2026-11-01 03:10: figures only, the judge judges.\nPreset `mql5/Experts/AurumFunded/AurumFunded_FTMO_phase1_grz.set`, deposit 10000, leverage 1:33, 2024.01.01 to 2025.09.30, set none, compare_set ['InpGrzMult=0.5'].\n\n## legs off (`2026-11-01_0143_AurumFunded_grz1_off`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,339.78 (+133.4%) |\n| Trades / win rate | 2289.0 / 52.34% |\n| Profit factor | 1.65 |\n| Max equity drawdown (relative) | 7.06% |\n| Worst day | 2024-07-25 -2.59% |\n| Return per unit of drawdown | 18.9 |\n| By year | 2024 +4,191, 2025 +9,149 |\n| History quality | 99% real ticks |\n\n## legs on (`2026-11-01_0220_AurumFunded_grz1_on`)\n\n| Measure | Value |\n|---|---|\n| Net profit | +13,732.36 (+137.3%) |\n| Trades / win rate | 2298.0 / 52.26% |\n| Profit factor | 1.63 |\n| Max equity drawdown (relative) | 7.75% |\n| Worst day | 2024-07-25 -2.45% |\n| Return per unit of drawdown | 17.7 |\n| By year | 2024 +5,117, 2025 +8,616 |\n| History quality | 99% real ticks |\n\n## On against off\n\nReturn per unit of equity drawdown: off 18.9, on 17.7 (not higher with the legs on).\n\n## Expected (from the job)\n\nStep 15 for AurumFunded v1.21 (month-reversal leg, magics +36 S&P 500 / +37 Nasdaq). Preset = OFF run; compare_set adds InpGrzMult=0.5 (ON run). Python (research/graziani_reversal.py, US500+US100 equal weight, gross 1.0, 1x cost): +7.1% over 2024.01-2025.09, max DD -16%, about 216 held days; the EA at SizeMult 0.5 x 0.5 x min(3,10%/vol) holds about 1/3 of that gross, so expect about +2.4% (+240 USD, 67-87% of it in the tester per lesson 4), added DD about 5%, roughly 8-10 entries per index (about 40% of months, a trade is renewed without closing when the next month signals again). Rule: last trading day of the month at 22:30 server, buy if price is below the 4th-Friday D1 close, hold to the next month last trading day 22:30, broker stop 5% of equity. Lesson 21: the book CloseEverything (day stop, open-loss stop) can close a month-long hold early; the Python has no such exits, so spot off-schedule closes (empty comment except sl). Do not tune on this window.\n\n## Log lines worth a look\n\n- `2026-11-01_0220_AurumFunded_grz1_on`: OQ\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: LS\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0220_AurumFunded_grz1_on`: RR\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: DR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:01   AurumFunded: close on US100.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0220_AurumFunded_grz1_on`: NQ\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: IR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0220_AurumFunded_grz1_on`: GM\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:11   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: DN\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: OR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n- `2026-11-01_0220_AurumFunded_grz1_on`: EM\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:22   failed market sell 0.09 US100.cash, close #1775 buy 0.09 US100.cash 19514.25 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: QN\t2\t02:53:32.250\tCore 1\t2024.10.28 00:05:32   failed market sell 0.49 US500.cash, close #1774 buy 0.49 US500.cash 5628.35 [Market closed]\n- `2026-11-01_0220_AurumFunded_grz1_on`: NR\t0\t02:53:32.250\tCore 1\t2024.10.28 00:05:32   AurumFunded: close on US500.cash failed, retcode 10018 (market closed)\n",
+   "state": "done",
+   "result": {
+    "expert": "AurumFunded",
+    "symbol": "XAUUSD",
+    "period": "M15 (2024.01.01 - 2025.09.30)",
+    "deposit": 10000.0,
+    "net": 13732.36,
+    "gross_profit": 35661.46,
+    "gross_loss": -21929.1,
+    "profit_factor": 1.63,
+    "recovery": 10.23,
+    "sharpe": 5.19,
+    "trades": 2298.0,
+    "won": "1201 (52.26%)",
+    "eq_dd_max": "1 341.97 (7.75%)",
+    "eq_dd_rel": "7.75% (1 341.97)",
+    "bal_dd_max": "1 102.74 (6.39%)",
+    "ticks": 60098827.0,
+    "history_quality": "99% real ticks",
+    "win_rate": 52.26,
+    "eq_dd_max_pct": 7.75,
+    "bal_dd_max_pct": 6.39,
+    "eq_dd_rel_pct": 7.75,
+    "deals": 4597,
+    "curve": [
+     [
+      "2024-01-02",
+      10309.6
+     ],
+     [
+      "2024-01-03",
+      10335.32
+     ],
+     [
+      "2024-01-04",
+      10355.29
+     ],
+     [
+      "2024-01-05",
+      10384.62
+     ],
+     [
+      "2024-01-08",
+      10491.97
+     ],
+     [
+      "2024-01-09",
+      10509.74
+     ],
+     [
+      "2024-01-10",
+      10454.06
+     ],
+     [
+      "2024-01-11",
+      10425.19
+     ],
+     [
+      "2024-01-12",
+      10460.28
+     ],
+     [
+      "2024-01-15",
+      10468.04
+     ],
+     [
+      "2024-01-16",
+      10580.98
+     ],
+     [
+      "2024-01-17",
+      10570.68
+     ],
+     [
+      "2024-01-18",
+      10598.76
+     ],
+     [
+      "2024-01-19",
+      10551.46
+     ],
+     [
+      "2024-01-22",
+      10506.3
+     ],
+     [
+      "2024-01-23",
+      10504.63
+     ],
+     [
+      "2024-01-24",
+      10509.44
+     ],
+     [
+      "2024-01-25",
+      10528.64
+     ],
+     [
+      "2024-01-26",
+      10529.29
+     ],
+     [
+      "2024-01-29",
+      10552.72
+     ],
+     [
+      "2024-01-30",
+      10504.16
+     ],
+     [
+      "2024-01-31",
+      10535.02
+     ],
+     [
+      "2024-02-01",
+      10500.9
+     ],
+     [
+      "2024-02-02",
+      10624.08
+     ],
+     [
+      "2024-02-05",
+      10698.03
+     ],
+     [
+      "2024-02-06",
+      10669.23
+     ],
+     [
+      "2024-02-07",
+      10616.14
+     ],
+     [
+      "2024-02-08",
+      10636.9
+     ],
+     [
+      "2024-02-09",
+      10699.33
+     ],
+     [
+      "2024-02-12",
+      10685.29
+     ],
+     [
+      "2024-02-13",
+      10662.11
+     ],
+     [
+      "2024-02-14",
+      10645.52
+     ],
+     [
+      "2024-02-15",
+      10668.7
+     ],
+     [
+      "2024-02-16",
+      10691.35
+     ],
+     [
+      "2024-02-19",
+      10730.96
+     ],
+     [
+      "2024-02-20",
+      10558.62
+     ],
+     [
+      "2024-02-21",
+      10524.75
+     ],
+     [
+      "2024-02-22",
+      10552.08
+     ],
+     [
+      "2024-02-23",
+      10497.22
+     ],
+     [
+      "2024-02-26",
+      10480.88
+     ],
+     [
+      "2024-02-27",
+      10464.31
+     ],
+     [
+      "2024-02-28",
+      10478.28
+     ],
+     [
+      "2024-02-29",
+      10762.01
+     ],
+     [
+      "2024-03-01",
+      10812.6
+     ],
+     [
+      "2024-03-04",
+      10827.82
+     ],
+     [
+      "2024-03-05",
+      10821.86
+     ],
+     [
+      "2024-03-06",
+      10833.08
+     ],
+     [
+      "2024-03-07",
+      10848.41
+     ],
+     [
+      "2024-03-08",
+      10807.66
+     ],
+     [
+      "2024-04-01",
+      10747.57
+     ],
+     [
+      "2024-04-02",
+      10685.52
+     ],
+     [
+      "2024-04-03",
+      10621.45
+     ],
+     [
+      "2024-04-04",
+      10781.01
+     ],
+     [
+      "2024-04-05",
+      10927.25
+     ],
+     [
+      "2024-04-08",
+      10955.25
+     ],
+     [
+      "2024-04-09",
+      10901.93
+     ],
+     [
+      "2024-04-10",
+      11025.7
+     ],
+     [
+      "2024-04-11",
+      11052.45
+     ],
+     [
+      "2024-04-12",
+      11052.15
+     ],
+     [
+      "2024-04-15",
+      11078.33
+     ],
+     [
+      "2024-04-16",
+      10962.4
+     ],
+     [
+      "2024-04-17",
+      11056.18
+     ],
+     [
+      "2024-04-18",
+      11022.67
+     ],
+     [
+      "2024-04-19",
+      11217.15
+     ],
+     [
+      "2024-04-22",
+      11192.26
+     ],
+     [
+      "2024-04-23",
+      11175.59
+     ],
+     [
+      "2024-04-24",
+      11182.27
+     ],
+     [
+      "2024-04-25",
+      11278.27
+     ],
+     [
+      "2024-04-26",
+      11374.49
+     ],
+     [
+      "2024-04-29",
+      11346.05
+     ],
+     [
+      "2024-04-30",
+      11455.29
+     ],
+     [
+      "2024-05-01",
+      11474.23
+     ],
+     [
+      "2024-05-02",
+      11465.85
+     ],
+     [
+      "2024-05-03",
+      11453.83
+     ],
+     [
+      "2024-05-06",
+      11446.31
+     ],
+     [
+      "2024-05-07",
+      11417.51
+     ],
+     [
+      "2024-05-08",
+      11431.84
+     ],
+     [
+      "2024-05-09",
+      11427.81
+     ],
+     [
+      "2024-05-10",
+      11332.65
+     ],
+     [
+      "2024-05-13",
+      11297.23
+     ],
+     [
+      "2024-05-14",
+      11290.17
+     ],
+     [
+      "2024-05-15",
+      11334.44
+     ],
+     [
+      "2024-05-16",
+      11342.44
+     ],
+     [
+      "2024-05-17",
+      11310.61
+     ],
+     [
+      "2024-05-20",
+      11265.77
+     ],
+     [
+      "2024-05-21",
+      11279.37
+     ],
+     [
+      "2024-05-22",
+      11317.96
+     ],
+     [
+      "2024-05-23",
+      11282.33
+     ],
+     [
+      "2024-05-24",
+      11387.52
+     ],
+     [
+      "2024-05-27",
+      11377.69
+     ],
+     [
+      "2024-05-28",
+      11276.2
+     ],
+     [
+      "2024-05-29",
+      11260.37
+     ],
+     [
+      "2024-05-30",
+      11260.28
+     ],
+     [
+      "2024-05-31",
+      11266.22
+     ],
+     [
+      "2024-06-03",
+      11241.91
+     ],
+     [
+      "2024-06-04",
+      11264.78
+     ],
+     [
+      "2024-06-05",
+      11235.09
+     ],
+     [
+      "2024-06-06",
+      11265.31
+     ],
+     [
+      "2024-06-07",
+      11227.26
+     ],
+     [
+      "2024-06-10",
+      11189.21
+     ],
+     [
+      "2024-06-11",
+      11181.61
+     ],
+     [
+      "2024-06-12",
+      11111.99
+     ],
+     [
+      "2024-06-13",
+      11174.66
+     ],
+     [
+      "2024-06-14",
+      11146.84
+     ],
+     [
+      "2024-06-17",
+      11163.5
+     ],
+     [
+      "2024-06-18",
+      11166.02
+     ],
+     [
+      "2024-06-19",
+      11099.08
+     ],
+     [
+      "2024-06-20",
+      11315.2
+     ],
+     [
+      "2024-06-21",
+      11301.73
+     ],
+     [
+      "2024-06-24",
+      11245.77
+     ],
+     [
+      "2024-06-25",
+      11319.54
+     ],
+     [
+      "2024-06-26",
+      11278.98
+     ],
+     [
+      "2024-06-27",
+      11262.65
+     ],
+     [
+      "2024-06-28",
+      11854.98
+     ],
+     [
+      "2024-07-01",
+      11860.8
+     ],
+     [
+      "2024-07-02",
+      11888.89
+     ],
+     [
+      "2024-07-03",
+      11919.71
+     ],
+     [
+      "2024-07-04",
+      11903.0
+     ],
+     [
+      "2024-07-05",
+      12031.99
+     ],
+     [
+      "2024-07-08",
+      12030.74
+     ],
+     [
+      "2024-07-09",
+      12098.31
+     ],
+     [
+      "2024-07-10",
+      12045.69
+     ],
+     [
+      "2024-07-11",
+      12260.6
+     ],
+     [
+      "2024-07-12",
+      12278.06
+     ],
+     [
+      "2024-07-15",
+      12276.18
+     ],
+     [
+      "2024-07-16",
+      12245.89
+     ],
+     [
+      "2024-07-17",
+      12313.8
+     ],
+     [
+      "2024-07-18",
+      12314.17
+     ],
+     [
+      "2024-07-19",
+      12115.57
+     ],
+     [
+      "2024-07-22",
+      12122.96
+     ],
+     [
+      "2024-07-23",
+      12111.5
+     ],
+     [
+      "2024-07-24",
+      12284.88
+     ],
+     [
+      "2024-07-25",
+      11983.81
+     ],
+     [
+      "2024-07-26",
+      11933.76
+     ],
+     [
+      "2024-07-29",
+      11938.46
+     ],
+     [
+      "2024-07-30",
+      11982.29
+     ],
+     [
+      "2024-07-31",
+      11990.48
+     ],
+     [
+      "2024-08-01",
+      12173.92
+     ],
+     [
+      "2024-08-02",
+      12387.17
+     ],
+     [
+      "2024-08-05",
+      12086.22
+     ],
+     [
+      "2024-08-06",
+      11848.81
+     ],
+     [
+      "2024-08-07",
+      11831.03
+     ],
+     [
+      "2024-08-08",
+      11757.01
+     ],
+     [
+      "2024-08-09",
+      11891.98
+     ],
+     [
+      "2024-08-12",
+      11915.16
+     ],
+     [
+      "2024-08-13",
+      11796.76
+     ],
+     [
+      "2024-08-14",
+      11804.8
+     ],
+     [
+      "2024-08-15",
+      11733.53
+     ],
+     [
+      "2024-08-16",
+      11734.89
+     ],
+     [
+      "2024-08-19",
+      11722.77
+     ],
+     [
+      "2024-08-20",
+      11693.89
+     ],
+     [
+      "2024-08-21",
+      11653.27
+     ],
+     [
+      "2024-08-22",
+      11658.72
+     ],
+     [
+      "2024-08-23",
+      11665.66
+     ],
+     [
+      "2024-08-26",
+      11678.22
+     ],
+     [
+      "2024-08-27",
+      11682.92
+     ],
+     [
+      "2024-08-28",
+      11667.47
+     ],
+     [
+      "2024-08-29",
+      11651.05
+     ],
+     [
+      "2024-08-30",
+      11662.09
+     ],
+     [
+      "2024-09-02",
+      11678.84
+     ],
+     [
+      "2024-09-03",
+      11892.0
+     ],
+     [
+      "2024-09-04",
+      11936.23
+     ],
+     [
+      "2024-09-05",
+      11878.3
+     ],
+     [
+      "2024-09-06",
+      11996.25
+     ],
+     [
+      "2024-09-09",
+      12057.57
+     ],
+     [
+      "2024-09-10",
+      12086.76
+     ],
+     [
+      "2024-09-11",
+      12086.19
+     ],
+     [
+      "2024-09-12",
+      12090.71
+     ],
+     [
+      "2024-09-13",
+      12246.69
+     ],
+     [
+      "2024-09-16",
+      12252.23
+     ],
+     [
+      "2024-09-17",
+      12235.89
+     ],
+     [
+      "2024-09-18",
+      12547.47
+     ],
+     [
+      "2024-09-19",
+      12598.59
+     ],
+     [
+      "2024-09-20",
+      12698.05
+     ],
+     [
+      "2024-09-23",
+      12659.44
+     ],
+     [
+      "2024-09-24",
+      12661.87
+     ],
+     [
+      "2024-09-25",
+      12544.51
+     ],
+     [
+      "2024-09-26",
+      12474.31
+     ],
+     [
+      "2024-09-27",
+      12447.65
+     ],
+     [
+      "2024-09-30",
+      12449.43
+     ],
+     [
+      "2024-10-01",
+      12473.46
+     ],
+     [
+      "2024-10-02",
+      12468.0
+     ],
+     [
+      "2024-10-03",
+      12433.01
+     ],
+     [
+      "2024-10-04",
+      12513.61
+     ],
+     [
+      "2024-10-07",
+      12459.12
+     ],
+     [
+      "2024-10-08",
+      12478.51
+     ],
+     [
+      "2024-10-09",
+      12581.7
+     ],
+     [
+      "2024-10-10",
+      12632.57
+     ],
+     [
+      "2024-10-11",
+      12672.9
+     ],
+     [
+      "2024-10-14",
+      12780.24
+     ],
+     [
+      "2024-10-15",
+      12772.92
+     ],
+     [
+      "2024-10-16",
+      12742.38
+     ],
+     [
+      "2024-10-17",
+      12738.33
+     ],
+     [
+      "2024-10-18",
+      12724.87
+     ],
+     [
+      "2024-10-21",
+      12700.89
+     ],
+     [
+      "2024-10-22",
+      12733.0
+     ],
+     [
+      "2024-10-23",
+      12852.09
+     ],
+     [
+      "2024-10-24",
+      12877.87
+     ],
+     [
+      "2024-10-25",
+      12961.05
+     ],
+     [
+      "2024-10-28",
+      13056.1
+     ],
+     [
+      "2024-11-04",
+      13029.72
+     ],
+     [
+      "2024-11-05",
+      13173.16
+     ],
+     [
+      "2024-11-06",
+      12872.77
+     ],
+     [
+      "2024-11-07",
+      12781.39
+     ],
+     [
+      "2024-11-08",
+      12868.98
+     ],
+     [
+      "2024-11-11",
+      12906.28
+     ],
+     [
+      "2024-11-12",
+      12928.75
+     ],
+     [
+      "2024-11-13",
+      12769.66
+     ],
+     [
+      "2024-11-14",
+      12618.11
+     ],
+     [
+      "2024-11-15",
+      12844.96
+     ],
+     [
+      "2024-11-18",
+      12787.25
+     ],
+     [
+      "2024-11-19",
+      12740.66
+     ],
+     [
+      "2024-11-20",
+      12696.24
+     ],
+     [
+      "2024-11-21",
+      12653.61
+     ],
+     [
+      "2024-11-22",
+      12668.82
+     ],
+     [
+      "2024-11-25",
+      12718.67
+     ],
+     [
+      "2024-11-26",
+      12728.24
+     ],
+     [
+      "2024-11-27",
+      12687.67
+     ],
+     [
+      "2024-11-28",
+      12728.95
+     ],
+     [
+      "2024-11-29",
+      13191.34
+     ],
+     [
+      "2024-12-02",
+      13225.79
+     ],
+     [
+      "2024-12-03",
+      13299.86
+     ],
+     [
+      "2024-12-04",
+      13357.16
+     ],
+     [
+      "2024-12-05",
+      13292.78
+     ],
+     [
+      "2024-12-06",
+      13550.25
+     ],
+     [
+      "2024-12-09",
+      13606.44
+     ],
+     [
+      "2024-12-10",
+      13808.27
+     ],
+     [
+      "2024-12-11",
+      13794.64
+     ],
+     [
+      "2024-12-12",
+      13830.83
+     ],
+     [
+      "2024-12-13",
+      13696.01
+     ],
+     [
+      "2024-12-16",
+      13735.26
+     ],
+     [
+      "2024-12-17",
+      13711.15
+     ],
+     [
+      "2024-12-18",
+      14028.57
+     ],
+     [
+      "2024-12-19",
+      14257.9
+     ],
+     [
+      "2024-12-20",
+      14875.68
+     ],
+     [
+      "2024-12-23",
+      14890.92
+     ],
+     [
+      "2024-12-24",
+      14987.55
+     ],
+     [
+      "2024-12-26",
+      15112.21
+     ],
+     [
+      "2024-12-27",
+      15092.49
+     ],
+     [
+      "2024-12-30",
+      15157.64
+     ],
+     [
+      "2024-12-31",
+      15116.72
+     ],
+     [
+      "2025-01-02",
+      15520.79
+     ],
+     [
+      "2025-01-03",
+      15480.82
+     ],
+     [
+      "2025-01-06",
+      15480.75
+     ],
+     [
+      "2025-01-07",
+      15556.09
+     ],
+     [
+      "2025-01-08",
+      15633.82
+     ],
+     [
+      "2025-01-09",
+      15609.96
+     ],
+     [
+      "2025-01-10",
+      15538.88
+     ],
+     [
+      "2025-01-13",
+      15518.03
+     ],
+     [
+      "2025-01-14",
+      15531.39
+     ],
+     [
+      "2025-01-15",
+      15584.82
+     ],
+     [
+      "2025-01-16",
+      15849.0
+     ],
+     [
+      "2025-01-17",
+      15940.39
+     ],
+     [
+      "2025-01-20",
+      15954.5
+     ],
+     [
+      "2025-01-21",
+      16018.61
+     ],
+     [
+      "2025-01-22",
+      16043.21
+     ],
+     [
+      "2025-01-23",
+      16091.7
+     ],
+     [
+      "2025-01-24",
+      16135.7
+     ],
+     [
+      "2025-01-27",
+      16123.32
+     ],
+     [
+      "2025-01-28",
+      16153.44
+     ],
+     [
+      "2025-01-29",
+      16098.28
+     ],
+     [
+      "2025-01-30",
+      16105.32
+     ],
+     [
+      "2025-01-31",
+      16017.58
+     ],
+     [
+      "2025-02-03",
+      15983.85
+     ],
+     [
+      "2025-02-04",
+      15953.85
+     ],
+     [
+      "2025-02-05",
+      16151.91
+     ],
+     [
+      "2025-02-06",
+      16145.78
+     ],
+     [
+      "2025-02-07",
+      16251.8
+     ],
+     [
+      "2025-02-10",
+      16287.69
+     ],
+     [
+      "2025-02-11",
+      16223.76
+     ],
+     [
+      "2025-02-12",
+      16267.11
+     ],
+     [
+      "2025-02-13",
+      16400.27
+     ],
+     [
+      "2025-02-14",
+      16430.5
+     ],
+     [
+      "2025-02-17",
+      16783.65
+     ],
+     [
+      "2025-02-18",
+      16909.91
+     ],
+     [
+      "2025-02-19",
+      16901.06
+     ],
+     [
+      "2025-02-20",
+      16973.44
+     ],
+     [
+      "2025-02-21",
+      17158.25
+     ],
+     [
+      "2025-02-24",
+      17206.66
+     ],
+     [
+      "2025-02-25",
+      17186.02
+     ],
+     [
+      "2025-02-26",
+      17178.48
+     ],
+     [
+      "2025-02-27",
+      16875.47
+     ],
+     [
+      "2025-02-28",
+      16691.2
+     ],
+     [
+      "2025-03-03",
+      16664.37
+     ],
+     [
+      "2025-03-04",
+      16621.69
+     ],
+     [
+      "2025-03-05",
+      16564.37
+     ],
+     [
+      "2025-03-06",
+      16550.57
+     ],
+     [
+      "2025-03-07",
+      16556.62
+     ],
+     [
+      "2025-03-31",
+      16626.6
+     ],
+     [
+      "2025-04-01",
+      16662.45
+     ],
+     [
+      "2025-04-02",
+      16563.28
+     ],
+     [
+      "2025-04-03",
+      16465.31
+     ],
+     [
+      "2025-04-04",
+      16161.06
+     ],
+     [
+      "2025-04-07",
+      16936.02
+     ],
+     [
+      "2025-04-08",
+      17222.58
+     ],
+     [
+      "2025-04-09",
+      17854.45
+     ],
+     [
+      "2025-04-10",
+      18169.42
+     ],
+     [
+      "2025-04-11",
+      18192.11
+     ],
+     [
+      "2025-04-14",
+      18357.24
+     ],
+     [
+      "2025-04-15",
+      18482.06
+     ],
+     [
+      "2025-04-16",
+      18478.9
+     ],
+     [
+      "2025-04-17",
+      18864.81
+     ],
+     [
+      "2025-04-18",
+      18816.76
+     ],
+     [
+      "2025-04-21",
+      18842.12
+     ],
+     [
+      "2025-04-22",
+      19326.39
+     ],
+     [
+      "2025-04-23",
+      19396.33
+     ],
+     [
+      "2025-04-24",
+      19517.48
+     ],
+     [
+      "2025-04-25",
+      19447.21
+     ],
+     [
+      "2025-04-28",
+      19452.16
+     ],
+     [
+      "2025-04-29",
+      19460.03
+     ],
+     [
+      "2025-04-30",
+      19365.74
+     ],
+     [
+      "2025-05-01",
+      19128.86
+     ],
+     [
+      "2025-05-02",
+      19136.17
+     ],
+     [
+      "2025-05-05",
+      19514.32
+     ],
+     [
+      "2025-05-06",
+      19440.67
+     ],
+     [
+      "2025-05-07",
+      19431.49
+     ],
+     [
+      "2025-05-08",
+      19379.01
+     ],
+     [
+      "2025-05-09",
+      19216.84
+     ],
+     [
+      "2025-05-12",
+      19244.64
+     ],
+     [
+      "2025-05-13",
+      19374.47
+     ],
+     [
+      "2025-05-14",
+      19467.79
+     ],
+     [
+      "2025-05-15",
+      19571.6
+     ],
+     [
+      "2025-05-16",
+      19706.08
+     ],
+     [
+      "2025-05-19",
+      19710.93
+     ],
+     [
+      "2025-05-20",
+      19724.71
+     ],
+     [
+      "2025-05-21",
+      19804.85
+     ],
+     [
+      "2025-05-22",
+      19538.89
+     ],
+     [
+      "2025-05-23",
+      19789.49
+     ],
+     [
+      "2025-05-26",
+      19800.14
+     ],
+     [
+      "2025-05-27",
+      20110.86
+     ],
+     [
+      "2025-05-28",
+      20194.35
+     ],
+     [
+      "2025-05-29",
+      20263.9
+     ],
+     [
+      "2025-05-30",
+      20510.03
+     ],
+     [
+      "2025-06-02",
+      20543.92
+     ],
+     [
+      "2025-06-03",
+      20620.94
+     ],
+     [
+      "2025-06-04",
+      20623.48
+     ],
+     [
+      "2025-06-05",
+      20519.56
+     ],
+     [
+      "2025-06-06",
+      20449.25
+     ],
+     [
+      "2025-06-09",
+      20511.04
+     ],
+     [
+      "2025-06-10",
+      20280.57
+     ],
+     [
+      "2025-06-11",
+      20255.35
+     ],
+     [
+      "2025-06-12",
+      20253.45
+     ],
+     [
+      "2025-06-13",
+      20271.94
+     ],
+     [
+      "2025-06-16",
+      20299.41
+     ],
+     [
+      "2025-06-17",
+      20249.63
+     ],
+     [
+      "2025-06-18",
+      20200.18
+     ],
+     [
+      "2025-06-19",
+      20118.28
+     ],
+     [
+      "2025-06-20",
+      20125.34
+     ],
+     [
+      "2025-06-23",
+      20172.32
+     ],
+     [
+      "2025-06-24",
+      20133.77
+     ],
+     [
+      "2025-06-25",
+      20200.62
+     ],
+     [
+      "2025-06-26",
+      20337.84
+     ],
+     [
+      "2025-06-27",
+      20217.94
+     ],
+     [
+      "2025-06-30",
+      20483.28
+     ],
+     [
+      "2025-07-01",
+      20466.54
+     ],
+     [
+      "2025-07-02",
+      20637.32
+     ],
+     [
+      "2025-07-03",
+      20809.31
+     ],
+     [
+      "2025-07-04",
+      20800.46
+     ],
+     [
+      "2025-07-07",
+      21097.53
+     ],
+     [
+      "2025-07-08",
+      21146.36
+     ],
+     [
+      "2025-07-09",
+      21179.68
+     ],
+     [
+      "2025-07-10",
+      21264.68
+     ],
+     [
+      "2025-07-11",
+      21308.73
+     ],
+     [
+      "2025-07-14",
+      21332.05
+     ],
+     [
+      "2025-07-15",
+      21423.76
+     ],
+     [
+      "2025-07-16",
+      21463.15
+     ],
+     [
+      "2025-07-17",
+      21602.05
+     ],
+     [
+      "2025-07-18",
+      21532.25
+     ],
+     [
+      "2025-07-21",
+      21432.84
+     ],
+     [
+      "2025-07-22",
+      21365.46
+     ],
+     [
+      "2025-07-23",
+      21413.81
+     ],
+     [
+      "2025-07-24",
+      21366.95
+     ],
+     [
+      "2025-07-25",
+      21362.08
+     ],
+     [
+      "2025-07-28",
+      21391.97
+     ],
+     [
+      "2025-07-29",
+      21599.04
+     ],
+     [
+      "2025-07-30",
+      21808.1
+     ],
+     [
+      "2025-07-31",
+      21952.68
+     ],
+     [
+      "2025-08-01",
+      21651.63
+     ],
+     [
+      "2025-08-04",
+      21794.17
+     ],
+     [
+      "2025-08-05",
+      21632.29
+     ],
+     [
+      "2025-08-06",
+      21626.83
+     ],
+     [
+      "2025-08-07",
+      21649.3
+     ],
+     [
+      "2025-08-08",
+      21606.82
+     ],
+     [
+      "2025-08-11",
+      21594.79
+     ],
+     [
+      "2025-08-12",
+      21617.85
+     ],
+     [
+      "2025-08-13",
+      21651.51
+     ],
+     [
+      "2025-08-14",
+      21678.88
+     ],
+     [
+      "2025-08-15",
+      21682.02
+     ],
+     [
+      "2025-08-18",
+      21709.92
+     ],
+     [
+      "2025-08-19",
+      21809.36
+     ],
+     [
+      "2025-08-20",
+      21918.88
+     ],
+     [
+      "2025-08-21",
+      22024.36
+     ],
+     [
+      "2025-08-22",
+      22072.96
+     ],
+     [
+      "2025-08-25",
+      21942.84
+     ],
+     [
+      "2025-08-26",
+      21884.37
+     ],
+     [
+      "2025-08-27",
+      21879.2
+     ],
+     [
+      "2025-08-28",
+      21955.24
+     ],
+     [
+      "2025-08-29",
+      22341.81
+     ],
+     [
+      "2025-09-01",
+      22398.75
+     ],
+     [
+      "2025-09-02",
+      23129.22
+     ],
+     [
+      "2025-09-03",
+      23090.02
+     ],
+     [
+      "2025-09-04",
+      23550.35
+     ],
+     [
+      "2025-09-05",
+      23630.7
+     ],
+     [
+      "2025-09-08",
+      23614.43
+     ],
+     [
+      "2025-09-09",
+      23713.87
+     ],
+     [
+      "2025-09-10",
+      23722.39
+     ],
+     [
+      "2025-09-11",
+      23707.87
+     ],
+     [
+      "2025-09-12",
+      23789.76
+     ],
+     [
+      "2025-09-15",
+      23732.91
+     ],
+     [
+      "2025-09-16",
+      23736.06
+     ],
+     [
+      "2025-09-17",
+      23600.91
+     ],
+     [
+      "2025-09-18",
+      23552.42
+     ],
+     [
+      "2025-09-19",
+      23723.29
+     ],
+     [
+      "2025-09-22",
+      23762.69
+     ],
+     [
+      "2025-09-23",
+      23882.94
+     ],
+     [
+      "2025-09-24",
+      23747.73
+     ],
+     [
+      "2025-09-25",
+      23628.04
+     ],
+     [
+      "2025-09-26",
+      23463.94
+     ],
+     [
+      "2025-09-29",
+      23732.36
+     ]
+    ],
+    "by_year": {
+     "2024": 5116.72,
+     "2025": 8615.64
+    },
+    "by_month": {
+     "2024-01": 535.02,
+     "2024-02": 226.99,
+     "2024-03": 45.65,
+     "2024-04": 647.63,
+     "2024-05": -189.07,
+     "2024-06": 588.76,
+     "2024-07": 135.5,
+     "2024-08": -328.39,
+     "2024-09": 787.34,
+     "2024-10": 606.67,
+     "2024-11": 135.24,
+     "2024-12": 1925.38,
+     "2025-01": 900.86,
+     "2025-02": 673.62,
+     "2025-03": -64.6,
+     "2025-04": 2739.14,
+     "2025-05": 1144.29,
+     "2025-06": -26.75,
+     "2025-07": 1469.4,
+     "2025-08": 389.13,
+     "2025-09": 1390.55
+    },
+    "by_symbol": {
+     "EURUSD": 2897.57,
+     "GBPUSD": 861.95,
+     "AUDUSD": 657.91,
+     "USDCAD": 699.71,
+     "USDCHF": 962.24,
+     "USDJPY": 2407.29,
+     "US100.cash": 384.51,
+     "US500.cash": 608.35,
+     "XAUUSD": 2426.31,
+     "AUDJPY": 228.94,
+     "CADJPY": 664.36,
+     "GBPJPY": 602.7,
+     "EURJPY": 330.52
+    },
+    "worst_day": {
+     "day": "2024-07-25",
+     "pct": -2.45
+    },
+    "months_positive": 17,
+    "months": 21,
+    "return_pct": 137.32
+   },
+   "expected": null
   },
   {
    "name": "2026-11-01_0143_AurumFunded_grz1_off",
@@ -61036,88 +71709,114 @@ window.AURUM = {
   }
  ],
  "budget": {
-  "now": "2026-11-01T02:34",
-  "week_start": "2026-10-30T18:00",
-  "week_runs": 53,
-  "week_usd": 16.73,
-  "weekly_usd": 100,
-  "fraction": 0.167,
+  "now": "2026-11-08T00:40",
+  "week_start": "2026-11-06T18:00",
+  "week_runs": 3,
+  "week_usd": 0.0,
+  "autopilot_usd": 0.0,
+  "outside_usd": 0.0,
+  "outside_by": {
+   "desk/other": 0.0
+  },
+  "weekly_usd": 300,
+  "fraction": 0.0,
   "skip_above": 0.7,
+  "enforce": false,
   "skip": false,
+  "desk_reserve_usd": 15.0,
+  "desk_reserve_left_usd": 15.0,
+  "skip_fraction": 0.05,
   "today": {
    "finder": {
-    "runs": 9,
-    "cost_usd": 2.306,
-    "tokens": 4023944
-   },
-   "builder": {
-    "runs": 3,
-    "cost_usd": 1.411,
-    "tokens": 3287786
-   },
-   "judge": {
-    "runs": 2,
-    "cost_usd": 1.718,
-    "tokens": 1252142
-   },
-   "tester": {
-    "runs": 2,
-    "cost_usd": 0.042,
-    "tokens": 1959859
+    "runs": 1,
+    "cost_usd": 0.0,
+    "tokens": 0
    }
   },
   "week_days": {
-   "2026-10-30": 0.026,
-   "2026-10-31": 11.223,
-   "2026-11-01": 5.477
+   "2026-11-07": 0.0,
+   "2026-11-08": 0.0
   },
   "trend": [
+   {
+    "week_start": "2026-11-06T18:00",
+    "roles": {
+     "doctor": {
+      "runs": 1,
+      "tokens": 0
+     },
+     "finder": {
+      "runs": 2,
+      "tokens": 0
+     }
+    }
+   },
    {
     "week_start": "2026-10-30T18:00",
     "roles": {
      "monitor": {
-      "runs": 1,
-      "tokens": 818636
+      "runs": 4,
+      "tokens": 1560263
      },
      "finder": {
-      "runs": 35,
-      "tokens": 19222321
+      "runs": 126,
+      "tokens": 56035844
      },
      "builder": {
-      "runs": 11,
-      "tokens": 6917841
+      "runs": 46,
+      "tokens": 17204469
      },
      "doctor": {
-      "runs": 1,
-      "tokens": 608337
+      "runs": 10,
+      "tokens": 3110272
      },
      "portfolio": {
       "runs": 1,
       "tokens": 840202
      },
      "judge": {
-      "runs": 2,
-      "tokens": 1252142
+      "runs": 33,
+      "tokens": 15495244
      },
      "tester": {
       "runs": 2,
       "tokens": 1959859
      },
      "desk:debrief": {
-      "runs": 1,
-      "tokens": 15717
+      "runs": 3,
+      "tokens": 55770
      },
      "desk:scorekeeper": {
-      "runs": 2,
-      "tokens": 48221
+      "runs": 5,
+      "tokens": 112055
      },
      "desk:crypto": {
-      "runs": 1,
-      "tokens": 35259
+      "runs": 6,
+      "tokens": 215328
      },
      "desk:head-trader": {
-      "runs": 1,
-      "tokens": 39186
+      "runs": 2,
+      "tokens": 78802
+     },
+     "desk:fxmacro": {
+      "runs": 6,
+      "tokens": 264679
+     },
+     "desk:systematic": {
+      "runs": 6,
+      "tokens": 241273
+     },
+     "desk:metals": {
+      "runs": 3,
+      "tokens": 120827
+     },
+     "desk:indices": {
+      "runs": 4,
+      "tokens": 178949
+     },
+     "desk:event": {
+      "runs": 5,
+      "tokens": 164722
      }
     }
    },
@@ -61238,10 +71937,6 @@ window.AURUM = {
       "tokens": 2113961
      }
     }
-   },
-   {
-    "week_start": "2026-10-09T18:00",
-    "roles": {}
    }
   ]
  },
@@ -61345,7 +72040,7 @@ window.AURUM = {
  },
  "demo": {
   "today": {
-   "day": "2026-11-01",
+   "day": "2026-11-08",
    "alert": false,
    "experts_lines": 0,
    "orders_by_leg": {},
@@ -61362,34 +72057,208 @@ window.AURUM = {
    "duplicate_close": [],
    "done_reported_failed": [],
    "last_lines": [],
-   "logs_found": [
-    "20261101.log"
-   ]
+   "logs_found": []
   },
-  "log": "# Demo log\n\n## 2026-10-17 (Saturday)\n\n- Trades per leg: not logged (0 EA lines, 0 orders, 0 journal trade lines).\n- P/L of the day: not logged.\n- Slippage on fills: not logged (no fills).\n- Day stop / final stop / margin error / trades without broker stop: none in the log.\n- Odd: no trades logged; EA not attached? Saturday, so the forex market is closed and zero activity is expected; the log file 20261017.log exists. Tester window open until 2026-10-18 18:00, Terminal 16 reported running.\n\n## 2026-10-19 (Monday) \u2014 ALERT: demo EA not attached\n\n- Found by the orchestrator at 07:36 local. AurumFunded is on no chart of Terminal 16 and has not been since\n  2026-10-17 04:57:06 (journal: \"expert AurumFunded (XAUUSD,M15) removed\"). It had loaded at 04:33:55 that day.\n- After that the terminal ran tester configs until 2026-10-18 01:20:43. The keeper then restarted it plain at 01:24:53\n  (\"Terminal 16: started\", not \"started, AurumFunded attached\"). The journal has no Experts line after that start.\n  It logged in to the demo with 0 positions and 0 orders, and it showed 0 positions again on the 23:01 reconnect.\n- The saved charts (Profiles/Charts/Default chart01-04.chr, written 2026-10-18 01:20:40) contain no `<expert>`\n  block. The EA log (MQL5/Logs) exists only for 20261017. demo_check for 2026-10-19 reports \"ok\" with 0 EA lines.\n- Result: no demo trading since Saturday. The clean out-of-sample demo test due to start today has not started.\n  Agents may not attach an EA, so the owner has to re-attach it (HANDOFF \"Waiting on the owner\", approvals a4).\n- Likely cause: the keeper copy that ran at 01:24 had been started on 10-17, before the attach branch was added to\n  keeper.ps1, so it ran the old code. The attach check also runs only while Terminal 16 is closed, so a terminal\n  that stays open without the EA is never caught.\n\n## 2026-10-19 (Monday), 15:30 update: demo EA attached; demo_check ALERT is a false alarm\n\n- Found by the orchestrator at 15:30 local. At 14:53:44 Terminal 16 was shut down and restarted at 14:53:59 from\n  `tools/autopilot/t16_attach.ini`. At 14:54:09 the journal says \"16 inputs read from ... AurumFunded_FTMO_phase1_legs.set\"\n  and \"expert AurumFunded (XAUUSD,M15) loaded successfully\". The EA log prints the 1.06 firm-day line, so the build\n  is 1.06. The clean demo test runs from 14:54 today.\n- **Leverage and margin (the open fidelity question):** \"account leverage 1:100, margin of 1 lot in EUR, XAUUSD\n  7417.67 at 4162.76, USDJPY 890.96 at 158.365, EURUSD 1000.00 at 1.12241, AUDCAD 622.02 at 0.9839, US500.cash\n  137.11 at 7694.45\". At EURUSD 1.12241 that is gold 1:50.0, USDJPY 1:100.0, EURUSD 1:100, US500.cash 1:50.0 (at\n  contract size 1). That is the tester install's setting (1:100, gold 1:50), so j12-j14 are the right reference for\n  the demo, and j3 (Terminal 16 tester at 1:33, gold 1:16.5) is not.\n- **Account currency is EUR**, while the tester jobs use a deposit of 10000 USD. The firm's limits are in EUR: \"firm day\n  2026.10.19, day start 10000.00, day stop at 9700.00, final stop at 9150.00 (static)\". Compare demo and tester in %\n  of the balance, not in currency. The P&L of USD-quoted symbols carries the EURUSD move.\n- **Trades:** 1 order, 1 deal: a breakout market buy of 0.01 USDJPY with sl 157.700, \"done in 180.438 ms\". The deal\n  filled at 158.365 three ms after the order result. Range 157.700-158.143 (0.73x its 60-day average).\n- **The ALERT is false.** demo_check reported \"breakout order on USDJPY failed, retcode 10009 (done at 0.000)\".\n  10009 is TRADE_RETCODE_DONE. The EA judges `!ok || g_trade.ResultDeal()==0` (`Legs.mqh:1630`), and FTMO's market\n  execution returns the order with deal 0; the deal comes moments later. So the fill was logged as a failure and\n  its \"broke its range, bought\" line is missing. No duplicate: on the next tick `HeldLots` (`Legs.mqh:1605`) sees the\n  position. The same deal-0 test is on the grid (915), fix (1156), stock-fall (1258), Tokyo-morning (1375),\n  after-holiday (1513) and noise (1843) legs. Their next-tick guards (HeldLots / TradedSince, the grid's level\n  count) stop a repeat unless a tick arrives before the position shows. The demo has no repeat order so far.\n- **Late-attach entry:** the leg bought on the first tick after the attach, 22 pips above the range high, because\n  the break had happened before 14:54 and nothing limits how late the entry may come. The tester would have bought\n  at the break, nearer 158.143. Fidelity should flag today's breakout fill as a restart artefact, not a model gap.\n  Any mid-session restart by the keeper can cause the same thing.\n\n## 2026-10-20 (Tuesday): ALERT is the deal-0 false alarm again; one unplanned restart, no harm\n\nChecked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the repo's 1.07 has the deal-0 fix.\n\n- **The ALERT is false.** The Tokyo leg sold 0.63 USDJPY at 02:55:00, filled at 158.558. That is 1 order and 1 deal,\n  with no repeat. The ALERT is the same 10009/deal-0 read as on 10-19.\n- **Unplanned restart:** the EA was removed at 04:12:58 and the terminal exited cleanly at 04:13:21. The keeper's 10-20\n  log starts at 04:14:22; its 10-19 log ends at 14:54, so the keeper itself was restarted. It relaunched T16 with the\n  attach ini at 04:14:28, and the EA loaded at 04:14:35 and synced 1 position. The cause of the keeper restart is not\n  in the logs (a PC or scheduled-task restart?).\n- **Tokyo exit on time:** the position closed at 04:24:59 at 158.432, the planned 90-min end, so the restart did no\n  harm. The leverage line prints twice (00:05 and 04:14).\n- **Other trades:** each was 1 order with no repeat.\n\n  | Leg | Side and size | Opened | Closed |\n  |---|---|---|---|\n  | breakout | sell 0.02 USDJPY | 158.106 at 09:40 (range 158.106-158.600, 0.81x) | 157.985 at 16:59:59 |\n  | midday | sell 0.44 EURUSD | 1.12121 at 12:30 | 1.12110 at 13:59:59 |\n  | US500.cash | buy 0.70 | 7743.15 at 16:30 | 7717.55 at 17:30 |\n  | US100.cash | buy 0.09 | 29689.08 at 16:30 | 29560.13 at 17:30 |\n\n  The bell leg was skipped (move -0.45 is below 1.5x the average 3.30).\n- **Account:** the firm day started at 9992.46 EUR; the day stop was 9692.46 and the final stop is 9150.00. Neither\n  was hit.\n- **Agent runs:** every relay run on 10-20 ended at once with \"weekly limit, resets Oct 23 18:00\". So no orchestrator\n  or fidelity run happened between 10-19 15:35 and this run.\n\n## 2026-10-21 (Wednesday)\n\n- demo_check ok; 1 EA line so far.\n- 05:32 local: still no orders, as expected. The Tokyo leg trades only on settlement days (dates divisible by 5, or\n  the Friday before one that falls on a weekend; `Legs.mqh:589`), so the 21st has no Tokyo trade. The breakout and\n  noise legs open later in the day.\n- 12:36 local: no ALERT. The firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at\n  9150.00 (static). At 09:00 the USDJPY range was 158.025-158.388, 0.59x its 60-day average. That is inside the\n  filter (`InpBreakMinRange` 0.25, `Legs.mqh:1618`), so the breakout leg is armed and waiting for a break. At\n  12:29:59 the midday leg sold 0.42 EURUSD at 1.12258, with the stop at 1.12458 and model weight 1.19. That is\n  1 order with no repeat. Fills are compared with the tester after the first demo week (10-23).\n- 13:16 local: no ALERT. At 12:56:54 the breakout leg sold 0.03 USDJPY at 158.025, the range low, with the stop at\n  158.388, the range high. That is 1 order with no repeat.\n- 19:00 local: no ALERT. The noise leg bought 0.09 US100.cash twice: at 17:59:59 at 29856.58 (bands 29832.19 /\n  29356.58) and at 18:59:59 at 29884.08 (bands 29838.62 / 29350.19). The leg never adds to a held position. It skips\n  a new entry while it holds one (`Legs.mqh:1864-1880`). Before it buys again, it closes the position once the bid is\n  below max(upper band, day average). So the second buy follows an exit at the 18:30 or 19:00 check. The EA does not\n  log noise exits, so the demo log cannot show which check closed it. The fill comparison (10-23) will show it from\n  the deal history.\n- 20:31 local: no ALERT. At 20:29:59 the noise leg bought 0.09 US100.cash at 29896.58 (bands 29864.07 / 29324.90),\n  its third buy today with the same size. It again follows an exit of the held position: the leg cannot add while it\n  holds one (`Legs.mqh:1864-1880`). The exit can fall in the same check as the re-entry. When the day average lies\n  above the bid and the bid above the upper band, the leg closes and buys again at once. The Python model does the\n  same and charges the cost of each close (`research/noise_area_index.py:106-117`), so this churn is in the\n  expectation. The deal history at the 10-23 fill comparison shows which checks closed the positions.\n\n## 2026-10-21 (Wednesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports 8 EA lines, orders midday 1 and other 4, 0 journal trade\nlines. The Terminal 16 experts log has 9 AurumFunded lines, all listed below.\n\n- **Trades:** 5 orders today, each 1 order with no repeat. Midday 1 (sell 0.42 EURUSD at 12:29:59, 1.12258). Breakout 1\n  (sell 0.03 USDJPY at 12:56:54, 158.025). Noise 3 (buy 0.09 US100.cash at 17:59:59, 18:59:59 and 20:29:59). The noise\n  buys match the 19:00 and 20:31 notes above and add nothing new.\n- **New since 20:31:** one skip line at 21:59:59, \"bell move +1.25 is below 1.5 x average 3.25, no trade today\".\n  It is a skip, not an order.\n- **Account:** the firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at 9150.00 (static).\n  Neither was hit. No margin error was logged.\n- **Clock check and errors:** no clock-check skips and no errors in the log.\n- **P/L of the day:** not logged (the EA log has no close lines for today).\n- **Slippage:** not logged; the fill comparison with the tester waits for the first demo week (10-23).\n- **Trades without a broker stop:** none logged; each open line shows a stop (1.12458, 158.388, and the noise bands).\n\n## 2026-10-22 (Thursday), 16:30 check (judge): no ALERT\n\n`tools/demo_check.py` reports 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, no day stop, final stop,\nfailure or clock line.\n\n- Midday sold 0.23 EURUSD at 1.12225, stop 1.12422 (1 order).\n- Breakout skipped: USD/JPY range 157.290-158.251 (1.58x its 60-day average), \"balance too small for the minimum lot\n  of USDJPY at a stop of 1.181\" (`RiskLots()` floor; see the judge's 14:40 note in `docs/HANDOFF.md`).\n- Noise sold 0.68 US500.cash at 7657.45 (bands 7783.22 / 7662.51) and 0.09 US100.cash at 29172.68 (bands 29922.10 /\n  29227.01). Both bids were below the lower band, the designed short entry (`Legs.mqh:1880-1887`); one order each, no\n  repeat. The checker counts them as \"other\" (proposed tools change (7) in `docs/HANDOFF.md`).\n\n## 2026-10-22 (Thursday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, and one skip (breakout). The Terminal 16 experts log has 6 AurumFunded lines, the last at 16:29:59. Nothing new was logged after the 16:30 judge check.\n\n- **Trades per leg:** midday 1 (sell 0.23 EURUSD at 12:29:59, 1.12225, stop 1.12422, model weight 1.00). Breakout 0 (skipped at 08:59:59: range 157.290-158.251 at 1.58x its 60-day average, and \"balance too small for the minimum lot of USDJPY at a stop of 1.181\"). Noise 2 (sell 0.68 US500.cash at 16:29:59, 7657.45, bands 7783.22 / 7662.51; sell 0.09 US100.cash at 16:29:59, 29172.68, bands 29922.10 / 29227.01). One order each, no repeat. No bell, Tokyo, fix or other leg lines today.\n- **Account:** the firm-day lines (day start, day stop, final stop) are not logged today, so the day stop and final stop cannot be checked from the log. No margin error logged.\n- **P/L of the day:** not logged (no close lines in the EA log).\n- **Slippage:** not logged. The log gives fill prices only, not the quote at signal time, so the fills cannot be compared with the tester yet. The fill comparison starts 10-23.\n- **Trades without a broker stop:** none. The midday line shows its stop. The noise lines print the bands, not the stop, but the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`, 3 x the leg's volatility from the entry price). The printed line does not show that stop value, so it is not logged.\n- **Odd:** the breakout skip is the RiskLots floor (judge notes 14:43 and 16:33 in `docs/HANDOFF.md`), not a fault. The two noise shorts are designed lower-band entries.\n\n## 2026-10-23 (Friday), 10:30 check (judge): no ALERT\n\n`tools/demo_check.py` reports ok, 4 EA lines, orders Tokyo 1 and other 1, 0 journal trade lines, no day stop, final stop,\nfailure or clock line.\n\n- **Account:** firm day 2026.10.23, day start 10043.55, day stop at 9743.55, final stop at 9150.00 (static).\n- **Leverage:** \"account leverage 1:100, margin of 1 lot in EUR, XAUUSD 7183.07 at 4029.02\" at 00:05, and again at\n  01:45:34 after the keeper restart onto AurumFunded 1.10 (gold about 1:50, as on 10-19). `demo_check.py` hides this\n  line because it contains \"account\" (proposed tools change (8) in `docs/HANDOFF.md`).\n- Tokyo sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895, model weight 0.50 (1 order).\n- Breakout: USD/JPY range 156.075-157.123 (1.70x its 60-day average), bought 0.01 lots at 157.123 at 09:06, stop\n  156.075. The 1.048 range is just under the 1.09 above which the 0.01 floor blocks a trade (judge note 10-22 14:40).\n  The checker counts it as \"other\" (tools change (7)).\n- **Trades without a broker stop:** none; both order lines show a stop.\n- **Slippage:** the fill comparison waits for the full first demo week (fidelity, after today's close).\n\n## 2026-10-23 (Friday), 12:36 check (judge): no ALERT\n\n`tools/demo_check.py` reports ok, 5 EA lines, orders Tokyo 1, other 1, midday 1, 0 journal trade lines.\n\n- **New since 10:30:** at 12:30:00 the midday leg sold 0.44 EURUSD at 1.11993, stop 1.12200, model weight 1.36\n  (1 order, no repeat, broker stop set).\n- **Size check (midday 10-21 / 10-22 / 10-23: 0.42 / 0.23 / 0.44 lots):** risk at the stop divided by model weight is\n  0.63 / 0.40 / 0.60% of balance. With `InpSizeMult` 0.5 and `InpMeridianRiskPct` 1.0 (phase1 preset), that is the\n  loss-run factor `Progression()` (`Legs.mqh:519-535`, `InpLossMult` 0.67 / `InpLossNorm` 0.80): 1.25 after a win,\n  0.84 after one loss. So 10-21's midday trade closed at a loss (inferred from the size; the EA logs no closes) and\n  10-22's at a win. Designed behaviour; the tester runs the same code, so it is in the tester figures.\n- No skip, error, day stop or clock line. No ALERT.\n\n## 2026-10-23 (Friday), 15:25 check (judge): ALERT, harmless (a duplicate close)\n\n`tools/demo_check.py` reports ALERT, 6 EA lines, orders Tokyo 1, other 1, midday 1: \"close on EURUSD failed,\nretcode 10036 (position closed)\" at 14:00:00.795.\n\n- **What happened (terminal journal):** the midday exit sent a close for the 12:30 EURUSD sell at 13:59:59.507. It\n  was placed at 13:59:59.612 and filled at 14:00:00.736 (1235 ms): bought 0.44 at 1.11902 against the 1.11994 sell,\n  about +40 USD before commission. At 14:00:00.792 a second close of the same position was refused (\"Position doesn't\n  exist\"), and the EA logged it as retcode 10036.\n- **Cause:** `CloseAll` (`Legs.mqh:357-373`) runs on every tick and once a second, and trades synchronously. On the\n  next call, 56 ms after the fill, `PositionsTotal()` still listed the position, so the EA sent the close again.\n  Nothing opened, and `Leg()` (`Legs.mqh:779-780`) ignores the return value, so no state changed. The tester fills\n  at once, so the tester figures are not affected.\n- **Win after loss:** with this win, the next midday size goes up by the 1.25 factor (`Progression()`, 12:36 note).\n- No other skip, error, day stop or clock line. The checker and EA changes are proposed as (9) in `docs/HANDOFF.md`.\n  The demo's inputs are not changed.\n\n## 2026-10-23 (Friday), 17:03 check (judge): no new ALERT; EA re-initialised on M1 at 16:30\n\n`tools/demo_check.py` still reports the ALERT, but it is the 14:00 duplicate close explained at 15:25. There are 8 EA\nlines now; 2 are new:\n\n- **16:30:16, chart now XAUUSD,M1 (it was attached on M15):** the EA ran OnInit again and printed the USD/JPY\n  breakout range 156.075-157.123 again. This is likely a chart timeframe change. The terminal journal is written to\n  disk only up to 01:45, so the cause is not confirmed. No order was repeated:\n  - OnInit resets the breakout state (`Legs.mqh:2319-2320`).\n  - The late-start guard (`Legs.mqh:1747-1772`) skips a side that is already held or traded, so the 09:06 high-side\n    buy was not sent again.\n  - The low side (156.075) stays armed, as it would in an EA that kept running.\n  - The loss-run sizing (`Progression()`, `Legs.mqh:519-535`) is read from the 90-day deal history, so the reinit\n    does not reset it.\n  - The legs read their bars with explicit `PERIOD_*` arguments, so the chart period should not change what they\n    trade. Ticks on an M1 chart can arrive at different times, which may shift when an order is sent within a minute.\n- **17:00:00, US100.cash bought 0.08 lots at 29120.83, bands 29077.93 / 28742.05:** the noise leg (\"other\" 2 =\n  breakout + noise). Designed; 1 order, no repeat.\n- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo. Owner: please\n  confirm whether the XAUUSD chart was switched to M1 at 16:30 (switching back to M15 is the owner's choice; agents do\n  not touch the terminal).\n\n## 2026-10-23 (Friday), 20:25 check (judge): no new ALERT; second US100 noise buy at 17:59:59\n\n`tools/demo_check.py` still shows only the explained 14:00 ALERT. There are 9 EA lines; 1 is new:\n\n- **17:59:59.596, US100.cash bought 0.08 lots at 29123.83, bands 29114.00 / 28706.11:** the noise leg's exit and\n  re-entry at the same half-hour check, the pattern judged on 10-21 (18:59 and 20:29). The leg cannot add to a held\n  position: when it holds one it either keeps it (`continue`) or closes it under max(upper band, session average) and,\n  with the bid still above the upper band, buys again (`Legs.mqh:1989-2012`). The close leaves no EA line, and the\n  journal is flushed only to 01:45, so the close itself is not visible. The same code runs in the tester.\n- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo.\n\n## 2026-10-23 (Friday), 23:16 check (monitor): no new ALERT; the tool's ALERT is the known 14:00 duplicate close\n\nChecked by the monitor role. `tools/demo_check.py` reports ALERT, 10 EA lines, orders Tokyo 1, other 3, midday 1, 0 journal\ntrade lines. The flag is the failed close at 14:00:00.795 (retcode 10036), explained in the 15:25 judge check: a second\nclose of a position already closed at 13:59:59. It is not a monitor trigger (no day stop, final stop, margin error or\ntrade without a broker stop).\n\n- **Trades per leg (logged opens):** Tokyo 1 (sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895). Breakout 1 (bought 0.01\n  USDJPY at 157.123 at 09:06, stop 156.075). Midday 1 (sold 0.44 EURUSD at 1.11993 at 12:30, stop 1.12200; closed at\n  13:59:59 by the leg's exit, per the 15:25 note). Noise 2 (bought 0.08 US100.cash at 17:00:00 and at 17:59:59, bands in\n  the log). Bell skipped at 21:59:59 (move +0.83 is below 1.5 x the average 2.95). Each leg shows one order, no repeat.\n- **Tester comparison:** not possible. Tester jobs end 2025-09-30 (holdout), so there is no tester figure for this day.\n- **P/L of the day:** not logged (no P/L line in the EA log, no journal trade lines, no end-of-day equity). Only the midday\n  close can be worked out from the logged prices: sold 1.11993 and closed at 1.11902 on 0.44 lots is about +40 USD before\n  commission. The other legs' closes are not in the log.\n- **Slippage on fills:** not logged (fill prices only, no quote at signal time). The fill comparison waits for fidelity\n  after the first demo week.\n- **Account:** firm day 2026.10.23, day start 10043.55, day stop 9743.55, final stop 9150.00 (static). No day-stop or\n  final-stop line. No margin error. No clock-check skip.\n- **Trades without a broker stop:** none shown. Midday and breakout lines print a stop. The noise lines print bands, not the\n  stop; the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`), which the printed line does\n  not show.\n- **Odd:** nothing new. The 16:30 M1 re-initialisation and the 17:59:59 noise buy are the ones judged at 17:03 and 20:25.\n\n## 2026-10-24 and 2026-10-25 (weekend)\n\nNo entry: the demo window was closed (Saturday 00:00 to Sunday 18:00), so no trades were expected.\n\n## 2026-10-26 (Monday), 23:15 check (monitor): no ALERT; no trades logged\n\n`tools/demo_check.py` reports ok: 3 EA lines, orders none, 0 journal trade lines, no day stop, final stop, margin error, failure, skip or clock line.\n\n- **Trades per leg:** none. No order was logged for any leg.\n- **Reason given in the log:** no trading today, European and US summer time differ. The EA held out for the session; the two regions change clocks on different dates, so session times are off for part of the year.\n- **Account:** firm day 2026.10.27 as logged, day start 10000.97, day stop 9700.97, final stop 9150.00 (static). Neither stop was hit; no trade was taken.\n- **Leverage:** account leverage 1:100 (gold 7189.40 at 4016.43), the same as the 10-19 reading.\n- **P/L of the day:** not logged.\n- **Slippage on fills:** not logged (no fills). No tester figure: tester jobs end 2025-09-30 and demo days are after the holdout.\n- **Trades without a broker stop:** none (no orders).\n- **Odd:** only the summer-time note. Worth a look if the demo should trade every weekday.\n- **Fidelity:** docs/fidelity/2026-10-23.md exists, so no fidelity week is due today.\n\n## 2026-10-27 19:26 \u2014 demo EA updated to Funded 1.16 (owner request)\n\nThe owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.\n\n- **How:** Terminal 16 was closed gracefully under a short owner hold (`terminal.ps1 -Hold -By owner -Hours 0.25`), then released. The keeper restarted it at 19:26 with `t16_attach.ini`, because the saved chart had no AurumFunded.\n- **Journal:** \"16 inputs read from expert 'AurumFunded\\AurumFunded' set file ... AurumFunded_FTMO_phase1_legs.set\"; \"expert AurumFunded (XAUUSD,M15) loaded successfully\" at 19:26:40.\n- **Build:** AurumFunded.ex5 compiled 2026-10-27 17:56 (1.16, 0 errors, 0 warnings, reviewer PASS in docs/autopilot/gaps_report.md).\n- **Experts log at 19:26:43:** account leverage 1:100; \"no trading today, European and US summer time differ\". The DST guard keeps it flat until the US clock change on 11-01.\n- **Positions before the restart:** none. The 00:49 sync showed 0 positions and 0 orders.\n- **Preset:** unchanged, AurumFunded_FTMO_phase1_legs.set.\n\n## 2026-10-27 19:55 - T16 on the New York clock preset (owner)\n\n- Change: T16 now loads `AurumFunded_FTMO_phase1_legs_nyclock.set`, a copy of phase1_legs.set with only `InpEuClock=false`. `tools/autopilot/t16_attach.ini` points at it. Funded 1.16 is unchanged and no existing .set file was edited.\n- Why: 1.16 stayed flat with \"no trading today, European and US summer time differ\" after Europe changed its clocks on 10-25. FTMO's server stays at New York + 7 hours (GMT+3) all year. The T16 journal showed GMT+3 both before the change (10-19: 14:54 CEST local = 15:54 server) and after it (10-26: 22:01 GMT+1 local = 00:01 server). The legs are built around that offset, so the pause was blocking nothing.\n- Effect: with `InpEuClock=false`, the live check expects the server at GMT + 2 + US summer = GMT+3, which matches. The demo can trade from the next session instead of waiting for 11-01.\n- Restart: owner hold, then release. The keeper relaunched T16 with `/config:t16_attach.ini`.\n- Still open: the other FTMO presets (and the funded account's) keep `InpEuClock=true`. They would pause the same way from 03-14 to 03-28 2027 unless the EA default changes.\n\n## 2026-10-27 20:10 - AurumFunded 1.17 built (owner request)\n\n- 1.17: live, only the measured server clock (TimeTradeServer - TimeGMT against New York + 7) stops a day. The InpEuClock skip now acts only in the tester and defaults to false. This fixes every preset, the funded ones and the 2027-03-14..03-28 gap included, without editing any .set file.\n- Compiled 0 errors, 0 warnings. Tester behaviour is unchanged: tester runs set InpEuClock=true explicitly.\n- T16 still runs 1.16 on the nyclock preset, which behaves the same live. 1.17 loads at the next restart. It was not forced because a US100.cash 0.07 buy is open (deal #547910787, 19:59:58).\n- Live trades on the European/US gap days have no matching tester trades.\n\n## 2026-10-27 20:20 - 1.17 review: PASS, one known risk\n\n- Reviewer: PASS. The live clock check passes on FTMO GMT+3 for 10-26..10-31 and 2027-03-14..03-27, and on GMT+2 from 11-02. LondonOffset is right on gap days.\n- Known risk: InpPropResetHHMM=100 is fixed. On gap days FTMO's CET midnight is 02:00 server, so the EA's firm day starts 1 hour early. The day-stop start level and the day count can be off by that hour's P/L. Our 3% day stop leaves 2% of room under the firm's 5%. This applies until 11-01, and again 2027-03-14..03-28.\n\n## 2026-10-27 (Tuesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, orders noise 1, 4 journal trade lines, one skip (bell). The Terminal 16 experts log is two daily log files for the same date. No day stop, final stop or margin error logged.\n\n- **Trades per leg:** noise 1 (buy 0.07 US100.cash at 29647.28, bands 29624.22 / 29053.87, closed at 29652.88). Bell 0 (skipped: \"bell move -1.11 is below 1.5 x average 2.91, no trade today\"). No midday, breakout, Tokyo, fix or other leg lines today.\n- **Closes and P/L of the day:** 1 close, US100.cash 0.07 lots at 29652.88, P/L 0.37 EUR. P/L of the day 0.37 EUR (demo_check `pl_of_day`).\n- **Account:** the firm-day line for 2026.10.28 logs day start 10001.34, day stop 9701.34, highest day start 10043.55, final stop 9150.00 (static). Account leverage logged as 1:100. No margin error logged.\n- **Slippage:** the log gives fill and close prices only, not the quote at signal time, so the slippage on the fill is not logged. The judge check at 20:04 recorded the fill 0.2 pt better than the logged price. The tester pairing is not run for demo days, so no tester comparison.\n- **Trades without a broker stop:** none. The judge check (decisions.jsonl, 2026-10-27 20:04) records the broker stop on this US100 buy.\n- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.\n\n## 2026-10-28 (Wednesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 9 EA lines, 11 journal trade lines, two daily log files for the date. No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** midday 1 (EURUSD sell 0.45). Other 2 (USDJPY breakout: sell 0.04 at 157.741 and buy 0.04 at 158.046 on the same tick, one entry per side, as the leg is built). No bell, noise, Tokyo, fix or Dual Thrust lines logged today.\n- **Closes and P/L of the day:** 3 closes, all in EUR, matching the 3 orders. EURUSD 0.45 at 1.11347, P/L -33.57. USDJPY 0.04 at 158.046, P/L -7.07 (the sell, stopped out). USDJPY 0.04 at 158.165, P/L +2.59. P/L of the day -38.05 EUR (demo_check `pl_of_day`).\n- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.29: day start 9962.10, day stop 9662.10, highest day start 10043.55, final stop 9150.00 (static).\n- **Slippage on fills:** EURUSD midday sell filled at 1.11267 against 1.11266 in the log, 0.1 pip worse (judge note 12:33). USDJPY sell stopped at 158.046 against a stop of 158.039, 0.7 pip (judge note 14:34). The log gives no quote at signal time, so further slippage is not logged.\n- **Trades without a broker stop:** none. The EURUSD order carried a stop at 1.11465 (judge note 12:33); the USDJPY orders carried stops at 158.039 (sell) and 157.748 (buy) (judge note 14:34).\n- **Odd:** nothing beyond the two-sided USDJPY breakout, which is the leg's design (separate magics, one entry per side per day).\n\n## 2026-10-29 (Thursday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, 8 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** midday 1 (EURUSD sell 0.21 at 1.11463, broker stop 1.11659). Other 1 (USDJPY breakout buy 0.02 at 158.068, stop 157.602 at the range low). No bell, noise, Tokyo, fix or Dual Thrust orders. Bell skipped: \"bell move +4.34 is below 1.5 x average 3.10, no trade today\".\n- **Closes and P/L of the day:** 2 closes, both in EUR. EURUSD 0.21 at 1.11278, P/L +34.20. USDJPY 0.02 at 157.857, P/L -2.46. P/L of the day +31.74 EUR (demo_check `pl_of_day`).\n- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.30: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static).\n- **Slippage on fills:** EURUSD sell filled at 1.11463, the journal price, so 0 pips against the log. USDJPY buy filled at 158.068 against a range high of 158.067, 0.1 pip above (judge note 13:07). The log gives no quote at signal time, so further slippage is not logged.\n- **Trades without a broker stop:** none. Both entries carried a broker stop (judge notes 12:31 and 13:07).\n- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.\n\n## 2026-10-30 (Friday), 17:45 change (owner): Dual Thrust leg on from the next start\n\nOwner asked to turn the Dual Thrust index leg on in the T16 demo. New preset `AurumFunded_FTMO_phase1_legs_nyclock_dual.set` (the nyclock preset plus InpDualMult=0.25, GER40.cash and JP225.cash, K 0.3 / 0.7, max spread 5 bp: the j18 on run), copied to T16's Presets; `tools/autopilot/t16_attach.ini` now loads it.\n\n- **Restart:** not done mid-session, as with 1.17: 4 trades were open at 17:36 (AUDUSD sell 0.01 and USDCAD buy 0.01 after the fix, US500.cash sell 0.63 and US100.cash sell 0.08 noise). A one-off script restarts T16 on Saturday 2026-10-31 00:30, after the Friday close, by the 10-27 method (owner hold, graceful close, release, the keeper starts T16 with t16_attach.ini), so 1.18 (already in the junctioned Experts folder) loads with the new preset.\n- **Watch from Monday:** first Dual Thrust orders on US500, US100, GER40 and JP225 (magics +32 to +35). PropDays counts magics only up to +25, so Dual-only days do not count as trading days. GER40 had a Sharpe of -0.04 on its own in the j18 run. 1.18 had no independent review and its compile log is not in the repo.\n\n## 2026-10-31 (Saturday), 18:11 change (owner): AurumFunded 1.19 on T16\n\nOwner asked for the four should-fixes of the 1.18 review. 1.19: (1) Dual Thrust waits 10 s (GRID_WAIT) for a sent order to show among the positions before it may send again; (2) InpDualMaxRiskPct (default 1.0, not in any .set file) caps the loss at the broker stop per Dual trade at SizeMult() x 1% of balance, and below the minimum lot the market skips the day; (3) PropDays counts magics up to +35, so breakout, noise-area, VRP and Dual days count as trading days; (4) compile logs for 1.18 and 1.19 in the repo (0 errors, 0 warnings). Independent review: one blocker on the first draft (the cap ignored SizeMult), fixed before the deploy; commit 7d4306e.\n\n- **Restart:** market closed, 0 positions. Owner hold 18:09:45, T16 closed 18:10:00, released 18:10:02; keeper 18:10:59 \"Terminal 16: started, AurumFunded attached\". Journal 18:11:34: 23 inputs read from `AurumFunded_FTMO_phase1_legs_nyclock_dual.set`, \"expert AurumFunded loaded successfully\", 0 positions, 0 orders.\n- **Watch from Monday:** the cap is not in the Python test of prebuilt_dual_thrust_four_indices_ew, so on wide-range days the demo trades smaller than the gate figures; the judge should not compare capped demo days with the uncapped test. A position that takes more than 10 s to show can still be sent twice (bounded by DUAL_FLIPS), as with the grid. Check that none of the four indices prints \"not available\".\n\n## 2026-10-30 (Friday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 30 EA lines, 36 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** Tokyo 1 (USDJPY sell 0.26, broker stop 157.966, closed 03:25 after the 90 min hold, P/L -2.96). Other 1 (USDJPY breakout sell 0.01 below the range low, stop 157.893, closed 18:00 server, P/L -1.00). Midday 1 (EURUSD sell 0.45 at 1.11936, stop 1.12140, closed 14:00, P/L +68.56). Noise 4 (sell US500.cash 0.65 and US100.cash 0.08 at 15:30, closed 16:00 back inside the band, P/L -11.38 and -7.64; sell US500.cash 0.63 and US100.cash 0.08 at 17:30, closed later, P/L +8.82 and +5.13). Fix 2 (AUDUSD sell 0.01, P/L -0.08; USDCAD buy 0.01, P/L -0.77). Bell and Dual Thrust: no orders. demo_check counts the breakout as \"other\".\n- **Closes and P/L of the day:** 9 closes, all in EUR, matching the 9 position closes in the log. P/L of the day +58.68 EUR (demo_check `pl_of_day`). Every position was closed by the last log line; none is open overnight.\n- **Skipped:** 10 fix pairs at 15:00 and 17:00 skipped with \"balance too small for the minimum lot\" (GBPUSD x2, AUDUSD, USDCAD, USDCHF x2, AUDJPY, CADJPY, GBPJPY, EURUSD). At this balance the fix leg trades only the pairs whose minimum lot fits the stop.\n- **Account:** no leverage line logged today. Last firm-day line in the log: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static), which is the start of today's trading.\n- **Slippage on fills:** taken from the judge notes of 17:32 and 17:34 (not re-measured in this check). Tokyo sell filled at 157.485 against 157.481 in the log, 0.4 pip worse. US500.cash sells at 15:30 and 17:30 filled 0.3-0.5 pt worse than the log (17:30 at 7597.70 against 7598.20). US100.cash sell at 15:30 filled 1.8 pt better. The log gives no quote at signal time for the rest, so further slippage is not logged.\n- **Trades without a broker stop:** none. All orders carried a broker stop (judge notes 17:32, 17:34).\n- **Odd:** (1) the fix leg skipped 10 of its 12 pairs on the minimum-lot rule at a balance of about 9,993 EUR; (2) no Dual Thrust orders, as expected: the owner's 17:45 change loads the new preset only after the planned restart on Saturday 2026-10-31 00:30 (see the 17:45 entry); (3) clock check: none logged today, the window ran through Friday.\n\n## 2026-10-31 (Saturday), evening: AurumFunded 1.20 built, not deployed (waits for the owner)\n\n1.20 halves the fix risk on the five main pairs (InpFixRiskPct default 0.25 for AurumFunded only, from book_sim's SCALE fix 0.5) and rounds their lots to the nearest step. The yen crosses keep 0.5% and round down. AurumHydra is unchanged (macro defaults 0.5 and round down). The live preset sets neither input, so the new default takes effect. Compile of a scratch copy: 0 errors, 0 warnings (compile_v1.20.log.txt). Independent review: PASS WITH NOTES. Its note on the crosses (nearest rounding would have doubled their cap) was fixed before the final compile.\n\n- **What it does at about 10k EUR:** at 0.01-lot granularity, half the risk rounded to the nearest step trades exactly the pairs that 1.19 traded, at the same 1-step size. The halving applies only to positions of 2 steps or more. The 10 pairs skipped on 10-30 stay skipped. Trading them would need more than the full 0.5% risk on a weak trend weight, which goes against the halving, so it was not done. book_sim's halved-fix figures apply to v1.20 only from 2 steps up.\n- **Deploy:** waits for the owner (hold, graceful close, release, the keeper starts T16 with t16_attach.ini). The .ex5 is not in the repo.\n"
+  "log": "# Demo log\n\n## 2026-10-17 (Saturday)\n\n- Trades per leg: not logged (0 EA lines, 0 orders, 0 journal trade lines).\n- P/L of the day: not logged.\n- Slippage on fills: not logged (no fills).\n- Day stop / final stop / margin error / trades without broker stop: none in the log.\n- Odd: no trades logged; EA not attached? Saturday, so the forex market is closed and zero activity is expected; the log file 20261017.log exists. Tester window open until 2026-10-18 18:00, Terminal 16 reported running.\n\n## 2026-10-19 (Monday) \u2014 ALERT: demo EA not attached\n\n- Found by the orchestrator at 07:36 local. AurumFunded is on no chart of Terminal 16 and has not been since\n  2026-10-17 04:57:06 (journal: \"expert AurumFunded (XAUUSD,M15) removed\"). It had loaded at 04:33:55 that day.\n- After that the terminal ran tester configs until 2026-10-18 01:20:43. The keeper then restarted it plain at 01:24:53\n  (\"Terminal 16: started\", not \"started, AurumFunded attached\"). The journal has no Experts line after that start.\n  It logged in to the demo with 0 positions and 0 orders, and it showed 0 positions again on the 23:01 reconnect.\n- The saved charts (Profiles/Charts/Default chart01-04.chr, written 2026-10-18 01:20:40) contain no `<expert>`\n  block. The EA log (MQL5/Logs) exists only for 20261017. demo_check for 2026-10-19 reports \"ok\" with 0 EA lines.\n- Result: no demo trading since Saturday. The clean out-of-sample demo test due to start today has not started.\n  Agents may not attach an EA, so the owner has to re-attach it (HANDOFF \"Waiting on the owner\", approvals a4).\n- Likely cause: the keeper copy that ran at 01:24 had been started on 10-17, before the attach branch was added to\n  keeper.ps1, so it ran the old code. The attach check also runs only while Terminal 16 is closed, so a terminal\n  that stays open without the EA is never caught.\n\n## 2026-10-19 (Monday), 15:30 update: demo EA attached; demo_check ALERT is a false alarm\n\n- Found by the orchestrator at 15:30 local. At 14:53:44 Terminal 16 was shut down and restarted at 14:53:59 from\n  `tools/autopilot/t16_attach.ini`. At 14:54:09 the journal says \"16 inputs read from ... AurumFunded_FTMO_phase1_legs.set\"\n  and \"expert AurumFunded (XAUUSD,M15) loaded successfully\". The EA log prints the 1.06 firm-day line, so the build\n  is 1.06. The clean demo test runs from 14:54 today.\n- **Leverage and margin (the open fidelity question):** \"account leverage 1:100, margin of 1 lot in EUR, XAUUSD\n  7417.67 at 4162.76, USDJPY 890.96 at 158.365, EURUSD 1000.00 at 1.12241, AUDCAD 622.02 at 0.9839, US500.cash\n  137.11 at 7694.45\". At EURUSD 1.12241 that is gold 1:50.0, USDJPY 1:100.0, EURUSD 1:100, US500.cash 1:50.0 (at\n  contract size 1). That is the tester install's setting (1:100, gold 1:50), so j12-j14 are the right reference for\n  the demo, and j3 (Terminal 16 tester at 1:33, gold 1:16.5) is not.\n- **Account currency is EUR**, while the tester jobs use a deposit of 10000 USD. The firm's limits are in EUR: \"firm day\n  2026.10.19, day start 10000.00, day stop at 9700.00, final stop at 9150.00 (static)\". Compare demo and tester in %\n  of the balance, not in currency. The P&L of USD-quoted symbols carries the EURUSD move.\n- **Trades:** 1 order, 1 deal: a breakout market buy of 0.01 USDJPY with sl 157.700, \"done in 180.438 ms\". The deal\n  filled at 158.365 three ms after the order result. Range 157.700-158.143 (0.73x its 60-day average).\n- **The ALERT is false.** demo_check reported \"breakout order on USDJPY failed, retcode 10009 (done at 0.000)\".\n  10009 is TRADE_RETCODE_DONE. The EA judges `!ok || g_trade.ResultDeal()==0` (`Legs.mqh:1630`), and FTMO's market\n  execution returns the order with deal 0; the deal comes moments later. So the fill was logged as a failure and\n  its \"broke its range, bought\" line is missing. No duplicate: on the next tick `HeldLots` (`Legs.mqh:1605`) sees the\n  position. The same deal-0 test is on the grid (915), fix (1156), stock-fall (1258), Tokyo-morning (1375),\n  after-holiday (1513) and noise (1843) legs. Their next-tick guards (HeldLots / TradedSince, the grid's level\n  count) stop a repeat unless a tick arrives before the position shows. The demo has no repeat order so far.\n- **Late-attach entry:** the leg bought on the first tick after the attach, 22 pips above the range high, because\n  the break had happened before 14:54 and nothing limits how late the entry may come. The tester would have bought\n  at the break, nearer 158.143. Fidelity should flag today's breakout fill as a restart artefact, not a model gap.\n  Any mid-session restart by the keeper can cause the same thing.\n\n## 2026-10-20 (Tuesday): ALERT is the deal-0 false alarm again; one unplanned restart, no harm\n\nChecked on 2026-10-21 (orchestrator). The demo still runs AurumFunded 1.06; the repo's 1.07 has the deal-0 fix.\n\n- **The ALERT is false.** The Tokyo leg sold 0.63 USDJPY at 02:55:00, filled at 158.558. That is 1 order and 1 deal,\n  with no repeat. The ALERT is the same 10009/deal-0 read as on 10-19.\n- **Unplanned restart:** the EA was removed at 04:12:58 and the terminal exited cleanly at 04:13:21. The keeper's 10-20\n  log starts at 04:14:22; its 10-19 log ends at 14:54, so the keeper itself was restarted. It relaunched T16 with the\n  attach ini at 04:14:28, and the EA loaded at 04:14:35 and synced 1 position. The cause of the keeper restart is not\n  in the logs (a PC or scheduled-task restart?).\n- **Tokyo exit on time:** the position closed at 04:24:59 at 158.432, the planned 90-min end, so the restart did no\n  harm. The leverage line prints twice (00:05 and 04:14).\n- **Other trades:** each was 1 order with no repeat.\n\n  | Leg | Side and size | Opened | Closed |\n  |---|---|---|---|\n  | breakout | sell 0.02 USDJPY | 158.106 at 09:40 (range 158.106-158.600, 0.81x) | 157.985 at 16:59:59 |\n  | midday | sell 0.44 EURUSD | 1.12121 at 12:30 | 1.12110 at 13:59:59 |\n  | US500.cash | buy 0.70 | 7743.15 at 16:30 | 7717.55 at 17:30 |\n  | US100.cash | buy 0.09 | 29689.08 at 16:30 | 29560.13 at 17:30 |\n\n  The bell leg was skipped (move -0.45 is below 1.5x the average 3.30).\n- **Account:** the firm day started at 9992.46 EUR; the day stop was 9692.46 and the final stop is 9150.00. Neither\n  was hit.\n- **Agent runs:** every relay run on 10-20 ended at once with \"weekly limit, resets Oct 23 18:00\". So no orchestrator\n  or fidelity run happened between 10-19 15:35 and this run.\n\n## 2026-10-21 (Wednesday)\n\n- demo_check ok; 1 EA line so far.\n- 05:32 local: still no orders, as expected. The Tokyo leg trades only on settlement days (dates divisible by 5, or\n  the Friday before one that falls on a weekend; `Legs.mqh:589`), so the 21st has no Tokyo trade. The breakout and\n  noise legs open later in the day.\n- 12:36 local: no ALERT. The firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at\n  9150.00 (static). At 09:00 the USDJPY range was 158.025-158.388, 0.59x its 60-day average. That is inside the\n  filter (`InpBreakMinRange` 0.25, `Legs.mqh:1618`), so the breakout leg is armed and waiting for a break. At\n  12:29:59 the midday leg sold 0.42 EURUSD at 1.12258, with the stop at 1.12458 and model weight 1.19. That is\n  1 order with no repeat. Fills are compared with the tester after the first demo week (10-23).\n- 13:16 local: no ALERT. At 12:56:54 the breakout leg sold 0.03 USDJPY at 158.025, the range low, with the stop at\n  158.388, the range high. That is 1 order with no repeat.\n- 19:00 local: no ALERT. The noise leg bought 0.09 US100.cash twice: at 17:59:59 at 29856.58 (bands 29832.19 /\n  29356.58) and at 18:59:59 at 29884.08 (bands 29838.62 / 29350.19). The leg never adds to a held position. It skips\n  a new entry while it holds one (`Legs.mqh:1864-1880`). Before it buys again, it closes the position once the bid is\n  below max(upper band, day average). So the second buy follows an exit at the 18:30 or 19:00 check. The EA does not\n  log noise exits, so the demo log cannot show which check closed it. The fill comparison (10-23) will show it from\n  the deal history.\n- 20:31 local: no ALERT. At 20:29:59 the noise leg bought 0.09 US100.cash at 29896.58 (bands 29864.07 / 29324.90),\n  its third buy today with the same size. It again follows an exit of the held position: the leg cannot add while it\n  holds one (`Legs.mqh:1864-1880`). The exit can fall in the same check as the re-entry. When the day average lies\n  above the bid and the bid above the upper band, the leg closes and buys again at once. The Python model does the\n  same and charges the cost of each close (`research/noise_area_index.py:106-117`), so this churn is in the\n  expectation. The deal history at the 10-23 fill comparison shows which checks closed the positions.\n\n## 2026-10-21 (Wednesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports 8 EA lines, orders midday 1 and other 4, 0 journal trade\nlines. The Terminal 16 experts log has 9 AurumFunded lines, all listed below.\n\n- **Trades:** 5 orders today, each 1 order with no repeat. Midday 1 (sell 0.42 EURUSD at 12:29:59, 1.12258). Breakout 1\n  (sell 0.03 USDJPY at 12:56:54, 158.025). Noise 3 (buy 0.09 US100.cash at 17:59:59, 18:59:59 and 20:29:59). The noise\n  buys match the 19:00 and 20:31 notes above and add nothing new.\n- **New since 20:31:** one skip line at 21:59:59, \"bell move +1.25 is below 1.5 x average 3.25, no trade today\".\n  It is a skip, not an order.\n- **Account:** the firm day started at 10011.14 EUR, with the day stop at 9711.14 and the final stop at 9150.00 (static).\n  Neither was hit. No margin error was logged.\n- **Clock check and errors:** no clock-check skips and no errors in the log.\n- **P/L of the day:** not logged (the EA log has no close lines for today).\n- **Slippage:** not logged; the fill comparison with the tester waits for the first demo week (10-23).\n- **Trades without a broker stop:** none logged; each open line shows a stop (1.12458, 158.388, and the noise bands).\n\n## 2026-10-22 (Thursday), 16:30 check (judge): no ALERT\n\n`tools/demo_check.py` reports 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, no day stop, final stop,\nfailure or clock line.\n\n- Midday sold 0.23 EURUSD at 1.12225, stop 1.12422 (1 order).\n- Breakout skipped: USD/JPY range 157.290-158.251 (1.58x its 60-day average), \"balance too small for the minimum lot\n  of USDJPY at a stop of 1.181\" (`RiskLots()` floor; see the judge's 14:40 note in `docs/HANDOFF.md`).\n- Noise sold 0.68 US500.cash at 7657.45 (bands 7783.22 / 7662.51) and 0.09 US100.cash at 29172.68 (bands 29922.10 /\n  29227.01). Both bids were below the lower band, the designed short entry (`Legs.mqh:1880-1887`); one order each, no\n  repeat. The checker counts them as \"other\" (proposed tools change (7) in `docs/HANDOFF.md`).\n\n## 2026-10-22 (Thursday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 5 EA lines, orders midday 1 and other 2, 0 journal trade lines, and one skip (breakout). The Terminal 16 experts log has 6 AurumFunded lines, the last at 16:29:59. Nothing new was logged after the 16:30 judge check.\n\n- **Trades per leg:** midday 1 (sell 0.23 EURUSD at 12:29:59, 1.12225, stop 1.12422, model weight 1.00). Breakout 0 (skipped at 08:59:59: range 157.290-158.251 at 1.58x its 60-day average, and \"balance too small for the minimum lot of USDJPY at a stop of 1.181\"). Noise 2 (sell 0.68 US500.cash at 16:29:59, 7657.45, bands 7783.22 / 7662.51; sell 0.09 US100.cash at 16:29:59, 29172.68, bands 29922.10 / 29227.01). One order each, no repeat. No bell, Tokyo, fix or other leg lines today.\n- **Account:** the firm-day lines (day start, day stop, final stop) are not logged today, so the day stop and final stop cannot be checked from the log. No margin error logged.\n- **P/L of the day:** not logged (no close lines in the EA log).\n- **Slippage:** not logged. The log gives fill prices only, not the quote at signal time, so the fills cannot be compared with the tester yet. The fill comparison starts 10-23.\n- **Trades without a broker stop:** none. The midday line shows its stop. The noise lines print the bands, not the stop, but the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`, 3 x the leg's volatility from the entry price). The printed line does not show that stop value, so it is not logged.\n- **Odd:** the breakout skip is the RiskLots floor (judge notes 14:43 and 16:33 in `docs/HANDOFF.md`), not a fault. The two noise shorts are designed lower-band entries.\n\n## 2026-10-23 (Friday), 10:30 check (judge): no ALERT\n\n`tools/demo_check.py` reports ok, 4 EA lines, orders Tokyo 1 and other 1, 0 journal trade lines, no day stop, final stop,\nfailure or clock line.\n\n- **Account:** firm day 2026.10.23, day start 10043.55, day stop at 9743.55, final stop at 9150.00 (static).\n- **Leverage:** \"account leverage 1:100, margin of 1 lot in EUR, XAUUSD 7183.07 at 4029.02\" at 00:05, and again at\n  01:45:34 after the keeper restart onto AurumFunded 1.10 (gold about 1:50, as on 10-19). `demo_check.py` hides this\n  line because it contains \"account\" (proposed tools change (8) in `docs/HANDOFF.md`).\n- Tokyo sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895, model weight 0.50 (1 order).\n- Breakout: USD/JPY range 156.075-157.123 (1.70x its 60-day average), bought 0.01 lots at 157.123 at 09:06, stop\n  156.075. The 1.048 range is just under the 1.09 above which the 0.01 floor blocks a trade (judge note 10-22 14:40).\n  The checker counts it as \"other\" (tools change (7)).\n- **Trades without a broker stop:** none; both order lines show a stop.\n- **Slippage:** the fill comparison waits for the full first demo week (fidelity, after today's close).\n\n## 2026-10-23 (Friday), 12:36 check (judge): no ALERT\n\n`tools/demo_check.py` reports ok, 5 EA lines, orders Tokyo 1, other 1, midday 1, 0 journal trade lines.\n\n- **New since 10:30:** at 12:30:00 the midday leg sold 0.44 EURUSD at 1.11993, stop 1.12200, model weight 1.36\n  (1 order, no repeat, broker stop set).\n- **Size check (midday 10-21 / 10-22 / 10-23: 0.42 / 0.23 / 0.44 lots):** risk at the stop divided by model weight is\n  0.63 / 0.40 / 0.60% of balance. With `InpSizeMult` 0.5 and `InpMeridianRiskPct` 1.0 (phase1 preset), that is the\n  loss-run factor `Progression()` (`Legs.mqh:519-535`, `InpLossMult` 0.67 / `InpLossNorm` 0.80): 1.25 after a win,\n  0.84 after one loss. So 10-21's midday trade closed at a loss (inferred from the size; the EA logs no closes) and\n  10-22's at a win. Designed behaviour; the tester runs the same code, so it is in the tester figures.\n- No skip, error, day stop or clock line. No ALERT.\n\n## 2026-10-23 (Friday), 15:25 check (judge): ALERT, harmless (a duplicate close)\n\n`tools/demo_check.py` reports ALERT, 6 EA lines, orders Tokyo 1, other 1, midday 1: \"close on EURUSD failed,\nretcode 10036 (position closed)\" at 14:00:00.795.\n\n- **What happened (terminal journal):** the midday exit sent a close for the 12:30 EURUSD sell at 13:59:59.507. It\n  was placed at 13:59:59.612 and filled at 14:00:00.736 (1235 ms): bought 0.44 at 1.11902 against the 1.11994 sell,\n  about +40 USD before commission. At 14:00:00.792 a second close of the same position was refused (\"Position doesn't\n  exist\"), and the EA logged it as retcode 10036.\n- **Cause:** `CloseAll` (`Legs.mqh:357-373`) runs on every tick and once a second, and trades synchronously. On the\n  next call, 56 ms after the fill, `PositionsTotal()` still listed the position, so the EA sent the close again.\n  Nothing opened, and `Leg()` (`Legs.mqh:779-780`) ignores the return value, so no state changed. The tester fills\n  at once, so the tester figures are not affected.\n- **Win after loss:** with this win, the next midday size goes up by the 1.25 factor (`Progression()`, 12:36 note).\n- No other skip, error, day stop or clock line. The checker and EA changes are proposed as (9) in `docs/HANDOFF.md`.\n  The demo's inputs are not changed.\n\n## 2026-10-23 (Friday), 17:03 check (judge): no new ALERT; EA re-initialised on M1 at 16:30\n\n`tools/demo_check.py` still reports the ALERT, but it is the 14:00 duplicate close explained at 15:25. There are 8 EA\nlines now; 2 are new:\n\n- **16:30:16, chart now XAUUSD,M1 (it was attached on M15):** the EA ran OnInit again and printed the USD/JPY\n  breakout range 156.075-157.123 again. This is likely a chart timeframe change. The terminal journal is written to\n  disk only up to 01:45, so the cause is not confirmed. No order was repeated:\n  - OnInit resets the breakout state (`Legs.mqh:2319-2320`).\n  - The late-start guard (`Legs.mqh:1747-1772`) skips a side that is already held or traded, so the 09:06 high-side\n    buy was not sent again.\n  - The low side (156.075) stays armed, as it would in an EA that kept running.\n  - The loss-run sizing (`Progression()`, `Legs.mqh:519-535`) is read from the 90-day deal history, so the reinit\n    does not reset it.\n  - The legs read their bars with explicit `PERIOD_*` arguments, so the chart period should not change what they\n    trade. Ticks on an M1 chart can arrive at different times, which may shift when an order is sent within a minute.\n- **17:00:00, US100.cash bought 0.08 lots at 29120.83, bands 29077.93 / 28742.05:** the noise leg (\"other\" 2 =\n  breakout + noise). Designed; 1 order, no repeat.\n- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo. Owner: please\n  confirm whether the XAUUSD chart was switched to M1 at 16:30 (switching back to M15 is the owner's choice; agents do\n  not touch the terminal).\n\n## 2026-10-23 (Friday), 20:25 check (judge): no new ALERT; second US100 noise buy at 17:59:59\n\n`tools/demo_check.py` still shows only the explained 14:00 ALERT. There are 9 EA lines; 1 is new:\n\n- **17:59:59.596, US100.cash bought 0.08 lots at 29123.83, bands 29114.00 / 28706.11:** the noise leg's exit and\n  re-entry at the same half-hour check, the pattern judged on 10-21 (18:59 and 20:29). The leg cannot add to a held\n  position: when it holds one it either keeps it (`continue`) or closes it under max(upper band, session average) and,\n  with the bid still above the upper band, buys again (`Legs.mqh:1989-2012`). The close leaves no EA line, and the\n  journal is flushed only to 01:45, so the close itself is not visible. The same code runs in the tester.\n- No skip, error, day stop or clock line apart from the 14:00 one. No job and no change to the demo.\n\n## 2026-10-23 (Friday), 23:16 check (monitor): no new ALERT; the tool's ALERT is the known 14:00 duplicate close\n\nChecked by the monitor role. `tools/demo_check.py` reports ALERT, 10 EA lines, orders Tokyo 1, other 3, midday 1, 0 journal\ntrade lines. The flag is the failed close at 14:00:00.795 (retcode 10036), explained in the 15:25 judge check: a second\nclose of a position already closed at 13:59:59. It is not a monitor trigger (no day stop, final stop, margin error or\ntrade without a broker stop).\n\n- **Trades per leg (logged opens):** Tokyo 1 (sold 0.24 USDJPY at 156.425 at 02:55, stop 156.895). Breakout 1 (bought 0.01\n  USDJPY at 157.123 at 09:06, stop 156.075). Midday 1 (sold 0.44 EURUSD at 1.11993 at 12:30, stop 1.12200; closed at\n  13:59:59 by the leg's exit, per the 15:25 note). Noise 2 (bought 0.08 US100.cash at 17:00:00 and at 17:59:59, bands in\n  the log). Bell skipped at 21:59:59 (move +0.83 is below 1.5 x the average 2.95). Each leg shows one order, no repeat.\n- **Tester comparison:** not possible. Tester jobs end 2025-09-30 (holdout), so there is no tester figure for this day.\n- **P/L of the day:** not logged (no P/L line in the EA log, no journal trade lines, no end-of-day equity). Only the midday\n  close can be worked out from the logged prices: sold 1.11993 and closed at 1.11902 on 0.44 lots is about +40 USD before\n  commission. The other legs' closes are not in the log.\n- **Slippage on fills:** not logged (fill prices only, no quote at signal time). The fill comparison waits for fidelity\n  after the first demo week.\n- **Account:** firm day 2026.10.23, day start 10043.55, day stop 9743.55, final stop 9150.00 (static). No day-stop or\n  final-stop line. No margin error. No clock-check skip.\n- **Trades without a broker stop:** none shown. Midday and breakout lines print a stop. The noise lines print bands, not the\n  stop; the code sets a broker stop for each noise order (`mql5/Include/Aurum/Legs.mqh:2022`), which the printed line does\n  not show.\n- **Odd:** nothing new. The 16:30 M1 re-initialisation and the 17:59:59 noise buy are the ones judged at 17:03 and 20:25.\n\n## 2026-10-24 and 2026-10-25 (weekend)\n\nNo entry: the demo window was closed (Saturday 00:00 to Sunday 18:00), so no trades were expected.\n\n## 2026-10-26 (Monday), 23:15 check (monitor): no ALERT; no trades logged\n\n`tools/demo_check.py` reports ok: 3 EA lines, orders none, 0 journal trade lines, no day stop, final stop, margin error, failure, skip or clock line.\n\n- **Trades per leg:** none. No order was logged for any leg.\n- **Reason given in the log:** no trading today, European and US summer time differ. The EA held out for the session; the two regions change clocks on different dates, so session times are off for part of the year.\n- **Account:** firm day 2026.10.27 as logged, day start 10000.97, day stop 9700.97, final stop 9150.00 (static). Neither stop was hit; no trade was taken.\n- **Leverage:** account leverage 1:100 (gold 7189.40 at 4016.43), the same as the 10-19 reading.\n- **P/L of the day:** not logged.\n- **Slippage on fills:** not logged (no fills). No tester figure: tester jobs end 2025-09-30 and demo days are after the holdout.\n- **Trades without a broker stop:** none (no orders).\n- **Odd:** only the summer-time note. Worth a look if the demo should trade every weekday.\n- **Fidelity:** docs/fidelity/2026-10-23.md exists, so no fidelity week is due today.\n\n## 2026-10-27 19:26 \u2014 demo EA updated to Funded 1.16 (owner request)\n\nThe owner asked for the demo terminal to move from AurumFunded 1.10 to 1.16.\n\n- **How:** Terminal 16 was closed gracefully under a short owner hold (`terminal.ps1 -Hold -By owner -Hours 0.25`), then released. The keeper restarted it at 19:26 with `t16_attach.ini`, because the saved chart had no AurumFunded.\n- **Journal:** \"16 inputs read from expert 'AurumFunded\\AurumFunded' set file ... AurumFunded_FTMO_phase1_legs.set\"; \"expert AurumFunded (XAUUSD,M15) loaded successfully\" at 19:26:40.\n- **Build:** AurumFunded.ex5 compiled 2026-10-27 17:56 (1.16, 0 errors, 0 warnings, reviewer PASS in docs/autopilot/gaps_report.md).\n- **Experts log at 19:26:43:** account leverage 1:100; \"no trading today, European and US summer time differ\". The DST guard keeps it flat until the US clock change on 11-01.\n- **Positions before the restart:** none. The 00:49 sync showed 0 positions and 0 orders.\n- **Preset:** unchanged, AurumFunded_FTMO_phase1_legs.set.\n\n## 2026-10-27 19:55 - T16 on the New York clock preset (owner)\n\n- Change: T16 now loads `AurumFunded_FTMO_phase1_legs_nyclock.set`, a copy of phase1_legs.set with only `InpEuClock=false`. `tools/autopilot/t16_attach.ini` points at it. Funded 1.16 is unchanged and no existing .set file was edited.\n- Why: 1.16 stayed flat with \"no trading today, European and US summer time differ\" after Europe changed its clocks on 10-25. FTMO's server stays at New York + 7 hours (GMT+3) all year. The T16 journal showed GMT+3 both before the change (10-19: 14:54 CEST local = 15:54 server) and after it (10-26: 22:01 GMT+1 local = 00:01 server). The legs are built around that offset, so the pause was blocking nothing.\n- Effect: with `InpEuClock=false`, the live check expects the server at GMT + 2 + US summer = GMT+3, which matches. The demo can trade from the next session instead of waiting for 11-01.\n- Restart: owner hold, then release. The keeper relaunched T16 with `/config:t16_attach.ini`.\n- Still open: the other FTMO presets (and the funded account's) keep `InpEuClock=true`. They would pause the same way from 03-14 to 03-28 2027 unless the EA default changes.\n\n## 2026-10-27 20:10 - AurumFunded 1.17 built (owner request)\n\n- 1.17: live, only the measured server clock (TimeTradeServer - TimeGMT against New York + 7) stops a day. The InpEuClock skip now acts only in the tester and defaults to false. This fixes every preset, the funded ones and the 2027-03-14..03-28 gap included, without editing any .set file.\n- Compiled 0 errors, 0 warnings. Tester behaviour is unchanged: tester runs set InpEuClock=true explicitly.\n- T16 still runs 1.16 on the nyclock preset, which behaves the same live. 1.17 loads at the next restart. It was not forced because a US100.cash 0.07 buy is open (deal #547910787, 19:59:58).\n- Live trades on the European/US gap days have no matching tester trades.\n\n## 2026-10-27 20:20 - 1.17 review: PASS, one known risk\n\n- Reviewer: PASS. The live clock check passes on FTMO GMT+3 for 10-26..10-31 and 2027-03-14..03-27, and on GMT+2 from 11-02. LondonOffset is right on gap days.\n- Known risk: InpPropResetHHMM=100 is fixed. On gap days FTMO's CET midnight is 02:00 server, so the EA's firm day starts 1 hour early. The day-stop start level and the day count can be off by that hour's P/L. Our 3% day stop leaves 2% of room under the firm's 5%. This applies until 11-01, and again 2027-03-14..03-28.\n\n## 2026-10-27 (Tuesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, orders noise 1, 4 journal trade lines, one skip (bell). The Terminal 16 experts log is two daily log files for the same date. No day stop, final stop or margin error logged.\n\n- **Trades per leg:** noise 1 (buy 0.07 US100.cash at 29647.28, bands 29624.22 / 29053.87, closed at 29652.88). Bell 0 (skipped: \"bell move -1.11 is below 1.5 x average 2.91, no trade today\"). No midday, breakout, Tokyo, fix or other leg lines today.\n- **Closes and P/L of the day:** 1 close, US100.cash 0.07 lots at 29652.88, P/L 0.37 EUR. P/L of the day 0.37 EUR (demo_check `pl_of_day`).\n- **Account:** the firm-day line for 2026.10.28 logs day start 10001.34, day stop 9701.34, highest day start 10043.55, final stop 9150.00 (static). Account leverage logged as 1:100. No margin error logged.\n- **Slippage:** the log gives fill and close prices only, not the quote at signal time, so the slippage on the fill is not logged. The judge check at 20:04 recorded the fill 0.2 pt better than the logged price. The tester pairing is not run for demo days, so no tester comparison.\n- **Trades without a broker stop:** none. The judge check (decisions.jsonl, 2026-10-27 20:04) records the broker stop on this US100 buy.\n- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.\n\n## 2026-10-28 (Wednesday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 9 EA lines, 11 journal trade lines, two daily log files for the date. No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** midday 1 (EURUSD sell 0.45). Other 2 (USDJPY breakout: sell 0.04 at 157.741 and buy 0.04 at 158.046 on the same tick, one entry per side, as the leg is built). No bell, noise, Tokyo, fix or Dual Thrust lines logged today.\n- **Closes and P/L of the day:** 3 closes, all in EUR, matching the 3 orders. EURUSD 0.45 at 1.11347, P/L -33.57. USDJPY 0.04 at 158.046, P/L -7.07 (the sell, stopped out). USDJPY 0.04 at 158.165, P/L +2.59. P/L of the day -38.05 EUR (demo_check `pl_of_day`).\n- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.29: day start 9962.10, day stop 9662.10, highest day start 10043.55, final stop 9150.00 (static).\n- **Slippage on fills:** EURUSD midday sell filled at 1.11267 against 1.11266 in the log, 0.1 pip worse (judge note 12:33). USDJPY sell stopped at 158.046 against a stop of 158.039, 0.7 pip (judge note 14:34). The log gives no quote at signal time, so further slippage is not logged.\n- **Trades without a broker stop:** none. The EURUSD order carried a stop at 1.11465 (judge note 12:33); the USDJPY orders carried stops at 158.039 (sell) and 157.748 (buy) (judge note 14:34).\n- **Odd:** nothing beyond the two-sided USDJPY breakout, which is the leg's design (separate magics, one entry per side per day).\n\n## 2026-10-29 (Thursday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 8 EA lines, 8 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** midday 1 (EURUSD sell 0.21 at 1.11463, broker stop 1.11659). Other 1 (USDJPY breakout buy 0.02 at 158.068, stop 157.602 at the range low). No bell, noise, Tokyo, fix or Dual Thrust orders. Bell skipped: \"bell move +4.34 is below 1.5 x average 3.10, no trade today\".\n- **Closes and P/L of the day:** 2 closes, both in EUR. EURUSD 0.21 at 1.11278, P/L +34.20. USDJPY 0.02 at 157.857, P/L -2.46. P/L of the day +31.74 EUR (demo_check `pl_of_day`).\n- **Account:** leverage line logged as 1:100. Firm-day line for 2026.10.30: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static).\n- **Slippage on fills:** EURUSD sell filled at 1.11463, the journal price, so 0 pips against the log. USDJPY buy filled at 158.068 against a range high of 158.067, 0.1 pip above (judge note 13:07). The log gives no quote at signal time, so further slippage is not logged.\n- **Trades without a broker stop:** none. Both entries carried a broker stop (judge notes 12:31 and 13:07).\n- **Odd:** nothing beyond the bell skip (by design: the move is below its threshold). Clock check: none logged today.\n\n## 2026-10-30 (Friday), 17:45 change (owner): Dual Thrust leg on from the next start\n\nOwner asked to turn the Dual Thrust index leg on in the T16 demo. New preset `AurumFunded_FTMO_phase1_legs_nyclock_dual.set` (the nyclock preset plus InpDualMult=0.25, GER40.cash and JP225.cash, K 0.3 / 0.7, max spread 5 bp: the j18 on run), copied to T16's Presets; `tools/autopilot/t16_attach.ini` now loads it.\n\n- **Restart:** not done mid-session, as with 1.17: 4 trades were open at 17:36 (AUDUSD sell 0.01 and USDCAD buy 0.01 after the fix, US500.cash sell 0.63 and US100.cash sell 0.08 noise). A one-off script restarts T16 on Saturday 2026-10-31 00:30, after the Friday close, by the 10-27 method (owner hold, graceful close, release, the keeper starts T16 with t16_attach.ini), so 1.18 (already in the junctioned Experts folder) loads with the new preset.\n- **Watch from Monday:** first Dual Thrust orders on US500, US100, GER40 and JP225 (magics +32 to +35). PropDays counts magics only up to +25, so Dual-only days do not count as trading days. GER40 had a Sharpe of -0.04 on its own in the j18 run. 1.18 had no independent review and its compile log is not in the repo.\n\n## 2026-10-31 (Saturday), 18:11 change (owner): AurumFunded 1.19 on T16\n\nOwner asked for the four should-fixes of the 1.18 review. 1.19: (1) Dual Thrust waits 10 s (GRID_WAIT) for a sent order to show among the positions before it may send again; (2) InpDualMaxRiskPct (default 1.0, not in any .set file) caps the loss at the broker stop per Dual trade at SizeMult() x 1% of balance, and below the minimum lot the market skips the day; (3) PropDays counts magics up to +35, so breakout, noise-area, VRP and Dual days count as trading days; (4) compile logs for 1.18 and 1.19 in the repo (0 errors, 0 warnings). Independent review: one blocker on the first draft (the cap ignored SizeMult), fixed before the deploy; commit 7d4306e.\n\n- **Restart:** market closed, 0 positions. Owner hold 18:09:45, T16 closed 18:10:00, released 18:10:02; keeper 18:10:59 \"Terminal 16: started, AurumFunded attached\". Journal 18:11:34: 23 inputs read from `AurumFunded_FTMO_phase1_legs_nyclock_dual.set`, \"expert AurumFunded loaded successfully\", 0 positions, 0 orders.\n- **Watch from Monday:** the cap is not in the Python test of prebuilt_dual_thrust_four_indices_ew, so on wide-range days the demo trades smaller than the gate figures; the judge should not compare capped demo days with the uncapped test. A position that takes more than 10 s to show can still be sent twice (bounded by DUAL_FLIPS), as with the grid. Check that none of the four indices prints \"not available\".\n\n## 2026-10-30 (Friday), 23:15 check (monitor): no ALERT\n\nChecked by the monitor role. `tools/demo_check.py` reports ok, 30 EA lines, 36 journal trade lines, two daily log files for the date (the same file name is listed twice). No day stop, final stop, margin error, clock skip, duplicate close or failed order logged.\n\n- **Trades per leg:** Tokyo 1 (USDJPY sell 0.26, broker stop 157.966, closed 03:25 after the 90 min hold, P/L -2.96). Other 1 (USDJPY breakout sell 0.01 below the range low, stop 157.893, closed 18:00 server, P/L -1.00). Midday 1 (EURUSD sell 0.45 at 1.11936, stop 1.12140, closed 14:00, P/L +68.56). Noise 4 (sell US500.cash 0.65 and US100.cash 0.08 at 15:30, closed 16:00 back inside the band, P/L -11.38 and -7.64; sell US500.cash 0.63 and US100.cash 0.08 at 17:30, closed later, P/L +8.82 and +5.13). Fix 2 (AUDUSD sell 0.01, P/L -0.08; USDCAD buy 0.01, P/L -0.77). Bell and Dual Thrust: no orders. demo_check counts the breakout as \"other\".\n- **Closes and P/L of the day:** 9 closes, all in EUR, matching the 9 position closes in the log. P/L of the day +58.68 EUR (demo_check `pl_of_day`). Every position was closed by the last log line; none is open overnight.\n- **Skipped:** 10 fix pairs at 15:00 and 17:00 skipped with \"balance too small for the minimum lot\" (GBPUSD x2, AUDUSD, USDCAD, USDCHF x2, AUDJPY, CADJPY, GBPJPY, EURUSD). At this balance the fix leg trades only the pairs whose minimum lot fits the stop.\n- **Account:** no leverage line logged today. Last firm-day line in the log: day start 9993.33, day stop 9693.33, highest day start 10043.55, final stop 9150.00 (static), which is the start of today's trading.\n- **Slippage on fills:** taken from the judge notes of 17:32 and 17:34 (not re-measured in this check). Tokyo sell filled at 157.485 against 157.481 in the log, 0.4 pip worse. US500.cash sells at 15:30 and 17:30 filled 0.3-0.5 pt worse than the log (17:30 at 7597.70 against 7598.20). US100.cash sell at 15:30 filled 1.8 pt better. The log gives no quote at signal time for the rest, so further slippage is not logged.\n- **Trades without a broker stop:** none. All orders carried a broker stop (judge notes 17:32, 17:34).\n- **Odd:** (1) the fix leg skipped 10 of its 12 pairs on the minimum-lot rule at a balance of about 9,993 EUR; (2) no Dual Thrust orders, as expected: the owner's 17:45 change loads the new preset only after the planned restart on Saturday 2026-10-31 00:30 (see the 17:45 entry); (3) clock check: none logged today, the window ran through Friday.\n\n## 2026-10-31 (Saturday), evening: AurumFunded 1.20 built, not deployed (waits for the owner)\n\n1.20 halves the fix risk on the five main pairs (InpFixRiskPct default 0.25 for AurumFunded only, from book_sim's SCALE fix 0.5) and rounds their lots to the nearest step. The yen crosses keep 0.5% and round down. AurumHydra is unchanged (macro defaults 0.5 and round down). The live preset sets neither input, so the new default takes effect. Compile of a scratch copy: 0 errors, 0 warnings (compile_v1.20.log.txt). Independent review: PASS WITH NOTES. Its note on the crosses (nearest rounding would have doubled their cap) was fixed before the final compile.\n\n- **What it does at about 10k EUR:** at 0.01-lot granularity, half the risk rounded to the nearest step trades exactly the pairs that 1.19 traded, at the same 1-step size. The halving applies only to positions of 2 steps or more. The 10 pairs skipped on 10-30 stay skipped. Trading them would need more than the full 0.5% risk on a weak trend weight, which goes against the halving, so it was not done. book_sim's halved-fix figures apply to v1.20 only from 2 steps up.\n- **Deploy:** waits for the owner (hold, graceful close, release, the keeper starts T16 with t16_attach.ini). The .ex5 is not in the repo.\n\n## 2026-11-01 (Sunday), 21:57: AurumFunded 1.23 deployed on T16\n\nOwner's yes 2026-11-01. 1.23 adds the dashboard stop switch (ff247e2) on top of 1.20-1.22.\n\n- **How:** `terminal.ps1 -Hold -By owner -Hours 0.25` (graceful close), then `-Release`; the keeper relaunched T16 at 21:57:35 from t16_attach.ini.\n- **Loaded:** the journal at 21:57:52 shows 23 inputs read from AurumFunded_FTMO_phase1_legs_nyclock_dual.set and \"expert AurumFunded (XAUUSD,M15) loaded successfully\". The .ex5 (21:12) is newer than the 1.23 source. 0 positions, 0 orders at restart.\n- **Clock line:** the EA logs \"3 expected\" for the server offset. That is a weekend artifact: TimeCurrent is Friday's last tick, still before the US DST end. From Monday's first tick it expects 2.\n- **AurumHydra 1.43:** compiled, but Hydra is not attached on T16, so nothing changes there.\n\n## 2026-11-02 (Monday), 23:15 check (monitor): ALERT, trading disabled on the demo server, no fills\n\nALERT: 958 order sends in the day's experts log (AurumFunded, all logged in the \"other\" bucket by demo_check), each\nrefused with retcode 10017 \"trade disabled\" (the 10 sample lines shown, e.g. midday EURUSD market sell 0.18 with sl\n1.12322). The journal has 0 trade lines, so no trade opened or closed today. This matches the judge's same-day notes\n(04:45, 11:34-11:48 USDJPY burst, 12:30 midday EURUSD; judge entries in docs/memory/decisions.jsonl) and the 958 count\nin those notes. Not logged: P/L of the day (no closes), slippage (no fills). No day stop, final stop, or trade without a\nbroker stop.\n\n- Trades per leg: none filled. Sends: 958 (not split by leg in demo_check).\n- Skipped: bell move +3.04 below 1.5 x average 3.05, no trade today.\n- Account leverage line (logged twice): 1:100. Not compared with the 1:33 of Terminal 16 in earlier runs; not checked.\n- Clock-check skips: none today. Duplicate closes: none. Done-reported-failed: none.\n- Odd: the failed send repeats all day with no re-enable line in the journal read by demo_check. Needs the owner or the\n  judge to look at the server-side trading state; the monitor cannot change it.\n\n## 2026-11-03 (Tuesday), 23:15 check (monitor): no alert, 2 noise closes\n\ndemo_check (Terminal 16, two experts logs for 20261103): 16 EA lines, 8 journal trade lines.\n\n- **Trades per leg:** noise 2 sends (orders {'noise': 2}), 2 closes. Closes: US500.cash 0.5 at 7581.05 and US100.cash 0.06 at 28215.43. No other leg sent an order.\n- **P/L of the day:** -6.2 EUR over 2 closes (US500.cash -2.43 EUR, US100.cash -3.77 EUR), from demo_check's closes and pl_of_day.\n- **Slippage on fills:** not logged (demo_check prints no requested-versus-filled price).\n- **Skipped:** bell move +0.73 below 1.5 x average 3.03, no trade today.\n- **Clock check:** \"no trading today, the server clock is 2.0 hours ahead of GMT, 3 expected\". This is the summer/winter time mismatch by design (owner 2026-10-27), a one-line note only.\n- **Phase line:** \"phase 1 started, initial balance 10000.00, target 11000.00, day stop 300.00, final stop at 9150.00\" is logged once today. Not clear whether it is a fresh start or a restart of the EA; not checked further.\n- **Leverage line (logged four times):** account leverage 1:100. Margin of 1 lot in EUR is logged for XAUUSD, USDJPY, EURUSD, AUDCAD (n/a in three lines) and US500.cash.\n- **Errors, duplicate closes, done-reported-failed:** none listed by demo_check. The 2026-11-02 trade-disabled burst (retcode 10017) does not recur in today's read.\n- **Not logged:** day stop, final stop, margin error, trade without a broker stop. None appears in the check.\n- **Odd:** only the noise leg traded; the bell leg was skipped on its move threshold.\n"
  },
  "funnel": {
-  "total": 112,
+  "total": 134,
   "by_status": {
-   "rejected": 96,
-   "done": 13,
+   "rejected": 111,
+   "done": 21,
    "funded": 1,
-   "tester": 2
+   "queued": 1
   },
   "by_source": {
-   "data": 12,
-   "prebuilt": 23,
-   "paper": 48,
-   "fix": 7,
+   "data": 16,
+   "prebuilt": 25,
+   "paper": 58,
+   "fix": 13,
    "ml": 20,
    "drl": 2
   },
   "recent": [
    {
+    "id": "paper_aaii_spread_contrarian_us_indices",
+    "source": "paper",
+    "title": "Fisher and Statman 2000, AAII bull-bear spread as contrarian signal (weeks+ swing on US500/US100)",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "data_aaii_sentiment",
+    "source": "data",
+    "title": "AAII weekly sentiment survey history (public xls)",
+    "status": "done",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "paper_iwanaga_sp_prior_day_reversal_jpn225",
+    "source": "paper",
+    "title": "Iwanaga 2023/2026: prior-day S&P 500 return reverses in the next day's intraday Nikkei futures",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "paper_dollar_carry_basket_lrv",
+    "source": "paper",
+    "title": "Lustig-Roussanov-Verdelhan dollar carry: long/short USD basket on the sign of average foreign minus US short rate",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "variant_yen_cross_carry_vix_calm",
+    "source": "prebuilt",
+    "title": "Yen-cross carry held only while VIX is calm (Menkhoff, Sarno, Schmeling, Schrimpf 2012 JF: carry returns load on global FX volatility)",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "paper_post_ecb_drift_indices",
+    "source": "paper",
+    "title": "Valentin: Post-ECB announcement drift - trade EU/US indices in the direction of the press-conference-window move",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "paper_bab_index_beta_neutral",
+    "source": "paper",
+    "title": "Frazzini & Pedersen 2014 JFE Betting against beta: equity-index version (monthly beta-neutral low-beta vs high-beta indices)",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "paper_gold_silver_spread_meanrev",
+    "source": "paper",
+    "title": "Gold-silver spread mean reversion (Wahab, Cohn, Lashgari 1994, J Futures Markets): XAUUSD vs XAGUSD market-neutral pair",
+    "status": "rejected",
+    "added": "2026-11-03",
+    "verdict": null
+   },
+   {
+    "id": "paper_avg_industry_correlation_us500_month",
+    "source": "paper",
+    "title": "Average pairwise correlation of 48 industry portfolios predicts next-month US market returns (Pollet & Wilson 2010 JFE; Li, Li, Singh, Shi 2020 ARJ)",
+    "status": "rejected",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "data_french_48ind_daily",
+    "source": "data",
+    "title": "Ken French 48 industry portfolios, daily",
+    "status": "done",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "own_implied_move_fade_3mkts",
+    "source": "prebuilt",
+    "title": "Implied-move fade: short-gamma payoff by fading intraday moves beyond the option-implied daily sigma (US500 VIX, XAUUSD GVZ, EURUSD EVZ)",
+    "status": "rejected",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "paper_fisher_statman_confidence_us100_month",
+    "source": "paper",
+    "title": "Fisher & Statman: consumer confidence change predicts lower next-month Nasdaq returns (contrarian, US100 monthly hold)",
+    "status": "rejected",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "data_fred_umcsent",
+    "source": "data",
+    "title": "FRED UMCSENT Michigan consumer sentiment monthly",
+    "status": "done",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "data_wurgler_sentiment",
+    "source": "data",
+    "title": "Baker-Wurgler monthly sentiment proxies (CEFD, TURN, NIPO, RIPO, S, EQTI) 1965 on, plus SP500 monthly closes",
+    "status": "rejected",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "paper_baur_lucey_gold_unwind_after_equity_crash",
+    "source": "paper",
+    "title": "Baur & Lucey 2010: gold safe-haven gain after extreme equity down days is given back within about 15 days (short gold)",
+    "status": "rejected",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "paper_aligned_sentiment_us500_pls",
+    "source": "paper",
+    "title": "Huang, Jiang, Tu & Zhou 2015 RFS: aligned investor sentiment (PLS) as a US500 monthly timing signal",
+    "status": "rejected",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "fix_refused_retry2",
+    "source": "fix",
+    "title": "Finish fix_refused_retry: compile logs and a 1.24-vs-1.23 tester trade-list check",
+    "status": "done",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "fix_refused_retry",
+    "source": "fix",
+    "title": "Stop retrying an order the server refuses for the account or symbol (retcode 10017/10018/10027/10044) on every tick",
+    "status": "done",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "fix_stop_switch",
+    "source": "fix",
+    "title": "Stop switch: skip the leg before counting a try or sending while AurumStopped()",
+    "status": "queued",
+    "added": "2026-11-02",
+    "verdict": null
+   },
+   {
+    "id": "fix_graziani_clock",
+    "source": "fix",
+    "title": "Re-gate the month-reversal leg (graziani_rev) on the clock the EA trades, or drop it",
+    "status": "rejected",
+    "added": "2026-11-01",
+    "verdict": null
+   },
+   {
+    "id": "fix_graziani_rev3",
+    "source": "fix",
+    "title": "Commit the AurumHydra v1.42 compile log (0/0) with the shared Legs.mqh of AurumFunded v1.22",
+    "status": "done",
+    "added": "2026-11-01",
+    "verdict": null
+   },
+   {
+    "id": "fix_graziani_rev2",
+    "source": "fix",
+    "title": "Finish graziani_rev review items 4 and 7 before j20 counts",
+    "status": "done",
+    "added": "2026-11-01",
+    "verdict": null
+   },
+   {
     "id": "fix_graziani_rev",
     "source": "fix",
     "title": "Fix AurumFunded v1.21 month-reversal leg (graziani_rev) before its tester job counts",
-    "status": "tester",
+    "status": "done",
     "added": "2026-11-01",
     "verdict": null
    },
@@ -61397,7 +72266,7 @@ window.AURUM = {
     "id": "paper_graziani_ts_reversal_us500",
     "source": "paper",
     "title": "Graziani (2024) Time Series Reversal: A Payment Cycle Friction - long US500 for the next month if the last-week-of-month return was negative",
-    "status": "tester",
+    "status": "rejected",
     "added": "2026-11-01",
     "verdict": null
    },
@@ -61448,182 +72317,101 @@ window.AURUM = {
     "status": "rejected",
     "added": "2026-10-31",
     "verdict": null
+   }
+  ]
+ },
+ "eas": {
+  "AurumFunded": {
+   "today_lines": 0,
+   "last_day": "2026-11-06",
+   "last_lines": [
+    "AurumFunded: USD/JPY range 157.254-158.162, 1.51x its 60-day average",
+    "AurumFunded: USD/JPY passed its range high before this start, no late buy today",
+    "AurumFunded: account leverage 1:100, margin of 1 lot in EUR, XAUUSD 7277.47 at 4065.96, USDJPY 894.93 at 158.284, EURUSD 1000.00 at 1.11742, AUDCAD 614.81 at 0.96652, US500.cash 131.97 at 7373.35",
+    "AurumFunded: closed US500.cash magic <num> 0.43 at 7373.65, P/L 25.21 EUR",
+    "AurumFunded: closed US100.cash magic <num> 0.06 at 26993.38, P/L -7.92 EUR"
+   ],
+   "attached": false
+  },
+  "AurumHydra": {
+   "today_lines": 0,
+   "last_day": null,
+   "last_lines": [],
+   "attached": false
+  }
+ },
+ "tasks": {
+  "checked": "2026-11-08T00:39:14",
+  "rows": [
+   {
+    "name": "Aurum Keeper",
+    "does": "keeps T16 open, starts the script steps, the live feed and the research page",
+    "state": "Ready",
+    "last": "2026-11-08T00:30:30",
+    "next": "2026-11-08T00:45:45",
+    "result": "0x00000000",
+    "verdict": "ok",
+    "why": "last run ok"
    },
    {
-    "id": "ml_metalabel_desk_benchmark_edges",
-    "source": "ml",
-    "title": "Meta-label filter on the 5 prebuilt desk edges: of past setups like this (same trend and volatility regime), how many won? Take the trade only when that share is high",
-    "status": "rejected",
-    "added": "2026-10-31",
-    "verdict": null
+    "name": "Aurum Relay",
+    "does": "starts the next autopilot role (finder, builder, judge, tester)",
+    "state": "Ready",
+    "last": "2026-11-08T00:35:35",
+    "next": "2026-11-08T00:40:40",
+    "result": "0x00000000",
+    "verdict": "ok",
+    "why": "last run ok"
    },
    {
-    "id": "paper_baltussen_last30_index_mom",
-    "source": "paper",
-    "title": "Baltussen, Da, Lammers, Martens (2021 JFE): market intraday momentum, return to 30 min before close predicts the last 30 min, on US500, US100 (+ DAX, Nikkei same rule)",
-    "status": "rejected",
-    "added": "2026-10-31",
-    "verdict": null
+    "name": "Aurum Doctor",
+    "does": "daily system check, 06:00",
+    "state": "Ready",
+    "last": "2026-11-07T20:55:55",
+    "next": "2026-11-08T06:00:00",
+    "result": "0xC000013A",
+    "verdict": "failed",
+    "why": "last result 0xC000013A"
    },
    {
-    "id": "ml_jump_model_regime_long_indices",
-    "source": "ml",
-    "title": "Statistical jump model (JM) 0/1 regime filter: long US500 / US100 only in the bull regime",
-    "status": "rejected",
-    "added": "2026-10-31",
-    "verdict": null
+    "name": "Aurum Monitor",
+    "does": "demo forward-test check, Mon-Fri 22:15",
+    "state": "Ready",
+    "last": "2026-11-07T20:58:58",
+    "next": "2026-11-09T22:15:15",
+    "result": "0xC000013A",
+    "verdict": "failed",
+    "why": "last result 0xC000013A"
    },
    {
-    "id": "ml_quantile_exit_breakout_noise",
-    "source": "ml",
-    "title": "Quantile-regression take-profit for breakout and noise legs",
-    "status": "rejected",
-    "added": "2026-10-30",
-    "verdict": null
+    "name": "Aurum Portfolio",
+    "does": "weekly book review, Saturdays",
+    "state": "Ready",
+    "last": "2026-11-07T20:55:55",
+    "next": "2026-11-14T09:00:00",
+    "result": "0xC000013A",
+    "verdict": "failed",
+    "why": "last result 0xC000013A"
    },
    {
-    "id": "variance_ratio_grid_gate",
-    "source": "paper",
-    "title": "Lo-MacKinlay variance-ratio gate on the AUDCAD grid leg",
-    "status": "rejected",
-    "added": "2026-10-30",
-    "verdict": null
+    "name": "Dashboard",
+    "does": "the desk Command Center on 127.0.0.1:8765",
+    "state": "Running",
+    "last": "2026-11-07T02:01:01",
+    "next": null,
+    "result": "0x00041301",
+    "verdict": "running",
+    "why": "running now"
    },
    {
-    "id": "ml_pooled_metalabel_intraday_legs",
-    "source": "ml",
-    "title": "One pooled meta-label model across fix, cross, after, morning, fall, noise and quartet trades (Lopez de Prado, AFML ch. 3)",
-    "status": "rejected",
-    "added": "2026-10-30",
-    "verdict": null
-   },
-   {
-    "id": "ml_day_type_gate_breakout_noise_grid",
-    "source": "ml",
-    "title": "Trend-day versus range-day classifier (Dalton, Mind over Markets) gating breakout, noise and grid",
-    "status": "rejected",
-    "added": "2026-10-30",
-    "verdict": null
-   },
-   {
-    "id": "ml_hrp_leg_weights",
-    "source": "ml",
-    "title": "Hierarchical Risk Parity weights across the book legs (Lopez de Prado 2016, JPM 42(4))",
-    "status": "rejected",
-    "added": "2026-10-29",
-    "verdict": null
-   },
-   {
-    "id": "fix_dual_thrust_dax_open",
-    "source": "fix",
-    "title": "Dual Thrust four-index leg: rerun the research with the EA session open, commit the v1.18 compile log",
-    "status": "done",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "ml_bandit_leg_weights_monthly",
-    "source": "drl",
-    "title": "Thompson-sampling bandit over leg risk multipliers (0.5/1/1.5), monthly walk-forward",
-    "status": "rejected",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "paper_huang_gold_platinum_us500",
-    "source": "paper",
-    "title": "Huang (2015) Gold, Platinum, and Expected Stock Returns: gold/platinum ratio times US500 and US100 monthly",
-    "status": "rejected",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "prebuilt_dual_thrust_four_indices_ew",
-    "source": "prebuilt",
-    "title": "Dual Thrust (je-suis-tm/quant-trading) k1=0.3 long / k2=0.7 short, N=4, on the four index series with M1 data, equal risk: SPXUSD, NSXUSD, GRXEUR, JPXJPY",
-    "status": "funded",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "paper_fernandez_perez_commodity_skewness_ls",
-    "source": "paper",
-    "title": "Fernandez-Perez, Frijns, Fuertes, Miffre 2018: long the most negatively skewed commodities, short the most positively skewed, monthly",
-    "status": "rejected",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "ml_metalabel_quartet_skip",
-    "source": "ml",
-    "title": "Meta-label skip filter for the quartet leg (seasonal session)",
-    "status": "rejected",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "ml_cross_skip_fix_overlap",
-    "source": "ml",
-    "title": "Overlap-aware skip filter for the cross leg (logistic, past-only), aimed at the fix+cross corr 0.61",
-    "status": "rejected",
-    "added": "2026-10-28",
-    "verdict": null
-   },
-   {
-    "id": "paper_sorensen_grain_harvest_seasonal_short",
-    "source": "paper",
-    "title": "Sorensen 2002: harvest-pressure seasonal in grains, short corn, soybean and wheat from 1 June to 30 September",
-    "status": "rejected",
-    "added": "2026-10-27",
-    "verdict": null
-   },
-   {
-    "id": "paper_chen_rogoff_rossi_commodity_fx_lead",
-    "source": "paper",
-    "title": "Chen, Rogoff, Rossi 2010: commodity currencies (AUD, CAD, NZD) lead commodity prices, trade metals and oil on the monthly sign of the currency basket",
-    "status": "rejected",
-    "added": "2026-10-27",
-    "verdict": null
-   },
-   {
-    "id": "paper_driesprong_oil_predicts_index",
-    "source": "paper",
-    "title": "Driesprong, Jacobsen, Maat 2008: a fall in oil predicts a higher stock index next month (hold the index only after a negative oil month)",
-    "status": "rejected",
-    "added": "2026-10-27",
-    "verdict": null
-   },
-   {
-    "id": "prebuilt_dual_thrust_basket_crosses",
-    "source": "prebuilt",
-    "title": "Dual Thrust (je-suis-tm quant-trading) on a wider untested basket: yen/euro crosses, XAGUSD, WTIUSD, DAX, Nikkei, same parameters",
-    "status": "rejected",
-    "added": "2026-10-27",
-    "verdict": null
-   },
-   {
-    "id": "paper_announcement_day_long_indices",
-    "source": "paper",
-    "title": "Savor-Wilson 2013: long US500/US100 on scheduled macro announcement days (NFP, CPI/PPI, ISM, GDP; FOMC kept as a variant)",
-    "status": "rejected",
-    "added": "2026-10-26",
-    "verdict": null
-   },
-   {
-    "id": "ml_book_turbulence_scaler",
-    "source": "ml",
-    "title": "Turbulence index (Mahalanobis distance) as a past-only risk scaler on the whole book",
-    "status": "rejected",
-    "added": "2026-10-26",
-    "verdict": null
-   },
-   {
-    "id": "var_overreaction_fx_crosses",
-    "source": "prebuilt",
-    "title": "overreaction_fx variant: non-dollar crosses only (EURJPY, GBPJPY, AUDJPY, AUDCAD, EURGBP)",
-    "status": "rejected",
-    "added": "2026-10-26",
-    "verdict": null
+    "name": "xauusddesk-operator",
+    "does": "old desk operator (switched off)",
+    "state": "Disabled",
+    "last": "1999-11-30T00:00:00",
+    "next": "2026-11-08T04:00:00",
+    "result": "0x00041303",
+    "verdict": "disabled",
+    "why": "switched off"
    }
   ]
  }
