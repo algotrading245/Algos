@@ -1,0 +1,289 @@
+"""The desk sandbox: a quick backtest of an edge at real costs on the history before the holdout (DESIGN.md 3a).
+
+It informs a pod; it is not the research gate. Fills: a signal on bar i enters at the open of bar i + 1 with half the
+instrument's round-trip cost; each exit pays the other half. On a bar the stop is checked before any target (the
+cautious order), a gap through the stop fills at the open, the trail moves on the close, a time stop exits at the
+open of the first bar at or after it. One position per slot per edge and market, as live. Index, metal, energy and
+crypto costs in config.json are today's points; back in history they scale with the price (a 1.8-point US100 spread
+is 0.9 bp now and would be 9 bp at 2010's prices if left in points).
+
+python -m desk.sandbox NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]
+"""
+import datetime as dt
+import json
+import sys
+
+import numpy as np
+
+from desk import edges, journal, paths
+from desk.edges import base
+
+CARDS = paths.DESK / "edges" / "cards"
+
+
+SCALED = ("index", "metal", "energy", "crypto")
+
+
+def costs(df, cost, cls):
+    """The round-trip cost on each bar: fixed for currencies, in proportion to the price for the rest."""
+    if cls not in SCALED:
+        return np.full(len(df), float(cost))
+    c = df["close"].values.astype(float)
+    return float(cost) * c / c[-1]
+
+
+def simulate(df, signals, cost):
+    """Trades of a signal list: [{t, out, side, slot, r, why}], r in units of the edge's risk (R x the weight).
+    cost: the round trip in price units, one number or one per bar."""
+    o, h, l, c, t = (df[k].values.astype(float) if k != "time" else df[k].values
+                     for k in ("open", "high", "low", "close", "time"))
+    cost = np.broadcast_to(np.asarray(cost, dtype=float), (len(df),))
+    a = base.atr(df, 14).values
+    entries, closes = {}, {}
+    for s in signals:
+        if s.get("close"):
+            closes.setdefault(s["i"], set()).add(s.get("slot", 0))
+        else:
+            entries.setdefault(s["i"], {}).setdefault(s.get("slot", 0), s)
+    trades, book = [], {}
+
+    def close(pos, px, share, why, j):
+        px -= pos["dir"] * cost[j] / 2
+        pos["r"] += share * (px - pos["entry"]) * pos["dir"] / pos["risk"]
+        pos["left"] -= share
+        if pos["left"] <= 1e-9:
+            trades.append({"t": int(pos["t"]), "out": int(t[j]), "side": pos["side"], "slot": pos["slot"],
+                           "r": round(pos["r"] * pos["w"], 4), "why": why})
+            return None
+        return pos
+
+    def manage(pos, j, at_open):
+        """Stop, then targets, on bar j. at_open: the position existed before the bar opened (gaps count)."""
+        d, st = pos["dir"], pos["stop"]
+        if at_open and (o[j] - st) * d <= 0:
+            return close(pos, o[j], pos["left"], "stop", j)
+        if (l[j] if d > 0 else h[j]) * d <= st * d:
+            return close(pos, st, pos["left"], "stop", j)
+        while pos and pos["targets"]:
+            px, share = pos["targets"][0]
+            if (h[j] if d > 0 else l[j]) * d < px * d:
+                break
+            pos["targets"].pop(0)
+            fill = o[j] if at_open and (o[j] - px) * d >= 0 else px
+            pos = close(pos, fill, min(share, pos["left"]), "target", j)
+        return pos
+
+    for j in range(1, len(df)):
+        for k in list(book):
+            pos = book[k]
+            if k in closes.get(j - 1, ()):
+                pos = close(pos, o[j], pos["left"], "rule", j)
+            elif pos["exit_t"] is not None and t[j] >= pos["exit_t"]:
+                pos = close(pos, o[j], pos["left"], "time", j)
+            else:
+                pos = manage(pos, j, True)
+            if pos is None:
+                del book[k]
+        for k, s in entries.get(j - 1, {}).items():
+            if k in book:
+                continue
+            d = 1 if s["side"] == "buy" else -1
+            entry = o[j] + d * cost[j] / 2
+            risk = (entry - s["stop"]) * d
+            if risk > 0 and not (s.get("exit_t") is not None and t[j] >= s["exit_t"]):
+                pos = {"t": t[j], "side": s["side"], "dir": d, "entry": entry, "stop": s["stop"], "risk": risk,
+                       "targets": [list(x) for x in sorted(s.get("targets") or [], key=lambda x: x[0] * d)],
+                       "exit_t": s.get("exit_t"), "trail": s.get("trail_atr"), "left": 1.0, "r": 0.0, "slot": k,
+                       "w": float(s.get("weight", 1.0))}
+                pos = manage(pos, j, False)
+                if pos:
+                    book[k] = pos
+        for pos in book.values():
+            if pos["trail"] and np.isfinite(a[j]):
+                want = c[j] - pos["dir"] * pos["trail"] * a[j]
+                if (want - pos["stop"]) * pos["dir"] > 0:
+                    pos["stop"] = want
+    for pos in book.values():
+        close(pos, c[-1], pos["left"], "end", len(df) - 1)
+    trades.sort(key=lambda x: (x["out"], x["t"]))
+    return trades
+
+
+def stats(trades):
+    r = np.array([x["r"] for x in trades], dtype=float)
+    if not len(r):
+        return {"trades": 0}
+    eq = np.cumsum(r)
+    dd = float((np.maximum.accumulate(np.maximum(eq, 0)) - eq).max())
+    win, loss = r[r > 0].sum(), -r[r < 0].sum()
+    years = {}
+    for x in trades:
+        y = str(base.date_of(x["t"] // base.DAY).year)
+        years.setdefault(y, {"trades": 0, "r": 0.0})
+        years[y]["trades"] += 1
+        years[y]["r"] = round(years[y]["r"] + x["r"], 2)
+    return {"trades": len(r), "pf": round(float(win / loss), 2) if loss else None, "win": round(float((r > 0).mean()), 3),
+            "avg_r": round(float(r.mean()), 3), "total_r": round(float(r.sum()), 2), "max_dd_r": round(dd, 2),
+            "first": str(base.date_of(trades[0]["t"] // base.DAY)), "last": str(base.date_of(trades[-1]["t"] // base.DAY)),
+            "by_year": years, "halves": halves(trades)}
+
+
+def halves(trades):
+    """Total R of the trades entered before and after the midpoint in time between the first and the last entry: an
+    edge tuned to one stretch of history shows it as one losing half (the arm bar, owner 2026-11-02)."""
+    if not trades:
+        return [0.0, 0.0]
+    ts = [x["t"] for x in trades]
+    mid = (min(ts) + max(ts)) / 2
+    return [round(float(sum(x["r"] for x in trades if x["t"] <= mid)), 2),
+            round(float(sum(x["r"] for x in trades if x["t"] > mid)), 2)]
+
+
+def _cut(df, start, end):
+    if start:
+        df = df[df["time"] >= base.day_of(dt.date.fromisoformat(start)) * base.DAY]
+    if end:
+        df = df[df["time"] < (base.day_of(dt.date.fromisoformat(end)) + 1) * base.DAY]
+    return df.reset_index(drop=True)
+
+
+def context(e, market, cfg=None):
+    ctx = {"market": market}
+    for k in e["needs"]:
+        ctx[k] = base.hist_bars(*base.need(k), cfg)
+    return ctx
+
+
+def edge_trades(name, market, params=None, cfg=None, start=None, end=None):
+    """The trades of one edge on one market before the holdout, at real costs (view sim edge resamples them)."""
+    cfg = cfg or paths.config()
+    e = edges.get(name)
+    spec = cfg["instruments"].get(market, {})
+    if spec.get("cost") is None:
+        raise ValueError(f"no cost for {market} in config.json")
+    df = _cut(base.hist_bars(market, e["tf"], cfg), start, end)
+    sigs = edges.run(name, df, params, context(e, market, cfg))
+    return simulate(df, sigs, costs(df, spec["cost"], spec.get("class")))
+
+
+def run_edge(name, market=None, params=None, start=None, end=None, cfg=None, save=True):
+    """Backtest one edge on one market (or all its markets); update its card. Returns {market: stats}."""
+    cfg = cfg or paths.config()
+    e = edges.get(name)
+    out = {}
+    for m in ([market] if market else e["markets"]):
+        spec = cfg["instruments"].get(m, {})
+        cost = spec.get("cost")
+        if cost is None:
+            out[m] = {"error": f"no cost for {m} in config.json"}
+            continue
+        try:
+            df = _cut(base.hist_bars(m, e["tf"], cfg), start, end)
+        except (FileNotFoundError, ValueError) as err:
+            out[m] = {"error": str(err)}
+            continue
+        sigs = edges.run(name, df, params, context(e, m, cfg))
+        out[m] = stats(simulate(df, sigs, costs(df, cost, spec.get("class"))))
+    p = dict(e["defaults"])
+    p.update(params or {})
+    if save:
+        card = paths.read_json(CARDS / f"{name}.json", {})
+        card.update({k: v for k, v in base.describe(e).items()})
+        bt = card.setdefault("backtest", {})
+        for m, s in out.items():
+            bt[m] = {"params": p, "from": start, "to": end, **s,
+                     "run": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")}
+        card.setdefault("live", {})
+        paths.write_json(CARDS / f"{name}.json", card)
+    journal.log("sandbox", edge=name, params=p, start=start, end=end,
+                results={m: {k: s.get(k) for k in ("trades", "pf", "total_r", "max_dd_r", "error") if k in s}
+                         for m, s in out.items()})
+    return out
+
+
+def _tweak(defaults, k):
+    """One parameter change to test against the defaults: the k-th numeric one, up or down by half."""
+    nums = sorted(p for p, v in defaults.items() if isinstance(v, (int, float)) and not isinstance(v, bool) and v)
+    if not nums:
+        return {}
+    p = nums[k % len(nums)]
+    v = defaults[p]
+    f = 1.5 if (k // len(nums)) % 2 == 0 else 0.67
+    new = max(1, round(v * f)) if isinstance(v, int) else round(v * f, 4)
+    return {p: new} if new != v else {p: v + 1 if isinstance(v, int) else round(v * 1.5, 4)}
+
+
+def week_of(t):
+    y, w, _ = t.isocalendar()
+    return f"{y}-W{w:02d}"
+
+
+def weekly_task(pod, owns, t=None, cfg=None):
+    """One concrete sandbox task a week for a pod (owner 2026-11-02: 0 sandbox calls in 96 pod runs). Picked by the pod
+    and the ISO week, so it stays put all week: a library edge on one of the pod's home markets, those with no card run
+    on that market first, plus one parameter change to test against the defaults. Done when the journal holds a
+    sandbox run by the pod of that edge this week."""
+    from desk import clocks
+    import zlib
+    cfg = cfg or paths.config()
+    t = t or clocks.now()
+    week = week_of(t)
+    mkts = [m for m in owns if cfg["instruments"].get(m, {}).get("cost") is not None
+            and cfg["instruments"][m].get("hist")]
+    names = sorted(n for n, e in edges.EDGES.items() if e.get("kind") == "reference")
+    if not mkts or not names:
+        return None
+    pairs = [(n, m) for n in names for m in mkts]
+    fresh = [(n, m) for n, m in pairs
+             if m not in (paths.read_json(CARDS / f"{n}.json", {}).get("backtest") or {})]
+    pool = fresh or pairs
+    k = zlib.crc32(f"{pod}|{week}".encode())
+    name, market = pool[k % len(pool)]
+    tweak = _tweak(edges.EDGES[name]["defaults"], k // len(pool))
+    kv = " ".join(f"{p}={v}" for p, v in tweak.items())
+    start = (t - dt.timedelta(days=t.weekday())).date().isoformat()
+    done = [r for r in journal.recent(["sandbox"], 8) if r.get("by") == pod and r.get("edge") == name
+            and r.get("t", "")[:10] >= start]
+    return {"week": week, "edge": name, "market": market, "tweak": tweak,
+            "steps": [f"edge sandbox {name} {market}", f"edge sandbox {name} {market} {kv}".strip(),
+                      f"view sim edge {name} {market} n=20",
+                      f"memory learn \"{name} {market}: which version held up in both halves after costs, and why\" "
+                      f"instrument={market}"],
+            "card": edges.EDGES[name].get("card", "")[:300],
+            "done": bool(done), "runs": len(done)}
+
+
+def parse(argv):
+    """NAME [MARKET] [key=value ...] [from=..] [to=..] -> (name, market, params, start, end)."""
+    if not argv:
+        raise ValueError("usage: NAME [MARKET] [key=value ...] [from=YYYY-MM-DD] [to=YYYY-MM-DD]")
+    name, rest = argv[0], argv[1:]
+    market = rest.pop(0) if rest and "=" not in rest[0] else None
+    params, start, end = {}, None, None
+    for kv in rest:
+        k, v = kv.split("=", 1)
+        if k == "from":
+            start = v
+        elif k == "to":
+            end = v
+        else:
+            try:
+                params[k] = json.loads(v)
+            except json.JSONDecodeError:
+                params[k] = v
+    return name, market, params, start, end
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    try:
+        name, market, params, start, end = parse(argv)
+        print(json.dumps(run_edge(name, market, params, start, end), indent=1))
+        return 0
+    except (ValueError, KeyError) as e:
+        print(json.dumps({"ok": False, "error": str(e)}))
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,59 @@
+{
+    "Expert":  "AurumHydra",
+    "Symbol":  "XAUUSD",
+    "Preset":  "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+    "Set":  "",
+    "Period":  "M15",
+    "Deposit":  10000,
+    "Leverage":  500,
+    "Tag":  "5xC",
+    "Goal":  5,
+    "Months":  [
+                   "2026.03",
+                   "2026.04",
+                   "2026.05",
+                   "2026.06",
+                   "2026.07",
+                   "2026.08",
+                   "2026.09"
+               ],
+    "Done":  [
+                 {
+                     "Month":  "2026.03",
+                     "Folder":  "backtests\\2026-10-17_2231_AurumHydra_5xC_202603",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.04",
+                     "Folder":  "backtests\\2026-10-17_2236_AurumHydra_5xC_202604",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.05",
+                     "Folder":  "backtests\\2026-10-17_2240_AurumHydra_5xC_202605",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.06",
+                     "Folder":  "backtests\\2026-10-17_2245_AurumHydra_5xC_202606",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.07",
+                     "Folder":  "backtests\\2026-10-17_2249_AurumHydra_5xC_202607",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.08",
+                     "Folder":  "backtests\\2026-10-17_2254_AurumHydra_5xC_202608",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.09",
+                     "Folder":  "backtests\\2026-10-17_2258_AurumHydra_5xC_202609",
+                     "Status":  "done"
+                 }
+             ],
+    "Pid":  15952,
+    "Started":  "2026-10-17T22:31:14.9843303+02:00"
+}

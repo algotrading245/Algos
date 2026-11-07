@@ -1,0 +1,110 @@
+{
+ "name": "hold",
+ "markets": [
+  "XAUUSD"
+ ],
+ "tf": "D1",
+ "pod": "systematic",
+ "kind": "leg",
+ "bars": 300,
+ "needs": [],
+ "defaults": {
+  "lags": [
+   20,
+   60,
+   120,
+   250
+  ],
+  "k": 3.0,
+  "hold": 60
+ },
+ "card": "XAUUSD D1 trend hold. The share of four lookbacks (20, 60, 120, 250 days) on which gold is higher; long while any is up.\nStop and trail 3 ATR; out after 60 days, then back in on the next bar if the trend still holds.",
+ "backtest": {
+  "XAUUSD": {
+   "params": {
+    "lags": [
+     20,
+     60,
+     120,
+     250
+    ],
+    "k": 3.0,
+    "hold": 60
+   },
+   "from": null,
+   "to": null,
+   "trades": 118,
+   "pf": 1.32,
+   "win": 0.356,
+   "avg_r": 0.129,
+   "total_r": 15.19,
+   "max_dd_r": 11.35,
+   "first": "2010-03-04",
+   "last": "2025-09-24",
+   "by_year": {
+    "2010": {
+     "trades": 9,
+     "r": 2.41
+    },
+    "2011": {
+     "trades": 12,
+     "r": 4.86
+    },
+    "2012": {
+     "trades": 8,
+     "r": -2.71
+    },
+    "2014": {
+     "trades": 6,
+     "r": -2.94
+    },
+    "2015": {
+     "trades": 2,
+     "r": -1.71
+    },
+    "2016": {
+     "trades": 8,
+     "r": 0.56
+    },
+    "2017": {
+     "trades": 9,
+     "r": -0.56
+    },
+    "2018": {
+     "trades": 4,
+     "r": 0.51
+    },
+    "2019": {
+     "trades": 8,
+     "r": 5.0
+    },
+    "2020": {
+     "trades": 13,
+     "r": -0.13
+    },
+    "2021": {
+     "trades": 7,
+     "r": -4.28
+    },
+    "2022": {
+     "trades": 7,
+     "r": 0.23
+    },
+    "2023": {
+     "trades": 9,
+     "r": -1.75
+    },
+    "2024": {
+     "trades": 9,
+     "r": 8.28
+    },
+    "2025": {
+     "trades": 7,
+     "r": 7.42
+    }
+   },
+   "run": "2026-10-26T21:06:49+00:00"
+  }
+ },
+ "live": {}
+}

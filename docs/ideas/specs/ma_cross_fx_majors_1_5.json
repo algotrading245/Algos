@@ -1,0 +1,32 @@
+{
+  "id": "ma_cross_fx_majors_1_5",
+  "title": "1-day vs 5-day moving-average crossover on the dollar majors (Pukthuanthong-Le, Levich, Thomas)",
+  "source": "Pukthuanthong-Le, Levich & Thomas (2006), Do Foreign Exchange Markets Still Trend?, NYU Stern working paper FIN-06-030 (draft 13 Nov 2006)",
+  "link": "https://archive.nyu.edu/jspui/bitstream/2451/26386/2/FIN-06-030.pdf",
+  "read": "in full",
+  "why": "The paper's second rule: the 1-day average against the 5-day average, long above and short below, held until the signal changes. It is the fastest of the paper's three rules and is kept as its own spec so the 5/20 rule is not diluted. The paper reports the same decline in the majors after 1995 (Exhibit 1), so a fail is the expected result. Gold and the yen crosses are left out, as the paper does not test them.",
+  "rule": "ma_cross",
+  "symbols": [
+    "USDJPY",
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD",
+    "USDCHF",
+    "USDCAD"
+  ],
+  "params": {
+    "fast": [
+      1
+    ],
+    "slow": [
+      5
+    ],
+    "hold": [
+      1
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T20:21:16"
+}

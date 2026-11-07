@@ -1,0 +1,37 @@
+; AurumFunded - Instant Funding PRO (no challenge, no target, no daily limit, no consistency rule; maximum loss 10%
+; of the starting balance, tightened for good to 5% once the account is 5% up; first payout 14 days after the first
+; trade once +5% and the lock is in, then weekly; rules read on instantfunding.com 2026-10-15; confirm their EA
+; policy and the broker's server clock (the EA wants New York + 7) before buying).
+; Guard: final stop at -8.5% until equity first reaches +5%, then at -3.5% for good (InpPropLock*), 1.5% inside the
+; firm's lines; own day stop 3%; size 0.5 with the cushion rule. tools/prop_instantfunding.py, 70% of the edge:
+; first payout within 1 / 2 / 3 months 20 / 41 / 57%, median 2.5 months, none lost; half the edge with pessimistic
+; intraday dips: median 3.9 months, none lost.  Size 0.7: median 2.0 months, 6.7% lost at half the edge.
+; Account Drawdown: the firm closes everything when open positions lose a set % of the starting balance together
+; (2% in their help page's example; first time the split drops to 50%, second time the account is lost). Ask them the
+; PRO figure and set InpPropFloatPct about 0.3 below it, so the EA closes first; 1.7 assumes their 2%.
+; Clock: on a live account the EA trades only on days the server is New York + 7 (GMT+2 winter, GMT+3 US summer);
+; otherwise the Experts log says "no trading today, the server clock is ... hours ahead of GMT". Check the log on the
+; first day - if that line appears every day, this broker's clock does not fit the EA.
+; Fast sizing (InpPropFast, table FAST_IF, tools/prop_dp_instantfunding.py): until the +5% lock, while at or above
+; the start, sizes from a policy solved for a 42-day horizon; below the start the cushion rule. 70% of the edge:
+; first payout within 1 / 2 / 3 months 28 / 50 / 62%, median 2.0 months (2.5 without), none lost; half the edge with
+; dips: median 2.9 months (3.9 without), none lost.  Set InpPropFastStart to the day the account starts.
+; Weekend holding needs their add-on; this preset's legs close before the weekend (grid and gold hold are off).
+InpPropTargetPct=0.0
+InpPropRound=1
+InpPropMinDays=0
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropLockPct=5.0
+InpPropLockStopPct=3.5
+InpPropFloatPct=1.7
+InpPropFast=true
+InpPropFastDays=42
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=0
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0

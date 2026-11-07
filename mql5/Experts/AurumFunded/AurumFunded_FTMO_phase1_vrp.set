@@ -1,0 +1,27 @@
+; AurumFunded v1.15 - FTMO funded-style run (no profit target, so the run does not stop at +10%) with the variance-premium leg
+; (research/vrp_gap_equity_indices.py). The preset is the OFF run (InpVrpMult=0); the on run adds InpVrpMult=0.5 (queue compare_set).
+; Tester only until the judge has passed it. VIX source: the broker symbol InpVrpVix if it exists (FTMO has none), else the file
+; vixcls.csv in the common Files folder (python research/vrp_vix_file.py writes it, days before 2025-10-13 only).
+InpPropTargetPct=0.0
+InpPropRound=3
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275
+InpVrpMult=0.0
+InpVrpVix=VIX.cash
+InpVrpVixFile=vixcls.csv
+InpVrpHHMM=2230
+InpVrpEntrySec=600
+InpVrpMaxSpreadBp=3.0
+InpVrpStopEqPct=5.0

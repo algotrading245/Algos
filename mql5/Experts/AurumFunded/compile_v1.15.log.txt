@@ -1,0 +1,2 @@
+tools/autopilot/compile.ps1 -Expert AurumFunded (v1.15, 2026-10-25)
+Result: 0 errors, 0 warnings, 5798 ms elapsed, cpu='X64 Regular'

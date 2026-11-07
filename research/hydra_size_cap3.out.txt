@@ -1,0 +1,180 @@
+SELECTION RULE (fixed before any number is seen). Variants: static caps 20, 25, 30, 35, 40, 45, 50 and dynamic
+min(50, s_dyn) at thresholds 1.1, 1.25, 1.5, 2.0, 3.0 less those the degeneracy guard marks DEGENERATE (the pool). For
+each goal 3, 4, 5, on "to 2017" (2010-06..2017-12):
+ a. best = the highest P(goal) at edge 1.0 over all variants of the pool.
+ b. near = variants within 1.0 pp of best. Pick the one with the lowest P(stop-out) at edge 1.0 to 2017; ties go to the
+    variant closest to the preset (static: the larger cap; dynamic: the lower threshold; static before dynamic).
+ c. The pick's P(goal) at edge 0.7 to 2017 must be >= cap 50's minus 1.0 pp; if not, take the next variant of `near` in
+    the order of (b) that passes; if none, cap 50.
+ d. Do the same steps a-c restricted to the 7 static variants: "best static".
+ e. CONFIRM on "2018 on" (2018-01..2025-09), edge 1.0: PASS against cap 50 if pick P(goal) >= cap 50's - 1.0 pp AND pick
+    P(SO) < cap 50's. If the pick is dynamic it must ALSO PASS against "best static" by the same test (P(goal) >= best
+    static's - 1.0 pp and P(SO) < best static's); otherwise the verdict is "dynamic does not beat the best static". If the
+    pick is cap 50: "no variant better than the preset".
+PRE-REGISTERED dynamic thresholds (level eq/Mproj after the clip >= thr): [1.1, 1.25, 1.5, 2.0, 3.0]; statics [20, 25, 30, 35, 40, 45, 50]; degeneracy guard: bind share > 90% or < 5%, or median bound s_dyn < 15 -> DEGENERATE
+====================================================================================================
+tester runs found: 3x 21, 4x 21, 5x 21
+====================================================================================================
+PART 1  margin per notional from the tester's stop-outs
+equity = balance of the last deal row at the stop-out second (all closes, 'end of test' included); notionals = every position open just before that second
+26 stop-outs; columns ['gold', 'fx', 'other']; fit of margin/equity, equity-weighted rows (each row in units of its own equity)
+run              time                 level  equity(old) equity(new)   gold $      fx $  of it AUDCAD   other $   fit margin  implied   fit/impl  level at 1:500
+t3b_202401       2024.01.17 10:59:00   48.7      8,368      5,945    376,057    452,720    287,720          0      12,136    12,209     0.99      358.6%
+t3b_202405       2024.05.23 17:52:00   48.0      6,454      3,391    341,922     17,892     17,892          0       7,089     7,063     1.00      471.2%
+t3b_202408       2024.08.05 13:56:00   49.9      2,651      2,647    226,868     71,164          0          0       5,298     5,307     1.00      444.1%
+t3b_202410       2024.10.08 05:36:00   49.2      8,880      5,743    326,749    505,168    505,168          0      11,665    11,661     1.00      345.2%
+t3b_202411       2024.11.06 08:38:00   45.4      6,696      4,889    378,367    310,004    310,004          0      10,752    10,760     1.00      355.1%
+t3b_202504       2025.04.04 06:02:00   49.3      7,010      5,511    328,257    460,159    460,159          0      11,244    11,188     1.01      349.5%
+t3b_202506       2025.06.27 13:43:00   49.6      8,201      5,666    279,171    581,688    288,670          0      11,470    11,428     1.00      329.1%
+t4b_202401       2024.01.08 13:42:00   49.5      6,257      5,841    391,884    383,649    165,947          0      11,763    11,813     1.00      376.6%
+t4b_202405       2024.05.23 20:27:00   49.6      6,726      3,590    350,690     17,858     17,858          0       7,266     7,235     1.00      487.1%
+t4b_202406       2024.06.07 23:01:00   46.6      7,645      4,836    448,497    127,648    127,648          0      10,342    10,376     1.00      419.7%
+t4b_202407       2024.07.25 04:41:00   47.5     15,283     10,999    625,025  1,044,974    670,974          0      23,101    23,155     1.00      329.3%
+t4b_202408       2024.08.05 13:49:00   48.2      4,408      3,508    333,346     53,618          0          0       7,274     7,280     1.00      453.3%
+t4b_202410       2024.10.08 05:36:00   49.6     10,036      6,136    392,625    443,956    443,956          0      12,383    12,377     1.00      366.7%
+t4b_202411       2024.11.06 08:38:00   45.3      6,379      4,730    386,475    263,014    263,014          0      10,445    10,448     1.00      364.1%
+t4b_202504       2025.04.03 15:41:00   49.8      6,632      4,782    364,562    222,056    179,056          0       9,592     9,602     1.00      407.6%
+t4b_202506       2025.06.27 13:53:00   49.6      8,509      5,774    292,084    577,509    284,791          0      11,689    11,641     1.00      332.0%
+t4b_202507       2025.07.25 19:34:00   49.8     11,559      6,435    485,682    166,520    166,520     72,519      12,926    12,926     1.00      443.9%
+t5b_202401       2024.01.08 13:31:00   49.1      6,570      6,102    440,973    346,687    160,649          0      12,385    12,422     1.00      387.3%
+t5b_202405       2024.05.23 20:27:00   49.5      6,845      3,656    357,703     19,180     19,180          0       7,421     7,390     1.00      485.1%
+t5b_202406       2024.06.07 16:48:00   48.8      5,600      5,116    432,632    173,379     57,379          0      10,480    10,491     1.00      422.1%
+t5b_202407       2024.07.25 04:39:00   47.1     20,520     10,649    623,767    991,271    645,271          0      22,538    22,585     1.00      329.7%
+t5b_202408       2024.08.05 13:43:00   49.3      4,665      3,589    333,720     53,643          0          0       7,281     7,285     1.00      463.3%
+t5b_202410       2024.10.08 05:35:00   49.7     10,280      6,281    392,722    468,847    468,847          0      12,634    12,636     1.00      364.5%
+t5b_202411       2024.11.06 08:38:00   42.8      6,345      4,453    408,096    214,719    214,719          0      10,398    10,403     1.00      357.5%
+t5b_202504       2025.04.03 15:40:00   48.7      6,675      4,703    373,926    208,203    168,203          0       9,642     9,653     1.00      403.9%
+t5b_202506       2025.06.27 13:49:00   49.8      8,283      5,690    295,485    549,597    269,090          0      11,478    11,429     1.00      336.6%
+FX notional at the stop-outs that is NOT AUDCAD: 29% of the FX total; per stop-out median 19%
+fitted gold : margin = 0.02021 of USD notional  ->  1:49 leverage equivalent
+fitted fx   : margin = 0.01002 of USD notional  ->  1:100 leverage equivalent
+fitted other: margin = 0.01990 of USD notional  ->  1:50 leverage equivalent
+pure 1:500 would be 0.00200 of notional for every kind (median level at the stop-outs: 372% against the tester's 49%)
+fit quality: median |fit/implied - 1| 0%, max 1%
+note: 'other' symbols (the indices, contract size unknown) carry margin in the fit; since round 4 the noise tickets use that rate (a_other below; a_fx when nnls gives 0)
+used by the model: a_gold 0.02021 (1:49), a_fx 0.01002 (1:100)
+other-legs margin sensitivity: margin of non-AUDCAD FX and other notional / (balance before the stop-out day * GoalSize then); 'other' rate 0.01990
+  t3b_202401       2024.01.17  balance before    14,273  days left 11  size  40.4  non-AUDCAD margin     1,653  ratio 0.003
+  t3b_202405       2024.05.23  balance before     7,610  days left  7  size  50.0  non-AUDCAD margin         0  ratio 0.000
+  t3b_202408       2024.08.05  balance before    14,414  days left 21  size  29.0  non-AUDCAD margin       713  ratio 0.002
+  t3b_202410       2024.10.08  balance before    13,747  days left 18  size  32.7  non-AUDCAD margin         0  ratio 0.000
+  t3b_202411       2024.11.06  balance before    10,650  days left 20  size  37.6  non-AUDCAD margin         0  ratio 0.000
+  t3b_202504       2025.04.04  balance before    12,471  days left 20  size  33.6  non-AUDCAD margin         0  ratio 0.000
+  t3b_202506       2025.06.27  balance before    12,594  days left  4  size  50.0  non-AUDCAD margin     2,936  ratio 0.005
+  t4b_202401       2024.01.08  balance before    14,031  days left 18  size  39.9  non-AUDCAD margin     2,181  ratio 0.004
+  t4b_202405       2024.05.23  balance before     7,769  days left  7  size  50.0  non-AUDCAD margin         0  ratio 0.000
+  t4b_202406       2024.06.07  balance before    12,144  days left 19  size  42.3  non-AUDCAD margin         0  ratio 0.000
+  t4b_202407       2024.07.25  balance before    28,505  days left  5  size  34.3  non-AUDCAD margin     3,747  ratio 0.004
+  t4b_202408       2024.08.05  balance before    14,195  days left 21  size  36.7  non-AUDCAD margin       537  ratio 0.001
+  t4b_202410       2024.10.08  balance before    14,398  days left 18  size  39.3  non-AUDCAD margin         0  ratio 0.000
+  t4b_202411       2024.11.06  balance before    10,511  days left 20  size  44.5  non-AUDCAD margin         0  ratio 0.000
+  t4b_202504       2025.04.03  balance before    10,115  days left 21  size  44.2  non-AUDCAD margin       431  ratio 0.001
+  t4b_202506       2025.06.27  balance before    12,771  days left  4  size  50.0  non-AUDCAD margin     2,933  ratio 0.005
+  t4b_202507       2025.07.25  balance before    14,214  days left  5  size  50.0  non-AUDCAD margin     1,443  ratio 0.002
+  t5b_202401       2024.01.08  balance before    14,311  days left 18  size  44.9  non-AUDCAD margin     1,864  ratio 0.003
+  t5b_202405       2024.05.23  balance before     7,955  days left  7  size  50.0  non-AUDCAD margin         0  ratio 0.000
+  t5b_202406       2024.06.07  balance before    11,690  days left 19  size  48.2  non-AUDCAD margin     1,162  ratio 0.002
+  t5b_202407       2024.07.25  balance before    27,547  days left  5  size  50.0  non-AUDCAD margin     3,467  ratio 0.003
+  t5b_202408       2024.08.05  balance before    14,207  days left 21  size  41.7  non-AUDCAD margin       538  ratio 0.001
+  t5b_202410       2024.10.08  balance before    14,817  days left 18  size  44.1  non-AUDCAD margin         0  ratio 0.000
+  t5b_202411       2024.11.06  balance before    10,469  days left 20  size  49.2  non-AUDCAD margin         0  ratio 0.000
+  t5b_202504       2025.04.03  balance before    10,134  days left 21  size  48.7  non-AUDCAD margin       401  ratio 0.001
+  t5b_202506       2025.06.27  balance before    12,471  days left  4  size  50.0  non-AUDCAD margin     2,811  ratio 0.005
+OTHER_MARGIN (median of the 26 ratios) = 0.001 of day-open equity * size
+building hourly bars ...
+  AUDCAD: hour extremes from M1 high/low, 616 of 93261 hours without data (bar close used)
+  XAUUSD: hour extremes from M1 high/low, 1345 of 93261 hours without data (bar close used)
+  3995 days 2010-06-01 .. 2025-10-10, 87559 hourly bars
+  fix: recomputed daily pnl against the file column: max abs diff 9.89e-17 (sum recomputed 1.2965, file 1.2965)
+  cross: recomputed daily pnl against the file column: max abs diff 9.90e-17 (sum recomputed 0.5947, file 0.5947)
+  fall: recomputed daily pnl against the file column: max abs diff 9.99e-17 (sum recomputed 0.6889, file 0.6889)
+  morning: recomputed daily pnl against the file column: max abs diff 9.93e-17 (sum recomputed 0.6688, file 0.6688)
+  after: recomputed daily pnl against the file column: max abs diff 9.74e-17 (sum recomputed 1.0286, file 1.0286)
+  quartet legs rebuilt as backtest_hydra.quartet(0.67, 0.80): sum of the four legs against the file's quartet column: max abs diff 9.97e-17 on 3959 days (the bell is 2.792 of it and stays in the residual)
+  Tokyo / Meridian notional clipped at 30 on 0 tickets
+  noise_lev SPXUSD: 3224 of 3995 model days have a lev, median 2.51, 10th 1.27, 90th 4.00, first day 2011-03-11
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! NOISE SIZING (M5): NOT DONE (FileNotFoundError: C:\Users\ailea\Desktop\Algo\marketdata\histdata\NSXUSD_M1.csv.gz); the r5 variant keeps the constant 1.1 at 16:00 like round 4
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+[elapsed] part 0 data build: 140.3 s
+CHECK 4 holdout: 184 months 2010-06 .. 2025-09, last day used 2025-09-30 (< 2025-10-01); the arrays hold 8 model days from 2025-10-01, none in a round -> PASS
+NOISE PATH: round 4's CONSTANT noise ticket (round-5 noise sizing not built); NSXUSD_M1.csv.gz is missing
+====================================================================================================
+CHECK 1  sc's copy check, identity, unit tests, check C
+copy check (fixes 3, 4 off vs mod.assemble): PASS
+identity max |sum ticket pnl + res - other|: edge 1.0: 1.39e-17, edge 0.7: 6.94e-18 -> PASS
+====================================================================================================
+UNIT TEST open_ratio (patched): want = k0 * nmax * rate = 1 * 10 * 0.01 = 0.10, 5 parts of w = 0.02 each
+  (the module's unpatched open_ratio on the one-part ticket at clip 1e12, free 0 gives 0.000: the reviewer's C1 bug)
+  A 5 parts, clip 1.0, free 0.05, 3rd part runs out: hand value 0.50: got 0.5000000000 -> PASS
+  B 5 parts, clip 0.5, free 0.07: hand value 0.6625: got 0.6625000000 -> PASS
+  C1 5 parts, clip 1e12, free 0: hand value 1.0: got 1.0000000000 -> PASS
+  C2 1 part, clip 1e12, free 0: hand value 1.0: got 1.0000000000 -> PASS
+  D1 1 part, clip 0.5, free 0.03: min(1, 0.5*0.03/0.1) = 0.15: got 0.1500000000 -> PASS
+  D2 1 part, clip 0.5, free 1.0: min(1, 5) = 1.0: got 1.0000000000 -> PASS
+(C1) tester months: CLIP=1e12 lmode 1 (ticket margin off) against lmode 2: max abs end-equity diff 0.00e+00 over 63 rounds, stop flags different in 0  -> PASS
+(C2) tester months: CLIP=1e12 lmode 1 WITH the tickets' own margin against lmode 2 with constant OTHER_MARGIN 0.001: max abs diff 4.05e+00, rounds that differ 63 of 63 (information: the two carry different margins, so a difference is expected where margin is binding)
+(C1) month-start rounds: CLIP=1e12 lmode 1 (ticket margin off) against lmode 2: max abs end-equity diff 0.00e+00 over 552 rounds, stop flags different in 0  -> PASS
+C1 overall: PASS
+CHECK 1 PASS
+[elapsed] check 1: 6.7 s
+====================================================================================================
+THE PLAN (per-leg constants per unit of eq*size, fitted on 1971 days 2010-06..2017-12 only; every leg on every day; FixDay x2.0 on fix, cross, tokyo)
+  after     DST 0: window 9-15, segments 9-15: 7.821, parts 5, kind fx, modal shape in 43 of 43 tickets
+  after     DST 1: window 9-15, segments 9-15: 7.639, parts 5, kind fx, modal shape in 32 of 32 tickets
+  breakout  DST 0: window 10-18, segments 10-18: 0.342, parts 1, kind fx, modal shape in 593 of 593 tickets
+  breakout  DST 1: window 10-18, segments 10-18: 0.354, parts 1, kind fx, modal shape in 1172 of 1172 tickets
+  cross     DST 0: window 16-18, segments 16-18: 2.070, parts 3, kind fx, modal shape in 30 of 30 tickets
+  cross     DST 1: window 16-18, segments 16-18: 1.622, parts 3, kind fx, modal shape in 61 of 61 tickets
+  dip       DST 0: window 3-8, segments 3-8: 3.023, parts 1, kind gold, modal shape in 16 of 51 tickets
+  dip       DST 1: window 4-9, segments 4-9: 2.425, parts 1, kind gold, modal shape in 39 of 106 tickets
+  fall      DST 0: window 17-18, segments 17-18: 5.620, parts 5, kind fx, modal shape in 32 of 32 tickets
+  fall      DST 1: window 17-18, segments 17-18: 5.110, parts 5, kind fx, modal shape in 66 of 66 tickets
+  fix       DST 0: window 16-19, segments 16-18: 3.729, 18-19: 6.189, parts 5, kind fx, modal shape in 30 of 30 tickets
+  fix       DST 1: window 16-19, segments 16-18: 3.495, 18-19: 6.111, parts 5, kind fx, modal shape in 61 of 61 tickets
+  meridian  DST 0: window 13-15, segments 13-15: 3.023, parts 1, kind fx, modal shape in 664 of 664 tickets
+  meridian  DST 1: window 13-15, segments 13-15: 3.311, parts 1, kind fx, modal shape in 1175 of 1300 tickets
+  morning   DST 0: window 1-4, segments 1-4: 3.827, parts 3, kind fx, modal shape in 59 of 59 tickets
+  morning   DST 1: window 2-5, segments 2-5: 2.825, parts 3, kind fx, modal shape in 121 of 121 tickets
+  noise     DST 0: window 16-23, segments 16-23: 1.100, parts 2, kind other, modal shape in 410 of 410 tickets
+  noise     DST 1: window 16-23, segments 16-23: 1.100, parts 2, kind other, modal shape in 778 of 778 tickets
+  tokyo     DST 0: window 2-5, segments 2-5: 6.162, parts 1, kind fx, modal shape in 176 of 176 tickets
+  tokyo     DST 1: window 3-6, segments 3-6: 5.523, parts 1, kind fx, modal shape in 355 of 355 tickets
+  plan for a plain US-DST day (2010-06-01): peak legs margin at size 1, rates ag/af/ao = 0.0202/0.0100/0.0199: 0.1279 at hour 17 (unclipped)
+====================================================================================================
+UNIT TEST U1 hand-computed projection and s_dyn (answers in the function's docstring)
+  A s=2 level 16.6667: got 16.666667 -> PASS
+  B s=60 clip binds, level 1.0322581: got 1.032258 -> PASS
+  C s=1 level 10: got 10.000000 -> PASS
+  C s=20 level 2.0: got 2.000000 -> PASS
+  D thr 3 -> 3.33: got 3.330000 -> PASS
+  D thr 2.0 -> 50: got 50.000000 -> PASS
+  D thr 1.5 -> 50: got 50.000000 -> PASS
+  E level at s=0 with G0 60: 1.6667: got 1.666667 -> PASS
+  E thr 2 -> 0: got 0.000000 -> PASS
+  E thr 1.5 -> 33.33: got 33.330000 -> PASS
+====================================================================================================
+UNIT TEST U2 engine agreement, clip off, frozen day, 117 to-2017 days x 5 thresholds x 2 states
+  1170 engine runs (0 with s_dyn 0 skipped), 276908 order-instant levels read, below thr - 1e-9: 0; smallest (level - thr) 2.510e-02 -> PASS
+====================================================================================================
+UNIT TEST U3 level non-increasing in s (0.5 grid to 50), 118 day-states: violations 0 -> PASS
+CHECK 3 unit tests (U1 hand, U2 engine agreement, U3 monotone): PASS
+[elapsed] unit tests: 23.1 s
+====================================================================================================
+CHECK 2 dynamic off (thr 0) vs original run_round at cap 50: 1104 rounds, max abs diff of end multiples 0.0e+00, stop-out flag differences 0 -> PASS
+[elapsed] check 2: 20.7 s
+CHECK 5 cap 50 reproduces runs 1/2, edge 1.0, all 184 months: 3x 39.7% (runs 1/2: 39.7); 4x 28.8% (runs 1/2: 28.8); 5x 22.8% (runs 1/2: 22.8) -> PASS
+====================================================================================================
+DEGENERACY GUARD (to-2017 days of the cap-50 path, edge 1.0, goals pooled; bind = s_dyn < goal_size)
+  4281 day-open sizing calls on the cap-50 path to 2017; median goal_size 43.5, share of days size = 50: 34.6%
+[elapsed] probe cap-50 path: 7.8 s
+  thr 1.1: bind share 97.8% of 4281 days, median bound s_dyn 3.0 -> DEGENERATE (bind share > 90%, median bound s_dyn < 15)   [per goal: bind% / median bound: 3x 97% / 3.2; 4x 98% / 2.8; 5x 98% / 2.5]
+  thr 1.25: bind share 98.1% of 4281 days, median bound s_dyn 2.0 -> DEGENERATE (bind share > 90%, median bound s_dyn < 15)   [per goal: bind% / median bound: 3x 97% / 2.3; 4x 98% / 1.9; 5x 99% / 1.6]
+  thr 1.5: bind share 98.4% of 4281 days, median bound s_dyn 1.2 -> DEGENERATE (bind share > 90%, median bound s_dyn < 15)   [per goal: bind% / median bound: 3x 98% / 1.4; 4x 98% / 1.1; 5x 99% / 0.7]
+  thr 2.0: bind share 98.8% of 4281 days, median bound s_dyn 0.1 -> DEGENERATE (bind share > 90%, median bound s_dyn < 15)   [per goal: bind% / median bound: 3x 98% / 0.4; 4x 99% / 0.0; 5x 99% / 0.0]
+  thr 3.0: bind share 99.2% of 4281 days, median bound s_dyn 0.0 -> DEGENERATE (bind share > 90%, median bound s_dyn < 15)   [per goal: bind% / median bound: 3x 99% / 0.0; 4x 99% / 0.0; 5x 100% / 0.0]
+[elapsed] guard: 44.4 s
+NON-DEGENERATE thresholds: none
+ALL DEGENERATE: no verdict, close with cap 50
+CHECKS: 1 (sc copy/identity/C1/unit) PASS | 2 (thr 0 == cap 50, diff 0) PASS | 3 (unit U1/U2/U3) PASS | 4 (holdout) PASS | 5 (cap 50 reproduces runs 1/2) PASS
+TRIALS: 0 new (no dynamic threshold was run); the statics are repeats of run 2

@@ -1,0 +1,111 @@
+{
+ "name": "bollinger_reversion",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "AUDUSD",
+  "XAUUSD",
+  "US500"
+ ],
+ "tf": "H1",
+ "pod": "systematic",
+ "kind": "benchmark",
+ "bars": 60,
+ "needs": [],
+ "defaults": {
+  "n": 20,
+  "sd": 2.0,
+  "k": 1.5,
+  "hold": 24
+ },
+ "card": "Bollinger fade: a close that crosses outside the 20-bar, 2-sigma band is faded to the middle band; stop 1.5 ATR, out\nafter 24 bars.",
+ "backtest": {
+  "US500": {
+   "params": {
+    "n": 20,
+    "sd": 2.0,
+    "k": 1.5,
+    "hold": 24
+   },
+   "from": null,
+   "to": null,
+   "trades": 5042,
+   "pf": 0.84,
+   "win": 0.408,
+   "avg_r": -0.094,
+   "total_r": -472.27,
+   "max_dd_r": 504.26,
+   "first": "2010-11-16",
+   "last": "2025-10-10",
+   "by_year": {
+    "2010": {
+     "trades": 41,
+     "r": 5.68
+    },
+    "2011": {
+     "trades": 327,
+     "r": -27.87
+    },
+    "2012": {
+     "trades": 336,
+     "r": -30.81
+    },
+    "2013": {
+     "trades": 369,
+     "r": -20.98
+    },
+    "2014": {
+     "trades": 376,
+     "r": -63.49
+    },
+    "2015": {
+     "trades": 357,
+     "r": -45.07
+    },
+    "2016": {
+     "trades": 327,
+     "r": -29.71
+    },
+    "2017": {
+     "trades": 335,
+     "r": -59.2
+    },
+    "2018": {
+     "trades": 351,
+     "r": -63.93
+    },
+    "2019": {
+     "trades": 332,
+     "r": -30.71
+    },
+    "2020": {
+     "trades": 319,
+     "r": -21.95
+    },
+    "2021": {
+     "trades": 338,
+     "r": -22.49
+    },
+    "2022": {
+     "trades": 344,
+     "r": -25.83
+    },
+    "2023": {
+     "trades": 283,
+     "r": -18.55
+    },
+    "2024": {
+     "trades": 352,
+     "r": -39.64
+    },
+    "2025": {
+     "trades": 255,
+     "r": 22.17
+    }
+   },
+   "run": "2026-10-27T18:24:28+00:00"
+  }
+ },
+ "live": {}
+}

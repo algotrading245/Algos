@@ -1,0 +1,42 @@
+{
+ "id": "volforecast_sizing",
+ "when": "2026-10-22T01:48:08",
+ "verdict": "FAIL at halves",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": false,
+   "figure": "0.04 / 0.96",
+   "rule": ">= 0.5 to 2017 and from 2018"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.61",
+   "rule": ">= 0.3 at 1.5x cost"
+  },
+  {
+   "gate": "dsr",
+   "pass": false,
+   "figure": "0.035 (N=27063, luck bar 1.03)",
+   "rule": ">= 0.9"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book -0.01, max leg fix +0.01",
+   "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "goal",
+   "pass": true,
+   "figure": "Hydra 2018+ 3.45 -> 3.51 at weight 0.0985; P(5x) 56.2% -> 56.8%",
+   "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+  }
+ ],
+ "weight": 0.09854107817762223,
+ "p5x": [
+  0.5618464571293371,
+  0.5677190335511603
+ ]
+}

@@ -1,0 +1,11 @@
+; AurumBreakout on USDJPY. Attach to a USDJPY chart; Strategy Tester: symbol USDJPY, M1 or M5, every tick based on
+; real ticks, from 2024-01 (the range filter needs about three months of M1 history before the first trade).
+; Backtest (research/london_breakout.py): both sides on their own Sharpe 1.40 to 2017, 1.08 from 2018 at 0.8 bp;
+; a hedging account is needed (both sides can be open at the same moment).
+; Expected tester result 2024-01 to 2026-09 (research/breakout_ticks.py, real bid/ask ticks + $2.50 a lot a side):
+; ~777 trades (~285 a year), 47% winners, +0.044 R a trade, profit factor ~1.14; from 10,000 at 0.25% risk about
+; +8.6% with a 5% maximum drawdown. Its use is as an uncorrelated leg next to the others, not alone. 0.25% risk a trade
+; for a test of its own; as a leg next to AurumFunded about 0.125%.
+InpRiskPct=0.25
+InpMagic=245300
+InpBothSides=true

@@ -1,0 +1,35 @@
+{
+    "Expert":  "AurumHydra",
+    "Symbol":  "XAUUSD",
+    "Preset":  "mql5/Experts/AurumHydra/AurumHydra_5x_month_FTMO.set",
+    "Set":  "InpBreakRiskPct=0,InpNoiseMult=0",
+    "Period":  "M15",
+    "Deposit":  10000,
+    "Leverage":  500,
+    "Tag":  "5xEQ",
+    "Goal":  5,
+    "Months":  [
+                   "2026.01",
+                   "2026.02",
+                   "2026.03"
+               ],
+    "Done":  [
+                 {
+                     "Month":  "2026.01",
+                     "Folder":  "backtests\\2026-10-18_0102_AurumHydra_5xEQ_202601",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.02",
+                     "Folder":  "backtests\\2026-10-18_0109_AurumHydra_5xEQ_202602",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2026.03",
+                     "Folder":  "backtests\\2026-10-18_0113_AurumHydra_5xEQ_202603",
+                     "Status":  "done"
+                 }
+             ],
+    "Pid":  15604,
+    "Started":  "2026-10-18T01:02:13.8055611+02:00"
+}

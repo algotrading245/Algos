@@ -1,0 +1,143 @@
+{
+    "Expert":  "AurumHydra",
+    "Symbol":  "XAUUSD",
+    "Preset":  "mql5/Experts/AurumHydra/AurumHydra_target4x_FTMO.set",
+    "Set":  "",
+    "Period":  "M15",
+    "Deposit":  10000,
+    "Leverage":  500,
+    "Tag":  "t4b",
+    "Goal":  5,
+    "Months":  [
+                   "2024.01",
+                   "2024.02",
+                   "2024.03",
+                   "2024.04",
+                   "2024.05",
+                   "2024.06",
+                   "2024.07",
+                   "2024.08",
+                   "2024.09",
+                   "2024.10",
+                   "2024.11",
+                   "2024.12",
+                   "2025.01",
+                   "2025.02",
+                   "2025.03",
+                   "2025.04",
+                   "2025.05",
+                   "2025.06",
+                   "2025.07",
+                   "2025.08",
+                   "2025.09"
+               ],
+    "Done":  [
+                 {
+                     "Month":  "2024.01",
+                     "Folder":  "backtests\\2026-10-18_0755_AurumHydra_t4b_202401",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.02",
+                     "Folder":  "backtests\\2026-10-18_0758_AurumHydra_t4b_202402",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.03",
+                     "Folder":  "backtests\\2026-10-18_0803_AurumHydra_t4b_202403",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.04",
+                     "Folder":  "backtests\\2026-10-18_0809_AurumHydra_t4b_202404",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.05",
+                     "Folder":  "backtests\\2026-10-18_0816_AurumHydra_t4b_202405",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.06",
+                     "Folder":  "backtests\\2026-10-18_0821_AurumHydra_t4b_202406",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.07",
+                     "Folder":  "backtests\\2026-10-18_0824_AurumHydra_t4b_202407",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.08",
+                     "Folder":  "backtests\\2026-10-18_0829_AurumHydra_t4b_202408",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.09",
+                     "Folder":  "backtests\\2026-10-18_0833_AurumHydra_t4b_202409",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.10",
+                     "Folder":  "backtests\\2026-10-18_0839_AurumHydra_t4b_202410",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.11",
+                     "Folder":  "backtests\\2026-10-18_0843_AurumHydra_t4b_202411",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2024.12",
+                     "Folder":  "backtests\\2026-10-18_0847_AurumHydra_t4b_202412",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.01",
+                     "Folder":  "backtests\\2026-10-18_0851_AurumHydra_t4b_202501",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.02",
+                     "Folder":  "backtests\\2026-10-18_0857_AurumHydra_t4b_202502",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.03",
+                     "Folder":  "backtests\\2026-10-18_0903_AurumHydra_t4b_202503",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.04",
+                     "Folder":  "backtests\\2026-10-18_0910_AurumHydra_t4b_202504",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.05",
+                     "Folder":  "backtests\\2026-10-18_0914_AurumHydra_t4b_202505",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.06",
+                     "Folder":  "backtests\\2026-10-18_0919_AurumHydra_t4b_202506",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.07",
+                     "Folder":  "backtests\\2026-10-18_0927_AurumHydra_t4b_202507",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.08",
+                     "Folder":  "backtests\\2026-10-18_0934_AurumHydra_t4b_202508",
+                     "Status":  "done"
+                 },
+                 {
+                     "Month":  "2025.09",
+                     "Folder":  "backtests\\2026-10-18_0940_AurumHydra_t4b_202509",
+                     "Status":  "done"
+                 }
+             ],
+    "Pid":  12572,
+    "Started":  "2026-10-18T07:55:16.4603084+02:00"
+}

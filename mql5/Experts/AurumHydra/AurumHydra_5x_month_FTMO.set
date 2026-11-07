@@ -1,0 +1,32 @@
+; AurumHydra - AurumHydra_5x_month.set (goal mode, one 5x round) on FTMO's symbol names, for the month series on
+; Terminal 16 (queue j8). The goal inputs below are the 5x preset's, unchanged; only the 16 symbol names differ.
+; Without the names the EA finds no XAUUSD.pc and OnInit fails, so every month's report is empty (job j7, 2026-10-17).
+; Inputs not listed keep the EA's defaults (run-tester.ps1 writes the source defaults first).
+InpGold=XAUUSD
+InpYen=USDJPY
+InpEuro=EURUSD
+InpGridSymbol=AUDCAD
+InpStocks=US500.cash
+InpPound=GBPUSD
+InpAussie=AUDUSD
+InpLoonie=USDCAD
+InpSwissy=USDCHF
+InpFixCross1=AUDJPY
+InpFixCross2=CADJPY
+InpFixCross3=GBPJPY
+InpMorn1=EURJPY
+InpMorn2=GBPJPY
+InpMorn3=CADJPY
+InpNasdaq=US100.cash
+InpGoalMult=5.0
+InpGoalDays=23
+InpGoalCap=50.0
+InpGoalBold=false
+InpGoalScale=2.5
+InpGoalDayVolPct=1.56
+InpGoalRepeat=false
+InpMonthEndBoost=2.0
+InpGoalStop=true
+InpGoalRound=1
+InpMaxDrawdownPct=0.0
+InpBrakePct=0.0

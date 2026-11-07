@@ -1,0 +1,137 @@
+{
+ "name": "adx_dmi",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "USDCHF",
+  "USDCAD",
+  "AUDUSD",
+  "NZDUSD",
+  "EURJPY",
+  "GBPJPY",
+  "AUDJPY",
+  "CADJPY",
+  "NZDJPY",
+  "EURGBP",
+  "EURCHF",
+  "EURAUD",
+  "AUDCAD",
+  "AUDNZD",
+  "GBPCHF",
+  "NZDCAD",
+  "XAUUSD",
+  "XAGUSD",
+  "WTI",
+  "US500",
+  "US100",
+  "GER40",
+  "JP225",
+  "BTCUSD",
+  "ETHUSD"
+ ],
+ "tf": "D1",
+ "pod": "library",
+ "kind": "reference",
+ "bars": 100,
+ "needs": [],
+ "defaults": {
+  "k": 2.0,
+  "side": "both",
+  "hold": 0,
+  "trail": 0,
+  "n": 14,
+  "th": 25
+ },
+ "card": "Wilder DMI: +DI crossing above -DI with ADX(14) above 25 buys (the mirror sells); the opposite DI cross exits.",
+ "backtest": {
+  "US500": {
+   "params": {
+    "k": 3.0,
+    "side": "both",
+    "hold": 0,
+    "trail": 0,
+    "n": 14,
+    "th": 25
+   },
+   "from": null,
+   "to": null,
+   "trades": 50,
+   "pf": 0.66,
+   "win": 0.36,
+   "avg_r": -0.091,
+   "total_r": -4.54,
+   "max_dd_r": 5.53,
+   "first": "2011-02-01",
+   "last": "2025-01-22",
+   "by_year": {
+    "2011": {
+     "trades": 3,
+     "r": -0.58
+    },
+    "2012": {
+     "trades": 2,
+     "r": -0.23
+    },
+    "2013": {
+     "trades": 4,
+     "r": -0.91
+    },
+    "2014": {
+     "trades": 5,
+     "r": 0.5
+    },
+    "2015": {
+     "trades": 1,
+     "r": 0.53
+    },
+    "2016": {
+     "trades": 3,
+     "r": -1.54
+    },
+    "2017": {
+     "trades": 1,
+     "r": -0.54
+    },
+    "2018": {
+     "trades": 5,
+     "r": 0.55
+    },
+    "2019": {
+     "trades": 4,
+     "r": -0.22
+    },
+    "2020": {
+     "trades": 5,
+     "r": -1.67
+    },
+    "2021": {
+     "trades": 3,
+     "r": -0.96
+    },
+    "2022": {
+     "trades": 3,
+     "r": -0.45
+    },
+    "2023": {
+     "trades": 1,
+     "r": 1.74
+    },
+    "2024": {
+     "trades": 8,
+     "r": -0.79
+    },
+    "2025": {
+     "trades": 2,
+     "r": 0.04
+    }
+   },
+   "halves": [
+    -2.78,
+    -1.77
+   ],
+   "run": "2026-11-02T23:51:01+00:00"
+  }
+ },
+ "live": {}
+}
