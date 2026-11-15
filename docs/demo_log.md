@@ -401,3 +401,11 @@ demo_check (Terminal 16, two experts logs for 20261103): 16 EA lines, 8 journal 
 - **Errors, duplicate closes, done-reported-failed:** none listed by demo_check. The 2026-11-02 trade-disabled burst (retcode 10017) does not recur in today's read.
 - **Not logged:** day stop, final stop, margin error, trade without a broker stop. None appears in the check.
 - **Odd:** only the noise leg traded; the bell leg was skipped on its move threshold.
+
+## 2026-11-15 (Sunday), 02:21 check (monitor): no trades logged; EA not attached?
+
+demo_check (Terminal 16) for 20261115: no EA log lines, 0 orders, 0 journal trade lines, no closes. Markets are closed at this hour, so no trade is expected yet; the demo window runs until 2026-11-15 18:00.
+
+- Trades per leg: none. P/L of the day: not logged. Slippage: not logged.
+- Odd: demo_check also finds no EA log lines for 2026-11-09 to 2026-11-13 (five trading days, see docs/fidelity/2026-11-13.md). The last day with EA lines in demo_check is 2026-11-06 (2 closes, US500.cash and US100.cash, +17.29 EUR). Not logged: whether the EA is detached or only its log is not written. Two terminal64 processes are running (started 08/11/2026). The monitor did not check the chart's EA list, which is read-only and outside this check.
+- No day stop, final stop, margin error, or trade without a broker stop appears. No ALERT.
