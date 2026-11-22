@@ -1,0 +1,18 @@
+{
+  "id": "f_tsmom_eurgbp",
+  "title": "tsmom on EURGBP",
+  "source": "spec factory grid: time-series momentum (Moskowitz, Ooi & Pedersen 2012), the engine's default parameters",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "rule": "tsmom",
+  "symbols": [
+    "EURGBP"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "made": "2026-10-22",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T00:47:57"
+}

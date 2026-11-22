@@ -1,0 +1,30 @@
+{
+  "id": "xsmom_xau_xag_wti_spx_12m",
+  "title": "Cross-sectional 12-month momentum across gold, silver, WTI and SPX, long top 1, short bottom 1, monthly",
+  "source": "Asness, Moskowitz & Pedersen (2013), Value and Momentum Everywhere, Journal of Finance 68(3)",
+  "link": "https://pages.stern.nyu.edu/~lpederse/papers/ValMomEverywhere.pdf",
+  "read": "in full",
+  "why": "Paper finds momentum in commodities (P3-P1 Sharpe about 0.53, 1972-2011) and in country index futures (0.73), ranking each market on its past 12-month return. This spec takes the four of our symbols that map to those classes (metals, oil, US equity index) as one basket, holding the top 1 long and bottom 1 short for 21 days. Deviation: the paper skips the last month (12-1); the engine has no skip, so the lookback is the plain 252-day return. Four symbols is far fewer than the paper's universe, so this is a narrow test.",
+  "rule": "xsmom",
+  "symbols": [
+    "XAUUSD",
+    "XAGUSD",
+    "WTIUSD",
+    "SPXUSD"
+  ],
+  "params": {
+    "lookback": [
+      252
+    ],
+    "hold": [
+      21
+    ],
+    "top": [
+      1
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-22T00:48:00"
+}

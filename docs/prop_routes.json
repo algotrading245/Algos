@@ -1,0 +1,15 @@
+{
+ "about": "Prop routes for AurumFunded, from docs/HANDOFF.md (simulators in tools/prop_*.py, 70% of the back-tested edge). Firm rules were read on the firms' own pages on 2026-10-14/15; check again before buying. The dashboard reads this file.",
+ "chosen": "FTMO 2-Step Challenge, Swing account",
+ "routes": [
+  {"route": "FundedNext Stellar Instant", "median_months": 1.4, "alt_months": 4.3, "alt_if": "if it has a 40% best-day consistency rule", "preset": "AurumFunded_FundedNext_instant.set", "rules": "no challenge, no daily limit, 6% trailing max loss, 14-day payout cycle, 70-80% share, EA add-on", "open": "confirm the consistency rule with FundedNext"},
+  {"route": "Instant Funding PRO", "median_months": 2.5, "alt_months": 2.0, "alt_if": "with DP fast sizing FAST_IF", "preset": "AurumFunded 1.03 lock preset", "rules": "no target, no daily limit, no consistency rule, 10% max loss tightening to 5% once +5%, first payout after 14 days", "open": "Account Drawdown %, EA policy, server clock"},
+  {"route": "FTMO 1-Step", "median_months": 7.8, "preset": "AurumFunded FTMO 1-Step preset", "rules": "one phase", "open": "maximum loss: 10% or 6%"},
+  {"route": "FTMO 2-Step (chosen)", "median_months": 9.6, "preset": "AurumFunded_FTMO_phase1/phase2/funded.set", "rules": "10% then 5% target, 5% daily on equity from midnight CE(S)T, 10% static max, 4 trading days, no time limit, 1:30", "open": "none"}
+ ],
+ "guard": {"day_stop_pct": 3, "final_stop_pct": 8.5, "shrink_within_pct": 6.5, "firm_daily_pct": 5, "firm_max_pct": 10},
+ "tester": [
+  {"run": "backtests/2026-10-15_funded_phase1", "what": "phase 1 passed on 2024-10-25, 10 months after start"},
+  {"run": "backtests/2026-10-15_funded_account", "what": "funded preset: +110% in 34 months, max equity DD 4.08%, worst day -1.64%"}
+ ]
+}

@@ -1,0 +1,5 @@
+﻿AurumHydra.mq5 v1.43 compile, 2026-11-02, owner session (scratchpad copy, so the T16 junction was not touched)
+Source: mql5/Experts/AurumHydra/AurumHydra.mq5 at da44051, Include/Aurum via the T16 junction (= repo mql5/Include/Aurum).
+Compiler: T16 metaeditor64.exe /compile /include:<T16>\MQL5
+
+Result: 0 errors, 0 warnings, 5326 ms elapsed, cpu='X64 Regular'

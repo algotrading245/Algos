@@ -1,0 +1,27 @@
+{
+  "id": "ma_cross_nzdusd_5_20",
+  "title": "5-day vs 20-day moving-average crossover on NZD/USD (Pukthuanthong-Le, Levich, Thomas)",
+  "source": "Pukthuanthong-Le, Levich & Thomas (2006), Do Foreign Exchange Markets Still Trend?, NYU Stern working paper FIN-06-030 (draft 13 Nov 2006)",
+  "link": "https://archive.nyu.edu/jspui/bitstream/2451/26386/2/FIN-06-030.pdf",
+  "read": "in full",
+  "why": "The paper's exotic-currency group (Exhibit 3-4) is the only place it finds profit after 2000, and the New Zealand dollar is the one member we trade. Same 5/20 average rule as the majors spec, on NZD/USD alone, with the paper's 2000-2006 figures (NZD information ratio 0.74 over 2000-2006; calendar-year mean profits of 18.9% in 2000, -15.3% in 2001, 29.1% in 2002, 23.3% in 2003, 0.1% in 2004, -12.7% in 2005 and 8.5% in 2006, from Exhibit 3). Kept to one symbol so the test does not add trials for the other exotics, which we do not trade.",
+  "rule": "ma_cross",
+  "symbols": [
+    "NZDUSD"
+  ],
+  "params": {
+    "fast": [
+      5
+    ],
+    "slow": [
+      20
+    ],
+    "hold": [
+      1
+    ]
+  },
+  "side": "both",
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T20:21:16"
+}

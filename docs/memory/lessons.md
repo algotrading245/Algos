@@ -1,0 +1,136 @@
+# Lessons
+
+What the project learned the hard way, so no run repeats it. At most 40. Rules:
+
+- Each lesson is one rule plus `Evidence:` (a file, job or commit) and the date it was learned.
+- Only the orchestrator adds, changes or removes a lesson, and only after the reviewer subagent agreed that the
+  evidence supports it. Other agents propose one with `python tools/memory.py decide --kind lesson ...`.
+- At 40, merge or drop the weakest before adding. A lesson that later evidence contradicts is removed, with a
+  decision line saying why.
+- A lesson never overrides `docs/memory/mission.md`.
+
+## Strategy Tester
+
+1. **Every input must be written, or the tester reuses the last run's value.** j5's off and on runs came out identical
+   to the cent because the preset left the legs, boost and halt inputs out. Check the input list in the report before
+   judging any run. Evidence: j5/j6 in `docs/HANDOFF.md`; `tools/run-tester.ps1` now writes source defaults first.
+   (2026-10-17)
+2. **Presets must use the broker's own symbol names.** j4 traded only 3 of 16 symbols and j7's months all stopped at
+   OnInit because the presets kept another broker's `.pc` / `.r` names. Evidence: j4, j7. (2026-10-17)
+3. **The tester install needs one owner login before any job starts.** j10/j11 failed without it; the relay now
+   waits for the login instead. Evidence: j10/j11 notes in `docs/autopilot/queue.json`. (2026-10-18)
+4. **The tester keeps about 67-87% of the Python model's log growth.** Judge a run against that range, not against
+   the raw model figure: Funded runs 67-74% (j3), Hydra at size 1 83-87% (j6). Evidence: j3, j6. (2026-10-17)
+5. **One goal round says little about the 5x EA; it needs separate fresh-deposit months.** j4's 5x preset stopped
+   after January 2024. Evidence: j4, then j8a-c via `tools/run-months.ps1`. (2026-10-17)
+6. **Keep each month series short enough for the chained tags.** j7 broke at an 86-character tag; 52 works. Evidence: j7, j8. (2026-10-17)
+19. **The goal model has no margin; the tester has the broker's stop-out.** At goal sizes 30-50, the gold hold
+    (`Legs.mqh:957`) and the AUDCAD grid (`Legs.mqh:797`), both scaled by `SizeMult()`, carry nearly all of the loss
+    when an intraday move takes the margin level below 50% (deal comment `so 4x.xx%`). The tester closes everything at
+    that price and ends the test. That ended 7 / 10 / 9 of the 21 single-month runs at 3x / 4x / 5x, at a median 0.5x;
+    2 / 4 / 3 of them were months the model reaches. Tester "ruin 0" hides these stop-outs; judge goal odds against a
+    model with margin. Evidence: `research/hydra_goal_202410_compare.py`, `research/hydra_stopout_scan.py`.
+    (2026-10-18)
+    - Amended 2026-10-18 (reviewer-checked): a goal model that checks margin must carry the EA's position state. That
+      means held gold lots with the 25% band and the buy-only clip to 50% of free margin, the grid cycle base fixed at
+      its first level from the balance, and the panic exit, with sizes from live equity. Re-sizing size-1 exposures
+      each day hides the build-up. On the 21 months, the re-sized model found 1 / 1 / 2 stop-outs at 3x / 4x / 5x, the
+      position-carrying model 5 / 7 / 7 and the tester 7 / 10 / 9, with 4 / 6 / 6 of them in the same months.
+    - Margin = the symbol's margin rate times the test leverage. Those tests ran at 1:100 (see below), which gave
+      gold 1:50, FX 1:100 and indices 1:50, not 1:500. A fit to all 26 stop-outs lands within 1%, with equity taken
+      after every close at the stop-out second.
+    - Corrected 2026-10-19 (reviewer-checked; replaces the same day's "the rate belongs to the terminal"): the
+      tester did not apply the job's `leverage` field, though it did apply the job's deposit. Each terminal tested at
+      the leverage saved in its own `config\terminal.ini` [Tester] section: Terminal 16 1:33 on every run on
+      10-15/17/18, including Hydra jobs that asked for 500, and the tester install 1:100 on every run on 10-18,
+      including j12-j14, which asked for 33. Both terminals use the same FTMO-Demo account. The gold rate is about 2,
+      inferred from these ratios and not read from the specs: 1:16.5 at 1:33 (j3) and 1:50 at 1:100 (j12, up to
+      49.6). That made the bell 2-2.9x larger in j12 and caused its 3 extra day stops. Read the agent log's
+      "leverage 1:n" line before using any tester figure; report files repeat the job's leverage
+      (`tester_step.py:300,342`). Evidence: `research/demo_margin_terminals.out.txt`,
+      `research/funded_j12_j3_daystops.out.txt` (last block).
+    - That model still reaches the goal far more often than the tester (12 / 10 / 10 against 9 / 4 / 2). It also
+      misses stop-outs where other legs were open (2024.01, 2024.07, 2025.06). Until the other legs' margin and their
+      50% free-margin clip are modelled, do not quote its P(goal) as the EA's odds. Evidence:
+      `research/hydra_goal_margin_model.py` (2026-10-18 run); t5b reports 2024.01 and 2025.06.
+    - Amended 2026-10-18 (reviewer-checked): the EA clips each order to 50% of the free margin left (`Legs.mqh:625,
+      1749`), so a 5-pair leg can take about 97% of it, and the month-end boost (2.0 in the target presets) doubles
+      fix, bell and tokyo on the last weekday. A model that clips one combined ticket and leaves out the boost shrinks
+      the other legs' margin and pnl. It can match the tester's stop-out count (7 / 8 / 9 against 7 / 10 / 9) and
+      still overstate goals (8 / 8 against 4 / 2 at 4x / 5x), so its P(goal) is an upper bound. Evidence: round 4 of
+      `research/hydra_goal_margin_model.py`.
+
+## Strategy and data
+
+7. **The 5x goal mode reaches 5x in 1-2 of 21 tester months; judge it against 11-25%, not ~40-47%.** j8 gave 1/21
+   (2025.01-2026.09), j10b 2/21 (2024.01-2025.09). `tools/target_odds.py` gives P(5x) 17% at edge 0.7 and 25% at
+   edge 1.0 (5x target, scale 2.5, every weekday a round); month-start rounds give 11% / 20%. The old 40% matched P(3x)
+   at the 3x target and 47% the goal-mode preset. On j10b's own months the model with target_odds' settings gave 5-9
+   of 21 at 5x with 14-24% ruin; the tester gave 2 with no ruin (lowest 0.36x). On the preset-settings model, broker
+   stop-outs account for 3 of its 11 months at 5x (lesson 19); the rest of the gap is not measured. 2024 also gave only 1 of 12, so 2025-26 gold volatility is not the whole cause, though j9's gold-hold
+   evidence stands. A fix is a new idea through the gates on data from 2010, never a setting picked on tester months.
+   Evidence: j8a-c, j9, j10b, `research/hydra_t5b_months_model.py`. (2026-10-18)
+   - Amended 2026-10-19 (reviewer-checked): neither series ran at the 1:500 its job asked for (lesson 19). j8a-c ran
+     on Terminal 16 at 1:33, j10b on the tester install at 1:100; their presets set the same goal (5x, scale 2.5,
+     `Legs.mqh:2060-2061`). So 1/21 and 2/21 are not two samples of one setting, and j8 against j10b does not
+     separate the 2025-26 months from the leverage (1:33 against 1:100). The "2024 gave 1 of 12" above is j10b
+     (month 2024.12) set against j8, so it carries the same confound. target_odds' 11-25% (no margin) is the
+     yardstick of neither. The margin model (cap 50, 184 month-start rounds, an upper bound per lesson 19) gives
+     P(5x) 24.5 / 12.5% at 1:100, 12.5 / 8.2% at 1:33 (edge 1.0 / 0.7) and 40.2 / 27.7% at 1:500. Judge a 5x tester
+     figure against that model at the leverage in the run's agent log. Evidence: `research/demo_margin_terminals.out.txt`
+     (Terminal 16 2026-10-17 16:26-16:49 and 21:44-22:59 at 1:33; tester install 2026-10-18 04:02-05:02 at 1:100),
+     `research/hydra_leverage_sens.out.txt` lines 96, 99, `docs/autopilot/queue.json` j8a-c, j10b.
+8. **The gold spread cap (`InpGoldMaxSpread` 0.30) works as an unplanned volatility filter; lifting it made the months
+   worse.** Evidence: j9 (0.34x / 0.49x / 0.57x against 1.33x / 0.91x / 0.72x). (2026-10-18)
+9. **Leave the rollover (server 23:00-01:00) out of intraday tests.** Histdata's bid quotes spike and snap back there,
+   which looks like a reversal that cannot be traded. Evidence: AUD/NZD relative-move test. (2026-10-15)
+10. **Simple rule scans on these instruments are used up.** The cal/vol scan made 21,240 trials and one survivor, which
+    failed its halves; every rerun raises the DSR bar for all later candidates. New edges need a reason (a flow, a
+    paper) or new data. Evidence: `docs/trials.jsonl`, `docs/gates/`. (2026-10-17)
+11. **Round-number levels do not work on USDJPY/EURUSD** (Osler): no variant reaches net Sharpe 0.5 in both halves,
+    and round levels do no better than arbitrary ones. Evidence: `research/osler_round.py`. (2026-10-18)
+12. **The S&P half of the noise leg has been flat or negative on 2024-26 three times; the Nasdaq half carries it.**
+    It is not refitted on the tester window. Evidence: j1, j3, j6. (2026-10-17)
+13. **A day stop set as a share of the *initial* balance fires more as the account compounds.** It is 1.1-1.2% of
+    equity at 2.5-2.7x, so late day stops in long runs overstate the risk on a funded account that pays out. Evidence: j3. (2026-10-17)
+
+## Process
+
+14. **SSRN refuses downloads (403).** Find the paper on the authors' pages or in a working-paper series, and say when
+    a source is "not readable" instead of filling in numbers. Evidence: researcher runs. (2026-10-17)
+15. **Read the full paper before testing it.** Abstract-only ideas wait for a full read
+    (`python tools/pdf_text.py`). Evidence: the owner's rule. (2026-10-14)
+16. **The quant-coder subagent has no Bash in the relay.** It writes the script; the orchestrator runs it with
+    `python research/<name>.py`. Evidence: Osler run, 2026-10-18.
+17. **Run `git diff --cached --name-only` before committing.** Commit 031f5b6 carried 18 renames that were already
+    staged, `.ex5` files among them. Evidence: commit 031f5b6. (2026-10-18)
+18. **Count how often a month series reaches the goal from the month multiples, with 0.3% tolerance, or from the
+    month's own "goal round of <month> ended" line. Never count from the `round` field, and never with a strict
+    `>= level`.**
+    - The own line is the one whose goal matches the run's (for example "goal 3.0x") and whose clock time falls inside
+      the run.
+    - The `round` field comes from the first "goal round of <month> ended" line for that month in the day-wide
+      summary.txt, and that line can belong to an earlier run that day. The p_3x/p_5x figures are built on
+      max(multiple, round) (`tools/months_summary.py:44-55`). j11b's 5x count of 2 came from j10b's lines, and j15's
+      p_3x of 43% compares with a true 6 of 21.
+    - The multiple is the balance after the last fill, so a round that stopped at the goal shows 2.999x or 3.992x. A
+      strict `>= 3.0` counted j11b as 3 of 21, where its own lines give 9.
+    - A 4x-goal run logs no 3x line, so its 3x count comes from the multiples only.
+
+    Evidence: j11b, j15 `months_result.json`; t3b_202502 summary.txt line 351145; t4b_202412 summary.txt lines 1198,
+    350303, 699411. (2026-10-18)
+20. **Before testing a margin-level size cap, compute the book's unclipped margin per unit of size and the size it
+    allows.** Add up the hold, the grid and the peak of the legs open together, then take eq / (thr x that). If that size
+    is far below the sizes in use, the preset fits only through the engine's 50% free-margin clip. A cap on a level
+    above 1 is then a tiny static cap: do not run it. Pre-register a degeneracy guard (bind share, median bound cap) so
+    a void arm stops before any sweep. Evidence: `research/hydra_size_cap3.out.txt` lines 143, 171-175 (legs peak 0.128
+    per unit of size, binds on 97.8-99.2% of days, median bound s_dyn 3.0-0.0); run 2 `research/hydra_size_cap2.py`
+    (s_dyn <= 2.9). (2026-10-19)
+21. **A multi-day leg in AurumFunded is also closed by the book-wide `CloseEverything()` (day stop, open-loss stop,
+    final stop or target, clock check, drawdown halt); a leg-alone Python model leaves those exits out.** Model a
+    multi-day leg with the book's exits before queuing its tester job. In j17, 14 of the VRP leg's 26 trades closed
+    off their own exit time and lost 972.60, and the other 12 made 972.91, so the leg netted +0.31 against a model of
+    about +260. Spot those closes by their off-schedule time: every exit in the report has an empty comment except
+    "sl" and "end of test". Evidence: `backtests/2026-10-25_2049_AurumFunded_vrp2_on/AurumFunded_vrp2_on.htm`;
+    `mql5/Include/Aurum/Legs.mqh:2454` (callers :309, :2514; `AurumFunded.mq5:390-403`);
+    `research/vrp_gap_equity_indices.py:36-77` (no stops). Reviewer-checked. (2026-10-27)

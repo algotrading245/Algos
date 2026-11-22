@@ -1,0 +1,27 @@
+{
+  "id": "ism_spx_release",
+  "title": "S&P and USDJPY drift in the hour before the ISM release",
+  "source": "Lucca & Moench (2015) pre-announcement drift, extended to the ISM manufacturing release",
+  "link": "https://doi.org/10.1111/jofi.12196",
+  "read": "unverified",
+  "why": "If the pre-FOMC premium is about resolving macro uncertainty, other big scheduled releases may carry a smaller one",
+  "symbols": [
+    "SPXUSD",
+    "USDJPY"
+  ],
+  "entry": [
+    "event-2",
+    "event-1"
+  ],
+  "hold": [
+    1,
+    2
+  ],
+  "side": "both",
+  "when": {
+    "event": "ism"
+  },
+  "status": "dropped",
+  "note": "Repeat: pre-announcement drift before ISM, payrolls and GDP was tested with Hu, Pan, Wang, Zhu (JFE 2022) read in full, research/pre_announcement_drift.py, and rejected (docs/HANDOFF_archive.md lines 678-679)",
+  "dropped": "2026-10-21 orchestrator"
+}

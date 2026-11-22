@@ -1,0 +1,8 @@
+{
+ "_why": "weekly_usd is the whole account's week (autopilot + chat + desk) in Claude's notional dollars (owner 2026-11-02, item 6). The weekly limit hit at $207 (week from 10-16 18:00, hit 10-19 16:10) and $303 (week from 10-23 18:00, hit 10-30 00:05), all use priced by budget.py; 250 sits between, so skip_above 0.7 stops the finder at $175. The autopilot alone used $102 and $145 of those. Reset: Friday (4) 18:00 local, from the limit message 'resets Oct 23, 6pm'. Owner 2026-11-02: raised to 300 for the week from 10-30 so the desk pods trade again (at 250 the account read 101% and the pod pool fell below the day's spend); 300 sits just under the $303 hit the week from 10-23. Owner 2026-11-02 (later): the budget boundary removed - enforce false: spend is still counted and shown, but the autopilot never skips on it, the desk pods' pool is not fitted to dollars or throttled, and the build job has no dollar cap. The daily token caps in desk/config.json stay. Set enforce true to bring the boundary back.",
+ "weekly_usd": 300,
+ "reset_weekday": 4,
+ "reset_hour": 18,
+ "skip_above": 0.7,
+ "enforce": false
+}

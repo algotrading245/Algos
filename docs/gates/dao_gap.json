@@ -1,0 +1,49 @@
+{
+ "id": "dao_gap",
+ "when": "2026-10-23T16:35:19",
+ "verdict": "FAIL at halves",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": false,
+   "figure": "0.02 / 0.32 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.13",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.05, max leg quartet +0.15",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": false,
+   "figure": "book 2018+ 3.34 -> 3.32",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=26724, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [],
+ "published": "https://ntu.eprints-hosting.org/id/eprint/35555/1/13113_Dao.pdf",
+ "profitable_months_2018": [
+  0.798,
+  0.809
+ ]
+}

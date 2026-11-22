@@ -1,0 +1,30 @@
+{
+  "id": "monthend_eurusd_fix",
+  "title": "Dollar into the London 4pm fix on the last trading day of the month",
+  "source": "Melvin & Prins (2015), Equity hedging and exchange rates at the London 4 p.m. fix, Journal of Financial Markets 22",
+  "link": "https://doi.org/10.1016/j.finmar.2014.11.001",
+  "read": "unverified",
+  "why": "Foreign equity investors rebalance currency hedges at the month-end fix, a predictable flow",
+  "symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD"
+  ],
+  "entry": [
+    "09:00",
+    "10:00"
+  ],
+  "hold": [
+    2,
+    4
+  ],
+  "side": "both",
+  "when": {
+    "month_day": [
+      -1
+    ]
+  },
+  "status": "dropped",
+  "note": "Duplicate of a live leg: the EA month-end fix leg (mql5/Include/Aurum/Legs.mqh:1035-1114) already trades the Melvin-Prins hedge flow into the London 4pm fix on the dollar pairs, signed by the stock index month-to-date move (FixTrend); this spec is an unsigned, earlier-entry version of it",
+  "dropped": "2026-10-21 orchestrator"
+}

@@ -1,0 +1,2 @@
+tools/autopilot/compile.ps1 -Expert AurumFunded (2026-10-25): Result: 0 errors, 0 warnings, 10856 ms elapsed, cpu='X64 Regular'
+tools/autopilot/compile.ps1 -Expert AurumHydra (2026-10-25, shares Legs.mqh): Result: 0 errors, 0 warnings, 22500 ms elapsed, cpu='X64 Regular'

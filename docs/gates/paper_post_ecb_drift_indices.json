@@ -1,0 +1,49 @@
+{
+ "id": "paper_post_ecb_drift_indices",
+ "when": "2026-11-03T01:32:33",
+ "verdict": "FAIL at book",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "0.28 / 0.25 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.23",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.00, max leg fall +0.02",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": false,
+   "figure": "book 2018+ 3.29 -> 2.45",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "0.998 (book, N=26840, luck bar 1.00)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [],
+ "published": "https://acfr.aut.ac.nz/__data/assets/pdf_file/0004/691195/The_Post_ECB_Announcement_Drift_AV.pdf",
+ "profitable_months_2018": [
+  0.809,
+  0.798
+ ]
+}

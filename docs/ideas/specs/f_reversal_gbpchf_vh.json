@@ -1,0 +1,21 @@
+{
+  "id": "f_reversal_gbpchf_vh",
+  "title": "reversal on GBPCHF when vol high",
+  "source": "spec factory grid: short-term reversal (Jegadeesh 1990), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "GBPCHF"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "reversal",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-24T09:00:37"
+}

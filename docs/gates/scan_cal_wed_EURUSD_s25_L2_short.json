@@ -1,0 +1,42 @@
+{
+ "id": "scan_cal_wed_EURUSD_s25_L2_short",
+ "when": "2026-10-17T15:44:57",
+ "verdict": "FAIL at halves",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": false,
+   "figure": "1.03 / 0.41",
+   "rule": ">= 0.5 to 2017 and from 2018"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.50",
+   "rule": ">= 0.3 at 1.5x cost"
+  },
+  {
+   "gate": "dsr",
+   "pass": false,
+   "figure": "0.125 (N=26010, luck bar 2.23)",
+   "rule": ">= 0.9"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.01, max leg quartet +0.03",
+   "rule": "|book| <= 0.2, |leg| <= 0.3"
+  },
+  {
+   "gate": "goal",
+   "pass": false,
+   "figure": "Hydra 2018+ 3.37 -> 3.33 at weight 11.5; P(5x) 55.2% -> 54.8%",
+   "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+  }
+ ],
+ "weight": 11.546111768491794,
+ "p5x": [
+  0.5522581158607921,
+  0.5477978122516491
+ ]
+}

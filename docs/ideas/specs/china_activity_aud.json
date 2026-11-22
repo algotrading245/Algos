@@ -1,0 +1,27 @@
+{
+  "id": "china_activity_aud",
+  "title": "AUD after China's monthly activity data follows the first move",
+  "source": "China NBS release calendar; AUD as the liquid China proxy",
+  "link": "",
+  "read": "n/a",
+  "why": "China's activity data moves AUD; follow the first hour's direction only if it is a big move day for AUD",
+  "symbols": [
+    "AUDUSD",
+    "AUDJPY"
+  ],
+  "entry": [
+    "event+2"
+  ],
+  "hold": [
+    2,
+    4,
+    8
+  ],
+  "side": "both",
+  "when": {
+    "event": "china_activity"
+  },
+  "status": "done",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-21T17:10:55"
+}

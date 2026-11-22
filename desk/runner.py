@@ -1,0 +1,423 @@
+"""The runner (DESIGN.md section 6): drains the job queue one job at a time, each job one or more claude runs.
+
+The clock launches it when jobs wait (jobs.launch); it holds Local\\AurumDesk so only one runs, and exits when the
+queue is empty. A job becomes agent runs like this:
+  brief        each pod named in the job, then the head trader if any ticket is proposed
+  wake         the pod, then the head trader if a ticket is proposed
+  debrief      the debrief
+  weekly       scorekeeper.weekly() (code), then the head trader (Saturday review, playbook fold-in)
+  scorekeeper  scorekeeper.daily() (code), then a short scorekeeper note
+  monitor      the monitor
+Each run's prompt is agents/guide.md + the role's prompt + brief.build(role, job). A role whose daily token budget is
+spent is skipped (why "budget"); the pods share one pool, and each pod also has its own slice of it that follows the
+competition's shares (pod_budget). Transcripts go to logs/desk/runs/<job>_<role>.jsonl.
+
+python -m desk.runner drain
+python -m desk.runner once ROLE [KIND]     one run now, for testing a prompt by hand
+"""
+import datetime as dt
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+from desk import allowance, brief, clocks, journal, jobs, mutex, paths, phase
+
+AGENTS = paths.DESK / "agents"
+SETTINGS = AGENTS / "settings.json"
+BUDGET = paths.STATE / "budget.json"
+HEAD = brief.HEAD
+# "You've hit your 5-hour limit" (2026-11-01) had a hyphen the old word list did not allow.
+LIMIT_RE = re.compile(r"hit your ([\w-]+ )*limit", re.I)
+LIMIT_STATE = paths.STATE / "usage_limit.json"
+
+
+def group(role, cfg):
+    return "pod" if role in cfg.get("pods", {}) else role
+
+
+def _cfg_for(key, role, cfg, default):
+    return cfg.get(key, {}).get(group(role, cfg), default)
+
+
+def weighted(usage):
+    u = usage or {}
+    return int(u.get("input_tokens", 0) + u.get("output_tokens", 0) + u.get("cache_creation_input_tokens", 0)
+               + 0.1 * u.get("cache_read_input_tokens", 0))
+
+
+def spent(role, cfg, t=None, key=None):
+    return paths.read_json(BUDGET, {}).get(clocks.trading_day(t).isoformat(), {}).get(key or group(role, cfg), 0)
+
+
+def add_spend(role, tokens, cfg, t=None):
+    day = clocks.trading_day(t)
+    cutoff = (day - dt.timedelta(days=14)).isoformat()
+    b = {d: v for d, v in paths.read_json(BUDGET, {}).items() if d >= cutoff}
+    g = b.setdefault(day.isoformat(), {})
+    for k in {group(role, cfg), role}:
+        g[k] = g.get(k, 0) + int(tokens)
+    paths.write_json(BUDGET, b)
+
+
+def _add_build_spend(pod, tokens, t=None):
+    """A build run's tokens under "build" and "build:<pod>", so the pods' daily pool and slices stay untouched."""
+    day = clocks.trading_day(t)
+    cutoff = (day - dt.timedelta(days=14)).isoformat()
+    b = {d: v for d, v in paths.read_json(BUDGET, {}).items() if d >= cutoff}
+    g = b.setdefault(day.isoformat(), {})
+    for k in ("build", f"build:{pod}"):
+        g[k] = g.get(k, 0) + int(tokens)
+    paths.write_json(BUDGET, b)
+
+
+def pod_budget(pod, cfg, t=None):
+    """A pod's own daily tokens: the pods' pool (fitted to the weekly dollars, desk/allowance.py) split by the token
+    shares among the pods trading now, so a pod that scores well gets more tokens and one that scores badly fewer."""
+    return allowance.pod_budget(pod, cfg, t)
+
+
+def over_budget(role, cfg, t=None):
+    if role in cfg.get("pods", {}):
+        return allowance.slice_spent(role, cfg, t)
+    limit = cfg.get("budgets", {}).get(group(role, cfg))
+    return limit is not None and spent(role, cfg, t) >= limit
+
+
+def prompt_for(role, job):
+    """guide.md, then pod.md for any pod, then the role's own file (build.md last for a build job), then the brief
+    and the job."""
+    names = ["guide.md"] + (["pod.md"] if role in paths.config().get("pods", {}) else []) + [f"{role}.md"]
+    if job.get("kind") == "build":
+        names.append("build.md")
+    parts = [(AGENTS / n).read_text(encoding="utf-8") for n in names if (AGENTS / n).exists()]
+    parts.append(brief.build(role, job))
+    parts.append("## The job\n```json\n" + json.dumps(job, indent=1, default=str) + "\n```\n")
+    return "\n\n".join(parts)
+
+
+def claude_exe():
+    p = Path(os.environ.get("APPDATA", "")) / "npm" / "node_modules" / "@anthropic-ai" / "claude-code" / "bin" / "claude.exe"
+    if p.exists():
+        return str(p)
+    return shutil.which("claude.exe") or shutil.which("claude") or "claude"
+
+
+def _kill_tree(pid):
+    if sys.platform == "win32":
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+    else:
+        try:
+            os.kill(pid, 9)
+        except OSError:
+            pass
+
+
+def call(role, model, prompt, turns, minutes, job):
+    """Run claude once. Returns {ok, tokens, result, why}. Tests replace this."""
+    cmd = [claude_exe(), "-p", "--settings", str(SETTINGS), "--permission-mode", "dontAsk",
+           "--permission-prompts", "none", "--max-turns", str(turns), "--output-format", "stream-json", "--verbose",
+           "--strict-mcp-config", "--disable-slash-commands", "--no-chrome", "--setting-sources", "project,local",
+           "--model", model]
+    env = dict(os.environ, AURUM_AGENT="1", ECC_GATEGUARD="off", AURUM_DESK_ROLE=role)
+    paths.RUNS.mkdir(parents=True, exist_ok=True)
+    out = paths.RUNS / f"{job['id']}_{role}.jsonl"
+    flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+    deadline = clocks.now() + dt.timedelta(minutes=minutes)
+    with open(out, "w", encoding="utf-8") as f:
+        p = subprocess.Popen(cmd, cwd=str(paths.ROOT), env=env, stdin=subprocess.PIPE, stdout=f,
+                             stderr=subprocess.STDOUT, creationflags=flags)
+        r = paths.read_json(jobs.RUNNER, {})
+        r.update(pid=os.getpid(), job=job["id"], role=role, agent_pid=p.pid,
+                 deadline=deadline.isoformat(timespec="seconds"))
+        paths.write_json(jobs.RUNNER, r)
+        try:
+            p.stdin.write(prompt.encode("utf-8"))
+            p.stdin.close()
+        except OSError:
+            pass
+        try:
+            code = p.wait(timeout=minutes * 60)
+        except subprocess.TimeoutExpired:
+            _kill_tree(p.pid)
+            code = None
+    r = paths.read_json(jobs.RUNNER, {})
+    r.pop("agent_pid", None)
+    paths.write_json(jobs.RUNNER, r)
+    usage, result, err, denied, usd = {}, "", False, [], None
+    for line in out.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            ev = json.loads(line)
+        except ValueError:
+            continue
+        if ev.get("type") == "result":
+            usage, result, err = ev.get("usage") or {}, ev.get("result") or "", bool(ev.get("is_error"))
+            denied = [_denial(d) for d in ev.get("permission_denials") or []]
+            usd = ev.get("total_cost_usd")
+    if code is None:
+        return {"ok": False, "tokens": weighted(usage), "result": result, "why": f"timeout after {minutes} min",
+                "denied": denied, "usd": usd}
+    return {"ok": code == 0 and not err, "tokens": weighted(usage), "result": result,
+            "why": "" if code == 0 and not err else f"exit {code}", "denied": denied, "usd": usd}
+
+
+def _denial(d):
+    """A permission denial from the result event, as one short line: the tool and its command or path."""
+    inp = d.get("tool_input") or {}
+    what = inp.get("command") or inp.get("file_path") or inp.get("pattern") or inp.get("url") or json.dumps(inp)
+    return f"{d.get('tool_name', '?')}: {' '.join(str(what).split())[:200]}"
+
+
+def run_agent(role, job, cfg):
+    """One agent run inside a job. Returns 'ok', 'failed' or 'budget'.
+    A build job (the weekend edge build, owner 2026-11-02) runs on its own weekly dollars and its own model, turns
+    and minutes (the "build" keys), and its tokens never touch the pods' daily slices."""
+    build = job.get("kind") == "build"
+    if build:
+        st = allowance.build_status(cfg)
+        if st["over"]:
+            journal.log("agent_skipped", job=job["id"], role=role, why="budget", detail=st["why"])
+            return "budget"
+    elif over_budget(role, cfg):
+        journal.log("agent_skipped", job=job["id"], role=role, why="budget")
+        return "budget"
+    key = "build" if build else group(role, cfg)
+    model = cfg.get("models", {}).get(key, "sonnet")
+    turns = cfg.get("max_turns", {}).get(key, 30)
+    minutes = cfg.get("timeout_min", {}).get(key, 20)
+    t0 = clocks.now()
+    try:
+        res = call(role, model, prompt_for(role, job), turns, minutes, job)
+    except Exception as e:  # a missing claude.exe or a broken prompt fails the run, not the runner
+        res = {"ok": False, "tokens": 0, "result": "", "why": f"{type(e).__name__}: {e}"}
+    if build:
+        _add_build_spend(role, res.get("tokens", 0))
+    else:
+        add_spend(role, res.get("tokens", 0), cfg)
+    denied = res.get("denied") or []
+    journal.log("agent_run", job=job["id"], kind=job["kind"], role=role, model=model, ok=res["ok"],
+                tokens=res.get("tokens", 0), seconds=round((clocks.now() - t0).total_seconds()),
+                why=res.get("why", ""), result=(res.get("result") or "")[:500], denied=len(denied),
+                usd=None if res.get("usd") is None else round(float(res["usd"]), 4))
+    if denied:
+        refused(role, job, denied, t0)
+    if role == "monitor":
+        alert(res.get("result") or "", t0)
+    if not res["ok"] and LIMIT_RE.search(res.get("result") or ""):
+        usage_limit(res["result"], t0)
+        return "limit"
+    return "ok" if res["ok"] else "failed"
+
+
+def usage_limit(text, t):
+    """The Claude account hit its usage limit (10-29 to 10-30 every pod brief failed this way): one alert in
+    inbox/ALERT.md per 6 hours instead of a silent failure per pod."""
+    last = paths.read_json(LIMIT_STATE, {}).get("t")
+    if last and t - dt.datetime.fromisoformat(last) < dt.timedelta(hours=6):
+        return False
+    paths.write_json(LIMIT_STATE, {"t": t.isoformat(timespec="seconds"), "result": text[:200]})
+    journal.log("usage_limit", result=text[:200])
+    _to_inbox(f"Usage limit {t.isoformat(timespec='minutes')}",
+              [f"ALERT the desk's agent runs stop until the limit resets: {text.strip()[:200]}"])
+    return True
+
+
+def _to_inbox(title, lines):
+    f = paths.INBOX / "ALERT.md"
+    paths.INBOX.mkdir(parents=True, exist_ok=True)
+    old = f.read_text(encoding="utf-8") if f.exists() else ""
+    new = f"# {title}\n\n" + "\n".join(f"- {ln}" for ln in lines)
+    f.write_text(new + "\n\n" + old[:20000], encoding="utf-8")
+
+
+def alert(text, t):
+    """A monitor run whose summary has a line starting ALERT goes to the journal and to inbox/ALERT.md for the owner,
+    newest first, the same file the code check writes."""
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip().upper().startswith("ALERT")]
+    if not lines:
+        return []
+    journal.log("alert", lines=lines)
+    _to_inbox(f"Monitor agent {t.isoformat(timespec='minutes')}", lines)
+    return lines
+
+
+def refused(role, job, denied, t):
+    """Commands the session's permissions refused: each one is a turn the agent lost, and usually a gap in guide.md
+    (owner 2026-10-27). Journaled, and put in front of the owner in inbox/ALERT.md."""
+    journal.log("refused_commands", job=job["id"], role=role, n=len(denied), commands=denied[:10])
+    _to_inbox(f"Refused commands {t.isoformat(timespec='minutes')} ({role}, job {job['id']})",
+              [f"WARN {len(denied)} command(s) refused by the session's permissions"] + denied[:10])
+
+
+def _with_head(roles, job, cfg):
+    """Run roles, then the head trader when something waits for approval."""
+    out = [run_agent(r, job, cfg) for r in roles]
+    rv = reviewer(cfg)
+    if rv:
+        out.append(run_agent(rv[0], dict(job, review=rv[1]), cfg))
+    if brief.proposed():
+        out.append(run_agent(HEAD, job, cfg))
+    return out
+
+
+def reviewer(cfg):
+    """Cross-review (owner 2026-11-01): when a proposed ticket has no other pod's review yet, one more pod run before
+    the head trader reviews them, the active pod with the fewest reviews so far that proposed none of them.
+    Returns (pod, [ticket ids]) or None."""
+    from desk import memory
+    todo = [v for v in brief.proposed() if not memory.reviews(v["id"])]
+    if not todo:
+        return None
+    done = {}
+    for r in memory.board(10 ** 6):
+        if r.get("kind") == "review":
+            done[r.get("pod")] = done.get(r.get("pod"), 0) + 1
+    pods = [p for p in phase.pods_active(cfg) if p != brief.systematic.POD]
+    free = [p for p in pods if all(v.get("pod") != p for v in todo)]
+    pick = min(free or [p for p in pods if p != todo[0].get("pod")], key=lambda p: done.get(p, 0), default=None)
+    if pick is None:
+        return None
+    return pick, [v["id"] for v in todo if v.get("pod") != pick]
+
+
+def missing_notes(job, pods, since, cfg):
+    """The home markets (a watchlist, not a fence: owner 2026-11-01) each pod left without a board note since the brief began (owner 2026-10-27). A pod
+    whose run was skipped or failed is not counted. Journaled; returns {pod: [markets]}."""
+    from desk import memory
+    posted = {(r.get("pod"), r.get("instrument")) for r in memory.board(10 ** 6) if r.get("t", "") >= since}
+    out = {}
+    for pod in pods:
+        miss = [m for m in cfg["pods"].get(pod, {}).get("owns") or [] if (pod, m) not in posted]
+        if miss:
+            out[pod] = miss
+            journal.log("missing_notes", job=job["id"], pod=pod, markets=miss)
+    return out
+
+
+def unanswered_asks(job, pods):
+    """The asks a pod read in its brief and left unanswered (owner 2026-10-31). Journaled; returns {pod: [ask ids]}."""
+    from desk import memory
+    out = {}
+    for pod in pods:
+        ids = [r["id"] for r in memory.open_asks(pod) if r.get("to") == pod]
+        if ids:
+            out[pod] = ids
+            journal.log("unanswered_asks", job=job["id"], pod=pod, asks=ids)
+    return out
+
+
+def untouched_models(job, pods, since):
+    """The pods that ran a brief and did not touch their market model (owner 2026-11-02: 4 of 6 left it empty on
+    11-01, so the watcher had nothing to wake them on). Journaled; returns the pods."""
+    from desk import market_model
+    out = [p for p in pods if not market_model.touched_since(p, since)]
+    for p in out:
+        journal.log("model_untouched", job=job["id"], pod=p, empty=not market_model.get(p)["markets"])
+    return out
+
+
+def refresh_intel(cfg):
+    """Recompute every pod's profile after a job, so the dashboards and the next brief see the work just done."""
+    try:
+        from desk import intel
+        intel.write(cfg)
+    except Exception as e:
+        journal.log("intel_error", error=f"{type(e).__name__}: {e}")
+
+
+def run_job(job, cfg):
+    kind = job["kind"]
+    jobs.mark(job["id"], "started")
+    try:
+        if kind == "brief":
+            pods, since = job.get("pods") or [], clocks.now().isoformat(timespec="seconds")
+            res = _with_head(pods, job, cfg)
+            ran = [p for p, r in zip(pods, res) if r == "ok"]
+            missing_notes(job, ran, since, cfg)
+            unanswered_asks(job, ran)
+            untouched_models(job, ran, since)
+        elif kind == "wake":
+            res = _with_head([job["pod"]], job, cfg)
+        elif kind == "debrief":
+            res = [run_agent("debrief", job, cfg)]
+        elif kind == "weekly":
+            from desk import scorekeeper
+            scorekeeper.weekly()
+            res = [run_agent(HEAD, job, cfg)]
+        elif kind == "scorekeeper":
+            from desk import scorekeeper
+            scorekeeper.daily()
+            res = [run_agent("scorekeeper", job, cfg)]
+        elif kind == "monitor":
+            res = [run_agent("monitor", job, cfg)]
+        elif kind == "build":  # one run per pod, in turn: each builds or tunes one edge (agents/build.md)
+            res = []
+            for p in job.get("pods") or []:
+                r = run_agent(p, job, cfg)
+                res.append(r)
+                if r in ("budget", "limit"):  # the build dollars or the account are spent: the rest wait a week
+                    break
+        else:
+            jobs.mark(job["id"], "skipped", why=f"unknown kind {kind}")
+            return "skipped"
+    except Exception as e:
+        journal.log("job_error", job=job["id"], kind=kind, error=f"{type(e).__name__}: {e}")
+        jobs.mark(job["id"], "failed", why=f"{type(e).__name__}: {e}")
+        return "failed"
+    finally:
+        refresh_intel(cfg)
+    if res and all(r == "budget" for r in res):
+        jobs.mark(job["id"], "skipped", why="budget")
+        return "skipped"
+    if "limit" in res:
+        jobs.mark(job["id"], "failed", why=f"usage limit ({res.count('limit')} of {len(res)} runs)")
+        return "failed"
+    if "failed" in res:
+        jobs.mark(job["id"], "failed", why=f"{res.count('failed')} of {len(res)} runs failed")
+        return "failed"
+    jobs.mark(job["id"], "done")
+    return "done"
+
+
+def drain(limit=50):
+    """Run waiting jobs until none are left. Returns how many ran, or -1 if another runner holds the mutex."""
+    with mutex.hold(jobs.RUNNER_MUTEX) as mine:
+        if not mine:
+            return -1
+        paths.write_json(jobs.RUNNER, {"pid": os.getpid(), "started": clocks.now().isoformat(timespec="seconds")})
+        n = 0
+        while n < limit:
+            jobs.expire_stale()
+            waiting = jobs.pending()
+            if not waiting:
+                break
+            cfg = paths.config()
+            if paths.KILL.exists() and waiting[0]["kind"] not in ("monitor", "debrief"):
+                jobs.mark(waiting[0]["id"], "skipped", why="desk halted")
+                continue
+            run_job(waiting[0], cfg)
+            n += 1
+        paths.write_json(jobs.RUNNER, {"pid": None, "finished": clocks.now().isoformat(timespec="seconds"), "ran": n})
+        return n
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["drain"]:
+        n = drain()
+        print(json.dumps({"ran": n}))
+        return 0 if n >= 0 else 1
+    if argv[:1] == ["once"] and len(argv) > 1:
+        cfg = paths.config()
+        job = {"id": "manual" + clocks.now().strftime("%H%M%S"), "kind": argv[2] if len(argv) > 2 else "manual"}
+        print(json.dumps({"result": run_agent(argv[1], job, cfg)}))
+        return 0
+    print(__doc__)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

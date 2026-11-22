@@ -1,0 +1,18 @@
+{
+  "id": "f_reversal_audnzd",
+  "title": "reversal on AUDNZD",
+  "source": "spec factory grid: short-term reversal (Jegadeesh 1990), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "AUDNZD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "reversal",
+  "made": "2026-10-23",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-23T03:00:12"
+}

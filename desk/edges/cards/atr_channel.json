@@ -1,0 +1,232 @@
+{
+ "name": "atr_channel",
+ "markets": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "USDCHF",
+  "USDCAD",
+  "AUDUSD",
+  "NZDUSD",
+  "EURJPY",
+  "GBPJPY",
+  "AUDJPY",
+  "CADJPY",
+  "NZDJPY",
+  "EURGBP",
+  "EURCHF",
+  "EURAUD",
+  "AUDCAD",
+  "AUDNZD",
+  "GBPCHF",
+  "NZDCAD",
+  "XAUUSD",
+  "XAGUSD",
+  "WTI",
+  "US500",
+  "US100",
+  "GER40",
+  "JP225",
+  "BTCUSD",
+  "ETHUSD"
+ ],
+ "tf": "D1",
+ "pod": "library",
+ "kind": "reference",
+ "bars": 100,
+ "needs": [],
+ "defaults": {
+  "k": 2.0,
+  "side": "both",
+  "hold": 0,
+  "trail": 0,
+  "n": 50,
+  "m": 1.0
+ },
+ "card": "ATR channel: SMA(50) +- 1 ATR(50); a close above the upper line buys, below the lower sells, back through the SMA\nexits.",
+ "backtest": {
+  "EURCHF": {
+   "params": {
+    "k": 2.0,
+    "side": "both",
+    "hold": 0,
+    "trail": 0,
+    "n": 50,
+    "m": 0.67
+   },
+   "from": null,
+   "to": null,
+   "trades": 177,
+   "pf": 1.35,
+   "win": 0.243,
+   "avg_r": 0.164,
+   "total_r": 29.04,
+   "max_dd_r": 15.36,
+   "first": "2009-04-20",
+   "last": "2025-09-17",
+   "by_year": {
+    "2009": {
+     "trades": 9,
+     "r": 6.34
+    },
+    "2010": {
+     "trades": 8,
+     "r": -0.43
+    },
+    "2011": {
+     "trades": 13,
+     "r": -1.47
+    },
+    "2012": {
+     "trades": 7,
+     "r": 1.45
+    },
+    "2013": {
+     "trades": 19,
+     "r": -11.01
+    },
+    "2014": {
+     "trades": 10,
+     "r": -2.24
+    },
+    "2015": {
+     "trades": 10,
+     "r": 34.74
+    },
+    "2016": {
+     "trades": 12,
+     "r": -2.87
+    },
+    "2017": {
+     "trades": 7,
+     "r": 7.58
+    },
+    "2018": {
+     "trades": 7,
+     "r": 1.22
+    },
+    "2019": {
+     "trades": 15,
+     "r": 0.5
+    },
+    "2020": {
+     "trades": 7,
+     "r": -2.31
+    },
+    "2021": {
+     "trades": 7,
+     "r": 6.17
+    },
+    "2022": {
+     "trades": 14,
+     "r": -3.22
+    },
+    "2023": {
+     "trades": 13,
+     "r": -2.3
+    },
+    "2024": {
+     "trades": 10,
+     "r": 2.37
+    },
+    "2025": {
+     "trades": 9,
+     "r": -5.52
+    }
+   },
+   "halves": [
+    32.52,
+    -3.48
+   ],
+   "run": "2026-11-03T04:02:17+00:00"
+  },
+  "US100": {
+   "params": {
+    "k": 2.0,
+    "side": "both",
+    "hold": 0,
+    "trail": 0,
+    "n": 34,
+    "m": 1.0
+   },
+   "from": null,
+   "to": null,
+   "trades": 170,
+   "pf": 1.04,
+   "win": 0.306,
+   "avg_r": 0.018,
+   "total_r": 2.98,
+   "max_dd_r": 19.27,
+   "first": "2011-01-25",
+   "last": "2025-09-09",
+   "by_year": {
+    "2011": {
+     "trades": 14,
+     "r": -5.3
+    },
+    "2012": {
+     "trades": 12,
+     "r": 0.55
+    },
+    "2013": {
+     "trades": 13,
+     "r": 0.16
+    },
+    "2014": {
+     "trades": 11,
+     "r": 0.51
+    },
+    "2015": {
+     "trades": 16,
+     "r": -7.69
+    },
+    "2016": {
+     "trades": 16,
+     "r": -6.36
+    },
+    "2017": {
+     "trades": 9,
+     "r": 6.48
+    },
+    "2018": {
+     "trades": 15,
+     "r": -5.21
+    },
+    "2019": {
+     "trades": 8,
+     "r": 5.06
+    },
+    "2020": {
+     "trades": 8,
+     "r": 3.82
+    },
+    "2021": {
+     "trades": 13,
+     "r": -2.65
+    },
+    "2022": {
+     "trades": 11,
+     "r": 1.19
+    },
+    "2023": {
+     "trades": 8,
+     "r": 4.88
+    },
+    "2024": {
+     "trades": 9,
+     "r": 4.04
+    },
+    "2025": {
+     "trades": 7,
+     "r": 3.6
+    }
+   },
+   "halves": [
+    -17.84,
+    20.82
+   ],
+   "run": "2026-11-03T07:02:52+00:00"
+  }
+ },
+ "live": {}
+}

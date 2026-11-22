@@ -1,0 +1,21 @@
+{
+  "id": "f_ma_cross_eurchf_vh",
+  "title": "ma_cross on EURCHF when vol high",
+  "source": "spec factory grid: moving-average crossover (Brock, Lakonishok & LeBaron 1992), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "EURCHF"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "ma_cross",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-23",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-23T18:00:59"
+}

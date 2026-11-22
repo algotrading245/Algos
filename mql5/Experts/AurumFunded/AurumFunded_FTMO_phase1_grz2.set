@@ -1,0 +1,26 @@
+; AurumFunded v1.22 - FTMO funded-style run (no profit target) with the month-reversal leg (Graziani 2024,
+; research/graziani_reversal.py, FTMO swaps). The preset is the OFF run (InpGrzMult=0); the on run adds InpGrzMult=0.5
+; (queue compare_set). Tester only until the judge has passed it. Symbol names are FTMO's.
+InpPropTargetPct=0.0
+InpPropRound=3
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275
+InpVrpMult=0.0
+InpDualMult=0.0
+InpGrzMult=0.0
+InpGrzHHMM=2230
+InpGrzEntrySec=600
+InpGrzMaxSpreadBp=3.0
+InpGrzStopEqPct=5.0

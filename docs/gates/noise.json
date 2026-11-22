@@ -1,0 +1,49 @@
+{
+ "id": "noise",
+ "when": "2026-10-22T22:19:22",
+ "verdict": "PASS",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "0.66 / 1.31 (to 2017 / from 2018)",
+   "rule": ">= 0.2 each half"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.57",
+   "rule": "> 0.0 at 1.5x cost"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book -0.02, max leg hold +0.02",
+   "rule": "book <= +0.3, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "belief",
+   "pass": true,
+   "figure": "published Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+   "rule": "a published source, or the same parameters profitable on all of 3+ markets"
+  },
+  {
+   "gate": "book",
+   "pass": true,
+   "figure": "book 2018+ 3.12 -> 3.34",
+   "rule": "gain >= 0.03, equal risk, weights walk-forward"
+  },
+  {
+   "gate": "dsr",
+   "pass": true,
+   "figure": "1.000 (book, N=27071, luck bar 1.01)",
+   "rule": ">= 0.9"
+  }
+ ],
+ "replaces": [],
+ "published": "Zarattini, Aziz, Barbon, Beat the Market, Swiss Finance Institute RP 24-97 (2025-02-03), https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4824172",
+ "profitable_months_2018": [
+  0.766,
+  0.798
+ ]
+}

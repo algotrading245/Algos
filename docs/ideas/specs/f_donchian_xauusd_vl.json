@@ -1,0 +1,21 @@
+{
+  "id": "f_donchian_xauusd_vl",
+  "title": "donchian on XAUUSD when vol low",
+  "source": "spec factory grid: Donchian channel breakout (Turtle rules), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "XAUUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "donchian",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at corr",
+  "tested": "2026-10-24T16:00:57"
+}

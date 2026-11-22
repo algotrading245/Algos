@@ -1,0 +1,39 @@
+; AurumHydra - AurumHydra_5x_month_FTMO.set with the risk layer on (step 6, owner 2026-10-22). Hydra is the capped side
+; bet. The plan's brakes as in tools/book_sim.py's risk layer: half size from 10% under the equity peak, quarter
+; size from 20%; account vol target 20% (at most 2x); day-loss guard 5%. Untested with the goal sizing: run it in the
+; tester beside the plain preset before any demo uses it. Inputs not listed keep the EA's defaults.
+InpGold=XAUUSD
+InpYen=USDJPY
+InpEuro=EURUSD
+InpGridSymbol=AUDCAD
+InpStocks=US500.cash
+InpPound=GBPUSD
+InpAussie=AUDUSD
+InpLoonie=USDCAD
+InpSwissy=USDCHF
+InpFixCross1=AUDJPY
+InpFixCross2=CADJPY
+InpFixCross3=GBPJPY
+InpMorn1=EURJPY
+InpMorn2=GBPJPY
+InpMorn3=CADJPY
+InpNasdaq=US100.cash
+InpGoalMult=5.0
+InpGoalDays=23
+InpGoalCap=50.0
+InpGoalBold=false
+InpGoalScale=2.5
+InpGoalDayVolPct=1.56
+InpGoalRepeat=false
+InpMonthEndBoost=2.0
+InpGoalStop=true
+InpGoalRound=1
+InpMaxDrawdownPct=0.0
+InpBrakePct=10.0
+InpBrakeCut=0.5
+InpBrake2Pct=20.0
+InpBrake2Cut=0.25
+InpAcctVolPct=20.0
+InpAcctVolDays=63
+InpAcctVolMax=2.0
+InpDayLossPct=5.0

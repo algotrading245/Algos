@@ -1,0 +1,42 @@
+{
+ "id": "scan_slot_EURUSD_s21_L8_short",
+ "when": "2026-10-17T15:27:15",
+ "verdict": "FAIL at dsr",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": true,
+   "figure": "0.96 / 0.79",
+   "rule": ">= 0.5 to 2017 and from 2018"
+  },
+  {
+   "gate": "costs",
+   "pass": true,
+   "figure": "0.60",
+   "rule": ">= 0.3 at 1.5x cost"
+  },
+  {
+   "gate": "dsr",
+   "pass": false,
+   "figure": "0.471 (N=4769, luck bar 0.89)",
+   "rule": ">= 0.9"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book +0.20, max leg quartet +0.23",
+   "rule": "|book| <= 0.2, |leg| <= 0.3"
+  },
+  {
+   "gate": "goal",
+   "pass": false,
+   "figure": "Hydra 2018+ 3.37 -> 3.36 at weight 1.03; P(5x) 55.2% -> 55.2%",
+   "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+  }
+ ],
+ "weight": 1.0339760072551898,
+ "p5x": [
+  0.5522581158607921,
+  0.5515589399725805
+ ]
+}

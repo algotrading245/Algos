@@ -1,0 +1,19 @@
+; AurumFunded - FTMO 2-Step Swing, phase 1 with the breakout and noise legs on (step 17, approval a3, 2026-10-17).
+; The FTMO demo's preset: phase1.set plus InpBreakRiskPct and InpNoiseMult. Inputs not listed keep the EA's defaults.
+InpPropTargetPct=10.0
+InpPropRound=1
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+; Fast sizing while in profit: set true only after live results confirm the edge (tools/prop_dp.py)
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275

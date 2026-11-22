@@ -1,0 +1,42 @@
+{
+ "id": "silver_legs_port",
+ "when": "2026-10-22T01:51:45",
+ "verdict": "FAIL at halves",
+ "gates": [
+  {
+   "gate": "halves",
+   "pass": false,
+   "figure": "-0.49 / -1.02",
+   "rule": ">= 0.5 to 2017 and from 2018"
+  },
+  {
+   "gate": "costs",
+   "pass": false,
+   "figure": "-1.79",
+   "rule": ">= 0.3 at 1.5x cost"
+  },
+  {
+   "gate": "dsr",
+   "pass": false,
+   "figure": "0.000 (N=27064, luck bar 1.03)",
+   "rule": ">= 0.9"
+  },
+  {
+   "gate": "corr",
+   "pass": true,
+   "figure": "book -0.00, max leg quartet +0.08",
+   "rule": "book <= +0.2, each leg <= +0.3 (negative passes)"
+  },
+  {
+   "gate": "goal",
+   "pass": false,
+   "figure": "Hydra 2018+ 3.45 -> 3.45 at weight 0; P(5x) 56.2% -> 56.2%",
+   "rule": "Sharpe gain >= 0.03, weight fitted to 2017"
+  }
+ ],
+ "weight": 0.0,
+ "p5x": [
+  0.5618464571293371,
+  0.5618464571293371
+ ]
+}

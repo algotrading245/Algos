@@ -1,0 +1,7 @@
+﻿AurumFunded.mq5 v1.23 compile, 2026-11-02, owner session (scratchpad copy, so the T16 junction and the live EA were not touched)
+Source: mql5/Experts/AurumFunded/AurumFunded.mq5 at da44051, Include/Aurum via the T16 junction (= repo mql5/Include/Aurum).
+Compiler: T16 metaeditor64.exe /compile /include:<T16>\MQL5
+
+Result: 0 errors, 0 warnings, 6446 ms elapsed, cpu='X64 Regular'
+
+Live check: T16 loaded AurumFunded at 2026-11-01 21:57:52; its .ex5 is from 21:12 that day and the source matches ff247e2 (v1.23).

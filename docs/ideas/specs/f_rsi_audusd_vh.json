@@ -1,0 +1,21 @@
+{
+  "id": "f_rsi_audusd_vh",
+  "title": "rsi on AUDUSD when vol high",
+  "source": "spec factory grid: RSI extremes (Wilder 1978; Connors RSI-2), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "AUDUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "rsi",
+  "when": {
+    "vol": "high"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-24T02:01:02"
+}

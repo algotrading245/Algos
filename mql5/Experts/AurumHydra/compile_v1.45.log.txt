@@ -1,0 +1,4 @@
+AurumHydra.mq5 v1.45 compile, 2026-11-02, builder (tools/autopilot/compile.ps1 -Expert AurumHydra)
+Change: 60 s back-off after server refusals in CAurumTrade (Legs.mqh) is now the input InpRefuseBackoffSec (default 60, 0 = off).
+
+Result: 0 errors, 0 warnings, 10784 ms elapsed, cpu='X64 Regular'

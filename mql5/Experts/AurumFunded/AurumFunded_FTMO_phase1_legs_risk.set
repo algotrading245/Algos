@@ -1,0 +1,31 @@
+; AurumFunded - FTMO phase 1 with the breakout and noise legs AND the risk layer on (step 6, owner 2026-10-22).
+; phase1_legs.set plus the risk layer. The plan's 10%/20% brakes are for Hydra; FTMO stops the account at 8.5% down,
+; so here they sit inside that room: half size from 3% under the peak, quarter size from 5%. The vol target may only
+; cut size (max 1.0), and the day-loss guard closes all at 2.5%, before FTMO's 3% day stop (InpPropDayStopPct).
+; For a second FTMO demo beside the phase1_legs one, so the two can be compared. Inputs not listed keep the defaults.
+InpPropTargetPct=10.0
+InpPropRound=1
+InpPropMinDays=4
+InpPropDayStopPct=3.0
+InpPropMaxStopPct=8.5
+InpPropTrailing=false
+InpPropRoomPct=8.5
+InpPropCap=1.4
+InpPropResetHHMM=100
+InpEuClock=true
+InpSizeMult=0.5
+InpGridRiskPct=0.0
+InpHoldVolPct=0.0
+; Fast sizing while in profit: set true only after live results confirm the edge (tools/prop_dp.py)
+InpPropFast=false
+InpBreakRiskPct=0.125
+InpNoiseMult=0.275
+; Risk layer (step 2, off by default in the EA)
+InpBrakePct=3.0
+InpBrakeCut=0.5
+InpBrake2Pct=5.0
+InpBrake2Cut=0.25
+InpAcctVolPct=20.0
+InpAcctVolDays=63
+InpAcctVolMax=1.0
+InpDayLossPct=2.5

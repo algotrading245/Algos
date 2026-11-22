@@ -1,0 +1,21 @@
+{
+  "id": "f_meanrev_jpxjpy_vl",
+  "title": "meanrev on JPXJPY when vol low",
+  "source": "spec factory grid: z-score mean reversion, the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "JPXJPY"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "meanrev",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-25",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-25T03:06:50"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "f_tsmom_gbpusd_vl",
+  "title": "tsmom on GBPUSD when vol low",
+  "source": "spec factory grid: time-series momentum (Moskowitz, Ooi & Pedersen 2012), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "GBPUSD"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "tsmom",
+  "when": {
+    "vol": "low"
+  },
+  "made": "2026-10-24",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-24T12:01:03"
+}

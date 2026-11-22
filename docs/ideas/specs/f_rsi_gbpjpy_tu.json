@@ -1,0 +1,21 @@
+{
+  "id": "f_rsi_gbpjpy_tu",
+  "title": "rsi on GBPJPY when trend up",
+  "source": "spec factory grid: RSI extremes (Wilder 1978; Connors RSI-2), the engine's defaults",
+  "link": "",
+  "read": "n/a",
+  "why": "Standard rule tested on every market we have; the grid is fixed, so nothing is tuned here",
+  "symbols": [
+    "GBPJPY"
+  ],
+  "side": "both",
+  "status": "done",
+  "made_by": "spec_factory",
+  "rule": "rsi",
+  "when": {
+    "trend": "up"
+  },
+  "made": "2026-10-25",
+  "verdict": "FAIL at halves",
+  "tested": "2026-10-25T15:01:10"
+}
