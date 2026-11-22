@@ -409,3 +409,14 @@ demo_check (Terminal 16) for 20261115: no EA log lines, 0 orders, 0 journal trad
 - Trades per leg: none. P/L of the day: not logged. Slippage: not logged.
 - Odd: demo_check also finds no EA log lines for 2026-11-09 to 2026-11-13 (five trading days, see docs/fidelity/2026-11-13.md). The last day with EA lines in demo_check is 2026-11-06 (2 closes, US500.cash and US100.cash, +17.29 EUR). Not logged: whether the EA is detached or only its log is not written. Two terminal64 processes are running (started 08/11/2026). The monitor did not check the chart's EA list, which is read-only and outside this check.
 - No day stop, final stop, margin error, or trade without a broker stop appears. No ALERT.
+
+## 2026-11-22 (Sunday), monitor check: no trades logged; EA not attached?
+
+- Trades per leg: none logged (0 EA lines, 0 orders, 0 journal trade lines in the 20261122.log check).
+- P/L of the day: not logged (no closes).
+- Slippage on fills: not logged (no fills).
+- Skipped or clock lines: none logged; Sunday, no trading day.
+- Week context: no EA lines on 11-16 to 11-20 either (log files for 11-17 and 11-18 present with no EA line; 11-16, 11-19, 11-20 no log file in the source demo_check reads). The doctor's 2026-11-22 entry in `docs/memory/decisions.jsonl` records Terminal 16 not logged in to the demo server since 11-07.
+- Anything odd: the EA has produced no output for about two weeks. Owner to check the Terminal 16 server login, EA attachment and trade permission. Monitor is read-only and did not touch the terminal.
+- No ALERT: no day stop, final stop, margin error or trade without a broker stop appears.
+- Fidelity week 11-16 to 11-20 written to `docs/fidelity/2026-11-20.md`; tester pairing waiting on the owner.
